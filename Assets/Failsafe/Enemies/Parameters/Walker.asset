@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9105fe3ed14e3d8489dc06df08831d6c, type: 3}
+  m_Name: Walker
+  m_EditorClassIdentifier: 
+  enemyName: Walker
+  accelaration: 120
+  angelarSpeed: 120
+  OriginDistanceSight: 20
+  AlertDistanceSight: 30
+  OrginAngleViev: 45
+  AlertAngleViev: 65
+  VisualFocusTime: 3
+  AlertVisualFocusTime: 0.2
+  OriginDistanceHearing: 10
+  AlertDistanceHearing: 20
+  MinSoundStr: 1
+  MaxSoundStr: 10
+  AlertMinSoundStr: 2
+  HearFocusTime: 0.5
+  AlertHearFocusTime: 0.2
+  FillSpeed: 80
+  DecaySpeed: 10
+  DecayDelay: 2
+  AlertThreshold: 10
+  ChaseThreshold: 100
+  ChaseExitThreshold: 30
+  CheckRadius: 5
+  CheckDuration: 10
+  CheckInterval: 2
+  ChaseSpeed: 6
+  PatrolingSpeed: 4
+  PatrollingWaitTime: 2
+  SearchingSpeed: 3
+  SearchingDuration: 15
+  SearchRadius: 5
+  offsetSearchingPoint: 10
+  changePointInterval: 5
+  enemyHealth: 100
+  Damage: 100
+  AttackRangeMin: 8
+  AttackRangeMax: 15
+  AttackDuration: 5
+  AttackDelay: 0.3
+  AttackCooldown: 4

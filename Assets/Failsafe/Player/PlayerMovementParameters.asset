@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 297d49f30d4de6c41a6e99a1a73fa7b3, type: 3}
+  m_Name: PlayerMovementParameters
+  m_EditorClassIdentifier: 
+  WalkSpeed:
+    BaseValue: 3.5
+  RunSpeed:
+    BaseValue: 7
+  CrouchSpeed:
+    BaseValue: 1.75
+  RunDurationBeforeSlide: 0.5
+  SlideSpeed: 4.2
+  MaxSlideTime: 1.5
+  MinSlideTime: 0.8
+  JumpMaxHeight: 1.5
+  JumpMaxSpeed: 8
+  JumpMinDuration: 0.1
+  JumpDuration: 0.5
+  AirMovementSpeed: 0.5
+  GravityForce: 8
+  InitialGravityStrength: 0.1
+  TimeToFullGravityForce: 0.5
+  FallDistanceToSlow: 2
+  SlowMultiplierOnLanding: 0.5
+  SlowDurationOnLanding: 5
+  FallDistanceToDisable: 4
+  DisableDurationOnLanding: 5
+  GrabLedgeMaxDistance: 0.5
+  GrabLedgeMinHeight: 2
+  GrabLedgeSpeed: 4
+  GrabLedgeHeightDifference: 0.1
+  ClimbOverMaxDistanceToLedge: 1
+  ClimbOverLedgeMaxWidth: 0.5
+  ClimbOverLedgeMaxHeight: 1.5
+  ClimbOnMaxDistanceToLedge: 1
+  ClimbOnLedgeMaxHeight: 2

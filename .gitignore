@@ -1,0 +1,130 @@
+# ========== UNITY ==========
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+sysinfo.txt
+
+# Never ignore Asset meta data
+!/[Aa]ssets/**/*.meta
+
+# Addressables
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bundle
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.hash
+
+# Temporary auto-generated Android Assets
+/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Ignore all asset store tools if needed
+# Assets/AssetStoreTools*
+
+# TextMesh Pro auto-generated files
+Assets/TextMesh*Pro/
+
+# ========== IDEs ==========
+# JetBrains Rider
+.idea/
+Assets/Plugins/Editor/JetBrains*
+
+# VS Code
+.vscode/
+
+# Visual Studio
+.vs/
+*.csproj
+*.sln
+*.user
+*.suo
+*.tmp
+*.pidb
+*.booproj
+*.unityproj
+*.VC.db
+*.opendb
+*.mdb
+*.pdb
+*.svd
+
+# Meta for generated binaries
+*.pdb.meta
+*.mdb.meta
+*.pidb.meta
+
+# ========== OS JUNK ==========
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# ========== BUILDS ==========
+*.apk
+*.aab
+*.unitypackage
+*.unitypackage.meta
+*.app
+*.exe
+*.war
+*.zip
+
+# Linux
+build.x86_64
+build_Data/
+UnityPlayer.so
+libdecor-0.so.0
+libdecor-cairo.so
+DMDungeon_BurstDebugInformation_DoNotShip/
+
+# ========== CACHE ==========
+.gradle/
+ExportedObj/
+consulo/
+
+# ========== NODE ==========
+node_modules/
+dist/
+
+# ========== JAR / JAVA ==========
+*.jar
+
+# ========== TEST REPORTS / CI ==========
+TEST*.xml
+coverage/
+coverage-final.json
+.nyc_output/
+
+# ========== EXCEPTIONS (TRACK EXPLICITLY) ==========
+!*.dll
+!*.json
+!*.obj
+
+# ========== FMOD ==========
+[Ff]modCache/
+[Ff]modTemp/
+/[Aa]ssets/[Pp]lugins/FMOD/Cache/
+fmod_editor.log
+*.guid
+*.fspro.user
+*.unsaved
+
+# FMOD studio (In folder FMOD)
+/FMOD/**.user
+/FMOD/**.unsaved
+/FMOD/**.cache
+/FMOD/**.restore
+
+/Assets/Plugins/FMOD/Cache
+ProjectSettings/Packages/com.unity.probuilder/Settings.json
+
+# TODO: Find and fix problem with this .mets file
+# Ignore TextMesh Pro meta useless file
+/[Aa]ssets/TextMesh Pro.meta
+/FMOD_Failsafe/.cache
