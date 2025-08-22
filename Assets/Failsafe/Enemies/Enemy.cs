@@ -1,4 +1,4 @@
-﻿using DMDungeonGenerator;
+using DMDungeonGenerator;
 using Failsafe.Enemies.Sensors;
 using System.Collections.Generic;
 using Tayx.Graphy.Utils.NumString;
@@ -39,11 +39,12 @@ public class Enemy : MonoBehaviour
         // Отключаем автоматическое управление трансформацией
         _navMeshAgent.updatePosition = false;
         _navMeshAgent.updateRotation = false;
+        _navMeshAgent.autoTraverseOffMeshLink = false; // ВАЖНО: отключаем авто-перемещение по линкам
 
         // Создаём вспомогательные классы
         _enemyGetData = new EnemyGetData(transform);
         _awarenessMeter = new AwarenessMeter(_sensors, _enemyConfig);
-        _enemyAnimator = new EnemyAnimator(_navMeshAgent, _animator, transform);
+        _enemyAnimator = new EnemyAnimator(_navMeshAgent, _animator, transform, this);
         _enemyMovePatterns = new EnemyMovePatterns(_navMeshAgent);
         _enemyNavMeshActions = new EnemyNavMeshActions(_navMeshAgent, transform);
         _enemyMemory = new EnemyMemory();
@@ -144,5 +145,3 @@ public class Enemy : MonoBehaviour
 
     }
 }
-
-

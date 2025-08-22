@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.AI;
 
 /// <summary>
@@ -16,6 +16,9 @@ public class ChasingState : BehaviorState
     private EnemyNavMeshActions _enemyNavMeshActions;
     private EnemyMemory _enemyMemory;
     private float _loseProgress;
+
+    private readonly int _jumpAreaIndex = 3; // Индекс зоны для прыжков. Должен совпадать с тем, что в OffMeshLinkAutoBuilder
+    private readonly float _jumpActivationDistance = 15f; // Расстояние, при котором противник начнет использовать прыжки
 
     private float _distanceToPlayer;
     private bool _playerInSight;
@@ -47,7 +50,8 @@ public class ChasingState : BehaviorState
 
     public override void Update()
     {
-        
+        UpdateJumpAreaCost(); // Обновляем стоимость зоны прыжков
+
         bool anySensorIsActive = false;
         foreach (var sensor in _sensors)
         {
@@ -81,6 +85,21 @@ public class ChasingState : BehaviorState
             return;
         }
         _enemyNavMeshActions.RunToPoint(_chasingPosition.Value, _enemyConfig.ChaseSpeed);
+    }
+
+    private void UpdateJumpAreaCost()
+    {
+        // Если мы видим игрока и он дальше, чем дистанция активации прыжка, разрешаем прыгать
+        if (_playerInSight && _distanceToPlayer > _jumpActivationDistance)
+        {
+            // Устанавливаем стандартную стоимость для зоны прыжков (1), делая ее доступной
+            _navMeshAgent.SetAreaCost(_jumpAreaIndex, 1f);
+        }
+        else
+        {
+            // Иначе устанавливаем очень высокую стоимость, чтобы агент избегал этой зоны
+            _navMeshAgent.SetAreaCost(_jumpAreaIndex, 10000f);
+        }
     }
 
     public override void Exit()
