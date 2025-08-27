@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using UnityEngine;
 
 namespace Failsafe.Enemies.Sensors
@@ -100,7 +100,11 @@ namespace Failsafe.Enemies.Sensors
                 _hasEverChased = true;
                 _hasLostPlayer = false; // сбрасываем флаг "игрок потерян"
             }
-            float maxSignal = _sensors.Max(s => s.SignalStrength);
+            float maxSignal = 0f;
+            if (_sensors.Any())
+            {
+                maxSignal = _sensors.Max(s => s.SignalStrength);
+            }
 
             if (maxSignal > 0f)
             {

@@ -17,6 +17,7 @@ public class PlayerHandsSystem : ITickable
 
     private readonly PlayerHandsContainer _playerHandsContainer;
     private readonly InputHandler _inputHandler;
+    private readonly PlayerView _playerView;
 
     private UsingState _usingState = UsingState.None;
     private Dictionary<ItemType, IActionWithItem> _actionsWithItems;
@@ -24,11 +25,11 @@ public class PlayerHandsSystem : ITickable
     // Задержка после применения предмета, чтобы не спамить использование предметов
     // Примерно должен соответсвовать времени анимаций, но не обязательно
     // Если у разных предметов должны быть разные кулдауны, то вынести это в ItemData
-    private float _itemUseDelay = 0.5f;
+    [SerializeField] private float _itemUseDelay = 5f;
     // Время использования одного предмета. По сути время анимации использования
     // Нужно чтобы Эффект предмета/визуал/звук сработал в определенный момент анимации, а не сразу при нажатии кнопки
     // Сейчас задается один на всех, нужно будет вынести в предмет и настраивать для каждого свой
-    private float _itemUseStartDelay = 0.5f;
+    [SerializeField] private float _itemUseStartDelay = 5f;
     // Пропускать начальную анимацию при повторном применении, скорее всего нужно вынести в параметры предмета или в UseResult
     private bool _skipStartDelay;
 
@@ -38,6 +39,7 @@ public class PlayerHandsSystem : ITickable
     {
         _playerHandsContainer = playerHandsSystem;
         _inputHandler = inputHandler;
+        _playerView = playerView;
         _actionsWithItems = new()
         {
             [ItemType.Consumable] = new UseOnSelfAction(),
@@ -81,6 +83,12 @@ public class PlayerHandsSystem : ITickable
     {
         if (!_skipStartDelay)
         {
+            // Если предмет - расходник, запускаем анимацию
+            if (_itemInHandType == ItemType.Consumable)
+            {
+                _playerView.Animator.SetTrigger("Heal");
+            }
+
             OnItemStartUsing?.Invoke(_itemInHandType);
             _usingState = UsingState.Start;
             await UniTask.Delay(TimeSpan.FromSeconds(_itemUseStartDelay));

@@ -1,9 +1,11 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.AI;
 
 [CreateAssetMenu(fileName = "Enemy", menuName = "ScriptableObjects/Enemy", order = 1)]
 public class Enemy_ScriptableObject : ScriptableObject
 {
+    public enum AttackType { LaserBeam, Projectile }
+
     [Header("Enemy Parameters")]
     public string enemyName; // Имя врага
     public float accelaration = 120; // Ускорение врага, как быстро он может развить максимальную скорость измерения метры в секунду
@@ -64,6 +66,7 @@ public class Enemy_ScriptableObject : ScriptableObject
     public float StunMultiplier; //Множитель стана, чтобы подогнать результат произведения массы на скорость к желаемому значению времени стана
 
     [Header("Attack")]
+    public AttackType attackType = AttackType.LaserBeam; // Тип атаки
     public float Damage = 100f; // Урон врага
     public float AttackRangeMin = 10f; // Минимальная дальность атаки врага
     public float AttackRangeMax = 15f; // Максимальная дальность атаки врага

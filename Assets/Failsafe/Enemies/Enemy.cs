@@ -10,6 +10,7 @@ using Vector3 = UnityEngine.Vector3;
 public class Enemy : MonoBehaviour
 {
     [SerializeField] private bool DebugMode = false;
+    [SerializeField] private bool useRootMotion = true;
     private Sensor[] _sensors;
     private BehaviorStateMachine _stateMachine;
     private Animator _animator;
@@ -17,6 +18,7 @@ public class Enemy : MonoBehaviour
     private EnemyGetData _enemyGetData;
     private NavMeshAgent _navMeshAgent;
     [SerializeField] private GameObject _laserBeamPrefab;
+    [SerializeField] private GameObject _laserProjectilePrefab; // Новый префаб для снаряда
     private LaserBeamController _activeLaser;
     [SerializeField] private Transform _laserSpawnPoint; // Точка спавна лазера, если нужно
     [SerializeField] private List<Transform> _manualPoints; // Привязать вручную через инспектор
@@ -36,15 +38,26 @@ public class Enemy : MonoBehaviour
         _sensors = GetComponents<Sensor>();
         _navMeshAgent = GetComponent<NavMeshAgent>();
 
-        // Отключаем автоматическое управление трансформацией
-        _navMeshAgent.updatePosition = false;
-        _navMeshAgent.updateRotation = false;
-        _navMeshAgent.autoTraverseOffMeshLink = false; // ВАЖНО: отключаем авто-перемещение по линкам
+        if (useRootMotion)
+        {
+            _animator.applyRootMotion = true;
+            // Отключаем автоматическое управление трансформацией для Root Motion
+            _navMeshAgent.updatePosition = false;
+            _navMeshAgent.updateRotation = false;
+        }
+        else
+        {
+            _animator.applyRootMotion = false;
+            // Включаем автоматическое управление для движения без Root Motion
+            _navMeshAgent.updatePosition = true;
+            _navMeshAgent.updateRotation = false; // Отключаем, чтобы управлять вращением вручную для плавности
+            _navMeshAgent.autoTraverseOffMeshLink = true; // Включаем авто-перемещение по линкам
+        }
 
         // Создаём вспомогательные классы
         _enemyGetData = new EnemyGetData(transform);
         _awarenessMeter = new AwarenessMeter(_sensors, _enemyConfig);
-        _enemyAnimator = new EnemyAnimator(_navMeshAgent, _animator, transform, this);
+        _enemyAnimator = new EnemyAnimator(_navMeshAgent, _animator, transform, this, useRootMotion);
         _enemyMovePatterns = new EnemyMovePatterns(_navMeshAgent);
         _enemyNavMeshActions = new EnemyNavMeshActions(_navMeshAgent, transform);
         _enemyMemory = new EnemyMemory();
@@ -61,7 +74,7 @@ public class Enemy : MonoBehaviour
         var defaultState = new DefaultState(_sensors, transform);
         var chasingState = new ChasingState(_sensors, transform, _enemyNavMeshActions, _enemyMemory, _navMeshAgent, _enemyConfig, _enemyAnimator );
         var patrolState = new PatrolState(_sensors, transform, _enemyMovePatterns, _enemyNavMeshActions,_enemyGetData,_navMeshAgent, _enemyConfig);
-        var attackState = new AttackState(_sensors, transform, _enemyNavMeshActions, _enemyAnimator, _activeLaser, _laserBeamPrefab, _laserSpawnPoint, _navMeshAgent, _enemyConfig);
+        var attackState = new AttackState(_sensors, transform, _enemyNavMeshActions, _enemyAnimator, _activeLaser, _laserBeamPrefab, _laserProjectilePrefab, _laserSpawnPoint, _navMeshAgent, _enemyConfig);
         var searchingState = new SearchingState(_sensors, transform, _enemyMovePatterns, _enemyNavMeshActions,_enemyMemory, _navMeshAgent, _enemyConfig);
         var checkState = new CheckState(_sensors, transform, _enemyMovePatterns,_enemyNavMeshActions , _enemyConfig);
         
@@ -100,6 +113,12 @@ public class Enemy : MonoBehaviour
         _stateMachine.Update();
         _awarenessMeter.Update();
         currentState = _stateMachine.CurrentState;
+
+        // Проверяем, нужно ли запускать логику случайных Idle анимаций
+        if (currentState.GetType() != typeof(DefaultState))
+        {
+            _enemyAnimator.HandleIdleAnimations();
+        }
     }
 
     [ContextMenu("DisableState")]
@@ -111,9 +130,18 @@ public class Enemy : MonoBehaviour
 
     void OnAnimatorMove()
     {
+        if (useRootMotion)
+        {
+            _enemyAnimator.ApplyRootMotion(); // Root Motion управляет позицией
+        }
+        else
+        {
+            // Когда Root Motion отключен, вручную обновляем позицию модели по NavMeshAgent
+            transform.position = _navMeshAgent.nextPosition;
+        }
 
-        _enemyAnimator.ApplyRootMotion(); // Всё управление Root Motion'ом централизовано здесь
-      
+        // Вращение обрабатывается здесь для обоих режимов, чтобы избежать конфликтов с аниматором
+        _enemyNavMeshActions.UpdateAgentRotation();
     }
 //Описал тут, но вызываю его в DebugManager
     public void DebugEnemy()

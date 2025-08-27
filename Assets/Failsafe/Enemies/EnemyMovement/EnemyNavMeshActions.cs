@@ -9,8 +9,6 @@ public class EnemyNavMeshActions
     {
         _navMeshAgent = navMeshAgent;
         _enemyPos =  transform;
-        _navMeshAgent.updatePosition = false;
-        _navMeshAgent.updateRotation = false;
     }
     public void MoveToPoint(Vector3 point, float speed)
     {
@@ -63,4 +61,14 @@ public class EnemyNavMeshActions
         _enemyPos.rotation = Quaternion.Slerp(_enemyPos.rotation, targetRotation, Time.deltaTime * rotationSpeed);
     }
     
+    public void UpdateAgentRotation(float rotationSpeed = 20f) 
+    {
+        Vector3 direction = _navMeshAgent.desiredVelocity;
+
+        if (direction.sqrMagnitude > 0.1f) 
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(direction.normalized);
+            _enemyPos.rotation = Quaternion.Slerp(_enemyPos.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+        }
+    }
 }
