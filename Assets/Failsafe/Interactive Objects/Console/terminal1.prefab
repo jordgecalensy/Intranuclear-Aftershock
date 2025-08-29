@@ -582,7 +582,9 @@ GameObject:
   - component: {fileID: 3373236697111203798}
   - component: {fileID: 8175611626646611454}
   - component: {fileID: 7209074976924084887}
-  m_Layer: 5
+  - component: {fileID: 8981440642880416506}
+  - component: {fileID: 1560821106619865227}
+  m_Layer: 11
   m_Name: InfoButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -728,6 +730,111 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 5868769760403661930}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 8342209679750420362}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1184573998247959005}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 4439442517394988865}
+        m_TargetAssemblyTypeName: TextColorChanges, Assembly-CSharp
+        m_MethodName: UpdateColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: '#000000'
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 5046904137474927821}
+        m_TargetAssemblyTypeName: TextColorChanges, Assembly-CSharp
+        m_MethodName: UpdateColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: '#FF6700'
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 3005885970853737050}
+        m_TargetAssemblyTypeName: TextColorChanges, Assembly-CSharp
+        m_MethodName: UpdateColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: '#FF6700'
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &8981440642880416506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2485609010123754089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 367e7a41f8da1114fbefbdef8e36ad92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!65 &1560821106619865227
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2485609010123754089}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.10149, y: 0.03556801, z: 0.004217849}
+  m_Center: {x: 0, y: 0, z: -0.002}
 --- !u!1 &2642774814770191352
 GameObject:
   m_ObjectHideFlags: 0
@@ -905,6 +1012,7 @@ GameObject:
   - component: {fileID: 7417664762296133416}
   - component: {fileID: 9135545749262880277}
   - component: {fileID: 1009417242109031405}
+  - component: {fileID: 5046904137474927821}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -968,8 +1076,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278216703
-  m_fontColor: {r: 1, g: 0.40392157, b: 0, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1030,6 +1138,18 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5046904137474927821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4010807993023123553}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 441cc0067e0133d45be03f012398f60d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4176568291934371542
 GameObject:
   m_ObjectHideFlags: 0
@@ -1042,7 +1162,9 @@ GameObject:
   - component: {fileID: 8055497058149929476}
   - component: {fileID: 6624415841481241055}
   - component: {fileID: 754763825597316554}
-  m_Layer: 5
+  - component: {fileID: 8519059513935727757}
+  - component: {fileID: 7332188555228432292}
+  m_Layer: 11
   m_Name: ErrorButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1152,6 +1274,39 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8519059513935727757
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4176568291934371542}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 367e7a41f8da1114fbefbdef8e36ad92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!65 &7332188555228432292
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4176568291934371542}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.10149, y: 0.03556801, z: 0.004217849}
+  m_Center: {x: 0, y: 0, z: -0.002}
 --- !u!1 &4528282543271536257
 GameObject:
   m_ObjectHideFlags: 0
@@ -1163,6 +1318,7 @@ GameObject:
   - component: {fileID: 6484624288631206807}
   - component: {fileID: 8856491616736156801}
   - component: {fileID: 757764606982042409}
+  - component: {fileID: 3005885970853737050}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -1288,6 +1444,18 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &3005885970853737050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4528282543271536257}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 441cc0067e0133d45be03f012398f60d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &5694800968180279487
 GameObject:
   m_ObjectHideFlags: 0
@@ -1525,7 +1693,9 @@ GameObject:
   - component: {fileID: 6033595367628938361}
   - component: {fileID: 6208369998980542327}
   - component: {fileID: 7584153157250424472}
-  m_Layer: 5
+  - component: {fileID: 8238196667862027740}
+  - component: {fileID: 3350696667436864452}
+  m_Layer: 11
   m_Name: CamButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1671,6 +1841,111 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 1184573998247959005}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 8342209679750420362}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 5868769760403661930}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 3005885970853737050}
+        m_TargetAssemblyTypeName: TextColorChanges, Assembly-CSharp
+        m_MethodName: UpdateColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: '#000000'
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 5046904137474927821}
+        m_TargetAssemblyTypeName: TextColorChanges, Assembly-CSharp
+        m_MethodName: UpdateColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: '#FF6700'
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 4439442517394988865}
+        m_TargetAssemblyTypeName: TextColorChanges, Assembly-CSharp
+        m_MethodName: UpdateColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: '#FF6700'
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &8238196667862027740
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5991949661455826781}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 367e7a41f8da1114fbefbdef8e36ad92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!65 &3350696667436864452
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5991949661455826781}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.10149, y: 0.03556801, z: 0.004217849}
+  m_Center: {x: 0, y: 0, z: -0.002}
 --- !u!1 &6612470656257361236
 GameObject:
   m_ObjectHideFlags: 0
@@ -1682,6 +1957,7 @@ GameObject:
   - component: {fileID: 3737999963732901072}
   - component: {fileID: 8232191781507691897}
   - component: {fileID: 1742060069823720398}
+  - component: {fileID: 4439442517394988865}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -1807,6 +2083,18 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4439442517394988865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6612470656257361236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 441cc0067e0133d45be03f012398f60d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7026810454172407981
 GameObject:
   m_ObjectHideFlags: 0
@@ -1819,7 +2107,10 @@ GameObject:
   - component: {fileID: 7379697610273728624}
   - component: {fileID: 897852457114918516}
   - component: {fileID: 6220830657665175444}
-  m_Layer: 5
+  - component: {fileID: 1408008951746298731}
+  - component: {fileID: 1828616155035212159}
+  - component: {fileID: 2172051188886935160}
+  m_Layer: 11
   m_Name: Map
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1965,6 +2256,123 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 8342209679750420362}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 1184573998247959005}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 5868769760403661930}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 5046904137474927821}
+        m_TargetAssemblyTypeName: TextColorChanges, Assembly-CSharp
+        m_MethodName: UpdateColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: '#000000'
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 3005885970853737050}
+        m_TargetAssemblyTypeName: TextColorChanges, Assembly-CSharp
+        m_MethodName: UpdateColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: '#FF6700'
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 4439442517394988865}
+        m_TargetAssemblyTypeName: TextColorChanges, Assembly-CSharp
+        m_MethodName: UpdateColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: '#FF6700'
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &1408008951746298731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7026810454172407981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 367e7a41f8da1114fbefbdef8e36ad92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!65 &1828616155035212159
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7026810454172407981}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.10149003, y: 0.035568014, z: 0.0042178486}
+  m_Center: {x: 0, y: 0, z: -0.002}
+--- !u!114 &2172051188886935160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7026810454172407981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 441cc0067e0133d45be03f012398f60d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7625165903947722510
 GameObject:
   m_ObjectHideFlags: 0
@@ -2149,7 +2557,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2637196747199607901
 Transform:
   m_ObjectHideFlags: 0
@@ -2310,6 +2718,7 @@ GameObject:
   - component: {fileID: 2522718122212012995}
   - component: {fileID: 5316663365884010195}
   - component: {fileID: 2386316757533959353}
+  - component: {fileID: 876368373860855816}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -2435,6 +2844,18 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &876368373860855816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8967342853241392072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 441cc0067e0133d45be03f012398f60d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &7319149342681744414
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2524,10 +2945,63 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -2965923318101524141, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3402534610496140094}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: -2644913701381098772, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8407389638426921365}
+    - targetCorrespondingSourceObject: {fileID: -2644913701381098772, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7435416583890608813}
   m_SourcePrefab: {fileID: 100100000, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
 --- !u!4 &3694143533458294093 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2965923318101524141, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
   m_PrefabInstance: {fileID: 7319149342681744414}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &4528851612894623474 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -2644913701381098772, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
+  m_PrefabInstance: {fileID: 7319149342681744414}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &8407389638426921365
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4528851612894623474}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.69634056, y: 1.12019, z: 0.5027287}
+  m_Center: {x: 0, y: -0.43426165, z: -0.13535485}
+--- !u!65 &7435416583890608813
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4528851612894623474}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.69634056, y: 1.2606871, z: 0.23797953}
+  m_Center: {x: 0, y: 0.36494482, z: -0.16028725}
