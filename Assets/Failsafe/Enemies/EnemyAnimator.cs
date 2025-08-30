@@ -149,7 +149,7 @@ public class EnemyAnimator
             }
         }
     }
-    
+
     public void TryAttack()
     {
         _animator.SetTrigger("Attack");

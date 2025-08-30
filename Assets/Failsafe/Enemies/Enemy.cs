@@ -27,9 +27,11 @@ public class Enemy : MonoBehaviour
     public AwarenessMeter _awarenessMeter;
     public bool seePlayer;
     public bool hearPlayer;
-    public Enemy_ScriptableObject _enemyConfig;
+    [SerializeField] private Enemy_ScriptableObject _enemyConfig;
+    public Enemy_ScriptableObject EnemyConfig { get { return _enemyConfig; } }
     private EnemyMovePatterns _enemyMovePatterns;
     private EnemyNavMeshActions _enemyNavMeshActions;
+    public EnemyNavMeshActions EnemyNavMesh { get { return _enemyNavMeshActions; } }
     private EnemyMemory _enemyMemory;
     [Header("Anim triggers (имена)")]
     [SerializeField] private string jumpTrigger = "Jump";
@@ -91,8 +93,11 @@ public class Enemy : MonoBehaviour
         var patrolState = new PatrolState(_sensors, transform, _enemyMovePatterns, _enemyNavMeshActions,_enemyGetData,_navMeshAgent, _enemyConfig);
         var attackState = new AttackState(_sensors, transform, _enemyNavMeshActions, _enemyAnimator, _activeLaser, _laserBeamPrefab, _laserProjectilePrefab, _laserSpawnPoint, _navMeshAgent, _enemyConfig);
         var searchingState = new SearchingState(_sensors, transform, _enemyMovePatterns, _enemyNavMeshActions,_enemyMemory, _navMeshAgent, _enemyConfig);
-        var checkState = new CheckState(_sensors, transform, _enemyMovePatterns,_enemyNavMeshActions , _enemyConfig);
-        
+        var checkState = new CheckState(_sensors, transform, _enemyMovePatterns, _enemyNavMeshActions, _enemyConfig);
+        var disabledState = new DisabledState(_animator);
+        var stunnedState = new StunnedState(_enemyAnimator, _enemyNavMeshActions, transform);
+
+
         defaultState.AddTransition(chasingState, _awarenessMeter.IsChasing);
         patrolState.AddTransition(chasingState, _awarenessMeter.IsChasing);
         patrolState.AddTransition(checkState, _awarenessMeter.IsAlerted);
@@ -104,8 +109,8 @@ public class Enemy : MonoBehaviour
         searchingState.AddTransition(chasingState, _awarenessMeter.IsChasing);
         checkState.AddTransition(chasingState, _awarenessMeter.IsChasing);
 
-        var disabledStates = new List<BehaviorForcedState> { new DisabledState() };
-        _stateMachine = new BehaviorStateMachine(defaultState, disabledStates);
+        var forcedStates = new List<BehaviorForcedState> {disabledState, stunnedState};
+        _stateMachine = new BehaviorStateMachine(defaultState, forcedStates);
 
         if(_manualPoints.Count > 0)
         {
@@ -142,12 +147,19 @@ public class Enemy : MonoBehaviour
         
     }
 
-    [ContextMenu("DisableState")]
     public void DisableState(float? duration = null)
     {
         _stateMachine.ForseChangeState<DisabledState>(duration);
     }
-    
+
+    public void StunnedState(Vector3 direction, float? duration = null)
+    {
+        if (!(_stateMachine.CurrentState is StunnedState))
+        {
+            _stateMachine.GetForcedState<StunnedState>().SetDirection(direction);
+            _stateMachine.ForseChangeState<StunnedState>(duration);
+        }
+    }
 
     void OnAnimatorMove()
     {
