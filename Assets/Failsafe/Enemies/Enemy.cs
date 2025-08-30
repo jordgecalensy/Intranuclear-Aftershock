@@ -63,7 +63,10 @@ public class Enemy : MonoBehaviour
         var attackState = new AttackState(_sensors, transform, _enemyNavMeshActions, _enemyAnimator, _activeLaser, _laserBeamPrefab, _laserSpawnPoint, _navMeshAgent, _enemyConfig);
         var searchingState = new SearchingState(_sensors, transform, _enemyMovePatterns, _enemyNavMeshActions,_enemyMemory, _navMeshAgent, _enemyConfig);
         var checkState = new CheckState(_sensors, transform, _enemyMovePatterns,_enemyNavMeshActions , _enemyConfig);
-        
+        var disabledState = new DisabledState();
+        var stunnedState = new StunnedState();
+
+
         defaultState.AddTransition(chasingState, _awarenessMeter.IsChasing);
         patrolState.AddTransition(chasingState, _awarenessMeter.IsChasing);
         patrolState.AddTransition(checkState, _awarenessMeter.IsAlerted);
@@ -75,8 +78,8 @@ public class Enemy : MonoBehaviour
         searchingState.AddTransition(chasingState, _awarenessMeter.IsChasing);
         checkState.AddTransition(chasingState, _awarenessMeter.IsChasing);
 
-        var disabledStates = new List<BehaviorForcedState> { new DisabledState() };
-        _stateMachine = new BehaviorStateMachine(defaultState, disabledStates);
+        var forcedStates = new List<BehaviorForcedState> {disabledState, stunnedState};
+        _stateMachine = new BehaviorStateMachine(defaultState, forcedStates);
 
         if(_manualPoints.Count > 0)
         {
@@ -106,7 +109,13 @@ public class Enemy : MonoBehaviour
     {
         _stateMachine.ForseChangeState<DisabledState>(duration);
     }
-    
+
+    [ContextMenu("StunnedState")]
+    public void StunnedState(Vector3 direction, float? duration = null)
+    {
+        _enemyNavMeshActions.RotateToPoint(direction);
+        _stateMachine.ForseChangeState<StunnedState>(duration);
+    }
 
     void OnAnimatorMove()
     {
