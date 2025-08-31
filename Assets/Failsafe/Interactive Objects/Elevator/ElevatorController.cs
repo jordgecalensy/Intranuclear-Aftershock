@@ -4,10 +4,11 @@ public class ElevatorController : MonoBehaviour
 {
     public bool CanMove = false;
     // [SerializeField] private GameObject _points;
-    [SerializeField] float _speed = 2.0f;
-    [SerializeField] int _startPoint;
-    [SerializeField] Transform[] _points;
-    int _pointIndex;
+    [SerializeField] private float _speed = 2.0f;
+    [SerializeField] private int _startPoint;
+    [SerializeField] private Transform[] _points;
+
+    private int _pointIndex;
 
     void Start()
     {
@@ -15,7 +16,7 @@ public class ElevatorController : MonoBehaviour
         transform.position = _points[_pointIndex].position;
     }
 
-    void Update()
+    void FixedUpdate()
     {
         if (Vector3.Distance(transform.position, _points[_pointIndex].position) < 0.01f)
         {
