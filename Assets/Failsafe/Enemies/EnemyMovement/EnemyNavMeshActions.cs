@@ -5,6 +5,9 @@ public class EnemyNavMeshActions
 {
     private NavMeshAgent _navMeshAgent;
     private Transform _enemyPos;
+
+    public NavMeshAgent Agent => _navMeshAgent;
+    public Transform   Model => _enemyPos;
     public EnemyNavMeshActions(NavMeshAgent navMeshAgent, Transform transform)
     {
         _navMeshAgent = navMeshAgent;
@@ -71,4 +74,6 @@ public class EnemyNavMeshActions
             _enemyPos.rotation = Quaternion.Slerp(_enemyPos.rotation, targetRotation, Time.deltaTime * rotationSpeed);
         }
     }
+    
+    
 }

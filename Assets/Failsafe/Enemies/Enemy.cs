@@ -1,5 +1,6 @@
 using DMDungeonGenerator;
 using Failsafe.Enemies.Sensors;
+using System.Collections;
 using System.Collections.Generic;
 using Tayx.Graphy.Utils.NumString;
 using UnityEngine;
@@ -30,6 +31,19 @@ public class Enemy : MonoBehaviour
     private EnemyMovePatterns _enemyMovePatterns;
     private EnemyNavMeshActions _enemyNavMeshActions;
     private EnemyMemory _enemyMemory;
+    [Header("Anim triggers (имена)")]
+    [SerializeField] private string jumpTrigger = "Jump";
+    [SerializeField] private string landTrigger = "Land";
+
+    [Header("Arc & Timing")]
+    [SerializeField] private float baseArcHeight = 1.2f;
+    [SerializeField] private float speedXZ = 4.0f;      // м/с по плоскости
+    [SerializeField] private float speedY  = 3.0f;      // м/с по высоте
+    [SerializeField] private float minDuration = 0.35f; // минимальное время прыжка
+    [SerializeField] private float endSnapTolerance = 0.25f;
+    [SerializeField] private bool  scaleArcByUpDelta = true; // добавлять дугу при прыжке "вверх"
+    private Rigidbody rb;
+    bool busy;
 
     private void Awake()
     {
@@ -37,7 +51,8 @@ public class Enemy : MonoBehaviour
         _animator = GetComponent<Animator>();
         _sensors = GetComponents<Sensor>();
         _navMeshAgent = GetComponent<NavMeshAgent>();
-
+        rb = GetComponent<Rigidbody>();
+        
         if (useRootMotion)
         {
             _animator.applyRootMotion = true;
@@ -112,13 +127,19 @@ public class Enemy : MonoBehaviour
         _enemyAnimator.UpdateAnimator();
         _stateMachine.Update();
         _awarenessMeter.Update();
+        LinkTester();
         currentState = _stateMachine.CurrentState;
-
         // Проверяем, нужно ли запускать логику случайных Idle анимаций
         if (currentState.GetType() != typeof(DefaultState))
         {
+            _enemyAnimator.IsActive();
             _enemyAnimator.HandleIdleAnimations();
         }
+        else
+        {
+            _enemyAnimator.IsOff();
+        }
+        
     }
 
     [ContextMenu("DisableState")]
@@ -143,7 +164,124 @@ public class Enemy : MonoBehaviour
         // Вращение обрабатывается здесь для обоих режимов, чтобы избежать конфликтов с аниматором
         _enemyNavMeshActions.UpdateAgentRotation();
     }
-//Описал тут, но вызываю его в DebugManager
+
+    /// <summary>
+    /// Прыжок по дуге от start до end.
+    /// Управляет Rigidbody вручную (kinematic), в начале и в конце дёргает триггеры анимаций.
+    /// Если есть NavMeshAgent, он отключается на время прыжка и синхронизируется в конце.
+    /// </summary>
+    /// <summary>
+    /// Прыжок по дуге от start до end.
+    /// Управляет Rigidbody вручную (kinematic), в начале и в конце дёргает триггеры анимаций.
+    /// Если есть NavMeshAgent, он отключается на время прыжка и синхронизируется в конце.
+    /// </summary>
+    public void Jump(Vector3 start, Vector3 end)
+    {
+        if (!busy) StartCoroutine(JumpRoutine(start, end));
+    }
+
+    IEnumerator JumpRoutine(Vector3 start, Vector3 end)
+    {
+        busy = true;
+        Vector3 oldDestenation = _navMeshAgent.destination;
+        // --- Подготовка агента ---
+        bool hadAgent = _navMeshAgent != null && _navMeshAgent.enabled;
+        bool oldUpdPos = true, oldUpdRot = true;
+        if (hadAgent)
+        {
+            oldUpdPos = _navMeshAgent.updatePosition;
+            oldUpdRot = _navMeshAgent.updateRotation;
+            _navMeshAgent.updatePosition = false;
+            _navMeshAgent.updateRotation = false;
+            _navMeshAgent.enabled = false; // чтобы агент не тянул трансформ
+        }
+
+        bool oldKinematic = rb.isKinematic;
+        rb.isKinematic = true;
+
+        // --- Анимация старта ---
+        if (_animator && !string.IsNullOrEmpty(jumpTrigger)) _animator.SetTrigger(jumpTrigger);
+
+        // --- Поворот к цели по XZ ---
+        Vector3 dir = end - start; dir.y = 0f;
+        if (dir.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(dir);
+
+        // === ВАЖНО: расчёт длительности ===
+        float dxz = Vector3.Distance(new Vector3(start.x,0,start.z), new Vector3(end.x,0,end.z));
+        float dy  = end.y - start.y;
+
+        float tXZ = dxz / Mathf.Max(0.01f, speedXZ);
+        float tY  = Mathf.Abs(dy) / Mathf.Max(0.01f, speedY);
+        float duration = Mathf.Max(minDuration, Mathf.Max(tXZ, tY)); // <-- выравнивание скорости вверх/вниз
+
+        // (альтернатива вместо tY: учесть вертикаль в «эффективной длине»)
+        // float verticalWeight = 2.0f;
+        // float effectiveLen = Mathf.Sqrt(dxz*dxz + (verticalWeight*Mathf.Abs(dy))*(verticalWeight*Mathf.Abs(dy)));
+        // float duration = Mathf.Max(minDuration, effectiveLen / speedXZ);
+
+        // Коррекция высоты дуги при прыжке вверх (чтоб не «иголка»)
+        float arc = baseArcHeight;
+        if (scaleArcByUpDelta && dy > 0f)
+            arc += dy * 0.35f; // коэффициент подстрой: 0.25–0.5 обычно хорошо
+
+        // --- Полёт по управляемой параболе ---
+        float t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime / duration;
+
+            Vector3 pos = Vector3.Lerp(start, end, t);
+            pos.y += 4f * arc * t * (1f - t); // парабола колоколом
+
+            rb.MovePosition(pos);
+            yield return null;
+        }
+
+        // Прилипнуть к финишу
+        if ((rb.position - end).sqrMagnitude > endSnapTolerance * endSnapTolerance)
+            rb.MovePosition(end);
+
+        // --- Анимация приземления ---
+        if (_animator && !string.IsNullOrEmpty(landTrigger)) _animator.SetTrigger(landTrigger);
+
+        // --- Возврат агента ---
+        if (hadAgent)
+        {
+            _navMeshAgent.enabled = true;
+            if (_navMeshAgent.isOnOffMeshLink) _navMeshAgent.CompleteOffMeshLink();
+            _navMeshAgent.Warp(end);
+            _navMeshAgent.updatePosition = oldUpdPos;
+            _navMeshAgent.updateRotation = oldUpdRot;
+        }
+
+        _navMeshAgent.SetDestination(oldDestenation);
+        rb.isKinematic = oldKinematic;
+        busy = false;
+    }
+
+
+    private void LinkTester()
+    {
+        _navMeshAgent.autoTraverseOffMeshLink = false; // чтобы агент сам не пролетал линк
+        // Агент подошёл к линку, но ещё не начал
+        if (_navMeshAgent.hasPath && _navMeshAgent.nextOffMeshLinkData.valid)
+        {
+            var next = _navMeshAgent.nextOffMeshLinkData;
+            Jump(next.startPos, next.endPos);
+            Debug.Log($"NEXT LINK: start={next.startPos}, end={next.endPos}");
+        }
+
+        // Агент реально находится на линке
+        if (_navMeshAgent.isOnOffMeshLink)
+        {
+            var cur = _navMeshAgent.currentOffMeshLinkData;
+            if (cur.valid)
+                Jump(cur.startPos, cur.endPos);
+                Debug.Log($"CURRENT LINK: start={cur.startPos}, end={cur.endPos}");
+        }
+    }
+    
+    //Описал тут, но вызываю его в DebugManager
     public void DebugEnemy()
     {
        

@@ -13,10 +13,11 @@ public class EnemyAnimator
     private readonly bool _useRootMotion;
 
     private bool _isTurning = false;
-
     private bool _waitingForTurnToFinish = false;
     private bool _inCooldown = false;
     private bool _inAttack = false;
+    private bool _wasGrounded = true;
+    private bool _wasOnLink = false;
 
     // --- Поля для случайных Idle анимаций ---
     private readonly int _idleAnimationCount = 3; // Количество ваших idle анимаций
@@ -116,16 +117,7 @@ public class EnemyAnimator
 
     public void ApplyRootMotion()
     {
-        // Проверяем, находимся ли мы на Off-Mesh Link
-        if (_navMeshAgent.isOnOffMeshLink)
-        {
-            // Если корутина перемещения еще не запущена, запускаем ее
-            if (_traversalCoroutine == null)
-            {
-                _traversalCoroutine = _coroutineRunner.StartCoroutine(TraverseOffMeshLink());
-            }
-            return; // Прерываем обычное обновление, пока идет прыжок
-        }
+        
 
         // Получаем текущую позицию агента на навмеш
         Vector3 agentNextPos = _navMeshAgent.nextPosition;
@@ -143,7 +135,28 @@ public class EnemyAnimator
         // Перемещаем трансформ только в пределах навмеша
         _transform.position = _navMeshAgent.nextPosition;
 
-        // Поворот теперь обрабатывается в EnemyNavMeshActions
+        // Поворот
+        if (_isTurning)
+        {
+            _transform.rotation = _animator.rootRotation;
+        }
+        else
+        {
+            Vector3 desiredVelocity = _navMeshAgent.desiredVelocity;
+            if (desiredVelocity.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(desiredVelocity.normalized);
+                _transform.rotation = Quaternion.Slerp(_transform.rotation, targetRotation, Time.deltaTime * 10f);
+            }
+        }
+    }
+
+    private bool IsGrounded()
+    {
+        // Проверяем землю с помощью луча вниз
+        float groundCheckDistance = 0.2f;
+        return Physics.Raycast(_transform.position + Vector3.up * 0.1f, Vector3.down, groundCheckDistance + 0.1f);
+
     }
 
     private IEnumerator TraverseOffMeshLink()
@@ -242,4 +255,14 @@ public class EnemyAnimator
         _animator.SetTrigger("PlayIdle");
     }
 
+    public void IsActive()
+    {
+        _animator.SetBool("IsActivated", true);
+    }
+
+    public void IsOff()
+    {
+        _animator.SetBool("IsActivated", false);
+
+    }
 }
