@@ -72,7 +72,7 @@ public class Enemy : MonoBehaviour
         // Создаём вспомогательные классы
         _enemyGetData = new EnemyGetData(transform);
         _awarenessMeter = new AwarenessMeter(_sensors, _enemyConfig);
-        _enemyAnimator = new EnemyAnimator(_navMeshAgent, _animator, transform, this, useRootMotion);
+        _enemyAnimator = new EnemyAnimator(_navMeshAgent, _animator, transform, useRootMotion);
         _enemyMovePatterns = new EnemyMovePatterns(_navMeshAgent);
         _enemyNavMeshActions = new EnemyNavMeshActions(_navMeshAgent, transform);
         _enemyMemory = new EnemyMemory();
