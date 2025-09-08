@@ -24,12 +24,11 @@ public class EnemyAnimator
     private bool _isIdleAnimationPlaying = false;
     // --------------------------------------------
 
-    public EnemyAnimator( NavMeshAgent navMeshAgent, Animator animator, Transform transform, MonoBehaviour coroutineRunner, bool useRootMotion)
+    public EnemyAnimator( NavMeshAgent navMeshAgent, Animator animator, Transform transform, bool useRootMotion)
     {
         _navMeshAgent = navMeshAgent;
         _animator = animator;
         _transform = transform;
-        _coroutineRunner = coroutineRunner;
         _useRootMotion = useRootMotion;
         _navMeshAgent.updatePosition = false;
         _navMeshAgent.updateRotation = false;
@@ -149,14 +148,6 @@ public class EnemyAnimator
                 _transform.rotation = Quaternion.Slerp(_transform.rotation, targetRotation, Time.deltaTime * 10f);
             }
         }
-    }
-
-    private bool IsGrounded()
-    {
-        // Проверяем землю с помощью луча вниз
-        float groundCheckDistance = 0.2f;
-        return Physics.Raycast(_transform.position + Vector3.up * 0.1f, Vector3.down, groundCheckDistance + 0.1f);
-
     }
 
     private IEnumerator TraverseOffMeshLink()
