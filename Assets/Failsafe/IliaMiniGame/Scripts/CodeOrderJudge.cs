@@ -17,6 +17,11 @@ public class CodeOrderJudge : MonoBehaviour
     // 👉 Получатель, заданный при открытии UI
     private ICodeSuccessReceiver _externalReceiver;
 
+    private void Start()
+    {
+        CloseGame();
+    }
+
     // вызвать при открытии мини-игры для конкретной консоли
     public void SetExternalReceiver(ICodeSuccessReceiver receiver)
     {
@@ -95,16 +100,16 @@ public class CodeOrderJudge : MonoBehaviour
 
     public void CheckButton() => Check();
 
-    public void OpenGame()
-    { 
-        if (playerRow != null)
-            playerRow.ClearAll();
-        this.gameObject.SetActive(true);
-       
-    }
-    
-    public void CloseGame()
+    private void ToggleGame(bool isOpen)
     {
-        this.gameObject.SetActive(false);
+        this.gameObject.SetActive(isOpen);
+        Cursor.lockState = isOpen ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = isOpen;
+    
+        if (isOpen && playerRow != null)
+            playerRow.ClearAll();
     }
+
+    public void OpenGame()  => ToggleGame(true);
+    public void CloseGame() => ToggleGame(false);
 }
