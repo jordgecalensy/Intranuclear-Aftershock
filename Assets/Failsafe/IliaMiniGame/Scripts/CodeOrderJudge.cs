@@ -29,6 +29,14 @@ public class CodeOrderJudge : MonoBehaviour
         _externalReceiver = null;
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            CloseGame();
+        }
+    }
+
     private void Awake()
     {
         foreach (var g in playerRow.GetGrids())
