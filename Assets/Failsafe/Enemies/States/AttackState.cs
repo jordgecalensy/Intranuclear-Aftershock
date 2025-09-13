@@ -56,7 +56,7 @@ public class AttackState : BehaviorState
         _attackFired = false;
         _targetPointLocked = false;
         _enemyNavMeshActions.StopMoving();
-        _enemyAnimator.isAttacking(true);
+        _enemyAnimator.isAttacking();
     }
 
     public override void Update()
@@ -92,6 +92,8 @@ public class AttackState : BehaviorState
 
                 if (_delayOver && !_onCooldown && !_attackFired)
                 {
+                    _enemyAnimator.TryAttack();
+
                     switch (_enemyConfig.attackType)
                     {
                         case Enemy_ScriptableObject.AttackType.LaserBeam:
@@ -117,7 +119,6 @@ public class AttackState : BehaviorState
                             break;
                     }
 
-                    _enemyAnimator.TryAttack();
                     _attackFired = true;
 
                     // Урон для лазера наносится непрерывно
@@ -171,7 +172,6 @@ public class AttackState : BehaviorState
             _activeLaser = null;
         }
 
-        _enemyAnimator.isAttacking(false);
         _enemyNavMeshActions.ResumeMoving();
         _targetPoint = null;
         _targetPointLocked = false;
