@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -8,17 +8,28 @@ public class EnemyAnimator
     private readonly Animator _animator;
     private readonly Transform _transform;
     private EnemyAudioManager _audioManager;
-    private bool _isTurning = false;
+    private readonly MonoBehaviour _coroutineRunner; // Для запуска корутин
+    private Coroutine _traversalCoroutine = null; // Ссылка на активную корутину
+    private readonly bool _useRootMotion;
 
+    private bool _isTurning = false;
     private bool _waitingForTurnToFinish = false;
     private bool _inCooldown = false;
     private bool _inAttack = false;
+    private bool _wasGrounded = true;
+    private bool _wasOnLink = false;
 
-    public EnemyAnimator( NavMeshAgent navMeshAgent, Animator animator, Transform transform)
+    // --- Поля для случайных Idle анимаций ---
+    private readonly int _idleAnimationCount = 3; // Количество ваших idle анимаций
+    private bool _isIdleAnimationPlaying = false;
+    // --------------------------------------------
+
+    public EnemyAnimator( NavMeshAgent navMeshAgent, Animator animator, Transform transform, bool useRootMotion)
     {
         _navMeshAgent = navMeshAgent;
         _animator = animator;
         _transform = transform;
+        _useRootMotion = useRootMotion;
         _navMeshAgent.updatePosition = false;
         _navMeshAgent.updateRotation = false;
     }
@@ -26,30 +37,38 @@ public class EnemyAnimator
     public void UpdateAnimator()
     {
         if (IsInAction())
-            return;
-
-        if (_isTurning)
         {
-            var state = _animator.GetCurrentAnimatorStateInfo(0);
-    
-            if (state.IsTag("Turn") && state.normalizedTime >= 0.98f)
-            {
-                _isTurning = false;
-                _animator.SetFloat("TurnAngle", 0f);
-            }
-
-            _animator.SetFloat("Speed", 0f);
+            _isIdleAnimationPlaying = false; // Сбрасываем флаг, когда враг атакует или перезаряжается
             return;
         }
 
-        // Вход в поворот
-        if (ShouldStartTurn(out float clampedAngle))
+        HandleIdleAnimations();
+
+        if (_useRootMotion)
         {
-            _isTurning = true;
-            _animator.SetFloat("TurnAngle", clampedAngle);
-            _animator.CrossFade("TurnInPlace", 0.1f);
-            _animator.SetFloat("Speed", 0f);
-            return;
+            if (_isTurning)
+            {
+                var state = _animator.GetCurrentAnimatorStateInfo(0);
+
+                if (state.IsTag("Turn") && state.normalizedTime >= 0.98f)
+                {
+                    _isTurning = false;
+                    _animator.SetFloat("TurnAngle", 0f);
+                }
+
+                _animator.SetFloat("Speed", 0f);
+                return;
+            }
+
+            // Вход в поворот
+            if (ShouldStartTurn(out float clampedAngle))
+            {
+                _isTurning = true;
+                _animator.SetFloat("TurnAngle", clampedAngle);
+                _animator.CrossFade("TurnInPlace", 0.1f);
+                _animator.SetFloat("Speed", 0f);
+                return;
+            }
         }
 
         UpdateSpeedBlend();
@@ -97,6 +116,8 @@ public class EnemyAnimator
 
     public void ApplyRootMotion()
     {
+        
+
         // Получаем текущую позицию агента на навмеш
         Vector3 agentNextPos = _navMeshAgent.nextPosition;
 
@@ -128,7 +149,7 @@ public class EnemyAnimator
             }
         }
     }
-
+    
     public void TryAttack()
     {
         _animator.SetTrigger("Attack");
@@ -151,9 +172,9 @@ public class EnemyAnimator
         _animator.SetBool("isReloading", isReloading);
     }
 
-    public void isAttacking(bool isAttacking)
+    public void isAttacking()
     {
-        _inAttack = isAttacking;
+        _animator.SetTrigger("isAttacking");
     }
 
     public void StartMove(float speed)
@@ -161,4 +182,34 @@ public class EnemyAnimator
         _animator.SetFloat("Speed", speed );
     }
 
+    public void HandleIdleAnimations()
+    {
+        var currentStateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+        _isIdleAnimationPlaying = currentStateInfo.IsTag("Idle");
+
+        // Если враг стоит на месте и сейчас не проигрывается idle-анимация, запустить новую.
+        if (_navMeshAgent.velocity.magnitude < 0.1f && !_isIdleAnimationPlaying)
+        {
+            PlayRandomIdleAnimation();
+        }
+    }
+
+    public void PlayRandomIdleAnimation()
+    {
+        if (_idleAnimationCount <= 0) return;
+        int randomIndex = Random.Range(0, _idleAnimationCount);
+        _animator.SetInteger("IdleIndex", randomIndex);
+        _animator.SetTrigger("PlayIdle");
+    }
+
+    public void IsActive()
+    {
+        _animator.SetBool("IsActivated", true);
+    }
+
+    public void IsOff()
+    {
+        _animator.SetBool("IsActivated", false);
+
+    }
 }

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>
 /// Стандартное поведение противника пока он не обнаружил игрока
@@ -7,11 +7,12 @@ public class DefaultState : BehaviorState
 {
     private Sensor[] _sensors;
     private Transform _transform;
+
     public bool IsPatroling()
     {
         return true;
     }
-    public DefaultState(Sensor[] sensors, Transform transform )
+    public DefaultState(Sensor[] sensors, Transform transform)
     {
         _sensors = sensors;
         _transform = transform;

@@ -1,4 +1,4 @@
-﻿using Failsafe.Scripts.Damage;
+using Failsafe.Scripts.Damage;
 using Failsafe.Scripts.Damage.Implementation;
 using UnityEngine;
 using UnityEngine.AI;
@@ -24,8 +24,10 @@ public class AttackState : BehaviorState
     private float _distanceToPlayer;
     private LaserBeamController _activeLaser;
     private GameObject _laserPrefab;
+    private GameObject _laserProjectilePrefab;
     private Transform _laserOrigin;
-    public AttackState(Sensor[] sensors, Transform currentTransform, EnemyNavMeshActions enemyNavMeshActions, EnemyAnimator enemyAnimator, LaserBeamController laserBeamController, GameObject laser, Transform laserOrigin,NavMeshAgent navMeshAgent ,Enemy_ScriptableObject enemyConfig)
+
+    public AttackState(Sensor[] sensors, Transform currentTransform, EnemyNavMeshActions enemyNavMeshActions, EnemyAnimator enemyAnimator, LaserBeamController laserBeamController, GameObject laser, GameObject laserProjectile, Transform laserOrigin, NavMeshAgent navMeshAgent, Enemy_ScriptableObject enemyConfig)
     {
         _sensors = sensors;
         _transform = currentTransform;
@@ -33,6 +35,7 @@ public class AttackState : BehaviorState
         _enemyAnimator = enemyAnimator;
         _activeLaser = laserBeamController;
         _laserPrefab = laser;
+        _laserProjectilePrefab = laserProjectile;
         _laserOrigin = laserOrigin;
         _navMeshAgent = navMeshAgent;
         _enemyConfig = enemyConfig;
@@ -53,7 +56,7 @@ public class AttackState : BehaviorState
         _attackFired = false;
         _targetPointLocked = false;
         _enemyNavMeshActions.StopMoving();
-        _enemyAnimator.isAttacking(true);
+        _enemyAnimator.isAttacking();
     }
 
     public override void Update()
@@ -75,7 +78,6 @@ public class AttackState : BehaviorState
                 // Зафиксировать точку только один раз
                 if (!_targetPointLocked)
                 {
-    
                     _targetPoint = visual.GetBestVisiblePointWithChestOverride();
                     _targetPointLocked = _targetPoint != null;
 
@@ -90,20 +92,43 @@ public class AttackState : BehaviorState
 
                 if (_delayOver && !_onCooldown && !_attackFired)
                 {
-                    if (_activeLaser == null)
+                    _enemyAnimator.TryAttack();
+
+                    switch (_enemyConfig.attackType)
                     {
-                        GameObject laserGO = GameObject.Instantiate(_laserPrefab, _laserOrigin.position, _laserOrigin.rotation);
-                        _activeLaser = laserGO.GetComponent<LaserBeamController>();
-                        _activeLaser.Initialize(_laserOrigin, _targetPoint);
+                        case Enemy_ScriptableObject.AttackType.LaserBeam:
+                            if (_activeLaser == null)
+                            {
+                                GameObject laserGO = GameObject.Instantiate(_laserPrefab, _laserOrigin.position, _laserOrigin.rotation);
+                                _activeLaser = laserGO.GetComponent<LaserBeamController>();
+                                _activeLaser.Initialize(_laserOrigin, _targetPoint);
+                            }
+                            break;
+
+                        case Enemy_ScriptableObject.AttackType.Projectile:
+                            if (_laserProjectilePrefab != null)
+                            {
+                                GameObject projectileGO = GameObject.Instantiate(_laserProjectilePrefab, _laserOrigin.position, Quaternion.identity);
+                                LaserProjectile projectile = projectileGO.GetComponent<LaserProjectile>();
+                                if (projectile != null)
+                                {
+                                    Vector3 direction = (_targetPoint.position - _laserOrigin.position).normalized;
+                                    projectile.Initialize(direction);
+                                }
+                            }
+                            break;
                     }
 
-                    _enemyAnimator.TryAttack();
                     _attackFired = true;
 
-                    var damageable = _target.GetComponentInChildren<DamageableComponent>();
-                    if (sensor.SignalInAttackRay(_targetPoint.position) && damageable != null)
+                    // Урон для лазера наносится непрерывно
+                    if (_enemyConfig.attackType == Enemy_ScriptableObject.AttackType.LaserBeam)
                     {
-                        damageable.TakeDamage(new FlatDamage(_enemyConfig.Damage * Time.deltaTime));
+                        var damageable = _target.GetComponentInChildren<DamageableComponent>();
+                        if (sensor.SignalInAttackRay(_targetPoint.position) && damageable != null)
+                        {
+                            damageable.TakeDamage(new FlatDamage(_enemyConfig.Damage * Time.deltaTime));
+                        }
                     }
                 }
             }
@@ -112,7 +137,7 @@ public class AttackState : BehaviorState
         // Завершение атаки
         if (_attackFired && _attackProgress > _enemyConfig.AttackDuration)
         {
-            if (_activeLaser != null)
+            if (_enemyConfig.attackType == Enemy_ScriptableObject.AttackType.LaserBeam && _activeLaser != null)
             {
                 GameObject.Destroy(_activeLaser.gameObject);
                 _activeLaser = null;
@@ -147,7 +172,6 @@ public class AttackState : BehaviorState
             _activeLaser = null;
         }
 
-        _enemyAnimator.isAttacking(false);
         _enemyNavMeshActions.ResumeMoving();
         _targetPoint = null;
         _targetPointLocked = false;
