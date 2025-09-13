@@ -85,4 +85,10 @@ public class SymbolGrid : MonoBehaviour
     {
         OnChanged?.Invoke();
     }
+    
+    public void Clear()
+    {
+        foreach (var p in pixels)
+            if (p) p.SetOn(false);
+    }
 }

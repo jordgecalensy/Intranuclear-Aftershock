@@ -15,4 +15,10 @@ public class SlotsRow : MonoBehaviour
         }
         return list;
     }
+
+    public void ClearAll()
+    {
+        foreach (var g in GetGrids())
+            g.Clear(); // у SymbolGrid должен быть метод очистки
+    }
 }

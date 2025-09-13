@@ -1,5 +1,8 @@
 using UnityEngine;
 
+using System;
+using UnityEngine;
+
 public class CodeOrderJudge : MonoBehaviour
 {
     [Header("Ссылки")]
@@ -9,13 +12,29 @@ public class CodeOrderJudge : MonoBehaviour
 
     [Header("Опции")]
     public bool requireSameLength = true;
-    public bool allowNearestRecognition = false; // можно включить "ближайший по Хэмминга"
-    
+    public bool allowNearestRecognition = false;
+
+    // 👉 Получатель, заданный при открытии UI
+    private ICodeSuccessReceiver _externalReceiver;
+
+    // вызвать при открытии мини-игры для конкретной консоли
+    public void SetExternalReceiver(ICodeSuccessReceiver receiver)
+    {
+        _externalReceiver = receiver;
+    }
+
+    // (опц.) очистить при закрытии окна
+    public void ClearExternalReceiver()
+    {
+        _externalReceiver = null;
+    }
+
     private void Awake()
     {
         foreach (var g in playerRow.GetGrids())
             g.OnChanged += Check;
     }
+
     public void Check()
     {
         if (!referenceRow || !playerRow || !symbolDictionary)
@@ -27,11 +46,9 @@ public class CodeOrderJudge : MonoBehaviour
         var refs = referenceRow.GetGrids();
         var usrs = playerRow.GetGrids();
 
-
         if (requireSameLength && refs.Count != usrs.Count)
         {
-            foreach (var g in usrs) g?.HighlightDiff(symbolDictionary, g.expectedSymbol); // подсветим как неверные
-            Debug.Log("[CodeOrderJudge] FAIL: разные длины ряда.");
+            foreach (var g in usrs) g?.HighlightDiff(symbolDictionary, g.expectedSymbol);
             return;
         }
 
@@ -45,38 +62,41 @@ public class CodeOrderJudge : MonoBehaviour
             if (!refGrid || !usrGrid) { allOk = false; continue; }
 
             char expected = refGrid.expectedSymbol;
-            if (expected == '\0')
-            {
-                // если expected не задан, определим его по маске эталона
-                if (!symbolDictionary.TryRecognize(refGrid.GetMask(), out expected, false))
-                {
-                    allOk = false;
-                    // Убрана подсветка ошибок для эталонных ячеек
-                    continue;
-                }
-            }
-
-            // распознаём у игрока
-            ushort userMask = usrGrid.GetMask();
-            if (!symbolDictionary.TryRecognize(userMask, out var got, allowNearestRecognition))
+            if (expected == '\0' && !symbolDictionary.TryRecognize(refGrid.GetMask(), out expected, false))
             {
                 allOk = false;
-                usrGrid.HighlightDiff(symbolDictionary, expected);
                 continue;
             }
 
-            if (got != expected)
+            ushort userMask = usrGrid.GetMask();
+            if (!symbolDictionary.TryRecognize(userMask, out var got, allowNearestRecognition) || got != expected)
             {
                 allOk = false;
-                usrGrid.HighlightDiff(symbolDictionary, expected); // подсветим, где не сходится с эталоном
+                usrGrid.HighlightDiff(symbolDictionary, expected);
             }
         }
 
         if (!requireSameLength && usrs.Count < refs.Count) allOk = false;
 
-        Debug.Log(allOk ? "[CodeOrderJudge] OK — порядок и символы совпали."
-                        : "[CodeOrderJudge] FAIL — есть несовпадения.");
+        if (allOk)
+        {
+            // 👉 Триггерим только текущего адресата (эту конкретную консоль)
+            _externalReceiver?.OnCodeAccepted();
+        }
     }
 
     public void CheckButton() => Check();
+
+    public void OpenGame()
+    { 
+        if (playerRow != null)
+            playerRow.ClearAll();
+        this.gameObject.SetActive(true);
+       
+    }
+    
+    public void CloseGame()
+    {
+        this.gameObject.SetActive(false);
+    }
 }
