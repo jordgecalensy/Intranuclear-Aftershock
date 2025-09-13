@@ -22,9 +22,13 @@ public class ReferenceRowBuilder : MonoBehaviour
     public bool trim = true;
     public bool ignoreNewLines = true;
 
+    [Header("Ограничения")]
+    [Min(1)] public int maxSymbols = 6;            // <= лимит длины эталона
+    public bool takeLastIfOverLimit = false;        // false = первые N, true = последние N
+
     [Header("Когда строить (рантайм)")]
-    public bool buildOnAwake = true;  // до Start
-    public bool buildOnStart = false; // после Start
+    public bool buildOnAwake = true;   // до Start
+    public bool buildOnStart = false;  // после Start
 
     private void Awake()
     {
@@ -39,11 +43,21 @@ public class ReferenceRowBuilder : MonoBehaviour
     [ContextMenu("Rebuild (Runtime)")]
     public void RebuildRuntime()
     {
-        if (!ValidateSetup(logErrors:true)) return;
+        if (!ValidateSetup(logErrors: true)) return;
 
         string code = pattern?.code ?? "";
         if (trim) code = code.Trim();
         if (ignoreNewLines) code = code.Replace("\n", "").Replace("\r", "");
+
+        // Применяем лимит длины
+        int targetLen = Mathf.Min(code.Length, maxSymbols);
+        bool truncated = code.Length > targetLen;
+        if (truncated)
+        {
+            code = takeLastIfOverLimit
+                ? code.Substring(code.Length - targetLen, targetLen)
+                : code.Substring(0, targetLen);
+        }
 
         // Очистка — строго Destroy в рантайме
         if (clearBeforeBuild)
@@ -80,7 +94,8 @@ public class ReferenceRowBuilder : MonoBehaviour
         var row = container.GetComponent<SlotsRow>();
         if (row) row.isReferenceRow = true;
 
-        Debug.Log($"[ReferenceRowBuilder] Построено «{pattern?.patternName ?? "Unnamed"}». Длина: {code.Length}");
+        Debug.Log($"[ReferenceRowBuilder] Построено «{pattern?.patternName ?? "Unnamed"}». Длина: {code.Length}" +
+                  (truncated ? $" (урезано до {maxSymbols})" : ""));
     }
 
     private bool ValidateSetup(bool logErrors)
@@ -105,5 +120,4 @@ public class ReferenceRowBuilder : MonoBehaviour
 
         return ok;
     }
-    
 }
