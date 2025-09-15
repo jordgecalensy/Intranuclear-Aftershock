@@ -9,5 +9,7 @@ namespace Failsafe.Items
         /// Использовать
         /// </summary>
         public ItemUseResult Use();
+
+        public void GetItemUseDelays(out float startDelay, out float useDelay);
     }
 }
