@@ -26,6 +26,12 @@ namespace Failsafe.Items
             _effectManager.ApplyEffect(_effect);
             return ItemUseResult.Consumed;
         }
+
+        public void GetItemUseDelays(out float startUseDelay, out float useDelay)
+        {
+            startUseDelay = _data.StartUseDelay;
+            useDelay = _data.UseDelay;
+        }
     }
 
     public class GorillaEffect : Effect

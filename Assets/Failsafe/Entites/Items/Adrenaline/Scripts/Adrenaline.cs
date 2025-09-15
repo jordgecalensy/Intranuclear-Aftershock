@@ -28,6 +28,12 @@ namespace Failsafe.Items
             return ItemUseResult.Consumed;
         }
 
+        public void GetItemUseDelays(out float startUseDelay, out float useDelay)
+        {
+            startUseDelay = _data.StartUseDelay;
+            useDelay = _data.UseDelay;
+        }
+
         //TODO: Вынести в отдельный файл если эффект будет переиспользоваться другими предметами
         public class AdrenalineEffect : Effect
         {

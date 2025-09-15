@@ -22,14 +22,6 @@ public class PlayerHandsSystem : ITickable
     private UsingState _usingState = UsingState.None;
     private Dictionary<ItemType, IActionWithItem> _actionsWithItems;
 
-    // Задержка после применения предмета, чтобы не спамить использование предметов
-    // Примерно должен соответсвовать времени анимаций, но не обязательно
-    // Если у разных предметов должны быть разные кулдауны, то вынести это в ItemData
-    [SerializeField] private float _itemUseDelay = 5f;
-    // Время использования одного предмета. По сути время анимации использования
-    // Нужно чтобы Эффект предмета/визуал/звук сработал в определенный момент анимации, а не сразу при нажатии кнопки
-    // Сейчас задается один на всех, нужно будет вынести в предмет и настраивать для каждого свой
-    [SerializeField] private float _itemUseStartDelay = 5f;
     // Пропускать начальную анимацию при повторном применении, скорее всего нужно вынести в параметры предмета или в UseResult
     private bool _skipStartDelay;
 
@@ -91,7 +83,7 @@ public class PlayerHandsSystem : ITickable
 
             OnItemStartUsing?.Invoke(_itemInHandType);
             _usingState = UsingState.Start;
-            await UniTask.Delay(TimeSpan.FromSeconds(_itemUseStartDelay));
+            await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseStartDelay));
         }
         _usingState = UsingState.Using;
 
@@ -102,7 +94,7 @@ public class PlayerHandsSystem : ITickable
             _skipStartDelay = false;
             _inputHandler.UseTrigger.ReleaseTrigger();
             _usingState = UsingState.OnDelay;
-            await UniTask.Delay(TimeSpan.FromSeconds(_itemUseDelay));
+            await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseDelay));
             _usingState = UsingState.None;
         }
         else if (useResult.UsageType == UsageType.HoldToUse)
