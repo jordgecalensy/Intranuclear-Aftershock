@@ -7,11 +7,14 @@ public class MathematicalMinigameManager : MonoBehaviour
 {
     private string[] _operations = { "+", "-" };
 
-    private int _baseNumber;
     private int _resultCalculation;
     private int _aCalculation;
     private int _bCalculation;
     private int _cellsCount = 0;
+
+    [Header("Base Number Settings")]
+    [SerializeField] private int _baseNumber;
+    [SerializeField] private string _textWithBaseNumber;
 
     [Header("Numerical Range")]
     [SerializeField] private int _minNumber;
@@ -26,8 +29,6 @@ public class MathematicalMinigameManager : MonoBehaviour
     private bool _timerRunning = false;
 
     [Header("Text Settings")]
-    [SerializeField] private string _textWithBaseNumber;
-
     [SerializeField] private TextMeshProUGUI _baseNumberText;
     [SerializeField] private TextMeshProUGUI _calculationText;
     [SerializeField] private TextMeshProUGUI[] _passwordCells = new TextMeshProUGUI[6];
@@ -40,8 +41,20 @@ public class MathematicalMinigameManager : MonoBehaviour
     {
         time = _time;
         _timerRunning = true;
-        GeneratingBaseNumber();
+        _baseNumberText.text = _textWithBaseNumber + " " + _baseNumber;
+        _cellsCount = 0;
+        ClearcCells();
         GeneratingCalculation();
+    }
+    private void Update()
+    {
+        if (!_timerRunning) return;
+
+        time -= Time.deltaTime;
+        Debug.Log(time.ToInt());
+
+        if (time <= 0f)
+            TimeIsOut();
     }
     public void Ñomparison(bool moreNumber)
     {
@@ -73,13 +86,14 @@ public class MathematicalMinigameManager : MonoBehaviour
             }
         }
         GeneratingCalculation();
-        GeneratingBaseNumber();
     }
     private void GeneratingCalculation()
     {
         System.Random random = new System.Random();
         _resultCalculation = random.Next(_minNumber, _maxNumber);
-        _aCalculation = random.Next(_minNumber, _maxNumber);
+        if (_resultCalculation == _baseNumber) 
+            _resultCalculation++;
+        _aCalculation = random.Next(_minNumber, _resultCalculation);
 
         string operation = _operations[random.Next(_operations.Length)];
         switch (operation)
@@ -91,16 +105,7 @@ public class MathematicalMinigameManager : MonoBehaviour
                 _bCalculation = _resultCalculation + _aCalculation;
                 break;
         }
-        _calculationText.text = $"{_aCalculation} {operation} {_bCalculation}";
-    }
-    private void GeneratingBaseNumber()
-    {
-        System.Random random = new System.Random();
-        _baseNumber = random.Next(_minNumber, _maxNumber);
-        if (_baseNumber == _resultCalculation)
-            _baseNumber--;
-
-        _baseNumberText.text = _textWithBaseNumber + " " + _baseNumber;
+        _calculationText.text = $"{_bCalculation} {operation} {_aCalculation}";
     }
     private void FillingCell()
     {
@@ -110,18 +115,6 @@ public class MathematicalMinigameManager : MonoBehaviour
         _cellsCount++;
         if (_cellsCount == _passwordCells.Length)
             UnlockConsole();
-    }
-    private void Update()
-    {
-        if (!_timerRunning) return;
-
-        time -= Time.deltaTime;
-        Debug.Log(time.ToInt());
-
-        if (time <= 0f)
-        {
-            TimeIsOut();
-        }
     }
     private void TimeIsOut()
     {
@@ -136,7 +129,6 @@ public class MathematicalMinigameManager : MonoBehaviour
         _timerRunning = true;
         _cellsCount = 0;
         ClearcCells();
-        GeneratingBaseNumber();
         GeneratingCalculation();
         Debug.Log("Restart");
     }
