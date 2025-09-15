@@ -150,6 +150,15 @@ public class EnemyAnimator
         }
     }
 
+    public void TryStun()
+    {
+        _animator.SetTrigger("Stun");
+    }
+
+    public void isInStun(bool state)
+    {
+        _animator.SetBool("isInStun", state);
+    }
     public void TryAttack()
     {
         _animator.SetTrigger("Attack");
