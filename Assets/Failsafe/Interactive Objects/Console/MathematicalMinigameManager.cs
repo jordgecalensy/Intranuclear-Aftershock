@@ -93,15 +93,16 @@ public class MathematicalMinigameManager : MonoBehaviour
         _resultCalculation = random.Next(_minNumber, _maxNumber);
         if (_resultCalculation == _baseNumber) 
             _resultCalculation++;
-        _aCalculation = random.Next(_minNumber, _resultCalculation);
 
         string operation = _operations[random.Next(_operations.Length)];
         switch (operation)
         {
             case "+":
+                _aCalculation = random.Next(_minNumber, _resultCalculation);
                 _bCalculation = _resultCalculation - _aCalculation;
                 break;
             case "-":
+                _aCalculation = random.Next(_minNumber, _maxNumber - _resultCalculation);
                 _bCalculation = _resultCalculation + _aCalculation;
                 break;
         }

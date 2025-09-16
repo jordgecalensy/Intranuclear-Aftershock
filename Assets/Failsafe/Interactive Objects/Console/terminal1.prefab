@@ -2253,7 +2253,31 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 6624415841481241055}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2403745151903349121}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 2642774814770191352}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &8519059513935727757
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4520,12 +4544,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 037ac5b93a6e35b4abe1a4b3eeb19f4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _minNumber: -99
-  _maxNumber: 100
+  _baseNumber: 10
+  _textWithBaseNumber: Compared Number
+  _minNumber: 0
+  _maxNumber: 20
   _timer: {fileID: 0}
   _time: 40
   _fimeTime: 5
-  _textWithBaseNumber: Compared Number
   _baseNumberText: {fileID: 6858285550428153324}
   _calculationText: {fileID: 6179608351773084689}
   _passwordCells:
