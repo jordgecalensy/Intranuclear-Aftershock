@@ -1104,7 +1104,7 @@ GameObject:
   - component: {fileID: 5861458741715805744}
   - component: {fileID: 5115442321702413648}
   m_Layer: 5
-  m_Name: Image
+  m_Name: MinigameWindow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4544,14 +4544,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 037ac5b93a6e35b4abe1a4b3eeb19f4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _baseNumber: 10
-  _textWithBaseNumber: Compared Number
+  _mathematicalVariation: 1
+  "_textWith\u0421omparedNumber": Compared Number
+  _comparedNumber: 10
   _minNumber: 0
   _maxNumber: 20
-  _timer: {fileID: 0}
+  _timer: {fileID: 885969363838741168}
   _time: 40
   _fimeTime: 5
-  _baseNumberText: {fileID: 6858285550428153324}
+  _comparedNumberText: {fileID: 6858285550428153324}
   _calculationText: {fileID: 6179608351773084689}
   _passwordCells:
   - {fileID: 3626911756746377868}

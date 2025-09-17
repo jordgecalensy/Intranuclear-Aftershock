@@ -2,6 +2,9 @@ using TMPro;
 using UnityEngine;
 using System;
 using Tayx.Graphy.Utils.NumString;
+using static UnityEngine.Rendering.HDROutputUtils;
+
+public enum MathematicalVariations {variant_1, variant_2, variant_3}
 
 public class MathematicalMinigameManager : MonoBehaviour
 {
@@ -12,9 +15,14 @@ public class MathematicalMinigameManager : MonoBehaviour
     private int _bCalculation;
     private int _cellsCount = 0;
 
-    [Header("Base Number Settings")]
-    [SerializeField] private int _baseNumber;
-    [SerializeField] private string _textWithBaseNumber;
+    [Header("Variation of the mini-game")]
+    [SerializeField] private MathematicalVariations _mathematicalVariation;
+
+    [Header("Ñompared Number Settings")]
+    [SerializeField] private string _textWithÑomparedNumber;
+    [SerializeField] private int _comparedNumber;
+
+    private int comparedNumber;
 
     [Header("Numerical Range")]
     [SerializeField] private int _minNumber;
@@ -29,7 +37,7 @@ public class MathematicalMinigameManager : MonoBehaviour
     private bool _timerRunning = false;
 
     [Header("Text Settings")]
-    [SerializeField] private TextMeshProUGUI _baseNumberText;
+    [SerializeField] private TextMeshProUGUI _comparedNumberText;
     [SerializeField] private TextMeshProUGUI _calculationText;
     [SerializeField] private TextMeshProUGUI[] _passwordCells = new TextMeshProUGUI[6];
 
@@ -39,12 +47,7 @@ public class MathematicalMinigameManager : MonoBehaviour
 
     private void OnEnable()
     {
-        time = _time;
-        _timerRunning = true;
-        _baseNumberText.text = _textWithBaseNumber + " " + _baseNumber;
-        _cellsCount = 0;
-        ClearcCells();
-        GeneratingCalculation();
+        CreateNewGame();
     }
     private void Update()
     {
@@ -61,52 +64,73 @@ public class MathematicalMinigameManager : MonoBehaviour
         if (!_timerRunning) return;
         if (moreNumber)
         {
-            if(_baseNumber > _resultCalculation)
+            if(comparedNumber > _resultCalculation)
             {
-                Debug.Log($"true {_baseNumber} > {_resultCalculation}");
+                Debug.Log($"true {comparedNumber} > {_resultCalculation}");
                 FillingCell();
+                ComparedNumber();
             }
             else
             {
-                Debug.Log($"false {_baseNumber} < {_resultCalculation}");
+                Debug.Log($"false {comparedNumber} < {_resultCalculation}");
                 time -= _fimeTime;
             }
         }
         else
         {
-            if (_baseNumber < _resultCalculation)
+            if (comparedNumber < _resultCalculation)
             {
-                Debug.Log($"true {_baseNumber} < {_resultCalculation}");
+                Debug.Log($"true {comparedNumber} < {_resultCalculation}");
                 FillingCell();
+                ComparedNumber();
             }
             else
             {
-                Debug.Log($"false {_baseNumber} > {_resultCalculation}");
+                Debug.Log($"false {comparedNumber} > {_resultCalculation}");
                 time -= _fimeTime;
             }
         }
         GeneratingCalculation();
     }
+    private void ComparedNumber()
+    {
+        if (_mathematicalVariation == MathematicalVariations.variant_3)
+            if(_cellsCount != 0)
+                comparedNumber = _resultCalculation;
+        _comparedNumberText.text = _textWithÑomparedNumber + " " + comparedNumber;
+    }
     private void GeneratingCalculation()
     {
         System.Random random = new System.Random();
         _resultCalculation = random.Next(_minNumber, _maxNumber);
-        if (_resultCalculation == _baseNumber) 
+        if (_resultCalculation == comparedNumber) 
             _resultCalculation++;
-
-        string operation = _operations[random.Next(_operations.Length)];
-        switch (operation)
+        switch (_mathematicalVariation)
         {
-            case "+":
-                _aCalculation = random.Next(_minNumber, _resultCalculation);
-                _bCalculation = _resultCalculation - _aCalculation;
+            case MathematicalVariations.variant_1:
+            {
+                _calculationText.text = $"{_resultCalculation}";
                 break;
-            case "-":
-                _aCalculation = random.Next(_minNumber, _maxNumber - _resultCalculation);
-                _bCalculation = _resultCalculation + _aCalculation;
+            }
+            case MathematicalVariations.variant_2:
+            case MathematicalVariations.variant_3:
+            {
+                string operation = _operations[random.Next(_operations.Length)];
+                switch (operation)
+                {
+                    case "+":
+                        _aCalculation = random.Next(_minNumber, _resultCalculation);
+                        _bCalculation = _resultCalculation - _aCalculation;
+                        break;
+                    case "-":
+                        _aCalculation = random.Next(_minNumber, _maxNumber - _resultCalculation);
+                        _bCalculation = _resultCalculation + _aCalculation;
+                        break;
+                }
+                _calculationText.text = $"{_bCalculation} {operation} {_aCalculation}";
                 break;
+            }
         }
-        _calculationText.text = $"{_bCalculation} {operation} {_aCalculation}";
     }
     private void FillingCell()
     {
@@ -122,18 +146,19 @@ public class MathematicalMinigameManager : MonoBehaviour
         _timerRunning = false;
         Debug.Log("Òàéìåð çàâåðøåí!");
         Debug.Log("Âûïîëíÿåòñÿ äåéñòâèå ïîñëå òàéìåðà");
-        Restart();
+        CreateNewGame();
     }
-    private void Restart()
+    private void CreateNewGame()
     {
+        comparedNumber = _comparedNumber;
+        _cellsCount = 0;
+        ClearCells();
+        ComparedNumber();
+        GeneratingCalculation();
         time = _time;
         _timerRunning = true;
-        _cellsCount = 0;
-        ClearcCells();
-        GeneratingCalculation();
-        Debug.Log("Restart");
     }
-    private void ClearcCells()
+    private void ClearCells()
     {
         foreach(TextMeshProUGUI passwordCell in _passwordCells)
             passwordCell.text = "";
