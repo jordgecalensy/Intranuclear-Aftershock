@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using System;
 using Tayx.Graphy.Utils.NumString;
-using static UnityEngine.Rendering.HDROutputUtils;
+using UnityEngine.UI;
 
 public enum MathematicalVariations {variant_1, variant_2, variant_3}
 
@@ -29,7 +29,7 @@ public class MathematicalMinigameManager : MonoBehaviour
     [SerializeField] private int _maxNumber;
 
     [Header("Timer")]
-    [SerializeField] private GameObject _timer;
+    [SerializeField] private Image _timerImage;
     [SerializeField] private int _time;
     [SerializeField] private int _fimeTime;
 
@@ -54,10 +54,14 @@ public class MathematicalMinigameManager : MonoBehaviour
         if (!_timerRunning) return;
 
         time -= Time.deltaTime;
-        Debug.Log(time.ToInt());
+        float fill = Mathf.Clamp01(time / _time);
+        _timerImage.fillAmount = fill;
 
         if (time <= 0f)
+        {
+            time = 0f;
             TimeIsOut();
+        }
     }
     public void Ñomparison(bool moreNumber)
     {
@@ -155,6 +159,7 @@ public class MathematicalMinigameManager : MonoBehaviour
         ClearCells();
         ComparedNumber();
         GeneratingCalculation();
+        _timerImage.fillAmount = 1f;
         time = _time;
         _timerRunning = true;
     }
