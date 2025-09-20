@@ -77,6 +77,7 @@ Material:
     - _EnableBlendModePreserveSpecularLighting: 1
     - _EnableFogOnTransparent: 1
     - _ExcludeFromTUAndAA: 0
+    - _GlitchSpeed: 0.1
     - _MaterialID: 1
     - _MaterialTypeMask: 2
     - _NoiseOnDotsAmmount: 50
@@ -117,11 +118,12 @@ Material:
     - _ZTestTransparent: 4
     - _ZWrite: 0
     m_Colors:
-    - _BorderColor: {r: 47.937252, g: 10.761733, b: 0, a: 1}
+    - _BorderColor: {r: 10.716981, g: 6.1339707, b: 4.8024206, a: 1}
     - _DotsColor: {r: 1.4980392, g: 0.35556856, b: 0, a: 1}
     - _DotsTiling: {r: 36, g: 36, b: 0, a: 0}
     - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _GlitchColor: {r: 1.471698, g: 0.2949657, b: 0.256853, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &1898054145009619144
