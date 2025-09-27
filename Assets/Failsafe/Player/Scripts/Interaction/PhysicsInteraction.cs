@@ -18,7 +18,8 @@ namespace Failsafe.Player.Scripts.Interaction
         [SerializeField] private float _carryingDistance = 2.5f;
         [SerializeField] private float _carrySpeed = 10f;
         [SerializeField] private LayerMask _carryingObjectLayer;
-
+        private ICarryUsable _carryUsable;
+        private bool _useHeld;
         [Header("Throwing")]
         //[Tooltip("Данная сила умножается на число от 0 до 3 при зажатии кнопки броска.")]
         //[SerializeField] private float _throwForce = 3f;
@@ -85,6 +86,25 @@ namespace Failsafe.Player.Scripts.Interaction
 
             if (IsDragging)
             {
+                // старт использования — единичный импульс
+                if (_inputHandler.UseTrigger.IsTriggered)
+                {
+                    _carryUsable?.OnUseStart();
+                    _useHeld = true;
+                }
+
+                // удержание — каждый кадр
+                if (_useHeld && _inputHandler.UseTrigger.IsPressed)
+                {
+                    _carryUsable?.UseTick(Time.deltaTime);
+                }
+
+                // отпускание — фронт вниз
+                if (_useHeld && !_inputHandler.UseTrigger.IsPressed)
+                {
+                    _carryUsable?.OnUseStop();
+                    _useHeld = false;
+                }
                 if (!CarryingObject || !CarryingBody)
                 {
                     DropItem();
@@ -166,7 +186,9 @@ namespace Failsafe.Player.Scripts.Interaction
             CarryingBody.useGravity = false;
 
             CarryingObject = hitInfo.rigidbody.gameObject;
-
+            _carryUsable = CarryingObject.GetComponent<ICarryUsable>();
+            _carryUsable?.OnGrabbed(_playerCameraTransform);
+            _useHeld = false;
             CarryingObject.transform.parent = _playerCameraTransform;
             _relativeRotation = CarryingObject.transform.localRotation;
             CarryingObject.transform.parent = null;
@@ -195,7 +217,9 @@ namespace Failsafe.Player.Scripts.Interaction
             }
 
             if (CarryingObject) CarryingObject.layer = _cachedCarryingLayer;
-
+            if (_useHeld) { _carryUsable?.OnUseStop(); _useHeld = false; }
+            _carryUsable?.OnDropped();
+            _carryUsable = null;
             CarryingBody = null;
             CarryingObject = null;
             IsDragging = false;
@@ -208,7 +232,9 @@ namespace Failsafe.Player.Scripts.Interaction
         {
             if (CarryingObject) CarryingObject.layer = _cachedCarryingLayer;
             if (CarryingBody) CarryingBody.useGravity = true;
-
+            if (_useHeld) { _carryUsable?.OnUseStop(); _useHeld = false; }
+            _carryUsable?.OnDropped();
+            _carryUsable = null;
             CarryingBody = null;
             CarryingObject = null;
             IsDragging = false;
