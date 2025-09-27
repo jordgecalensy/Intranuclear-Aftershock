@@ -10,19 +10,26 @@ public class EnemyAnimator
     private EnemyAudioManager _audioManager;
     private readonly MonoBehaviour _coroutineRunner; // Для запуска корутин
     private Coroutine _traversalCoroutine = null; // Ссылка на активную корутину
+    private readonly bool _useRootMotion;
 
     private bool _isTurning = false;
-
     private bool _waitingForTurnToFinish = false;
     private bool _inCooldown = false;
     private bool _inAttack = false;
+    private bool _wasGrounded = true;
+    private bool _wasOnLink = false;
 
-    public EnemyAnimator( NavMeshAgent navMeshAgent, Animator animator, Transform transform, MonoBehaviour coroutineRunner)
+    // --- Поля для случайных Idle анимаций ---
+    private readonly int _idleAnimationCount = 3; // Количество ваших idle анимаций
+    private bool _isIdleAnimationPlaying = false;
+    // --------------------------------------------
+
+    public EnemyAnimator( NavMeshAgent navMeshAgent, Animator animator, Transform transform, bool useRootMotion)
     {
         _navMeshAgent = navMeshAgent;
         _animator = animator;
         _transform = transform;
-        _coroutineRunner = coroutineRunner;
+        _useRootMotion = useRootMotion;
         _navMeshAgent.updatePosition = false;
         _navMeshAgent.updateRotation = false;
     }
@@ -30,30 +37,38 @@ public class EnemyAnimator
     public void UpdateAnimator()
     {
         if (IsInAction())
-            return;
-
-        if (_isTurning)
         {
-            var state = _animator.GetCurrentAnimatorStateInfo(0);
-    
-            if (state.IsTag("Turn") && state.normalizedTime >= 0.98f)
-            {
-                _isTurning = false;
-                _animator.SetFloat("TurnAngle", 0f);
-            }
-
-            _animator.SetFloat("Speed", 0f);
+            _isIdleAnimationPlaying = false; // Сбрасываем флаг, когда враг атакует или перезаряжается
             return;
         }
 
-        // Вход в поворот
-        if (ShouldStartTurn(out float clampedAngle))
+        HandleIdleAnimations();
+
+        if (_useRootMotion)
         {
-            _isTurning = true;
-            _animator.SetFloat("TurnAngle", clampedAngle);
-            _animator.CrossFade("TurnInPlace", 0.1f);
-            _animator.SetFloat("Speed", 0f);
-            return;
+            if (_isTurning)
+            {
+                var state = _animator.GetCurrentAnimatorStateInfo(0);
+
+                if (state.IsTag("Turn") && state.normalizedTime >= 0.98f)
+                {
+                    _isTurning = false;
+                    _animator.SetFloat("TurnAngle", 0f);
+                }
+
+                _animator.SetFloat("Speed", 0f);
+                return;
+            }
+
+            // Вход в поворот
+            if (ShouldStartTurn(out float clampedAngle))
+            {
+                _isTurning = true;
+                _animator.SetFloat("TurnAngle", clampedAngle);
+                _animator.CrossFade("TurnInPlace", 0.1f);
+                _animator.SetFloat("Speed", 0f);
+                return;
+            }
         }
 
         UpdateSpeedBlend();
@@ -101,16 +116,7 @@ public class EnemyAnimator
 
     public void ApplyRootMotion()
     {
-        // Проверяем, находимся ли мы на Off-Mesh Link
-        if (_navMeshAgent.isOnOffMeshLink)
-        {
-            // Если корутина перемещения еще не запущена, запускаем ее
-            if (_traversalCoroutine == null)
-            {
-                _traversalCoroutine = _coroutineRunner.StartCoroutine(TraverseOffMeshLink());
-            }
-            return; // Прерываем обычное обновление, пока идет прыжок
-        }
+        
 
         // Получаем текущую позицию агента на навмеш
         Vector3 agentNextPos = _navMeshAgent.nextPosition;
@@ -144,50 +150,15 @@ public class EnemyAnimator
         }
     }
 
-    private IEnumerator TraverseOffMeshLink()
+    public void TryStun()
     {
-        OffMeshLinkData linkData = _navMeshAgent.currentOffMeshLinkData;
-        _navMeshAgent.isStopped = true; // Останавливаем агента на время прыжка
-
-        _animator.SetBool("isJumping", true); // Устанавливаем состояние "в прыжке"
-
-        Vector3 startPos = _transform.position;
-        Vector3 endPos = linkData.endPos + Vector3.up * _navMeshAgent.baseOffset; // Корректируем конечную точку по высоте
-
-        float duration = 1.0f; // Длительность прыжка
-        float jumpHeight = 3.0f; // Высота прыжка
-        float elapsed = 0.0f;
-
-        while (elapsed < duration)
-        {
-            float t = elapsed / duration;
-
-            // Расчет параболической траектории
-            float yOffset = jumpHeight * 4.0f * (t - t * t); // Формула параболы
-            Vector3 currentPos = Vector3.Lerp(startPos, endPos, t) + Vector3.up * yOffset;
-
-            _transform.position = currentPos;
-
-            // Плавный поворот в сторону движения
-            Vector3 direction = (endPos - startPos).normalized;
-            if (direction != Vector3.zero)
-            {
-                Quaternion targetRotation = Quaternion.LookRotation(direction);
-                _transform.rotation = Quaternion.Slerp(_transform.rotation, targetRotation, t);
-            }
-
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        _transform.position = endPos; // Гарантируем точное прибытие
-        _navMeshAgent.Warp(endPos); // Телепортируем агента в конечную точку
-        _navMeshAgent.isStopped = false; // Возобновляем движение агента
-        _navMeshAgent.CompleteOffMeshLink(); // Завершаем перемещение по линку
-        _animator.SetBool("isJumping", false); // Завершаем состояние "в прыжке"
-        _traversalCoroutine = null; // Сбрасываем ссылку на корутину
+        _animator.SetTrigger("Stun");
     }
 
+    public void isInStun(bool state)
+    {
+        _animator.SetBool("isInStun", state);
+    }
     public void TryAttack()
     {
         _animator.SetTrigger("Attack");
@@ -210,9 +181,9 @@ public class EnemyAnimator
         _animator.SetBool("isReloading", isReloading);
     }
 
-    public void isAttacking(bool isAttacking)
+    public void isAttacking()
     {
-        _inAttack = isAttacking;
+        _animator.SetTrigger("isAttacking");
     }
 
     public void StartMove(float speed)
@@ -220,4 +191,34 @@ public class EnemyAnimator
         _animator.SetFloat("Speed", speed );
     }
 
+    public void HandleIdleAnimations()
+    {
+        var currentStateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+        _isIdleAnimationPlaying = currentStateInfo.IsTag("Idle");
+
+        // Если враг стоит на месте и сейчас не проигрывается idle-анимация, запустить новую.
+        if (_navMeshAgent.velocity.magnitude < 0.1f && !_isIdleAnimationPlaying)
+        {
+            PlayRandomIdleAnimation();
+        }
+    }
+
+    public void PlayRandomIdleAnimation()
+    {
+        if (_idleAnimationCount <= 0) return;
+        int randomIndex = Random.Range(0, _idleAnimationCount);
+        _animator.SetInteger("IdleIndex", randomIndex);
+        _animator.SetTrigger("PlayIdle");
+    }
+
+    public void IsActive()
+    {
+        _animator.SetBool("IsActivated", true);
+    }
+
+    public void IsOff()
+    {
+        _animator.SetBool("IsActivated", false);
+
+    }
 }

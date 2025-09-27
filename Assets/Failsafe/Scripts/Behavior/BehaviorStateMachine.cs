@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 public class BehaviorStateMachine
 {
@@ -55,6 +56,16 @@ public class BehaviorStateMachine
     }
 
     /// <summary>
+    /// Получить Forced Состояние машины
+    /// </summary>
+    /// <typeparam name="T">Тип состояния</typeparam>
+    /// <returns>null если состояния типа <see cref="T"/> не найдено</returns>
+    public T GetForcedState<T>() where T : BehaviorState
+    {
+        return _forcedStates.FirstOrDefault(x => x.GetType() == typeof(T)) as T;
+    }
+
+    /// <summary>
     /// Вызывать в методе MonoBehaviour.Update
     /// </summary>
     public void Update()
@@ -84,23 +95,23 @@ public class BehaviorStateMachine
     /// <summary>
     /// Переключение на принудительное состояние
     /// </summary>
-    public void ForseChangeState<T>() where T : BehaviorForcedState
+    public void ForseChangeState<T>(float? duration = null) where T : BehaviorForcedState
     {
         var nextState = _forcedStates.FirstOrDefault(x => x.GetType() == typeof(T));
         if (nextState != null)
         {
-            ForseChangeState(nextState);
+            ForseChangeState(nextState, duration);
         }
     }
 
-    private void ForseChangeState(BehaviorForcedState nextState)
+    private void ForseChangeState(BehaviorForcedState nextState, float? stateDuration)
     {
         if (nextState != _currentState)
         {
             var prevState = _currentState;
             prevState.Exit();
             _currentState = nextState;
-            nextState.Enter(prevState);
+            nextState.Enter(prevState, stateDuration);
         }
     }
 

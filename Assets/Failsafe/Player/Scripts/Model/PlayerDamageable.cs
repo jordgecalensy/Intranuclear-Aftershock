@@ -1,4 +1,4 @@
-using Failsafe.Scripts.Damage;
+﻿using Failsafe.Scripts.Damage;
 using Failsafe.Scripts.Damage.Implementation;
 using Failsafe.Scripts.Damage.Providers;
 using Failsafe.Scripts.Health;
@@ -12,11 +12,11 @@ namespace Failsafe.Player.Model
     /// </summary>
     public class PlayerDamageable : IInitializable
     {
-        private readonly IHealth _health;
-        private IDamageService _damageService;
+        private readonly PlayerHealth _health;
+        private IDamageService _damageService = new DamageService();
         private DamageableComponent _damageableComponent;
 
-        public PlayerDamageable(IHealth health, PlayerView playerView)
+        public PlayerDamageable(PlayerHealth health, PlayerView playerView)
         {
             _health = health;
             _damageableComponent = playerView.Damageable;
@@ -24,7 +24,10 @@ namespace Failsafe.Player.Model
 
         public void Initialize()
         {
-            _damageService = new DamageService(new FlatDamageProvider(_health));
+            _damageService.Register(new FlatDamageProvider(_health));
+            _damageService.Register(new FireContactDamageProvider(_health));
+            _damageService.Register(new FireDotTickDamageProvider(_health));
+            _damageService.Register(new FireDamageProvider(_health));
             _damageableComponent.OnTakeDamage += OnTakeDamage;
         }
 
