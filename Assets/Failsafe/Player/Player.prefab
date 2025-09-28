@@ -67,7 +67,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.1
+  near clip plane: 0.01
   far clip plane: 5000
   field of view: 70
   orthographic: 0
@@ -82,7 +82,7 @@ Camera:
   m_TargetEye: 3
   m_HDR: 0
   m_AllowMSAA: 0
-  m_AllowDynamicResolution: 0
+  m_AllowDynamicResolution: 1
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -135,7 +135,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   volumeAnchorOverride: {fileID: 0}
-  antialiasing: 0
+  antialiasing: 3
   SMAAQuality: 2
   dithering: 1
   stopNaNs: 0
@@ -161,7 +161,7 @@ MonoBehaviour:
   flipYMode: 0
   xrRendering: 1
   fullscreenPassthrough: 0
-  allowDynamicResolution: 0
+  allowDynamicResolution: 1
   customRenderingSettings: 1
   invertFaceCulling: 0
   probeLayerMask:
@@ -288,7 +288,10 @@ GameObject:
   - component: {fileID: 5474980340744432184}
   - component: {fileID: 7931588658094996424}
   - component: {fileID: 8355542254377614154}
-  m_Layer: 0
+  - component: {fileID: 4908854641351003492}
+  - component: {fileID: 7998481155207466712}
+  - component: {fileID: 2658110871342813716}
+  m_Layer: 6
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -334,7 +337,7 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 2
-  m_Radius: 0.5
+  m_Radius: 0.25
   m_SlopeLimit: 45
   m_StepOffset: 1
   m_SkinWidth: 0.01
@@ -357,6 +360,8 @@ MonoBehaviour:
   autoRun: 1
   autoInjectGameObjects:
   - {fileID: 374109433352817464}
+  - {fileID: 0}
+  - {fileID: 0}
   _playerModelParameters: {fileID: 11400000, guid: d61294178bcc7154cb7580e8388e3060, type: 2}
   _playerMovementParameters: {fileID: 11400000, guid: 6f3a29936aab9d246a187306e3f01e7f, type: 2}
   _playerNoiseParameters: {fileID: 11400000, guid: 5adbcf9fd798d4741a6f383bf3c579fc, type: 2}
@@ -489,7 +494,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.5
+  m_Radius: 0.25
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 1, z: 0}
@@ -508,6 +513,49 @@ MonoBehaviour:
   ItemName: 
   ItemPrefab: {fileID: 0}
   UseOnKey: F
+--- !u!114 &4908854641351003492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 374109433352817464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 093043f5af7756746b721c65fec1680b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &7998481155207466712
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 374109433352817464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b87f613b1cc6c94c9d2f3cf1d5c17a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speed: 10
+  speedMultiplier: 2.5
+  mouseSensitivity: 2
+  toggleKey: 118
+  thirdPersonToggleKey: 116
+  playerCameraTransform: {fileID: 374109432981789085}
+  thirdPersonOffset: {x: 0, y: 1.5, z: -4}
+--- !u!114 &2658110871342813716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 374109433352817464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63669000e4058b649920d99c28ef8bbe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &934749311656323593
 GameObject:
   m_ObjectHideFlags: 0
