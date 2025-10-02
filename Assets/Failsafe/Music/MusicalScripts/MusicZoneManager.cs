@@ -1,165 +1,148 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using FMODUnity;
 
 public class MusicZoneManager : MonoBehaviour
 {
-    [Header("Настройки менеджера")]
-    public float globalVolume = 1f;
-    public AudioClip[] defaultPlaylist;
+    [Header("FMOD Settings")]
+    [FMODUnity.EventRef]
+    public string defaultMusicEvent;
     
-    private AdvancedMusicPlaylist musicPlayer;
-    private MusicZone currentZone;
+    private FMOD.Studio.EventInstance currentMusicInstance;
+    private MusicZone currentMusicZone;
     private Coroutine fadeCoroutine;
-    
-    // Приоритеты зон (чем выше, тем приоритетнее)
-    private Dictionary<MusicZone, int> zonePriorities = new Dictionary<MusicZone, int>();
-    private List<MusicZone> activeZones = new List<MusicZone>();
 
-    void Awake()
+    void Start()
     {
-        musicPlayer = GetComponent<AdvancedMusicPlaylist>();
-        if (musicPlayer == null)
+        // Запускаем музыку по умолчанию, если она задана
+        if (!string.IsNullOrEmpty(defaultMusicEvent))
         {
-            musicPlayer = gameObject.AddComponent<AdvancedMusicPlaylist>();
-        }
-        
-        // Запускаем музыку по умолчанию
-        if (defaultPlaylist != null && defaultPlaylist.Length > 0)
-        {
-            musicPlayer.musicTracks = defaultPlaylist;
-            musicPlayer.SetVolume(globalVolume);
+            PlayMusic(defaultMusicEvent, 0f);
         }
     }
 
     public void EnterMusicZone(MusicZone zone)
     {
-        // Добавляем зону в список активных
-        if (!activeZones.Contains(zone))
-        {
-            activeZones.Add(zone);
-        }
-        
-        // Определяем зону с наивысшим приоритетом
-        MusicZone highestPriorityZone = GetHighestPriorityZone();
-        
-        // Если это новая зона с более высоким приоритетом
-        if (highestPriorityZone != currentZone)
-        {
-            currentZone = highestPriorityZone;
-            StartZoneMusic(currentZone);
-        }
+        if (currentMusicZone == zone) return;
+
+        // Останавливаем предыдущую музыку с фейдом
+        if (fadeCoroutine != null)
+            StopCoroutine(fadeCoroutine);
+
+        fadeCoroutine = StartCoroutine(SwitchMusicCoroutine(zone));
     }
 
     public void ExitMusicZone(MusicZone zone)
     {
-        // Убираем зону из активных
-        if (activeZones.Contains(zone))
-        {
-            activeZones.Remove(zone);
-        }
-        
-        // Если вышли из текущей активной зоны
-        if (currentZone == zone)
-        {
-            MusicZone nextZone = GetHighestPriorityZone();
-            
-            if (nextZone != null)
-            {
-                currentZone = nextZone;
-                StartZoneMusic(currentZone);
-            }
-            else
-            {
-                // Возвращаемся к музыке по умолчанию
-                currentZone = null;
-                StartDefaultMusic();
-            }
-        }
-    }
+        if (currentMusicZone != zone) return;
 
-    MusicZone GetHighestPriorityZone()
-    {
-        if (activeZones.Count == 0) return null;
-        
-        // Здесь можно добавить логику приоритетов
-        // Пока просто берем первую зону (можно расширить систему приоритетов)
-        return activeZones[0];
-    }
-
-    void StartZoneMusic(MusicZone zone)
-    {
         if (fadeCoroutine != null)
             StopCoroutine(fadeCoroutine);
-            
-        fadeCoroutine = StartCoroutine(SwitchToZoneMusic(zone));
+
+        fadeCoroutine = StartCoroutine(FadeOutMusicCoroutine(zone.fadeOutDuration));
+        currentMusicZone = null;
     }
 
-    IEnumerator SwitchToZoneMusic(MusicZone zone)
+    private IEnumerator SwitchMusicCoroutine(MusicZone zone)
     {
-        // Плавно выключаем текущую музыку
-        yield return StartCoroutine(FadeOutMusic());
-        
-        // Устанавливаем новый плейлист
-        musicPlayer.StopPlaylist();
-        musicPlayer.musicTracks = zone.GetPlaylist();
-        musicPlayer.shufflePlaylist = zone.shuffle;
-        musicPlayer.loopPlaylist = zone.loop;
-        
-        // Плавно включаем новую музыку
-        yield return StartCoroutine(FadeInMusic());
-        
-        // Запускаем плейлист
-        musicPlayer.StartPlaylist();
-    }
-
-    void StartDefaultMusic()
-    {
-        if (fadeCoroutine != null)
-            StopCoroutine(fadeCoroutine);
-            
-        fadeCoroutine = StartCoroutine(SwitchToDefaultMusic());
-    }
-
-    IEnumerator SwitchToDefaultMusic()
-    {
-        yield return StartCoroutine(FadeOutMusic());
-        
-        musicPlayer.StopPlaylist();
-        musicPlayer.musicTracks = defaultPlaylist;
-        
-        yield return StartCoroutine(FadeInMusic());
-        
-        musicPlayer.StartPlaylist();
-    }
-
-    IEnumerator FadeOutMusic()
-    {
-        float currentVolume = globalVolume;
-        float timer = 0f;
-        
-        while (timer < 1f)
+        // Фейд-аут текущей музыки
+        if (currentMusicZone != null)
         {
-            timer += Time.deltaTime / 1f; // 1 секунда на фейд-аут
-            musicPlayer.SetVolume(Mathf.Lerp(currentVolume, 0f, timer));
-            yield return null;
+            yield return StartCoroutine(FadeOutMusicCoroutine(currentMusicZone.fadeOutDuration));
+        }
+
+        currentMusicZone = zone;
+
+        // Запускаем музыку новой зоны
+        if (zone.HasValidPlaylist())
+        {
+            string musicEvent = zone.shuffle ? zone.GetRandomTrack() : zone.GetTrackByIndex(0);
+            PlayMusic(musicEvent, zone.fadeInDuration);
         }
     }
 
-    IEnumerator FadeInMusic()
+    private IEnumerator FadeOutMusicCoroutine(float fadeDuration)
     {
+        if (!currentMusicInstance.isValid()) yield break;
+
+        float currentVolume = 1f;
         float timer = 0f;
-        
-        while (timer < 1f)
+
+        // Получаем текущую громкость
+        currentMusicInstance.getVolume(out currentVolume);
+
+        while (timer < fadeDuration)
         {
-            timer += Time.deltaTime / 1f; // 1 секунда на фейд-ин
-            musicPlayer.SetVolume(Mathf.Lerp(0f, globalVolume, timer));
+            timer += Time.deltaTime;
+            float newVolume = Mathf.Lerp(currentVolume, 0f, timer / fadeDuration);
+            currentMusicInstance.setVolume(newVolume);
             yield return null;
+        }
+
+        currentMusicInstance.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
+        currentMusicInstance.release();
+    }
+
+    private void PlayMusic(string eventName, float fadeInDuration)
+    {
+        if (string.IsNullOrEmpty(eventName)) return;
+
+        // Останавливаем предыдущую музыку
+        if (currentMusicInstance.isValid())
+        {
+            currentMusicInstance.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
+            currentMusicInstance.release();
+        }
+
+        // Создаем новое событие
+        currentMusicInstance = RuntimeManager.CreateInstance(eventName);
+        
+        // Запускаем фейд-ин
+        if (fadeInDuration > 0f)
+        {
+            StartCoroutine(FadeInMusicCoroutine(currentMusicInstance, fadeInDuration));
+        }
+        else
+        {
+            currentMusicInstance.setVolume(1f);
+        }
+
+        currentMusicInstance.start();
+    }
+
+    private IEnumerator FadeInMusicCoroutine(FMOD.Studio.EventInstance instance, float fadeDuration)
+    {
+        instance.setVolume(0f);
+
+        float timer = 0f;
+        while (timer < fadeDuration)
+        {
+            timer += Time.deltaTime;
+            float volume = Mathf.Lerp(0f, 1f, timer / fadeDuration);
+            instance.setVolume(volume);
+            yield return null;
+        }
+
+        instance.setVolume(1f);
+    }
+
+    // Установка параметра FMOD
+    public void SetMusicParameter(string parameterName, float value)
+    {
+        if (currentMusicInstance.isValid())
+        {
+            currentMusicInstance.setParameterByName(parameterName, value);
         }
     }
 
-    public void SetZonePriority(MusicZone zone, int priority)
+    void OnDestroy()
     {
-        zonePriorities[zone] = priority;
+        // Очистка FMOD инстансов
+        if (currentMusicInstance.isValid())
+        {
+            currentMusicInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
+            currentMusicInstance.release();
+        }
     }
 }
