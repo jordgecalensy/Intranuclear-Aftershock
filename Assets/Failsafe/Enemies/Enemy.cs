@@ -1,11 +1,13 @@
 using DMDungeonGenerator;
 using Failsafe.Enemies.Sensors;
+using Failsafe.Scripts.Health;
 using System.Collections;
 using System.Collections.Generic;
 using Tayx.Graphy.Utils.NumString;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UIElements;
+using VContainer;
 using Vector3 = UnityEngine.Vector3;
 
 public class Enemy : MonoBehaviour
@@ -46,6 +48,14 @@ public class Enemy : MonoBehaviour
     [SerializeField] private bool  scaleArcByUpDelta = true; // добавлять дугу при прыжке "вверх"
     private Rigidbody rb;
     bool busy;
+    private IHealth _health;
+    public IHealth Health => _health;
+
+    [Inject]
+    public void Construct(IHealth health)
+    {
+        _health = health;
+    }
 
     private void Awake()
     {
