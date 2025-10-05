@@ -3649,6 +3649,22 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -6
       objectReference: {fileID: 0}
+    - target: {fileID: 6156967147726032477, guid: 5b51ea9e3a2a995458c8cec1de0c609f, type: 3}
+      propertyPath: _holdDistance
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6156967147726032477, guid: 5b51ea9e3a2a995458c8cec1de0c609f, type: 3}
+      propertyPath: _grabbableMask.m_Bits
+      value: 2048
+      objectReference: {fileID: 0}
+    - target: {fileID: 6156967147726032477, guid: 5b51ea9e3a2a995458c8cec1de0c609f, type: 3}
+      propertyPath: _playerColliders.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6156967147726032477, guid: 5b51ea9e3a2a995458c8cec1de0c609f, type: 3}
+      propertyPath: '_playerColliders.Array.data[0]'
+      value: 
+      objectReference: {fileID: 1775889967}
     - target: {fileID: 6161880116403646356, guid: 5b51ea9e3a2a995458c8cec1de0c609f, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -3984,6 +4000,14 @@ PrefabInstance:
     - target: {fileID: 6872948449968631716, guid: 5b51ea9e3a2a995458c8cec1de0c609f, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -39.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6919758070208313970, guid: 5b51ea9e3a2a995458c8cec1de0c609f, type: 3}
+      propertyPath: _carryingDistance
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6919758070208313970, guid: 5b51ea9e3a2a995458c8cec1de0c609f, type: 3}
+      propertyPath: _carryingObjectLayer.m_Bits
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6922598923951125722, guid: 5b51ea9e3a2a995458c8cec1de0c609f, type: 3}
       propertyPath: m_AnchorMax.y
@@ -5351,6 +5375,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63669000e4058b649920d99c28ef8bbe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!136 &1775889967 stripped
+CapsuleCollider:
+  m_CorrespondingSourceObject: {fileID: 4841356854283172342, guid: 5b51ea9e3a2a995458c8cec1de0c609f, type: 3}
+  m_PrefabInstance: {fileID: 1237243337}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1794330554
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5922,6 +5951,10 @@ PrefabInstance:
     - target: {fileID: 3675057568682326029, guid: f31f635d30eed964787bf02337b0e018, type: 3}
       propertyPath: m_Name
       value: FireExtiguisher
+      objectReference: {fileID: 0}
+    - target: {fileID: 5929378205056828256, guid: f31f635d30eed964787bf02337b0e018, type: 3}
+      propertyPath: m_Constraints
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
