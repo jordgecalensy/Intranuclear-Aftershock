@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
 using VContainer.Unity;
+using Failsafe.Scripts.Damage.Implementation;
 
 namespace Failsafe.Player
 {
@@ -25,6 +26,7 @@ namespace Failsafe.Player
 
         [SerializeField] private PlayerView _playerView;
         [SerializeField] private InputActionAsset _inputActionAsset;
+        [SerializeField] private DamageableComponent _damageable;
 
         [SerializeField] private Camera _playerCam;
 
@@ -34,6 +36,7 @@ namespace Failsafe.Player
             builder.RegisterInstance(_playerMovementParameters);
             builder.RegisterInstance(_playerNoiseParameters);
             builder.RegisterComponent(_playerView);
+            builder.RegisterComponent(_damageable);
             builder.RegisterComponent(_inputActionAsset);
 
             builder.RegisterInstance(_playerCam);

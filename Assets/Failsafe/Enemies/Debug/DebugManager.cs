@@ -86,6 +86,7 @@ public class DebugManager : MonoBehaviour
             var enemy = enemyGO.GetComponent<Enemy>();
             var NavMesh = enemyGO.GetComponent<NavMeshAgent>();
             var awarness = enemy._awarenessMeter.AlertnessValue;
+            float health = enemy.Health.CurrentHealth;
             string stateName = enemy?.currentState?.ToString() ?? "Unknown";
             enemy.DebugEnemy();
             
@@ -95,6 +96,7 @@ public class DebugManager : MonoBehaviour
             GUILayout.Label($"Speed: {NavMesh.velocity}");
             GUILayout.Label($"State: {stateName}");
             GUILayout.Label($"Степень настороженности: {awarness} ");
+            GUILayout.Label($"Здоровье: {health} ");
             GUILayout.Label($"Противник видит игрока: {enemy.seePlayer}");
             GUILayout.Label($"Противник слышит игрока:{enemy.hearPlayer}");
             GUILayout.Space(10);
