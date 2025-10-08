@@ -368,6 +368,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e06ba66b175978b4fb45ae17c7731ec9, type: 2}
   _playerView: {fileID: 345903572760889237}
   _inputActionAsset: {fileID: -944628639613478452, guid: 1f09f2f8cfa351946a2c010bb9946270, type: 3}
+  _damageable: {fileID: 5474980340744432184}
   _playerCam: {fileID: 374109432981789075}
 --- !u!114 &5564961472655603788
 MonoBehaviour:
@@ -384,10 +385,11 @@ MonoBehaviour:
   _maxPickupDistance: 7
   _carryingDistance: 2.5
   _carrySpeed: 10
-  _carryingObjectLayer:
-    serializedVersion: 2
-    m_Bits: 0
+  _carryingLayerIndex: 0
   _carryingDistanceShorteningTo: 0.8
+  _alignMode: 1
+  _rotKp: 30
+  _rotKd: 5
   _grabHelperVector: {x: 0, y: 0.01, z: 0}
   CarryingObject: {fileID: 0}
   CarryingBody: {fileID: 0}
@@ -1241,7 +1243,6 @@ MonoBehaviour:
   Body: {fileID: 1615477473312663351}
   RightHandItemPlace: {fileID: 7187681983919734697}
   Animator: {fileID: 3574109746567184272}
-  Damageable: {fileID: 5474980340744432184}
   PlayerGrabPoint: {fileID: 4161287245272060702}
   CharacterController: {fileID: 374109433352817471}
   FootstepEvent:
