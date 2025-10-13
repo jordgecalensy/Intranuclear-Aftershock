@@ -6,8 +6,7 @@ using FMODUnity;
 public class MusicZoneManager : MonoBehaviour
 {
     [Header("FMOD Settings")]
-    [FMODUnity.EventRef]
-    public string defaultMusicEvent;
+    [SerializeField] private List<EventReference> defaultMusicEvent = new List<EventReference>();
     
     private FMOD.Studio.EventInstance currentMusicInstance;
     private MusicZone currentMusicZone;
