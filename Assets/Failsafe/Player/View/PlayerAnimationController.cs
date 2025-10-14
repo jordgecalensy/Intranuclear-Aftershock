@@ -30,6 +30,7 @@ namespace Failsafe.Player
         private int _jumpId = Animator.StringToHash("Jump");
         private int _slidingId = Animator.StringToHash("Sliding");
         private int _healId = Animator.StringToHash("Heal");
+        private int _deadId = Animator.StringToHash("Dead");
 
         public PlayerAnimationController(PlayerController playerController, PlayerView playerView, PlayerHandsSystem playerHandsSystem)
         {
@@ -64,6 +65,7 @@ namespace Failsafe.Player
             _animator.SetBool(_fallingId, _playerController.StateMachine.CurrentState is FallState);
             _animator.SetBool(_groundedId, _playerController.PlayerMovementController.IsGrounded);
             _animator.SetBool(_slidingId, _playerController.StateMachine.CurrentState is SlideState);
+            _animator.SetBool(_deadId, _playerController.StateMachine.CurrentState is DeathState );
         }
 
         public void Initialize()
