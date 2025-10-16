@@ -18,8 +18,8 @@ public class MathematicalMinigameManager : MonoBehaviour
     [Header("Variation of the mini-game")]
     [SerializeField] private MathematicalVariations _mathematicalVariation;
 
-    [Header("Ñompared Number Settings")]
-    [SerializeField] private string _textWithÑomparedNumber;
+    [Header("ï¿½ompared Number Settings")]
+    [SerializeField] private string _textWithĞ¡omparedNumber;
     [SerializeField] private int _comparedNumber;
 
     private int comparedNumber;
@@ -63,7 +63,7 @@ public class MathematicalMinigameManager : MonoBehaviour
             TimeIsOut();
         }
     }
-    public void Ñomparison(bool moreNumber)
+    public void Ğ¡omparison(bool moreNumber)
     {
         if (!_timerRunning) return;
         if (moreNumber)
@@ -101,7 +101,7 @@ public class MathematicalMinigameManager : MonoBehaviour
         if (_mathematicalVariation == MathematicalVariations.variant_3)
             if(_cellsCount != 0)
                 comparedNumber = _resultCalculation;
-        _comparedNumberText.text = _textWithÑomparedNumber + " " + comparedNumber;
+        _comparedNumberText.text = _textWithĞ¡omparedNumber + " " + comparedNumber;
     }
     private void GeneratingCalculation()
     {
@@ -148,8 +148,8 @@ public class MathematicalMinigameManager : MonoBehaviour
     private void TimeIsOut()
     {
         _timerRunning = false;
-        Debug.Log("Òàéìåğ çàâåğøåí!");
-        Debug.Log("Âûïîëíÿåòñÿ äåéñòâèå ïîñëå òàéìåğà");
+        Debug.Log("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½!");
+        Debug.Log("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
         CreateNewGame();
     }
     private void CreateNewGame()

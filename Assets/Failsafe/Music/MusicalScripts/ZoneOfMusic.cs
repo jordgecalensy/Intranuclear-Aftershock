@@ -1,79 +1,62 @@
-using System.Collections;
 using UnityEngine;
+using FMODUnity;
 
+[DisallowMultipleComponent]
+[RequireComponent(typeof(Collider))]
 public class MusicZone : MonoBehaviour
 {
-    [Header("Настройки музыкальной зоны")]
-    [FMODUnity.EventRef]
-    public string[] zonePlaylist; // Массив событий FMOD
+    [Header("РџР»РµР№Р»РёСЃС‚ Р·РѕРЅС‹ (FMOD EventReference)")]
+    public EventReference[] zonePlaylist;
+
     public float fadeInDuration = 2f;
     public float fadeOutDuration = 2f;
     public bool stopOnExit = false;
-    
-    [Header("Настройки воспроизведения")]
+
+    [Header("РџРѕРІРµРґРµРЅРёРµ РїР»РµР№Р»РёСЃС‚Р°")]
     public bool shuffle = false;
     public bool loop = true;
-    
-    [Header("Параметры FMOD")]
+
+    [Header("FMOD РїР°СЂР°РјРµС‚СЂС‹ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)")]
     public string musicParameter = "MusicState";
     public float parameterValue = 1f;
-    
+
     private MusicZoneManager zoneManager;
     private bool playerInZone = false;
 
-    void Start()
+    private void Reset()
+    {
+        // Р”Р»СЏ 3D-С‚СЂРёРіРіРµСЂРѕРІ РѕРґРёРЅ РёР· РєРѕР»Р»Р°Р№РґРµСЂРѕРІ РІ РїР°СЂРµ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ СЃ Rigidbody.
+        var col = GetComponent<Collider>();
+        col.isTrigger = true;
+    }
+
+    private void Start()
     {
         zoneManager = FindObjectOfType<MusicZoneManager>();
         if (zoneManager == null)
         {
-            Debug.LogError("MusicZoneManager не найден в сцене!");
+            Debug.LogError("[MusicZone] MusicZoneManager РЅРµ РЅР°Р№РґРµРЅ РЅР° СЃС†РµРЅРµ!");
         }
     }
 
-    void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && !playerInZone)
-        {
-            playerInZone = true;
-            zoneManager.EnterMusicZone(this);
-        }
+        if (playerInZone) return;
+        if (!other.CompareTag("Player")) return;
+
+        playerInZone = true;
+        zoneManager?.EnterMusicZone(this);
     }
 
-    void OnTriggerExit(Collider other)
+    private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player") && playerInZone && stopOnExit)
-        {
-            playerInZone = false;
-            zoneManager.ExitMusicZone(this);
-        }
+        if (!playerInZone) return;
+        if (!other.CompareTag("Player")) return;
+
+        playerInZone = false;
+        zoneManager?.ExitMusicZone(this);
     }
 
-    public string[] GetPlaylist()
-    {
-        return zonePlaylist;
-    }
-
-    // Метод для получения случайного трека из плейлиста
-    public string GetRandomTrack()
-    {
-        if (zonePlaylist == null || zonePlaylist.Length == 0)
-            return null;
-
-        return zonePlaylist[Random.Range(0, zonePlaylist.Length)];
-    }
-
-    // Метод для получения трека по индексу
-    public string GetTrackByIndex(int index)
-    {
-        if (zonePlaylist == null || zonePlaylist.Length == 0 || index < 0 || index >= zonePlaylist.Length)
-            return null;
-
-        return zonePlaylist[index];
-    }
-
-    // Проверка валидности плейлиста
-    public bool HasValidPlaylist()
-    {
-        return zonePlaylist != null && zonePlaylist.Length > 0;
-    }
+    // Р”Р»СЏ СѓРґРѕР±СЃС‚РІР°, РµСЃР»Рё РЅСѓР¶РЅРѕ РїСЂРѕРІРµСЂРёС‚СЊ РІР°Р»РёРґРЅРѕСЃС‚СЊ РІ СЂРµРґР°РєС‚РѕСЂСЃРєРёС… СѓС‚РёР»РёС‚Р°С…
+    public bool HasValidPlaylist() => zonePlaylist != null && zonePlaylist.Length > 0;
 }

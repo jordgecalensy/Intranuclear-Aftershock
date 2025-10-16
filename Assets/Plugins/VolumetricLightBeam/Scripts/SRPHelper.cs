@@ -43,7 +43,7 @@ namespace VLB
         static RenderPipeline ComputeRenderPipeline()
         {
 #if VLB_SRP_SUPPORT
-        var rp = UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset;
+        var rp = UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline;
         if (rp)
         {
             var name = rp.GetType().ToString();
@@ -59,7 +59,7 @@ namespace VLB
     public static bool IsUsingCustomRenderPipeline()
     {
         // TODO: optimize and use renderPipelineType
-        return AliasCurrentPipeline.currentPipeline != null || UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset != null;
+        return AliasCurrentPipeline.currentPipeline != null || UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline != null;
     }
 
     public static void RegisterOnBeginCameraRendering(CallbackType cb)
