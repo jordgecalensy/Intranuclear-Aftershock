@@ -7,34 +7,39 @@ using Failsafe.Scripts.Damage.Implementation;
 [RequireComponent(typeof(SphereCollider))]
 public sealed class FireAreaAdvanced : MonoBehaviour
 {
-    public enum Tier { Weak, Medium, Strong, Big } // FX: добавил Big
+    public enum Tier { Weak, Medium, Strong, Big } // боевые тиры для ДПС/DoT (визуально не используются)
 
+    // -------------------- TARGETS / TICKS --------------------
     [Header("Targets")]
     public LayerMask targetMask = ~0;
     [Min(0.02f)] public float tickInterval = 0.25f;
     public int maxTargetsPerTick = 64;
 
+    // -------------------- GEOMETRY --------------------
     [Header("Geometry (Sphere)")]
     [Min(0.1f)] public float initialRadius = 2f;
     [Min(0.1f)] public float maxRadius = 10f;
     [Min(0f)]   public float radiusGrowPerSec = 0.5f;
 
+    // -------------------- INTENSITY MODEL --------------------
     [Header("Intensity")]
-    [Tooltip("Текущая \"сила\" очага")]
+    [Tooltip("Текущая «сила» очага")]
     public float intensity = 0.75f;
     [Min(0f)] public float intensityGrowPerSec = 0.2f;
     public float mediumThreshold = 1.0f;
     public float strongThreshold = 2.0f;
-    public float peakIntensity = 3.0f;      // ориентир на Big
-    public float sustainIntensity = 1.2f;
+    public float peakIntensity = 3.0f;      // максимум шкалы для маппинга FX
+    public float sustainIntensity = 1.2f;   // уровень, до которого догораем
     [Min(0f)] public float burnoutDecayPerSec = 0.5f;
 
+    // -------------------- EXTINGUISH --------------------
     [Header("Extinguish (угасание)")]
     [Tooltip("При падении ниже этого значения огонь считается потухшим")]
     public float extinguishAt = 0.15f;
     public bool destroyOnExtinguish = true;
     public float extinguishFadeTime = 0.6f; // плавное затухание FX
 
+    // -------------------- COMBAT DAMAGE --------------------
     [Header("Contact DPS per tier")]
     [Min(0f)] public float weakContactDps   = 5f;
     [Min(0f)] public float mediumContactDps = 12f;
@@ -47,6 +52,7 @@ public sealed class FireAreaAdvanced : MonoBehaviour
     [Min(0f)]    public float mediumDotIntensity = 1.0f;
     [Min(0f)]    public float strongDotIntensity = 2.0f;
 
+    // -------------------- SPREAD (опционально) --------------------
     [Header("Spreading (optional)")]
     public bool enableSpreading = false;
     public FireAreaAdvanced firePrefab;
@@ -57,23 +63,22 @@ public sealed class FireAreaAdvanced : MonoBehaviour
     [Range(0.1f, 1.5f)] public float childIntensityFactor = 0.8f;
     [Range(0.1f, 1.5f)] public float childRadiusFactor = 0.7f;
 
-    [Header("FX (prefabs by tier)")]
-    public ParticleSystem weakFxPrefab;
-    public ParticleSystem mediumFxPrefab;
-    public ParticleSystem strongFxPrefab;
-    public ParticleSystem bigFxPrefab;
-    [Tooltip("Время кроссфейда между префабами FX")]
-    [Min(0.05f)] public float fxCrossfadeTime = 0.4f;
-    [Tooltip("Скалирование FX по интенсивности (масштаб трансформа)")]
-    public Vector2 fxScaleByIntensity = new Vector2(0.8f, 1.4f);
-    [Tooltip("Множитель эмиссии на минимальной и максимальной интенсивности")]
-    public Vector2 fxEmissionByIntensity = new Vector2(0.6f, 1.6f);
+    // -------------------- SINGLE-FX (бесшовно) --------------------
+    [Header("FX (single prefab)")]
+    public ParticleSystem fxPrefab;                    // один общий префаб огня
+    [Min(0.01f)] public float fxSmoothTime = 0.25f;    // сглаживание переходов
+    [Min(0.0f)]  public float fxPrewarmTime = 0.35f;   // «прогрев» при старте
 
+    [Header("FX continuous mapping (0..1 от peakIntensity)")]
+    public AnimationCurve scaleCurve    = AnimationCurve.Linear(0, 0.8f, 1, 1.4f); // intensity -> transform.localScale
+    public AnimationCurve emissionCurve = AnimationCurve.Linear(0, 0.6f, 1, 1.6f); // intensity -> emission.rateOverTime.curveMultiplier
+
+    // -------------------- DEBUG --------------------
     [Header("Debug")]
     public bool drawGizmos = true;
     public Color gizmoColor = new Color(1f, 0.4f, 0f, 0.25f);
 
-    // runtime
+    // -------------------- RUNTIME --------------------
     float _radius;
     float _nextTickAt;
     bool  _burningOut;
@@ -92,16 +97,12 @@ public sealed class FireAreaAdvanced : MonoBehaviour
     readonly Dictionary<DamageableComponent, DotState> _dots = new();
     static readonly List<DamageableComponent> _toRemove = new();
 
-    // FX: текущее состояние визуального уровня с гистерезисом
-    Tier _visualTier = Tier.Weak;
-    ParticleSystem _fxCurrent;
-    Coroutine _fxBlendRoutine;
+    // single FX instance + сглаживание
+    ParticleSystem _fxInstance;
+    float _scaleVel, _emisVel;
+    float _currentScale = 1f, _currentEmission = 1f;
 
-    // FX: гистерезис, чтобы не дёргало на границе
-    [Header("FX thresholds (hysteresis)")]
-    [Tooltip("Отступ вниз от порога для выключения уровня")]
-    public float hysteresis = 0.12f;
-
+    // -------------------- LIFECYCLE --------------------
     void OnEnable()
     {
         _radius = Mathf.Clamp(initialRadius, 0.1f, maxRadius);
@@ -111,22 +112,37 @@ public sealed class FireAreaAdvanced : MonoBehaviour
 
         var sc = GetComponent<SphereCollider>();
         sc.isTrigger = true;
-        sc.radius = 0.01f; // служебный
+        sc.radius = 0.01f; // служебный, геометрию считаем сами
 
-        // FX: стартовый спавн
-        _visualTier = GetVisualTier(intensity, _visualTier);
-        EnsureFxForTier(_visualTier, immediate:true);
-        ApplyFxScaleAndEmission(intensity);
+        // инстанс единственного FX
+        if (fxPrefab && !_fxInstance)
+        {
+            _fxInstance = Instantiate(fxPrefab, transform);
+            _fxInstance.name = fxPrefab.name + "(Runtime)";
+            _fxInstance.transform.localPosition = Vector3.zero;
+            _fxInstance.transform.localRotation = Quaternion.identity;
+
+            var main = _fxInstance.main;
+            main.prewarm = true;
+            if (fxPrewarmTime > 0f)
+                _fxInstance.Simulate(fxPrewarmTime, withChildren: true, restart: true, fixedTimeStep: false);
+
+            _fxInstance.Play(true);
+            ApplyFxContinuous(intensity, immediate: true);
+        }
     }
 
     void OnDisable()
     {
-        if (_fxBlendRoutine != null) StopCoroutine(_fxBlendRoutine);
-        _fxBlendRoutine = null;
-        if (_fxCurrent) Destroy(_fxCurrent.gameObject);
-        _fxCurrent = null;
+        if (_fxInstance)
+        {
+            _fxInstance.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            Destroy(_fxInstance.gameObject);
+            _fxInstance = null;
+        }
     }
 
+    // -------------------- UPDATE --------------------
     void Update()
     {
         float dt = Time.deltaTime;
@@ -151,11 +167,11 @@ public sealed class FireAreaAdvanced : MonoBehaviour
                 intensity = Mathf.Max(sustainIntensity, intensity - burnoutDecayPerSec * dt);
         }
 
-        // EXTINGUISH: полное угасание
+        // угасание
         if (intensity <= extinguishAt)
         {
             StartCoroutine(CoExtinguishAndMaybeDestroy());
-            return; // прекращаем логику тиков/спреда после старта угасания
+            return; // после старта угасания логику не продолжаем
         }
 
         float now = Time.time;
@@ -177,25 +193,16 @@ public sealed class FireAreaAdvanced : MonoBehaviour
             TrySpread();
         }
 
-        // FX: слежение за визуальным уровнем и плавный переход
-        var desiredTier = GetVisualTier(intensity, _visualTier);
-        if (desiredTier != _visualTier)
-        {
-            _visualTier = desiredTier;
-            EnsureFxForTier(_visualTier, immediate:false);
-        }
-
-        // FX: масштаб и эмиссия по интенсивности
-        ApplyFxScaleAndEmission(intensity);
+        // бесшовный визуал
+        ApplyFxContinuous(intensity, immediate: false);
     }
 
-    // -------------------- DAMAGE / DOT как было --------------------
-
+    // -------------------- DAMAGE / DOT --------------------
     void DoContactTick()
     {
         _seen.Clear();
-
         int n = Physics.OverlapSphereNonAlloc(transform.position, _radius, _buf, targetMask, QueryTriggerInteraction.Collide);
+
         Tier tier = GetTier(intensity);
         float dps = tier switch
         {
@@ -280,123 +287,39 @@ public sealed class FireAreaAdvanced : MonoBehaviour
             _dots.Remove(_toRemove[i]);
         _toRemove.Clear();
     }
-    
-    // Боевой уровень урона (Weak/Medium/Strong) — старая логика
+
+    // боевой тир (для урона), визуально не используется
     Tier GetTier(float x)
     {
         if (x < mediumThreshold) return Tier.Weak;
         if (x < strongThreshold) return Tier.Medium;
         if (x < Mathf.Max(strongThreshold + 0.0001f, peakIntensity * 0.95f)) return Tier.Strong;
-        return Tier.Big; // добавил Big как очень сильный
+        return Tier.Big;
     }
 
-    // Визуальный уровень с гистерезисом
-    Tier GetVisualTier(float x, Tier current)
+    // -------------------- SINGLE-FX CONTROL --------------------
+    void ApplyFxContinuous(float x, bool immediate)
     {
-        float medOn = mediumThreshold;
-        float medOff = mediumThreshold - hysteresis;
+        if (!_fxInstance) return;
 
-        float strOn = strongThreshold;
-        float strOff = strongThreshold - hysteresis;
+        // нормализация 0..1 относительно 0..peakIntensity
+        float n = Mathf.InverseLerp(0f, Mathf.Max(0.001f, peakIntensity), Mathf.Max(0f, x));
+        float targetScale    = scaleCurve.Evaluate(n);
+        float targetEmission = emissionCurve.Evaluate(n);
 
-        float bigOn = Mathf.Max(strongThreshold + 0.01f, peakIntensity * 0.95f);
-        float bigOff = Mathf.Max(strongThreshold + 0.005f, peakIntensity * 0.85f);
-
-        switch (current)
+        if (immediate)
         {
-            case Tier.Weak:
-                if (x >= bigOn) return Tier.Big;
-                if (x >= strOn) return Tier.Strong;
-                if (x >= medOn) return Tier.Medium;
-                return Tier.Weak;
-
-            case Tier.Medium:
-                if (x >= bigOn) return Tier.Big;
-                if (x >= strOn) return Tier.Strong;
-                if (x < medOff) return Tier.Weak;
-                return Tier.Medium;
-
-            case Tier.Strong:
-                if (x >= bigOn) return Tier.Big;
-                if (x < strOff)
-                {
-                    if (x >= medOn) return Tier.Medium;
-                    return Tier.Weak;
-                }
-                return Tier.Strong;
-
-            case Tier.Big:
-                if (x < bigOff)
-                {
-                    if (x >= strOn) return Tier.Strong;
-                    if (x >= medOn) return Tier.Medium;
-                    return Tier.Weak;
-                }
-                return Tier.Big;
+            _currentScale    = targetScale;
+            _currentEmission = targetEmission;
         }
-        return Tier.Weak;
-    }
-
-    // -------------------- FX HANDLING --------------------
-
-    void EnsureFxForTier(Tier tier, bool immediate)
-    {
-        var prefab = GetFxPrefab(tier);
-        if (!prefab) return;
-
-        // Если уже тот же тип FX — ничего не делаем
-        if (_fxCurrent && _fxCurrent.name.StartsWith(prefab.name, StringComparison.Ordinal)) return;
-
-        var newFx = Instantiate(prefab, transform);
-        newFx.name = prefab.name + "(Runtime)";
-        newFx.transform.localPosition = Vector3.zero;
-        newFx.transform.localRotation = Quaternion.identity;
-        SetEmissionMultiplier(newFx, 0f); // начнём с 0 для кроссфейда
-        newFx.Play(true);
-
-        if (immediate || _fxCurrent == null || fxCrossfadeTime <= 0.05f)
+        else
         {
-            if (_fxCurrent) Destroy(_fxCurrent.gameObject);
-            _fxCurrent = newFx;
-            SetEmissionMultiplier(_fxCurrent, 1f);
-            return;
+            _currentScale    = Mathf.SmoothDamp(_currentScale,    targetScale,    ref _scaleVel, fxSmoothTime);
+            _currentEmission = Mathf.SmoothDamp(_currentEmission, targetEmission, ref _emisVel,  fxSmoothTime);
         }
 
-        if (_fxBlendRoutine != null) StopCoroutine(_fxBlendRoutine);
-        _fxBlendRoutine = StartCoroutine(CoFxCrossfade(_fxCurrent, newFx, fxCrossfadeTime));
-    }
-
-    ParticleSystem GetFxPrefab(Tier tier)
-    {
-        return tier switch
-        {
-            Tier.Weak   => weakFxPrefab,
-            Tier.Medium => mediumFxPrefab ? mediumFxPrefab : weakFxPrefab,
-            Tier.Strong => strongFxPrefab ? strongFxPrefab : mediumFxPrefab ? mediumFxPrefab : weakFxPrefab,
-            Tier.Big    => bigFxPrefab ? bigFxPrefab : strongFxPrefab ? strongFxPrefab : mediumFxPrefab ? mediumFxPrefab : weakFxPrefab,
-            _ => weakFxPrefab
-        };
-    }
-
-    IEnumerator CoFxCrossfade(ParticleSystem oldFx, ParticleSystem newFx, float t)
-    {
-        float time = 0f;
-        while (time < t)
-        {
-            time += Time.deltaTime;
-            float k = Mathf.Clamp01(time / t);
-            SetEmissionMultiplier(newFx, k);
-            SetEmissionMultiplier(oldFx, 1f - k);
-            yield return null;
-        }
-        SetEmissionMultiplier(newFx, 1f);
-        if (oldFx)
-        {
-            oldFx.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-            Destroy(oldFx.gameObject);
-        }
-        _fxCurrent = newFx;
-        _fxBlendRoutine = null;
+        _fxInstance.transform.localScale = Vector3.one * _currentScale;
+        SetEmissionMultiplier(_fxInstance, _currentEmission);
     }
 
     void SetEmissionMultiplier(ParticleSystem root, float m)
@@ -406,67 +329,42 @@ public sealed class FireAreaAdvanced : MonoBehaviour
         foreach (var ps in all)
         {
             var em = ps.emission;
-            var rate = em.rateOverTime;
-            rate.curveMultiplier = m;
+            var rate = em.rateOverTime;   // MinMaxCurve
+            rate.curveMultiplier = m;     // современный способ масштабировать rate
             em.rateOverTime = rate;
         }
     }
 
-    void ApplyFxScaleAndEmission(float x)
-    {
-        if (!_fxCurrent) return;
-
-        // нормализуем 0..1 относительно 0..peakIntensity
-        float n = Mathf.InverseLerp(0f, Mathf.Max(0.001f, peakIntensity), Mathf.Max(0f, x));
-        float scale = Mathf.Lerp(fxScaleByIntensity.x, fxScaleByIntensity.y, n);
-        float emisM = Mathf.Lerp(fxEmissionByIntensity.x, fxEmissionByIntensity.y, n);
-
-        _fxCurrent.transform.localScale = Vector3.one * scale;
-
-        var all = _fxCurrent.GetComponentsInChildren<ParticleSystem>(true);
-        foreach (var ps in all)
-        {
-            var em = ps.emission;
-            var rate = em.rateOverTime;
-            rate.curveMultiplier = emisM;
-            em.rateOverTime = rate;
-        }
-    }
-
-    // -------------------- УГАСАНИЕ --------------------
-
+    // -------------------- EXTINGUISH --------------------
     IEnumerator CoExtinguishAndMaybeDestroy()
     {
-        // отключаем дальнейшую работу
         enabled = false;
 
-        // плавно гасим FX
-        if (_fxBlendRoutine != null) StopCoroutine(_fxBlendRoutine);
-        if (_fxCurrent)
+        if (_fxInstance)
         {
             float t = Mathf.Max(0.05f, extinguishFadeTime);
             float time = 0f;
-            var all = _fxCurrent.GetComponentsInChildren<ParticleSystem>(true);
 
-            // запоминаем исходные мультипликаторы
-            var initialRates = new float[all.Length];
+            var all = _fxInstance.GetComponentsInChildren<ParticleSystem>(true);
+            var initial = new float[all.Length];
             for (int i = 0; i < all.Length; i++)
-            {
-                initialRates[i] = all[i].emission.rateOverTimeMultiplier;
-            }
+                initial[i] = all[i].emission.rateOverTime.curveMultiplier;
 
             while (time < t)
             {
                 time += Time.deltaTime;
                 float k = 1f - Mathf.Clamp01(time / t);
+
                 for (int i = 0; i < all.Length; i++)
                 {
                     var ps = all[i];
                     var em = ps.emission;
                     var rate = em.rateOverTime;
-                    rate.curveMultiplier = initialRates[i] * k;
+                    rate.curveMultiplier = initial[i] * k;
                     em.rateOverTime = rate;
                 }
+
+                _fxInstance.transform.localScale = Vector3.one * Mathf.Lerp(0.4f, _currentScale, k); // лёгкое схлопывание
                 yield return null;
             }
 
@@ -478,16 +376,15 @@ public sealed class FireAreaAdvanced : MonoBehaviour
             Destroy(gameObject);
     }
 
-    // Внешний «полив водой»/штраф к интенсивности
+    // внешнее «заливание водой»/штраф к интенсивности
     public void AddExtinguishImpulse(float amount)
     {
         if (amount <= 0f) return;
         intensity = Mathf.Max(0f, intensity - amount);
-        _burningOut = true; // форсируем режим выгорания
+        _burningOut = true; // форсируем выгорание
     }
 
-    // -------------------- SPREAD/GIZMOS как было --------------------
-
+    // -------------------- SPREAD / GIZMOS --------------------
     void TrySpread()
     {
         if (UnityEngine.Random.value > spreadChance) return;

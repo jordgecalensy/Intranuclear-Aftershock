@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace Failsafe.Scripts.Damage.Implementation
 {
-	[RequireComponent(typeof(Collider))]
 	public class DamageableComponent : MonoBehaviour, IDamageable
 	{
 		public event Action<IDamage> OnTakeDamage = delegate { };
