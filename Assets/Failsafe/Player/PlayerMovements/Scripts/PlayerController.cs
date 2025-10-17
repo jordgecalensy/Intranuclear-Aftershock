@@ -85,7 +85,7 @@ namespace Failsafe.PlayerMovements
 
         private void InitializeStateMachine()
         {
-            var deathState = new DeathState();
+            var deathState = new DeathState(_playerView.Animator, _behaviorStateMachine);
             var forcedStates = new List<BehaviorForcedState>
             {
                  deathState
