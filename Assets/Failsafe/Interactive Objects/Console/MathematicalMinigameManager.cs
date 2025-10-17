@@ -19,7 +19,7 @@ public class MathematicalMinigameManager : MonoBehaviour
     [SerializeField] private MathematicalVariations _mathematicalVariation;
 
     [Header("�ompared Number Settings")]
-    [SerializeField] private string _textWithComparedNumber;
+    [SerializeField] private string _textWithСomparedNumber;
     [SerializeField] private int _comparedNumber;
 
     private int comparedNumber;
@@ -63,7 +63,7 @@ public class MathematicalMinigameManager : MonoBehaviour
             TimeIsOut();
         }
     }
-    public void Comparison(bool moreNumber)
+    public void Сomparison(bool moreNumber)
     {
         if (!_timerRunning) return;
         if (moreNumber)
@@ -101,7 +101,7 @@ public class MathematicalMinigameManager : MonoBehaviour
         if (_mathematicalVariation == MathematicalVariations.variant_3)
             if(_cellsCount != 0)
                 comparedNumber = _resultCalculation;
-        _comparedNumberText.text = _textWithComparedNumber + " " + comparedNumber;
+        _comparedNumberText.text = _textWithСomparedNumber + " " + comparedNumber;
     }
     private void GeneratingCalculation()
     {
