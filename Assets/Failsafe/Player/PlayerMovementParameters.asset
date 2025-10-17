@@ -35,7 +35,7 @@ MonoBehaviour:
   FallDistanceToSlow: 2
   SlowMultiplierOnLanding: 0.5
   SlowDurationOnLanding: 5
-  FallDistanceToDisable: 4
+  FallDistanceToDisable: 11
   DisableDurationOnLanding: 5
   GrabLedgeMaxDistance: 0.5
   GrabLedgeMinHeight: 2
@@ -46,17 +46,17 @@ MonoBehaviour:
   ClimbOverLedgeMaxHeight: 1.5
   ClimbOnMaxDistanceToLedge: 1
   ClimbOnLedgeMaxHeight: 2
-  AnimFollowMoveMultiplier: 1
-  AnimMinSpeed: 0.2
-  AnimMaxSpeed: 1
-  AnimSmooth: 12
   FallDamageEnabled: 1
   FallDamageStartHeight: 1
   FallDamageBase: 10
   FallDamageHeightStep: 1
   FallDamageStepAmount: 5
-  LandingSlowHeight: 1
-  LandingSlowMultiplier: 0.6
-  LandingSlowDuration: 2
+  SlowMinorHeight: 1
+  HeavyLandingHeight: 1
+  MinorSlowMultiplier: 0.8
+  MinorSlowDuration: 1.2
+  MainSlowMultiplier: 0.6
+  MainSlowDuration: 2
+  LandingRecoverDuration: 1.29
   FlybyNoiseHeight: 4
   FlybyNoiseRadius: 8
