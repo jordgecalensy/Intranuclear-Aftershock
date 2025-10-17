@@ -18,8 +18,8 @@ public class MathematicalMinigameManager : MonoBehaviour
     [Header("Variation of the mini-game")]
     [SerializeField] private MathematicalVariations _mathematicalVariation;
 
-    [Header("Сompared Number Settings")]
-    [SerializeField] private string _textWithСomparedNumber;
+    [Header("пїЅompared Number Settings")]
+    [SerializeField] private string _textWithComparedNumber;
     [SerializeField] private int _comparedNumber;
 
     private int comparedNumber;
@@ -63,7 +63,7 @@ public class MathematicalMinigameManager : MonoBehaviour
             TimeIsOut();
         }
     }
-    public void Сomparison(bool moreNumber)
+    public void Comparison(bool moreNumber)
     {
         if (!_timerRunning) return;
         if (moreNumber)
@@ -101,7 +101,7 @@ public class MathematicalMinigameManager : MonoBehaviour
         if (_mathematicalVariation == MathematicalVariations.variant_3)
             if(_cellsCount != 0)
                 comparedNumber = _resultCalculation;
-        _comparedNumberText.text = _textWithСomparedNumber + " " + comparedNumber;
+        _comparedNumberText.text = _textWithComparedNumber + " " + comparedNumber;
     }
     private void GeneratingCalculation()
     {
@@ -148,8 +148,8 @@ public class MathematicalMinigameManager : MonoBehaviour
     private void TimeIsOut()
     {
         _timerRunning = false;
-        Debug.Log("Таймер завершен!");
-        Debug.Log("Выполняется действие после таймера");
+        Debug.Log("пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
+        Debug.Log("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
         CreateNewGame();
     }
     private void CreateNewGame()

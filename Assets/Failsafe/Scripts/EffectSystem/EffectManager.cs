@@ -30,6 +30,10 @@ namespace Failsafe.Scripts.EffectSystem
                 var currentEffect = _effects.FirstOrDefault(x => x.GetType() == effect.GetType());
                 if (currentEffect != null)
                 {
+                    if (currentEffect is IReapplicableEffect reapplicable)
+                    {
+                        reapplicable.OnReapply(effect);
+                    }
                     return;
                 }
             }
@@ -44,7 +48,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 Effect effect = _effects[i];
                 effect.Update();
-                if (effect.ElapsedAt < Time.time)
+                if (effect.ElapsedAt <= Time.time)
                 {
                     effect.Dispose();
                     _effects.RemoveAt(i);
