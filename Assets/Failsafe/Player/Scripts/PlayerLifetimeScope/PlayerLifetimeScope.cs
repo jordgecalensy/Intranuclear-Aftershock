@@ -9,6 +9,8 @@ using UnityEngine.InputSystem;
 using VContainer;
 using VContainer.Unity;
 using Failsafe.Scripts.Damage.Implementation;
+using Failsafe.PlayerMovements.Controllers;  
+using Failsafe.Scripts.EffectSystem;
 
 namespace Failsafe.Player
 {
@@ -30,35 +32,50 @@ namespace Failsafe.Player
 
         [SerializeField] private Camera _playerCam;
 
-        protected override void Configure(IContainerBuilder builder)
-        {
-            builder.RegisterInstance(_playerModelParameters);
-            builder.RegisterInstance(_playerMovementParameters);
-            builder.RegisterInstance(_playerNoiseParameters);
-            builder.RegisterComponent(_playerView);
-            builder.RegisterComponent(_damageable);
-            builder.RegisterComponent(_inputActionAsset);
+      
+protected override void Configure(IContainerBuilder builder)
+{
+    // твои регистрации параметров/компонентов
+    builder.RegisterInstance(_playerModelParameters);
+    builder.RegisterInstance(_playerMovementParameters);
+    builder.RegisterInstance(_playerNoiseParameters);
+    builder.RegisterComponent(_playerView);
+    builder.RegisterComponent(_damageable);
+    builder.RegisterComponent(_inputActionAsset);
 
-            builder.RegisterInstance(_playerCam);
+    // Берём нужные зависимости для PlayerMovementController из PlayerView
+    var cc = _playerView != null ? _playerView.CharacterController : null;
+    if (cc == null) Debug.LogError("[PlayerLifetimeScope] PlayerView.CharacterController не задан");
+    builder.RegisterInstance(cc);
 
-            builder.Register<InputHandler>(Lifetime.Scoped);
+    // (Если используешь камеру в других местах)
+    var cam = _playerView != null ? _playerView.PlayerCamera?.GetComponent<Camera>() : null;
+    if (cam == null) Debug.LogWarning("[PlayerLifetimeScope] PlayerCamera не найден (не критично для движения)");
+    builder.RegisterInstance(cam);
 
-            builder.Register<IHealth, PlayerHealth>(Lifetime.Singleton).AsSelf().WithParameter(_playerModelParameters.MaxHealth);
-            builder.Register<IStamina, PlayerStamina>(Lifetime.Singleton).AsSelf().WithParameter(_playerModelParameters.MaxStamina);
-            builder.RegisterEntryPoint<PlayerDamageable>(Lifetime.Scoped);
-            builder.RegisterEntryPoint<PlayerStaminaController>(Lifetime.Scoped).AsSelf();
+    // остальное как у тебя...
+    builder.Register<InputHandler>(Lifetime.Scoped);
+    builder.Register<IHealth, PlayerHealth>(Lifetime.Singleton).AsSelf()
+           .WithParameter(_playerModelParameters.MaxHealth);
+    builder.Register<IStamina, PlayerStamina>(Lifetime.Singleton).AsSelf()
+           .WithParameter(_playerModelParameters.MaxStamina);
+    builder.RegisterEntryPoint<PlayerDamageable>(Lifetime.Scoped);
+    builder.RegisterEntryPoint<PlayerStaminaController>(Lifetime.Scoped).AsSelf();
+    builder.RegisterEntryPoint<PlayerController>(Lifetime.Scoped).AsSelf();
+    builder.Register<PlayerHandsContainer>(Lifetime.Scoped);
+    builder.RegisterEntryPoint<PlayerHandsSystem>(Lifetime.Scoped).AsSelf();
+    builder.RegisterEntryPoint<PlayerAnimationController>(Lifetime.Scoped);
+    builder.RegisterEntryPoint<PlayerCameraController>(Lifetime.Scoped);
 
-            builder.RegisterEntryPoint<PlayerController>(Lifetime.Scoped).AsSelf();
+    builder.Register<PlayerMovementController>(Lifetime.Scoped);  
 
-            builder.Register<PlayerHandsContainer>(Lifetime.Scoped);
-            builder.RegisterEntryPoint<PlayerHandsSystem>(Lifetime.Scoped).AsSelf();
-            
-            builder.RegisterEntryPoint<PlayerAnimationController>(Lifetime.Scoped);
-            builder.RegisterEntryPoint<PlayerCameraController>(Lifetime.Scoped);
+    // ✅ Менеджер эффектов (он же ITickable через EntryPoint)
+    builder.RegisterEntryPoint<EffectManager>(Lifetime.Scoped)
+           .As<IEffectManager>()
+           .AsSelf();
 
-
-            RegisterItems(builder);
-        }
+    RegisterItems(builder);
+}
 
         private void RegisterItems(IContainerBuilder builder)
         {
