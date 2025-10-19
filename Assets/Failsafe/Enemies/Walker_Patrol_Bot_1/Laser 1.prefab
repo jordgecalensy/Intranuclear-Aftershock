@@ -96,11 +96,11 @@ GameObject:
   m_Component:
   - component: {fileID: 206523483800627361}
   - component: {fileID: -997724200373349503}
-  - component: {fileID: -7421779361338854241}
   - component: {fileID: 4665282534929150253}
   - component: {fileID: 2190733941285328543}
   - component: {fileID: 7317607230399975787}
   - component: {fileID: 6419052847392996110}
+  - component: {fileID: 403516391113313310}
   m_Layer: 10
   m_Name: Laser 1
   m_TagString: Untagged
@@ -118,7 +118,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 948556844148772673}
@@ -155,21 +155,6 @@ MonoBehaviour:
   OverrideAttenuation: 0
   OverrideMinDistance: 1
   OverrideMaxDistance: 20
---- !u!114 &-7421779361338854241
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7565026735645175051}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0cb2e70118fd40f4e869ca1bafe874f3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speed: 15
-  lifetime: 5
-  damage: 100
 --- !u!65 &4665282534929150253
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -227,7 +212,7 @@ VisualEffect:
   m_GameObject: {fileID: 7565026735645175051}
   m_Enabled: 1
   m_Asset: {fileID: 8926484042661614526, guid: 79b833b8c3f15da4b9a1445bf657bb54, type: 3}
-  m_InitialEventName: OnPlay
+  m_InitialEventName: On
   m_InitialEventNameOverriden: 0
   m_StartSeed: 0
   m_ResetSeedOnPlay: 1
@@ -302,3 +287,24 @@ VFXRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+--- !u!114 &403516391113313310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7565026735645175051}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c18257dfdd3e6740aa8ab1ad7c297c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  vfx: {fileID: 7317607230399975787}
+  startPosProperty: Start
+  endPosProperty: End
+  lengthProperty: Beam_Length
+  maxLength: 30
+  raycastMask:
+    serializedVersion: 2
+    m_Bits: 57335
+  parentToOrigin: 1

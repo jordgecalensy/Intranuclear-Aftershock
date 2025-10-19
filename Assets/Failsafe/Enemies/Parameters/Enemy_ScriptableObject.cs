@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.VFX;
 
 [CreateAssetMenu(fileName = "Enemy", menuName = "ScriptableObjects/Enemy", order = 1)]
 public class Enemy_ScriptableObject : ScriptableObject
@@ -67,6 +68,8 @@ public class Enemy_ScriptableObject : ScriptableObject
 
     [Header("Attack")]
     public AttackType attackType = AttackType.LaserBeam; // Тип атаки
+    public VisualEffect _laserVfxPrefab;     // ← вместо GameObject _laserBeamPrefab
+    public GameObject _laserProjectilePrefab; 
     public float Damage = 100f; // Урон врага
     public float AttackRangeMin = 10f; // Минимальная дальность атаки врага
     public float AttackRangeMax = 15f; // Максимальная дальность атаки врага
