@@ -290,7 +290,7 @@ GameObject:
   - component: {fileID: 8355542254377614154}
   - component: {fileID: 4908854641351003492}
   - component: {fileID: 7998481155207466712}
-  - component: {fileID: 2658110871342813716}
+  - component: {fileID: 7446055871254434344}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -546,7 +546,7 @@ MonoBehaviour:
   thirdPersonToggleKey: 116
   playerCameraTransform: {fileID: 374109432981789085}
   thirdPersonOffset: {x: 0, y: 1.5, z: -4}
---- !u!114 &2658110871342813716
+--- !u!114 &7446055871254434344
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -555,9 +555,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 374109433352817464}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 63669000e4058b649920d99c28ef8bbe, type: 3}
+  m_Script: {fileID: 11500000, guid: 7380f1feb9c046449989e38284eedbac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _playerCam: {fileID: 374109432981789075}
+  _distance: 5
+  _mask:
+    serializedVersion: 2
+    m_Bits: 2048
+  _crosshairImage: {fileID: 4000581551284009262}
+  _hoverSize: 0.6
+  _scaleSpeed: 8
 --- !u!1 &934749311656323593
 GameObject:
   m_ObjectHideFlags: 0
@@ -2605,7 +2613,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5448294589332743487, guid: 2af6a35dab3266b4d9c50cdecd15f02d, type: 3}
       propertyPath: m_fontSize
-      value: 19.05
+      value: 18
       objectReference: {fileID: 0}
     - target: {fileID: 6776399400493703144, guid: 2af6a35dab3266b4d9c50cdecd15f02d, type: 3}
       propertyPath: m_AnchorMax.x
