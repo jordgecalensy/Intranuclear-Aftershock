@@ -26,7 +26,7 @@ public class ItemDamageComponent : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        var impactBase = Mathf.Pow(collision.relativeVelocity.magnitude, 2) * collision.rigidbody.mass;
+        var impactBase = collision.relativeVelocity.magnitude * collision.rigidbody.mass;
 
         var damage = impactBase * _damageMultiplier;
         if (damage > _minDamage)
