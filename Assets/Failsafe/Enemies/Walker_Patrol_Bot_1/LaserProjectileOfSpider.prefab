@@ -189,7 +189,7 @@ GameObject:
   - component: {fileID: -7586688965744771833}
   - component: {fileID: -6628996601603761317}
   m_Layer: 10
-  m_Name: Laser
+  m_Name: LaserProjectileOfSpider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -223,11 +223,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c18257dfdd3e6740aa8ab1ad7c297c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vfx: {fileID: 0}
+  vfx: {fileID: -7586688965744771833}
   startPosProperty: Beam_Start
   endPosProperty: Beam_End
   lengthProperty: Beam_Length
-  maxLength: 30
+  maxLength: 35
   raycastMask:
     serializedVersion: 2
     m_Bits: 57335
