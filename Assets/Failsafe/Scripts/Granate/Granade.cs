@@ -4,20 +4,9 @@ using System.Collections;
 
 public abstract class Granade : MonoBehaviour
 {
-    [SerializeField] protected int ExplosionTime;
     [SerializeField] protected int ExplosionDamage;
     [SerializeField] protected float ExplosionRadius;
-
-    protected void OnEnable()
-    {
-        StartCoroutine(ExplosionTimer());
-    }
-    protected IEnumerator ExplosionTimer()
-    {
-        yield return new WaitForSeconds(ExplosionTime);
-        Explosion();
-    }
-    protected void Explosion()
+    public void Explosion()
     {
         Collider[] hitsInfo = Physics.OverlapSphere(transform.position, ExplosionRadius);
         foreach (var hitInfo in hitsInfo)
