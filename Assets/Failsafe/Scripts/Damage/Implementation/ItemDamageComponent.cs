@@ -11,10 +11,9 @@ public class ItemDamageComponent : MonoBehaviour
     private Collider _collider;
     private Rigidbody _rigidBody;
     private DamageableComponent _damageableComponent;
+    [SerializeField]
+    private Damage_ScriptableObject _config;
 
-    private int _minDamage = 20; //Если высчитаный скриптом результат меньше этого значения - урон не проходит
-    private int _maxDamage = 200; //Верхняя граница урона, результаты выше понижаются до этого параметра
-    private float _damageMultiplier = 2; //Множитель урона, чтобы подогнать результат произведения массы на скорость к желаемому значению урона
     void Start()
     {
         _collider = GetComponent<Collider>();
@@ -28,10 +27,10 @@ public class ItemDamageComponent : MonoBehaviour
     {
         var impactBase = collision.relativeVelocity.magnitude * collision.rigidbody.mass;
 
-        var damage = impactBase * _damageMultiplier;
-        if (damage > _minDamage)
+        var damage = impactBase * _config.DamageMultiplier;
+        if (damage > _config.DamageThreshhold)
         {
-            damage = Mathf.Min(damage, _maxDamage);
+            damage = Mathf.Min(damage, _config.MaxDamage);
             _damageableComponent.TakeDamage(new FlatDamage(damage));
             Debug.Log("Урон: " + damage);
         }
