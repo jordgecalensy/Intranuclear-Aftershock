@@ -22,8 +22,10 @@ MonoBehaviour:
   SlideSpeed: 4.2
   MaxSlideTime: 1.5
   MinSlideTime: 0.8
-  JumpMaxHeight: 1.5
-  JumpMaxSpeed: 8
+  JumpMaxHeight:
+    BaseValue: 1.5
+  JumpMaxSpeed:
+    BaseValue: 8
   JumpMinDuration: 0.1
   JumpDuration: 0.5
   AirMovementSpeed: 0.5
@@ -33,7 +35,7 @@ MonoBehaviour:
   FallDistanceToSlow: 2
   SlowMultiplierOnLanding: 0.5
   SlowDurationOnLanding: 5
-  FallDistanceToDisable: 4
+  FallDistanceToDisable: 11
   DisableDurationOnLanding: 5
   GrabLedgeMaxDistance: 0.5
   GrabLedgeMinHeight: 2
@@ -44,3 +46,17 @@ MonoBehaviour:
   ClimbOverLedgeMaxHeight: 1.5
   ClimbOnMaxDistanceToLedge: 1
   ClimbOnLedgeMaxHeight: 2
+  FallDamageEnabled: 1
+  FallDamageStartHeight: 3.5
+  FallDamageBase: 8
+  FallDamageHeightStep: 1
+  FallDamageStepAmount: 4
+  SlowMinorHeight: 3.5
+  HeavyLandingHeight: 7
+  MinorSlowMultiplier: 0.88
+  MinorSlowDuration: 1
+  MainSlowMultiplier: 0.65
+  MainSlowDuration: 3
+  LandingRecoverDuration: 1.29
+  FlybyNoiseHeight: 2
+  FlybyNoiseRadius: 7

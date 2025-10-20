@@ -138,5 +138,30 @@ namespace Failsafe.PlayerMovements
         /// Максимальная высота препятствия, на которое можно залезть
         /// </summary>
         public float ClimbOnLedgeMaxHeight = 2f;
+        
+        [Header("Fall Damage — общие настройки")]
+        public bool  FallDamageEnabled = true;       // галочка отключения урона
+        public float FallDamageStartHeight = 3.0f;   // Порог 1: с этой высоты идёт урон
+        public float FallDamageBase = 10.0f;         // начальный урон
+        public float FallDamageHeightStep = 1.0f;    // шаг высоты
+        public float FallDamageStepAmount = 5.0f;    // +урон за каждый шаг
+
+        [Header("Landing thresholds")]
+        public float SlowMinorHeight   = 4.0f;       // Порог 2: с этой высоты добавляем лёгкое замедление
+        public float HeavyLandingHeight = 5.5f;      // Порог 3: тяжёлое приземление -> анимация Recover
+
+        [Header("Slow settings")]
+        [Range(0.1f, 1f)] public float MinorSlowMultiplier = 0.8f;
+        public float MinorSlowDuration = 1.2f;
+
+        [Range(0.1f, 1f)] public float MainSlowMultiplier  = 0.6f;
+        public float MainSlowDuration  = 2.0f;
+
+        [Header("Recover animation")]
+        public float LandingRecoverDuration = 0.6f;  // длительность окна «восстановления»
+
+        [Header("Fly-by noise (в полёте)")]
+        public float FlybyNoiseHeight = 4.0f;        // с этой падённой высоты один раз создаём «сферу звука»
+        public float FlybyNoiseRadius = 8.0f;        // радиус сферы звука    
     }
 }

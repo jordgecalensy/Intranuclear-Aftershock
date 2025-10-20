@@ -16,10 +16,10 @@ namespace Failsafe.Player.Model
         private IDamageService _damageService = new DamageService();
         private DamageableComponent _damageableComponent;
 
-        public PlayerDamageable(PlayerHealth health, PlayerView playerView)
+        public PlayerDamageable(PlayerHealth health, DamageableComponent damageable)
         {
             _health = health;
-            _damageableComponent = playerView.Damageable;
+            _damageableComponent = damageable;
         }
 
         public void Initialize()

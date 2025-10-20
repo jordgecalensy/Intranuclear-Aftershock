@@ -1613,6 +1613,8 @@ GameObject:
   - component: {fileID: 3193436742333253775}
   - component: {fileID: 4551226578461979612}
   - component: {fileID: 2307031734720968503}
+  - component: {fileID: 2677351307390855897}
+  - component: {fileID: 6073071214146362726}
   m_Layer: 10
   m_Name: Walker_Patrol_Bot_1 1
   m_TagString: Enemy
@@ -1659,12 +1661,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DebugMode: 0
+  useRootMotion: 1
   _laserBeamPrefab: {fileID: 7565026735645175051, guid: 6dde5c04a18cc734c8a0900d8498b580, type: 3}
+  _laserProjectilePrefab: {fileID: 0}
   _laserSpawnPoint: {fileID: 2787837512202065222}
   _manualPoints: []
   seePlayer: 0
   hearPlayer: 0
   _enemyConfig: {fileID: 0}
+  jumpTrigger: Jump
+  landTrigger: Land
+  baseArcHeight: 1.2
+  speedXZ: 4
+  speedY: 3
+  minDuration: 0.35
+  endSnapTolerance: 0.25
+  scaleArcByUpDelta: 1
 --- !u!114 &202986098991734307
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1686,6 +1698,8 @@ MonoBehaviour:
     m_Bits: 1056
   _eyePosition: {fileID: 2787837512202065222}
   Target: {fileID: 0}
+  _targets: []
+  _chestIndex: 0
 --- !u!114 &8993564496396878420
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1950,6 +1964,35 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 69530086952b6bf42ac00bdee204cdb7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2677351307390855897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5441590585779604949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a32ff6af4f86cb4d95afbb79edf85f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  parentReference:
+    TypeName: Failsafe.GameSceneServices.GameSceneLifetimeScope
+  autoRun: 1
+  autoInjectGameObjects:
+  - {fileID: 5441590585779604949}
+--- !u!114 &6073071214146362726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5441590585779604949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51a9f10290fb40dba09100153c7f7e6f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &5568232610338988830
