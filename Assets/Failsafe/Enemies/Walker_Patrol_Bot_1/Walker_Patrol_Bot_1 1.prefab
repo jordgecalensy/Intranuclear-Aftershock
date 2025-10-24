@@ -1632,8 +1632,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -12.15, y: -2.281, z: -2.5711164}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4718649036610950731}
   - {fileID: 897296480088713354}
@@ -1662,13 +1662,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DebugMode: 0
   useRootMotion: 1
-  _laserBeamPrefab: {fileID: 7565026735645175051, guid: 6dde5c04a18cc734c8a0900d8498b580, type: 3}
-  _laserProjectilePrefab: {fileID: 0}
   _laserSpawnPoint: {fileID: 2787837512202065222}
-  _manualPoints: []
+  _manualPoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   seePlayer: 0
   hearPlayer: 0
-  _enemyConfig: {fileID: 0}
+  _enemyConfig: {fileID: 11400000, guid: 724be6a3266871249b346fdf1bb26a46, type: 2}
   jumpTrigger: Jump
   landTrigger: Land
   baseArcHeight: 1.2
@@ -1698,8 +1701,16 @@ MonoBehaviour:
     m_Bits: 1056
   _eyePosition: {fileID: 2787837512202065222}
   Target: {fileID: 0}
-  _targets: []
-  _chestIndex: 0
+  _targets:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  _chestIndex: 2
 --- !u!114 &8993564496396878420
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1731,7 +1742,7 @@ NavMeshAgent:
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120
-  m_StoppingDistance: 2
+  m_StoppingDistance: 5
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 0
   m_AutoRepath: 1
