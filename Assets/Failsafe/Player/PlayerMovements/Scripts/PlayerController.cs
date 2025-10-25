@@ -36,6 +36,7 @@ namespace Failsafe.PlayerMovements
         private PlayerLedgeController _ledgeController;
         private PlayerNoiseController _noiseController;
         private StepController _stepController;
+        private bool _isLowHpEffectActive = false; //добавил
 
         public BehaviorStateMachine StateMachine => _behaviorStateMachine;
         public PlayerMovementController PlayerMovementController => _movementController;
@@ -182,6 +183,19 @@ namespace Failsafe.PlayerMovements
             if (_health.IsDead)
             {
                 _behaviorStateMachine.ForseChangeState<DeathState>();
+                return;
+            }
+            
+            float currentHpPercent = _health.CurrentHealth / _health.MaxHealth;
+            if (currentHpPercent <= 0.2f && !_isLowHpEffectActive)
+            {
+                _effectManager.ApplyEffect(new LowHealthEffect());
+                _isLowHpEffectActive = true;
+            }
+            else if (currentHpPercent > 0.2f && _isLowHpEffectActive)
+            {
+                _effectManager.RemoveEffect<LowHealthEffect>();
+                _isLowHpEffectActive = false;
             }
         }
 
