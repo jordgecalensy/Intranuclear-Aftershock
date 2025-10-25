@@ -7,6 +7,7 @@ using Tayx.Graphy.Utils.NumString;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UIElements;
+using UnityEngine.VFX;
 using VContainer;
 using Vector3 = UnityEngine.Vector3;
 
@@ -20,8 +21,6 @@ public class Enemy : MonoBehaviour
     private EnemyAnimator _enemyAnimator;
     private EnemyGetData _enemyGetData;
     private NavMeshAgent _navMeshAgent;
-    [SerializeField] private GameObject _laserBeamPrefab;
-    [SerializeField] private GameObject _laserProjectilePrefab; // Новый префаб для снаряда
     private LaserBeamController _activeLaser;
     [SerializeField] private Transform _laserSpawnPoint; // Точка спавна лазера, если нужно
     [SerializeField] private List<Transform> _manualPoints; // Привязать вручную через инспектор
@@ -101,7 +100,7 @@ public class Enemy : MonoBehaviour
         var defaultState = new DefaultState(_sensors, transform);
         var chasingState = new ChasingState(_sensors, transform, _enemyNavMeshActions, _enemyMemory, _navMeshAgent, _enemyConfig, _enemyAnimator );
         var patrolState = new PatrolState(_sensors, transform, _enemyMovePatterns, _enemyNavMeshActions,_enemyGetData,_navMeshAgent, _enemyConfig);
-        var attackState = new AttackState(_sensors, transform, _enemyNavMeshActions, _enemyAnimator, _activeLaser, _laserBeamPrefab, _laserProjectilePrefab, _laserSpawnPoint, _navMeshAgent, _enemyConfig);
+        var attackState = new AttackState(_sensors, transform, _enemyNavMeshActions, _enemyAnimator, _laserSpawnPoint, _enemyConfig);
         var searchingState = new SearchingState(_sensors, transform, _enemyMovePatterns, _enemyNavMeshActions,_enemyMemory, _navMeshAgent, _enemyConfig);
         var checkState = new CheckState(_sensors, transform, _enemyMovePatterns, _enemyNavMeshActions, _enemyConfig);
         var disabledState = new DisabledState(_animator);
