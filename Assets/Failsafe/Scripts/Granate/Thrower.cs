@@ -3,26 +3,24 @@ using UnityEngine;
 
 public abstract class Thrower : MonoBehaviour
 {
-    [SerializeField] protected GameObject GranadePref;
+    [SerializeField] protected GranadeData Data;
 
-    [SerializeField] private float _granadeTimer;
-    [SerializeField] private float _throwForce;
-    [SerializeField] private Transform _throwPoint;
+    //private Transform _throwPoint;
 
     protected void Throw(bool ItAltUse)
     {
-        GameObject Granade = Instantiate(GranadePref, _throwPoint.position, _throwPoint.rotation);
+        GameObject Granade = Instantiate(Data.GranadePref, Camera.main.transform.position, Camera.main.transform.rotation);
         Rigidbody rbGranade = Granade.GetComponent<Rigidbody>();
-        rbGranade.AddForce(_throwPoint.forward *  _throwForce);
+        Granade scriptGranade = Granade.GetComponent<Granade>();
+        rbGranade.AddForce(Camera.main.transform.forward *  Data.ThrowForce);
         if (!ItAltUse)
-            StartCoroutine(ExplosionGranadeTimer(Granade));
+            StartCoroutine(ExplosionGranadeTimer(scriptGranade));
         else
-            Debug.Log("AltUse");
+            scriptGranade.ActiveMineState();
     }
-    private IEnumerator ExplosionGranadeTimer(GameObject granade)
+    private IEnumerator ExplosionGranadeTimer(Granade scriptGranade)
     {
-        yield return new WaitForSeconds(_granadeTimer);
-        Granade scriptGranade = granade.GetComponent<Granade>();
+        yield return new WaitForSeconds(Data.GranadeTimer);
         if (scriptGranade != null)
             scriptGranade.Explosion();
     }

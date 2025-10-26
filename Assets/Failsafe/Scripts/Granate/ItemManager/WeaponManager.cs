@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class GrandeManager : MonoBehaviour
+public class WeaponManager : MonoBehaviour
 {
     private IUsableGranade _currentGranade;
 
@@ -19,5 +19,13 @@ public class GrandeManager : MonoBehaviour
         }
         else
             Debug.Log("Оружие не выбрано");
+    }
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+            UseCurrentGranade(false);
+
+        else if (Input.GetMouseButtonDown(1))
+            UseCurrentGranade(true);
     }
 }
