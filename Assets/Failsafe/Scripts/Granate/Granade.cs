@@ -1,4 +1,4 @@
-using Failsafe.Scripts.Damage.Implementation;
+п»їusing Failsafe.Scripts.Damage.Implementation;
 using UnityEngine;
 using System.Collections;
 
@@ -14,6 +14,13 @@ public abstract class Granade : MonoBehaviour
         {
             if (hitInfo.GetComponentInChildren<DamageableComponent>() != null)
             {
+                Vector3 directionToEnemy = (hitInfo.transform.position - transform.position).normalized;
+                RaycastHit hit;
+                if (Physics.Raycast(transform.position, directionToEnemy, out hit, Data.ExplosionRadius))
+                {
+                    Debug.Log($"{hitInfo.gameObject.name} Р·Р° РїСЂРµРїСЏРґСЃС‚РІРёРµРј");
+                    continue;
+                }
                 DamageableComponent damageableComponent = hitInfo.GetComponent<DamageableComponent>();
                 damageableComponent.TakeDamage(new FlatDamage(Data.ExplosionDamage));
                 Debug.Log($"{hitInfo} Take {Data.ExplosionDamage} Damage");
@@ -28,7 +35,7 @@ public abstract class Granade : MonoBehaviour
     }
     protected virtual void ExplosionEffect()
     {
-        //тут пишутся эффекты для разных гранат
+        //С‚СѓС‚ РїРёС€СѓС‚СЃСЏ СЌС„С„РµРєС‚С‹ РґР»СЏ СЂР°Р·РЅС‹С… РіСЂР°РЅР°С‚
     }
     protected void OnCollisionEnter(Collision collision)
     {
