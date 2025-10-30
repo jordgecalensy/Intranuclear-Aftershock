@@ -12,6 +12,7 @@ using Failsafe.Player.View;
 using VContainer.Unity;
 using Failsafe.Player.Model;
 using Failsafe.Scripts.EffectSystem;
+using Failsafe.Items; // ← добавь это
 
 
 namespace Failsafe.PlayerMovements
@@ -37,6 +38,7 @@ namespace Failsafe.PlayerMovements
         private PlayerNoiseController _noiseController;
         private StepController _stepController;
         private bool _isLowHpEffectActive = false; //добавил
+        private bool _isVisorEffectActive = false; //добавил
 
         public BehaviorStateMachine StateMachine => _behaviorStateMachine;
         public PlayerMovementController PlayerMovementController => _movementController;
@@ -185,7 +187,7 @@ namespace Failsafe.PlayerMovements
                 _behaviorStateMachine.ForseChangeState<DeathState>();
                 return;
             }
-            
+
             float currentHpPercent = _health.CurrentHealth / _health.MaxHealth;
             if (currentHpPercent <= 0.2f && !_isLowHpEffectActive)
             {
@@ -197,7 +199,28 @@ namespace Failsafe.PlayerMovements
                 _effectManager.RemoveEffect<LowHealthEffect>();
                 _isLowHpEffectActive = false;
             }
+
+            if (_inputHandler.VisorTrigger.IsTriggered)
+            {
+                if (!_isVisorEffectActive)
+                {
+                    Debug.Log("Visor включен");
+                    _effectManager.ApplyEffect(new VisorEffect(_playerView.PlayerTransform));
+                    _isVisorEffectActive = true;
+                }
+                else
+                {
+                    Debug.Log("Visor выключен");
+                    _effectManager.RemoveEffect<VisorEffect>();
+                    _isVisorEffectActive = false;
+                }
+
+                // Сбрасываем триггер после обработки
+                _inputHandler.VisorTrigger.ReleaseTrigger();
+            }
+
         }
+        
 
         public void FixedTick()
         {

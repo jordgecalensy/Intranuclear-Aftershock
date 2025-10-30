@@ -2,7 +2,7 @@
 
 namespace Failsafe.Items
 {
-    [CreateAssetMenu(fileName = "AdrenalineData", menuName = "ScriptableObjects/Entities/Items/Components/AdrenalineData")]
+    [CreateAssetMenu(fileName = "AdrenalineData", menuName = "ScriptableObjects/Entities/Items/AdrenalineData")]
     public class AdrenalineData : ScriptableObject
     {
         public float SpeedMultiplier;
