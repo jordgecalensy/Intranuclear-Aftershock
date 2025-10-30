@@ -12,15 +12,22 @@ public abstract class Granade : MonoBehaviour
         Collider[] hitsInfo = Physics.OverlapSphere(transform.position, Data.ExplosionRadius);
         foreach (var hitInfo in hitsInfo)
         {
-            if (hitInfo.GetComponentInChildren<DamageableComponent>() != null)
+            Vector3 directionToEnemy = (hitInfo.transform.position - transform.position).normalized;
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, directionToEnemy, out hit, Data.ExplosionRadius))
             {
-                Vector3 directionToEnemy = (hitInfo.transform.position - transform.position).normalized;
-                RaycastHit hit;
-                if (Physics.Raycast(transform.position, directionToEnemy, out hit, Data.ExplosionRadius))
+                if(hitInfo.name != hit.collider.name)
                 {
-                    Debug.Log($"{hitInfo.gameObject.name} за препядствием");
+                    if (hitInfo.name == "Player")
+                    {
+                        Debug.Log(hit.collider.name);
+                        Debug.Log($"{hitInfo.gameObject.name} за препядствием");
+                    }
                     continue;
                 }
+            }
+            if (hitInfo.GetComponent<DamageableComponent>() != null)
+            {
                 DamageableComponent damageableComponent = hitInfo.GetComponent<DamageableComponent>();
                 damageableComponent.TakeDamage(new FlatDamage(Data.ExplosionDamage));
                 Debug.Log($"{hitInfo} Take {Data.ExplosionDamage} Damage");
@@ -43,7 +50,14 @@ public abstract class Granade : MonoBehaviour
         if (collision.gameObject.tag == "Player") return;
         Debug.Log("collide " + gameObject + " With " + collision.gameObject.name);
         transform.SetParent(collision.transform);
-        Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-        rb.isKinematic = true;
+        gameObject.GetComponent<Rigidbody>().isKinematic = true;
+    }
+    protected void OnTriggerEnter(Collider other)
+    {
+        
+    }
+    private void OnTriggerStay(Collider other)
+    {
+        Debug.Log(other.gameObject.name);
     }
 }

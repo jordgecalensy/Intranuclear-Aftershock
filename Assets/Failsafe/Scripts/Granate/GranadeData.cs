@@ -9,6 +9,7 @@ public class GranadeData : ScriptableObject
     [SerializeField] private float _granadeTimer;
     [SerializeField] private int _explosionDamage;
     [SerializeField] private float _explosionRadius;
+    [SerializeField] private float _explosionForce;
 
     public GameObject GranadePref 
     {
@@ -44,6 +45,13 @@ public class GranadeData : ScriptableObject
         {
             return _explosionRadius; 
         } 
+    }
+    public float ExplosionForce
+    {
+        get
+        {
+            return _explosionForce;
+        }
     }
 
 }
