@@ -5,13 +5,13 @@ using Failsafe.PlayerMovements;
 
 namespace Failsafe.Scripts.EffectSystem
 {
-    public class AdrenalineEffect : Effect
+    public class AdrenalineEffect : Effect, IReapplicableEffect
     {
-        private readonly IEffectManager _effectManager;
         private Material _adrenalineMaterial;
         private CustomPassVolume _customPassVolume;
         private PlayerMovementParameters _playerMovementParameters;
         private MultiplierFloat _speedModificator;
+        private float _speedMultiplier;
 
 
         public AdrenalineEffect(float duration, PlayerMovementParameters playerMovementParameters, float SpeedMultiplier) //время действия
@@ -22,9 +22,9 @@ namespace Failsafe.Scripts.EffectSystem
             if (_adrenalineMaterial == null)
                 Debug.LogWarning("PlayerController: не найден материал LowHealthEffect в Resources/");
 
-            _duration = duration; // ← теперь ограничено временем
-
+            _duration = duration;
             IsUniqueEffect = true;
+            _speedMultiplier = SpeedMultiplier;
         }
 
         public override void ApplyEffect()
@@ -52,12 +52,20 @@ namespace Failsafe.Scripts.EffectSystem
             _playerMovementParameters.WalkSpeed.RemoveModificator(_speedModificator);
             _playerMovementParameters.RunSpeed.RemoveModificator(_speedModificator);
             _playerMovementParameters.CrouchSpeed.RemoveModificator(_speedModificator);
-            
+
             if (_customPassVolume != null)
             {
                 Object.Destroy(_customPassVolume.gameObject);
                 Debug.Log("Low Health HDRP effect cleared");
             }
+        }
+        public void OnReapply(Effect newEffect)
+        {
+            AdrenalineEffect reapplied = newEffect as AdrenalineEffect;
+            Debug.Log("AdrenalineEffect reapplied — restarting effect");
+
+            _duration = reapplied._duration + (Time.time - StarteAt);
+            
         }
     }
 }

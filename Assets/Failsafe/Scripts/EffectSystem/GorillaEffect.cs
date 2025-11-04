@@ -19,7 +19,7 @@ namespace Failsafe.Scripts.EffectSystem
             _throwPowerModificator = new MultiplierFloat(ThrowPowerMultiplier, priority: 100);
             _gorillaMaterial = Resources.Load<Material>("StimpckEffect");
             if (_gorillaMaterial == null)
-                Debug.LogWarning("PlayerController: не найден материал LowHealthEffect в Resources/");
+                Debug.LogWarning("PlayerController: не найден материал в Resources/");
 
             _duration = duration; // ← теперь ограничено временем
 
@@ -42,19 +42,28 @@ namespace Failsafe.Scripts.EffectSystem
             var pass = new CustomPassDrawer(_gorillaMaterial);
             _customPassVolume.customPasses.Add(pass);
 
-            Debug.Log("Low Health HDRP effect applied");
+            Debug.Log("GorillaEffect effect applied");
         }
 
         public override void ClearEffect()
         {
             _playerModelParameters.ThrowPower.RemoveModificator(_throwPowerModificator);
             _playerModelParameters.ThrowTorquePower.RemoveModificator(_throwPowerModificator);
-            
+
             if (_customPassVolume != null)
             {
                 Object.Destroy(_customPassVolume.gameObject);
-                Debug.Log("Low Health HDRP effect cleared");
+                Debug.Log("GorillaEffect cleared");
             }
+        }
+        
+        public void OnReapply(Effect newEffect)
+        {
+            GorillaEffect reapplied = newEffect as GorillaEffect;
+            Debug.Log("GorillaEffect reapplied — restarting effect");
+
+            _duration = reapplied._duration + (Time.time - StarteAt);
+            
         }
     }
 }

@@ -14,15 +14,15 @@ namespace Failsafe.Scripts.EffectSystem
         private CustomPassVolume _customPassVolume;
 
 
-        public TushkanEffect(float duration, PlayerMovementParameters playerMovementParameters, float JumpMultiplier) //время действия
+        public TushkanEffect(float duration, PlayerMovementParameters playerMovementParameters, float JumpMultiplier) 
         {
             _playerMovementParameters = playerMovementParameters;
             _jumpModificator = new MultiplierFloat(JumpMultiplier, priority: 100);
             _tushkanMaterial = Resources.Load<Material>("StimpckEffect");
             if (_tushkanMaterial == null)
-                Debug.LogWarning("PlayerController: не найден материал LowHealthEffect в Resources/");
+                Debug.LogWarning("PlayerController: не найден материал в Resources/");
 
-            _duration = duration; // время эффекта
+            _duration = duration; 
 
             IsUniqueEffect = true; 
         }
@@ -43,19 +43,28 @@ namespace Failsafe.Scripts.EffectSystem
             var pass = new CustomPassDrawer(_tushkanMaterial);
             _customPassVolume.customPasses.Add(pass);
 
-            Debug.Log("Low Health HDRP effect applied");
+            Debug.Log("TushkanEffect effect applied");
         }
 
         public override void ClearEffect()
         {
             _playerMovementParameters.JumpMaxHeight.RemoveModificator(_jumpModificator);
             _playerMovementParameters.JumpMaxSpeed.RemoveModificator(_jumpModificator);
-            
+
             if (_customPassVolume != null)
             {
                 Object.Destroy(_customPassVolume.gameObject);
-                Debug.Log("Low Health HDRP effect cleared");
+                Debug.Log("TushkanEffect effect cleared");
             }
+        }
+
+        public void OnReapply(Effect newEffect)
+        {
+            TushkanEffect reapplied = newEffect as TushkanEffect;
+            Debug.Log("TushkanEffect reapplied — restarting effect");
+
+            _duration = reapplied._duration + (Time.time - StarteAt);
+            
         }
     }
 }

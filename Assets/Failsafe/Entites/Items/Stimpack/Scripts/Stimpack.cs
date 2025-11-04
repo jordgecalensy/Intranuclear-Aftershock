@@ -11,6 +11,7 @@ namespace Failsafe.Items
         private PlayerHealth _playerHealth;
         private StimpackData _data;
         private AdderFloat _maxHealthModificator;
+        private StimpackEffect _effect;
         private readonly IEffectManager _effectManager; // ← добавь это поле
 
         public Stimpack(PlayerHealth playerHealth, StimpackData data, IEffectManager effectManager)
@@ -19,14 +20,13 @@ namespace Failsafe.Items
             _data = data;
             _maxHealthModificator = new AdderFloat(_data.MaxHealthBonus);
             _effectManager = effectManager; // ← присваиваем
+            _effect = new StimpackEffect(_data.Duration, _playerHealth, _maxHealthModificator, _data.HealAmount);
         }
 
         public ItemUseResult Use()
         {
-            _playerHealth.AddHealth(_data.HealAmount);
-            _playerHealth.ModifyMaxHealth(_maxHealthModificator);
             // Добавляем эффект стимпака
-            _effectManager.ApplyEffect(new StimpackEffect(_data.Duration));
+            _effectManager.ApplyEffect(_effect);
             return ItemUseResult.Consumed;
         }
 
