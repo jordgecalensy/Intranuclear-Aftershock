@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks.Triggers;
 using DMDungeonGenerator;
 using Failsafe.Enemies.Sensors;
 using Failsafe.Scripts.Health;
@@ -105,7 +106,7 @@ public class Enemy : MonoBehaviour
         var checkState = new CheckState(_sensors, transform, _enemyMovePatterns, _enemyNavMeshActions, _enemyConfig);
         var disabledState = new DisabledState(_animator);
         var stunnedState = new StunnedState(_enemyAnimator, _enemyNavMeshActions, transform);
-        var deathState = new EnemyDeathState(_enemyAnimator);
+        var deathState = new EnemyDeathState(_enemyAnimator, _enemyNavMeshActions, _animator);
 
 
         defaultState.AddTransition(chasingState, _awarenessMeter.IsChasing);
@@ -335,5 +336,10 @@ public class Enemy : MonoBehaviour
                     }
             }
 
+    }
+
+    public void ReplaceWithDummy()
+    {
+        Destroy(this.gameObject);
     }
 }
