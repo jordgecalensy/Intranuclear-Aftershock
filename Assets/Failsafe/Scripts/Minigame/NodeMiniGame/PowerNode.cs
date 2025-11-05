@@ -84,7 +84,12 @@ public abstract class PowerNode : MonoBehaviour
     protected virtual void OnPowered()
     {
         Debug.Log($"{name} powered");
-        gameObject.GetComponent<Renderer>().material.color = Color.red;
+
+        ObjectXRay xray = GetComponent<ObjectXRay>();
+        if (xray != null)
+            xray.SetPoweredState(true);
+        else
+            gameObject.GetComponent<Renderer>().material.color = Color.red;
     }
     // Метод для сброса питания (отключение)
     public virtual void ResetPower()
@@ -97,8 +102,13 @@ public abstract class PowerNode : MonoBehaviour
     // Метод, вызываемый при отключении питания (можно переопределять)
     protected virtual void OnPowerLost()
     {
-        Debug.Log($"{name} потеряно питание"); 
-        gameObject.GetComponent<Renderer>().material.color = Color.white;
+        Debug.Log($"{name} потеряно питание");
+
+        ObjectXRay xray = GetComponent<ObjectXRay>();
+        if (xray != null)
+            xray.SetPoweredState(false);
+        else
+            gameObject.GetComponent<Renderer>().material.color = Color.white;
     }
 
     public static Direction Opposite(Direction dir)
