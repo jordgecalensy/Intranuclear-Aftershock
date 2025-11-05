@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 public class BehaviorStateMachine
 {
@@ -53,16 +52,6 @@ public class BehaviorStateMachine
     public T GetState<T>() where T : BehaviorState
     {
         return _states.FirstOrDefault(x => x.GetType() == typeof(T)) as T;
-    }
-
-    /// <summary>
-    /// Получить Forced Состояние машины
-    /// </summary>
-    /// <typeparam name="T">Тип состояния</typeparam>
-    /// <returns>null если состояния типа <see cref="T"/> не найдено</returns>
-    public T GetForcedState<T>() where T : BehaviorState
-    {
-        return _forcedStates.FirstOrDefault(x => x.GetType() == typeof(T)) as T;
     }
 
     /// <summary>

@@ -8,6 +8,11 @@ namespace Failsafe.Scripts.Damage.Implementation
     {
         private readonly Dictionary<Type, IDamageProvider> _damageProviders = new();
 
+        public DamageService(IDamageProvider damageProvider)
+        {
+            Register(damageProvider);
+        }
+
         public void Provide(IDamage damage)
         {
             if (!_damageProviders.TryGetValue(damage.GetType(), out var provider))

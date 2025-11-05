@@ -29,11 +29,7 @@ namespace Failsafe.Items
             return ItemUseResult.Consumed;
         }
 
-        public void GetItemUseDelays(out float startUseDelay, out float useDelay)
-        {
-            startUseDelay = _data.StartUseDelay;
-            useDelay = _data.UseDelay;
-        }
+
     }
 
     public class TushkanEffect : Effect

@@ -17,7 +17,6 @@ namespace Failsafe.Scripts.EffectSystem
         /// </summary>
         /// <param name="effect">Эффект</param>
         void ApplyEffect(Effect effect);
-        void RemoveEffect<T>() where T : Effect;
     }
 
     public class EffectManager : IEffectManager, ITickable, IDisposable
@@ -31,8 +30,6 @@ namespace Failsafe.Scripts.EffectSystem
                 var currentEffect = _effects.FirstOrDefault(x => x.GetType() == effect.GetType());
                 if (currentEffect != null)
                 {
-                    if (currentEffect is IReapplicableEffect reapplicable)
-                        reapplicable.OnReapply(effect);
                     return;
                 }
             }
@@ -41,23 +38,13 @@ namespace Failsafe.Scripts.EffectSystem
             _effects.Add(effect);
         }
 
-        public void RemoveEffect<T>() where T : Effect
-        {
-            var effect = _effects.FirstOrDefault(x => x is T);
-            if (effect != null)
-            {
-                effect.Dispose();
-                _effects.Remove(effect);
-            }
-        }
-
         public void Tick()
         {
             for (int i = _effects.Count - 1; i >= 0; i--)
             {
                 Effect effect = _effects[i];
                 effect.Update();
-                if (effect.ElapsedAt <= Time.time)
+                if (effect.ElapsedAt < Time.time)
                 {
                     effect.Dispose();
                     _effects.RemoveAt(i);
@@ -68,8 +55,9 @@ namespace Failsafe.Scripts.EffectSystem
         public void Dispose()
         {
             foreach (var effect in _effects)
+            {
                 effect.Dispose();
-
+            }
             _effects.Clear();
         }
     }

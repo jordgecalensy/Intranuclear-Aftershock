@@ -22,11 +22,5 @@ namespace Failsafe.Items
             _playerHealth.ModifyMaxHealth(_maxHealthModificator);
             return ItemUseResult.Consumed;
         }
-
-        public void GetItemUseDelays(out float startUseDelay, out float useDelay)
-        {
-            startUseDelay = _data.StartUseDelay;
-            useDelay = _data.UseDelay;
-        }
     }
 }

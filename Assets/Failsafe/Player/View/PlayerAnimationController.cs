@@ -30,15 +30,6 @@ namespace Failsafe.Player
         private int _jumpId = Animator.StringToHash("Jump");
         private int _slidingId = Animator.StringToHash("Sliding");
         private int _healId = Animator.StringToHash("Heal");
-        private int _deadId = Animator.StringToHash("Dead");
-
-        // --- НОВОЕ: настройки синхронизации скорости анимации ---
-        private const bool  AnimFollowMoveMultiplier = true; // включить/выключить привязку
-        private const float AnimMinSpeed = 0.20f;            // не давать анимации «умирать»
-        private const float AnimMaxSpeed = 1.00f;            // верхний предел для клипов
-        private const float AnimSmooth   = 12f;              // эксп. сглаживание (чем больше — быстрее)
-        private float _defaultAnimSpeed = 1f;                // чтобы вернуть при Dispose
-        // --------------------------------------------------------
 
         public PlayerAnimationController(PlayerController playerController, PlayerView playerView, PlayerHandsSystem playerHandsSystem)
         {
@@ -48,7 +39,6 @@ namespace Failsafe.Player
             _playerHandsSystem = playerHandsSystem;
 
             _upperBodyLayerId = _animator.GetLayerIndex("UpperBody");
-            if (_animator != null) _defaultAnimSpeed = _animator.speed;
         }
 
         public void Tick()
@@ -74,21 +64,6 @@ namespace Failsafe.Player
             _animator.SetBool(_fallingId, _playerController.StateMachine.CurrentState is FallState);
             _animator.SetBool(_groundedId, _playerController.PlayerMovementController.IsGrounded);
             _animator.SetBool(_slidingId, _playerController.StateMachine.CurrentState is SlideState);
-            _animator.SetBool(_deadId, _playerController.StateMachine.CurrentState is DeathState );
-
-            // --- НОВОЕ: синхронизация Animator.speed c множителем движения ---
-            if (AnimFollowMoveMultiplier && _animator != null)
-            {
-                float mul = _playerController.PlayerMovementController.CurrentSpeedMultiplier;
-                // можно дополнительно вырубать ускорение в не-локомоушн состояниях, если нужно:
-                // bool isLocomotion = _playerController.StateMachine.CurrentState is WalkState || _playerController.StateMachine.CurrentState is SprintState || _playerController.StateMachine.CurrentState is CrouchState || _playerController.StateMachine.CurrentState is CrouchIdle;
-                // if (!isLocomotion) mul = 1f;
-
-                float target = Mathf.Clamp(mul, AnimMinSpeed, AnimMaxSpeed);
-                float k = 1f - Mathf.Exp(-AnimSmooth * Time.deltaTime); // эксп. сглаживание
-                _animator.speed = Mathf.Lerp(_animator.speed, target, k);
-            }
-            // ---------------------------------------------------------------
         }
 
         public void Initialize()
@@ -103,9 +78,6 @@ namespace Failsafe.Player
             _playerController.StateMachine.GetState<JumpState>().OnEnter -= OnStartJumping;
             _playerController.StateMachine.GetState<JumpState>().OnExit -= OnFinishJumping;
             _playerHandsSystem.OnItemStartUsing -= OnUseItem;
-
-            // вернуть стандартную скорость анимации
-            if (_animator != null) _animator.speed = _defaultAnimSpeed;
         }
 
         public void OnStartJumping()
@@ -115,11 +87,17 @@ namespace Failsafe.Player
 
         public void OnFinishJumping()
         {
+            //Иногда юнити не успевает сбросить триггер, нужно это делать вручную
             _animator.ResetTrigger(_jumpId);
         }
 
         public void OnUseItem(ItemType itemType)
         {
+            // TODO: Выбрать анимацию по типу предмета
+            // Кроме типа нужны другие параметры: 
+            // - основное или дополнительное действие
+            // - в зависимости от режима предмета могут быть разные анимации
+            // - для каждого предмета могут быть разные анимации или разная длительность анимации
             _animator.SetTrigger(_healId);
             ActivateLayerForSeconds(_upperBodyLayerId, 2.5f).Forget();
         }

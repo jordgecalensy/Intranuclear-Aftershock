@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Failsafe.PlayerMovements.Controllers
@@ -18,44 +16,19 @@ namespace Failsafe.PlayerMovements.Controllers
         private float _coyoteTime = 0.1f;
         private float _coyoteTimeProgress = 0f;
         private float _groundedAt;
+        private bool _gravityEnabled = true;
 
-        private readonly Dictionary<int, float> _speedModifiers = new Dictionary<int, float>();
-
-        public float CurrentSpeedMultiplier
-        {
-            get
-            {
-                float mul = 1f;
-                foreach (var kv in _speedModifiers)
-                    mul *= kv.Value;
-                if (Time.frameCount % 60 == 0) // не слишком часто
-                    Debug.Log($"[PMC] Calculate multiplier={mul:0.00}, totalMods={_speedModifiers.Count} | this={GetHashCode()}");
-                return mul;
-            }
-        }
-
-        public void SetSpeedModifier(int id, float multiplier)
-        {
-            if (multiplier <= 0f) multiplier = 0.0001f;
-            _speedModifiers[id] = multiplier;
-
-            // 👇 временный лог
-            string mods = string.Join(", ", _speedModifiers.Select(kv => $"{kv.Key}:{kv.Value:0.00}"));
-            Debug.Log($"[PMC] Added/Updated speed modifier id={id}, mul={multiplier:0.00}, total={_speedModifiers.Count} ({mods}) | this={GetHashCode()}");
-        }
-
-        public void RemoveSpeedModifier(int id)
-        {
-            if (_speedModifiers.Remove(id))
-            {
-                string mods = string.Join(", ", _speedModifiers.Select(kv => $"{kv.Key}:{kv.Value:0.00}"));
-                Debug.Log($"[PMC] Removed modifier id={id}, total={_speedModifiers.Count} ({mods}) | this={GetHashCode()}");
-            }
-        }
-        // ---- /Новое ----
-
+        /// <summary>
+        /// Находится на земле
+        /// </summary>
         public bool IsGrounded => _coyoteTimeProgress <= 0;
+        /// <summary>
+        /// Находится на земле некоторое время
+        /// </summary>
+        /// <param name="duration">Время в секундах</param>
+        /// <returns></returns>
         public bool IsGroundedFor(float duration) => _groundedAt + duration <= Time.time;
+
         public bool IsFalling => _coyoteTimeProgress > _coyoteTime;
 
         public PlayerMovementController(CharacterController characterController, PlayerMovementParameters playerMovementParameters)
@@ -66,24 +39,49 @@ namespace Failsafe.PlayerMovements.Controllers
 
         public Vector3 GetRelativeMovement(Vector2 inputMovement)
         {
-            return Vector3.ClampMagnitude(
-                inputMovement.x * _characterController.transform.right +
-                inputMovement.y * _characterController.transform.forward, 1);
+            return Vector3.ClampMagnitude(inputMovement.x * _characterController.transform.right + inputMovement.y * _characterController.transform.forward, 1);
         }
 
-        public void Move(Vector3 motion) => _movement = motion;
-        public void SetGravity(Vector3 gravity) => _gravity = gravity;
-        public void SetGravityDefault() => SetGravity(_playerMovementParameters.GravityForce * Vector3.down);
+        /// <summary>
+        /// Определить находится на земле или нет
+        /// </summary>
+
+
+        /// <summary>
+        /// Задать движение персонажа. Перемещение выполнится методом <see cref="HandleMovement"/>
+        /// </summary>
+        /// <remarks>
+        /// Предыдущее заданое движение сохраняется, т.е. чтобы остановить персонажа нужно явно задать перемещение <see cref="Vector3.zero"/>
+        /// <para/>Не умножать на <see cref="Time.deltaTime"/> перед применением движения
+        /// </remarks>
+        /// <param name="motion">Перемещение</param>
+        public void Move(Vector3 motion)
+        {
+            _movement = motion;
+        }
+
+        /// <summary>
+        /// Задать силу притяжения
+        /// </summary>
+        /// <param name="gravity"></param>
+        public void SetGravity(Vector3 gravity)
+        {
+            _gravity = gravity;
+        }
+
+        /// <summary>
+        /// Задать силу притяжения стандартным значением
+        /// </summary>
+        public void SetGravityDefault()
+        {
+            SetGravity(_playerMovementParameters.GravityForce * Vector3.down);
+        }
 
         public void HandleMovement()
         {
-            var motion = (_movement * CurrentSpeedMultiplier) + _gravity;
+            var motion = _movement + _gravity;
             _characterController.Move(motion * Time.deltaTime);
             Velocity = _characterController.velocity;
-
-            // Временный лог — увидим, что множитель и скорость применяются
-            if (Time.frameCount % 30 == 0)
-                Debug.Log($"[PMC] mul={CurrentSpeedMultiplier:0.00} moveIn={_movement} moveOut={_movement * CurrentSpeedMultiplier}");
         }
 
         public void CheckGrounded()

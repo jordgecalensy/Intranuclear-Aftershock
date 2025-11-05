@@ -32,17 +32,6 @@ public class PlayerHandsContainer
     private IEnumerable<IUsable> _items;
     private Transform _rightHandItemPlace;
 
-    // Задержка после применения предмета, чтобы не спамить использование предметов
-    // Примерно должен соответсвовать времени анимаций, но не обязательно
-    // Если у разных предметов должны быть разные кулдауны, то вынести это в ItemData
-    private float _itemUseDelay = 0f;
-    public float ItemUseDelay => _itemUseDelay;
-    // Время использования одного предмета. По сути время анимации использования
-    // Нужно чтобы Эффект предмета/визуал/звук сработал в определенный момент анимации, а не сразу при нажатии кнопки
-    // Сейчас задается один на всех, нужно будет вынести в предмет и настраивать для каждого свой
-    private float _itemUseStartDelay = 0f;
-    public float ItemUseStartDelay => _itemUseStartDelay;
-
     public PlayerHandsContainer(IEnumerable<IUsable> items, PlayerView playerView)
     {
         _items = items;
@@ -78,7 +67,6 @@ public class PlayerHandsContainer
         };
         _itemInHand = itemInHand;
         _handState = HandState.ItemInHand;
-        _itemInHand.ItemUsable.GetItemUseDelays(out _itemUseStartDelay, out _itemUseDelay);
         Debug.Log("Предмет взят в руку");
         OnItemTaked?.Invoke();
         return true;

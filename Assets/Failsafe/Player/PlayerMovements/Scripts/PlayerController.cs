@@ -30,19 +30,17 @@ namespace Failsafe.PlayerMovements
         private readonly IStamina _stamina;
         private readonly PlayerStaminaController _playerStaminaController;
         private readonly IEffectManager _effectManager;
+        private PlayerMovementController _movementController;
         private PlayerRotationController _playerRotationController;
         private PlayerBodyController _playerBodyController;
         private BehaviorStateMachine _behaviorStateMachine;
         private PlayerLedgeController _ledgeController;
         private PlayerNoiseController _noiseController;
         private StepController _stepController;
-        private bool _isLowHpEffectActive = false; //добавил
 
         public BehaviorStateMachine StateMachine => _behaviorStateMachine;
         public PlayerMovementController PlayerMovementController => _movementController;
         public PlayerRotationController PlayerRotationController => _playerRotationController;
-
-      [Inject]  private readonly PlayerMovementController _movementController; // readonly и инжектим
 
         public PlayerController(
             PlayerMovementParameters movementParametrs,
@@ -53,9 +51,7 @@ namespace Failsafe.PlayerMovements
             IHealth health,
             IStamina stamina,
             PlayerStaminaController playerStaminaController,
-            IEffectManager effectManager,
-            PlayerMovementController movementController    // <-- ДОБАВЬ ЭТО
-        )
+            IEffectManager effectManager)
         {
             _movementParametrs = movementParametrs;
             _noiseParametrs = noiseParametrs;
@@ -66,11 +62,11 @@ namespace Failsafe.PlayerMovements
             _stamina = stamina;
             _playerStaminaController = playerStaminaController;
             _effectManager = effectManager;
-            _movementController = movementController;      // <-- ИСПОЛЬЗУЕМ DI-ЭКЗЕМПЛЯР
         }
 
         public void Initialize()
         {
+            _movementController = new PlayerMovementController(_playerView.CharacterController, _movementParametrs);
             _playerRotationController = new PlayerRotationController(_playerView.PlayerTransform, _playerView.PlayerRigHead, _inputHandler);
             _playerBodyController = new PlayerBodyController(_playerView.CharacterController);
             _ledgeController = new PlayerLedgeController(_playerView.PlayerTransform, _playerView.PlayerCamera, _playerView.PlayerGrabPoint, _movementParametrs);
@@ -78,15 +74,13 @@ namespace Failsafe.PlayerMovements
             _stepController = new StepController(_playerView.CharacterController, _movementParametrs, _playerView.FootstepEvent);
 
             InitializeStateMachine();
-            
-
         }
 
 
 
         private void InitializeStateMachine()
         {
-            var deathState = new DeathState(_playerView.Animator, _behaviorStateMachine);
+            var deathState = new DeathState();
             var forcedStates = new List<BehaviorForcedState>
             {
                  deathState
@@ -99,14 +93,14 @@ namespace Failsafe.PlayerMovements
             var slideState = new SlideState(_inputHandler, _movementController, _movementParametrs, _playerBodyController, _playerRotationController);
             var crouchState = new CrouchState(_inputHandler, _movementController, _movementParametrs, _playerBodyController, _noiseController, _stepController);
             var jumpState = new JumpState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _playerStaminaController);
-            var fallState = new FallState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _noiseController, _effectManager, _health);
+            var fallState = new FallState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _noiseController, _effectManager);
             var grabLedgeState = new GrabLedgeState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _playerRotationController, _ledgeController);
             var climbingUpState = new ClimbingUpState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _ledgeController);
             var climbingOnState = new ClimbingOnState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _ledgeController);
             var climbingOverState = new ClimbingOverState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _ledgeController);
             var ledgeJumpState = new LedgeJumpState(_inputHandler, _playerView.CharacterController, _movementParametrs, _playerView.PlayerCamera);
             var crouchIdleState = new CrouchIdle(_playerBodyController, _movementController, _movementParametrs, _noiseController, _stepController, _playerRotationController);
-            var recoverState = new RecoverFromJumpState(_playerView.Animator, _movementController, _movementParametrs, _effectManager);
+
 
             Func<bool> runStatePrecondition = () => _inputHandler.MoveForward && _inputHandler.SprintTriggered && !_stamina.IsEmpty;
             Func<bool> jumpStatePrecondition = () => _inputHandler.JumpTriggered && !_stamina.IsEmpty && _movementController.IsGroundedFor(0.1f);
@@ -151,8 +145,7 @@ namespace Failsafe.PlayerMovements
             jumpState.AddTransition(fallState, jumpState.InHightPoint);
             jumpState.AddTransition(grabLedgeState, () => _inputHandler.GrabLedgeTrigger.IsTriggered && _ledgeController.CanGrabToLedgeGrabPointInView());
 
-            fallState.AddTransition(walkState,
-                () => _movementController.IsGrounded && !fallState.ShouldRecover);
+            fallState.AddTransition(walkState, () => _movementController.IsGrounded);
             fallState.AddTransition(grabLedgeState, () => _inputHandler.GrabLedgeTrigger.IsTriggered && _ledgeController.CanGrabToLedgeGrabPointInView());
 
             grabLedgeState.AddTransition(fallState, () => _inputHandler.MoveBack && grabLedgeState.CanFinish());
@@ -165,10 +158,6 @@ namespace Failsafe.PlayerMovements
             climbingUpState.AddTransition(walkState, () => climbingUpState.ClimbFinish());
             climbingOnState.AddTransition(walkState, () => climbingOnState.ClimbFinish());
             climbingOverState.AddTransition(fallState, () => climbingOverState.ClimbFinish());
-            fallState.AddTransition(recoverState,
-                () => fallState.ShouldRecover);
-            recoverState.AddTransition(standingState,
-                () => recoverState.IsFinished);
 
             _behaviorStateMachine.SetInitState(walkState);
 
@@ -183,19 +172,6 @@ namespace Failsafe.PlayerMovements
             if (_health.IsDead)
             {
                 _behaviorStateMachine.ForseChangeState<DeathState>();
-                return;
-            }
-            
-            float currentHpPercent = _health.CurrentHealth / _health.MaxHealth;
-            if (currentHpPercent <= 0.2f && !_isLowHpEffectActive)
-            {
-                _effectManager.ApplyEffect(new LowHealthEffect());
-                _isLowHpEffectActive = true;
-            }
-            else if (currentHpPercent > 0.2f && _isLowHpEffectActive)
-            {
-                _effectManager.RemoveEffect<LowHealthEffect>();
-                _isLowHpEffectActive = false;
             }
         }
 
