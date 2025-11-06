@@ -43,7 +43,6 @@ namespace Failsafe.Player.View
 
         public Animator Animator;
 
-        public DamageableComponent Damageable;
         /// <summary>
         /// Точка захвата
         /// </summary>

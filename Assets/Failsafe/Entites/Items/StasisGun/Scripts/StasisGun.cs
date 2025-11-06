@@ -115,7 +115,11 @@ namespace Failsafe.Items
             return hit;
         }
 
-
+        public void GetItemUseDelays(out float startUseDelay, out float useDelay)
+        {
+            startUseDelay = _data.StartUseDelay;
+            useDelay = _data.UseDelay;
+        }
     }
 
 }

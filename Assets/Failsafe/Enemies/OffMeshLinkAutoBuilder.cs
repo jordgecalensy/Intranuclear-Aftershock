@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using Failsafe.Obstacles;
@@ -31,6 +31,9 @@ public class OffMeshLinkAutoBuilder : MonoBehaviour
     [Header("Параметры NavMeshLink")] [SerializeField]
     private float linkWidth = 0.8f;
 
+    [Tooltip("Индекс зоны NavMesh, который будет назначен линку. Используйте для динамического контроля.")]
+    [SerializeField] private int linkAreaIndex = 3; // 3 - пример, нужно настроить в Unity
+    [SerializeField] private int agentTypeID = 0;
     [SerializeField] private int area = 0; // 0 = Walkable
     [SerializeField] private float costModifier = 1.0f;
 
@@ -155,9 +158,10 @@ public class OffMeshLinkAutoBuilder : MonoBehaviour
         navLink.endPoint = go.transform.InverseTransformPoint(end);
         navLink.width = linkWidth;
         navLink.costModifier = costModifier;
-        navLink.area = area;
+        navLink.area = linkAreaIndex;
+        navLink.agentTypeID = agentTypeID;
         navLink.bidirectional = false; // Линки для подъема всегда однонаправленные
-
+        
         _createdLinks.Add(navLink);
 #if UNITY_EDITOR
         if (visualizeProcess) _debug_createdLinkPoints.Add(new System.Tuple<Vector3, Vector3>(start, end));
