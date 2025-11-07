@@ -7,19 +7,24 @@ namespace Failsafe.Scripts.EffectSystem
     [System.Serializable]
     public class CustomPassDrawer : CustomPass
     {
-        public Material EffectMaterial;
+        private Material _effectMaterial;
         private static readonly int _customMaterialEnabled = Shader.PropertyToID("_customMaterialEnabled");
+
+        public CustomPassDrawer(Material effectMaterial)
+        {
+            _effectMaterial = effectMaterial;
+        }
 
         protected override void Execute(CustomPassContext ctx)
         {
-            if (EffectMaterial == null)
+            if (_effectMaterial == null)
                 return;
 
             // Включаем параметр
-            EffectMaterial.SetFloat(_customMaterialEnabled, 1f);
+            _effectMaterial.SetFloat(_customMaterialEnabled, 1f);
 
             // Рисуем fullscreen quad
-            HDUtils.DrawFullScreen(ctx.cmd, EffectMaterial, ctx.cameraColorBuffer, null, 0);
+            HDUtils.DrawFullScreen(ctx.cmd, _effectMaterial, ctx.cameraColorBuffer, null, 0);
         }
     }
 }

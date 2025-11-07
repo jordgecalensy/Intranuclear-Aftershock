@@ -11,6 +11,8 @@ namespace Failsafe.Scripts.Health
 		public event Action<float> OnHealthChanged = delegate { };
 		public event Action OnDeath = delegate { };
 
+		private bool _maxHealthAlreadyModified;
+
 		[SerializeField] private ModifiableField<float> _maxHealth;
 
 		[SerializeField] private float _health;
@@ -45,7 +47,11 @@ namespace Failsafe.Scripts.Health
 
 		public void ModifyMaxHealth(AdderFloat modificator)
 		{
-			_maxHealth.AddModificator(modificator);
+			if (!_maxHealthAlreadyModified) //Проверка на то что максимальное здоровье уже было модифицировано
+			{
+				_maxHealth.AddModificator(modificator);
+				_maxHealthAlreadyModified = true;
+			}
 		}
 	}
 }
