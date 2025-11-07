@@ -10,41 +10,55 @@ namespace Failsafe.Player.Scripts.Interaction
 {
     public class PhysicsInteraction : MonoBehaviour
     {
-        [Inject] PlayerModelParameters _playerModelParameters;
+        [Inject] private PlayerModelParameters _playerModelParameters;
+
         [Header("Picking Up")]
         [SerializeField] private float _maxPickupDistance = 5f;
 
         [Header("Carrying")]
         [SerializeField] private float _carryingDistance = 2.5f;
         [SerializeField] private float _carrySpeed = 10f;
-        [SerializeField] private LayerMask _carryingObjectLayer;
+
+        [Tooltip("Индекс слоя (0–31), в который временно помещается переносимый объект.")]
+        [SerializeField, Range(0, 31)] private int _carryingLayerIndex = 0;
+
+        private ICarryUsable _carryUsable;
+        private bool _useHeld;
 
         [Header("Throwing")]
-        //[Tooltip("Данная сила умножается на число от 0 до 3 при зажатии кнопки броска.")]
-        //[SerializeField] private float _throwForce = 3f;
-        //[SerializeField] private float _throwTorqueForce = 3f;
         [Tooltip("[при зарядке броска] Линейное сокращение дистанции переноски с Carrying Distance до указанного значения.")]
         [SerializeField] private float _carryingDistanceShorteningTo = 0.8f;
 
+        [Header("Rotation Hold")]
+        [SerializeField] private AlignmentMode _alignMode = AlignmentMode.Camera; // ← смотрит туда же, куда игрок
+        [SerializeField, Tooltip("Скорость выравнивания вращения (P-составляющая).")]
+        private float _rotKp = 30f;
+        [SerializeField, Tooltip("Демпфирование вращения (D-составляющая).")]
+        private float _rotKd = 5f;
+
+        public enum AlignmentMode
+        {
+            WorldZero,   // к (0,0,0)
+            Camera,      // точь-в-точь как камера (включая крен)
+            CameraNoRoll // направление как у камеры, но без крена (up = Vector3.up)
+        }
+
         [Header("Additional Options")]
-        [Tooltip("Данный вектор введёт для исправления бага, при котором на некоторых поверхностях объект застревал в текстуре." +
-                 "Может быть удалён в будущем.")]
+        [Tooltip("Хак от залипания на некоторых поверхностях.")]
         [SerializeField] private Vector3 _grabHelperVector = new Vector3(0f, 0.01f, 0f);
 
         [Header("Debug")]
         [SerializeField] public GameObject CarryingObject;
         [SerializeField] public Rigidbody CarryingBody;
         [SerializeField] private Transform _playerCameraTransform;
-        [SerializeField][ReadOnly] private float _currentCarryingDistance;
+        [SerializeField, ReadOnly] private float _currentCarryingDistance;
 
         [SerializeField] private Vector3 _draggablePositionOffset;
-        [SerializeField] private float _dragSpeed = 10f;
-
+        [SerializeField] private float _dragSpeed = 10f; // резерв
 
         private Quaternion _relativeRotation;
 
-        [Inject]
-        private InputHandler _inputHandler;
+        [Inject] private InputHandler _inputHandler;
         [Inject] private PlayerHandsContainer _playerHandsContainer;
 
         private bool _isPreparingToThrow;
@@ -53,12 +67,12 @@ namespace Failsafe.Player.Scripts.Interaction
 
         private int _cachedCarryingLayer;
 
-
         [Header("Crosshair")]
         [SerializeField] private Image _crosshairImage;
         [SerializeField] private float _normalSize = 0.2f;
         [SerializeField] private float _hoverSize = 0.6f;
         [SerializeField] private float _scaleSpeed = 8f;
+
         public bool IsDragging { get; private set; }
 
         private void Awake()
@@ -68,76 +82,85 @@ namespace Failsafe.Player.Scripts.Interaction
             if (!_playerCameraTransform)
             {
                 Camera playerCamera = transform.root.GetComponentInChildren<Camera>();
-
                 _playerCameraTransform = playerCamera.transform;
             }
-
         }
-
 
         private void Update()
         {
             UpdateCrosshairScale();
+
             if (_inputHandler.GrabOrDropAction.WasPressedThisFrame())
-            {
                 GrabOrDrop();
+
+            if (!IsDragging) return;
+
+            // Use-start (edge)
+            if (_inputHandler.UseTrigger.IsTriggered)
+            {
+                _carryUsable?.OnUseStart();
+                _useHeld = true;
             }
 
-            if (IsDragging)
-            {
-                if (!CarryingObject || !CarryingBody)
-                {
-                    DropItem();
-                    return;
-                }
-                if (_inputHandler.AttackTriggered)
-                {
-                    _throwForceMultiplier = Mathf.Clamp(_throwForceMultiplier + Time.deltaTime, _throwForceMultiplier, _maxForceMultiplier);
-                    _isPreparingToThrow = true;
+            // Use-hold (every frame)
+            if (_useHeld && _inputHandler.UseTrigger.IsPressed)
+                _carryUsable?.UseTick(Time.deltaTime);
 
-                    if (_throwForceMultiplier < _maxForceMultiplier)
-                    {
-                        _currentCarryingDistance = Mathf.Lerp(_currentCarryingDistance, _carryingDistanceShorteningTo, Time.deltaTime);
-                    }
-                }
-                else if (_isPreparingToThrow)
-                {
-                    ThrowObject(_throwForceMultiplier);
-                }
+            // Use-stop (edge)
+            if (_useHeld && !_inputHandler.UseTrigger.IsPressed)
+            {
+                _carryUsable?.OnUseStop();
+                _useHeld = false;
+            }
+
+            if (!CarryingObject || !CarryingBody)
+            {
+                DropItem();
+                return;
+            }
+
+            // Подготовка броска
+            if (_inputHandler.AttackTriggered)
+            {
+                _throwForceMultiplier = Mathf.Clamp(_throwForceMultiplier + Time.deltaTime, _throwForceMultiplier, _maxForceMultiplier);
+                _isPreparingToThrow = true;
+
+                if (_throwForceMultiplier < _maxForceMultiplier)
+                    _currentCarryingDistance = Mathf.Lerp(_currentCarryingDistance, _carryingDistanceShorteningTo, Time.deltaTime);
+            }
+            else if (_isPreparingToThrow)
+            {
+                ThrowObject(_throwForceMultiplier);
             }
         }
 
         private void FixedUpdate()
         {
-            if (CarryingObject)
-            {
-                DragObject();
-            }
+            if (!CarryingObject || !CarryingBody) return;
+
+            DragObject();
+
+            // Вращение тянем PD-контроллером к ориентации камеры (или выбранной)
+            Quaternion targetRot = GetTargetRotation();
+            ApplyRotationHold(CarryingBody, targetRot, _rotKp, _rotKd);
         }
 
         public void GrabOrDrop()
         {
-
-            if (!CarryingObject)
-            {
-                GrabObject();
-            }
-            else
-            {
-                DropItem();
-            }
+            if (!CarryingObject) GrabObject();
+            else DropItem();
         }
 
         private void DragObject()
         {
-            Vector3 targetPosition = _playerCameraTransform.position + _playerCameraTransform.forward * _currentCarryingDistance;
+            // Целевая позиция перед камерой
+            Vector3 targetPosition =
+                _playerCameraTransform.position +
+                _playerCameraTransform.forward * _currentCarryingDistance;
 
-            Quaternion targetRotation = _playerCameraTransform.rotation * _relativeRotation;
-
-            CarryingBody.linearVelocity = (targetPosition - CarryingBody.position) * _carrySpeed;
-            CarryingBody.rotation = targetRotation;
-
-            CarryingBody.angularVelocity = Vector3.zero;
+            // Позиционная «подтяжка» скоростью (можно заменить на PD по желанию)
+            Vector3 toTarget = targetPosition - CarryingBody.position;
+            CarryingBody.linearVelocity = toTarget * _carrySpeed;
         }
 
         private void GrabObject()
@@ -155,9 +178,8 @@ namespace Failsafe.Player.Scripts.Interaction
             if (hitInfo.transform.TryGetComponent<Item>(out var itemObject))
             {
                 if (_playerHandsContainer.State == PlayerHandsContainer.HandState.ItemInHand)
-                {
                     _playerHandsContainer.DropItemFromHand();
-                }
+
                 _playerHandsContainer.TryTakeItemInHand(itemObject);
                 return;
             }
@@ -166,16 +188,24 @@ namespace Failsafe.Player.Scripts.Interaction
             CarryingBody.useGravity = false;
 
             CarryingObject = hitInfo.rigidbody.gameObject;
+            _carryUsable = CarryingObject.GetComponent<ICarryUsable>();
+            _carryUsable?.OnGrabbed(_playerCameraTransform);
+            _useHeld = false;
 
+            // Сохраняем относительный поворот (на будущее)
             CarryingObject.transform.parent = _playerCameraTransform;
             _relativeRotation = CarryingObject.transform.localRotation;
             CarryingObject.transform.parent = null;
 
+            // Лёгкий подъём от поверхности
             CarryingObject.transform.position += _grabHelperVector;
 
+            // Слои
             _cachedCarryingLayer = CarryingObject.layer;
+            CarryingObject.layer = _carryingLayerIndex;
 
-            CarryingObject.layer = _carryingObjectLayer.value >> 1;
+            // Стабилизация старта
+            CarryingBody.angularVelocity = Vector3.zero;
 
             IsDragging = true;
             _isPreparingToThrow = false;
@@ -188,14 +218,21 @@ namespace Failsafe.Player.Scripts.Interaction
             {
                 CarryingBody.useGravity = true;
 
-                CarryingBody.AddForce(_playerCameraTransform.forward * (_playerModelParameters.ThrowPower * throwForceMultiplier),
-                    ForceMode.Impulse);
-                CarryingBody.AddTorque(_playerCameraTransform.forward * (_playerModelParameters.ThrowTorquePower * throwForceMultiplier),
-                    ForceMode.Impulse);
+                CarryingBody.AddForce(
+                    _playerCameraTransform.forward * (_playerModelParameters.ThrowPower * throwForceMultiplier),
+                    ForceMode.Impulse
+                );
+
+                CarryingBody.AddTorque(
+                    _playerCameraTransform.forward * (_playerModelParameters.ThrowTorquePower * throwForceMultiplier),
+                    ForceMode.Impulse
+                );
             }
 
             if (CarryingObject) CarryingObject.layer = _cachedCarryingLayer;
-
+            if (_useHeld) { _carryUsable?.OnUseStop(); _useHeld = false; }
+            _carryUsable?.OnDropped();
+            _carryUsable = null;
             CarryingBody = null;
             CarryingObject = null;
             IsDragging = false;
@@ -208,7 +245,9 @@ namespace Failsafe.Player.Scripts.Interaction
         {
             if (CarryingObject) CarryingObject.layer = _cachedCarryingLayer;
             if (CarryingBody) CarryingBody.useGravity = true;
-
+            if (_useHeld) { _carryUsable?.OnUseStop(); _useHeld = false; }
+            _carryUsable?.OnDropped();
+            _carryUsable = null;
             CarryingBody = null;
             CarryingObject = null;
             IsDragging = false;
@@ -225,15 +264,52 @@ namespace Failsafe.Player.Scripts.Interaction
                 if (Physics.Raycast(ray, out RaycastHit hit, _maxPickupDistance))
                 {
                     if (hit.rigidbody != null)
-                    {
                         targetScale = _hoverSize;
-                    }
                 }
             }
 
             float current = _crosshairImage.rectTransform.localScale.x;
             float next = Mathf.Lerp(current, targetScale, Time.deltaTime * _scaleSpeed);
             _crosshairImage.rectTransform.localScale = new Vector3(next, next, 1f);
+        }
+
+        private Quaternion GetTargetRotation()
+        {
+            switch (_alignMode)
+            {
+                case AlignmentMode.WorldZero:
+                    return Quaternion.identity;
+
+                case AlignmentMode.Camera:
+                    return _playerCameraTransform.rotation;
+
+                case AlignmentMode.CameraNoRoll:
+                default:
+                    // смотрим туда же, что и камера, но без крена (up — мировой)
+                    return Quaternion.LookRotation(_playerCameraTransform.forward, Vector3.up);
+            }
+        }
+
+        /// <summary>
+        /// Выравнивание ориентации к targetRotation через PD-регулятор.
+        /// </summary>
+        private static void ApplyRotationHold(Rigidbody rb, Quaternion targetRotation, float kp, float kd)
+        {
+            if (!rb) return;
+
+            // Ошибка ориентации: qErr = qTarget * inv(qCurrent)
+            Quaternion qErr = targetRotation * Quaternion.Inverse(rb.rotation);
+            qErr.ToAngleAxis(out float angleDeg, out Vector3 axis);
+
+            if (float.IsNaN(axis.x) || float.IsNaN(axis.y) || float.IsNaN(axis.z))
+                return;
+
+            if (angleDeg > 180f) angleDeg -= 360f;
+            float angleRad = angleDeg * Mathf.Deg2Rad;
+
+            // P + D
+            Vector3 torque = axis.normalized * (angleRad * kp) - rb.angularVelocity * kd;
+            rb.AddTorque(torque, ForceMode.Acceleration);
         }
     }
 }
