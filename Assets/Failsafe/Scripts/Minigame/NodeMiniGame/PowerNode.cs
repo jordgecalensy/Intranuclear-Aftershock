@@ -88,8 +88,6 @@ public abstract class PowerNode : MonoBehaviour
         ObjectXRay xray = GetComponent<ObjectXRay>();
         if (xray != null)
             xray.SetPoweredState(true);
-        else
-            gameObject.GetComponent<Renderer>().material.color = Color.red;
     }
     // Метод для сброса питания (отключение)
     public virtual void ResetPower()
@@ -107,8 +105,6 @@ public abstract class PowerNode : MonoBehaviour
         ObjectXRay xray = GetComponent<ObjectXRay>();
         if (xray != null)
             xray.SetPoweredState(false);
-        else
-            gameObject.GetComponent<Renderer>().material.color = Color.white;
     }
 
     public static Direction Opposite(Direction dir)
