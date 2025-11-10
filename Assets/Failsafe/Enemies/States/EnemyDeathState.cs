@@ -6,7 +6,6 @@ public class EnemyDeathState : BehaviorForcedState
     private EnemyNavMeshActions _enemyNavMeshActions;
     private Animator _animator;
     private AnimationEvent _replaceEvent = new AnimationEvent();
-    private AnimationEvent _soundEvent = new AnimationEvent();
     private readonly int _deathStateHash = Animator.StringToHash("Base Layer.Death");
 
     public EnemyDeathState(EnemyAnimator enemyAnimator, EnemyNavMeshActions enemyNavMeshActions, Animator animator)
@@ -37,8 +36,7 @@ public class EnemyDeathState : BehaviorForcedState
             _replaceEvent.time = clip.length;
             _replaceEvent.functionName = "ReplaceWithDummy";
 
-            _soundEvent.time = 1f;
-            _soundEvent.functionName = "DeathEvent";
+            clip.AddEvent(_replaceEvent);
         }
     }
 }

@@ -25,6 +25,7 @@ public class Enemy : MonoBehaviour
     private LaserBeamController _activeLaser;
     [SerializeField] private Transform _laserSpawnPoint; // Точка спавна лазера, если нужно
     [SerializeField] private List<Transform> _manualPoints; // Привязать вручную через инспектор
+    [SerializeField] private GameObject _corpseModel; // Труп
     public BehaviorState currentState;
     public AwarenessMeter _awarenessMeter;
     public bool seePlayer;
@@ -340,6 +341,7 @@ public class Enemy : MonoBehaviour
 
     public void ReplaceWithDummy()
     {
+        Instantiate(_corpseModel, transform.position, transform.rotation);
         Destroy(this.gameObject);
     }
 }
