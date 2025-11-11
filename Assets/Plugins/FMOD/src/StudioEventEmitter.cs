@@ -407,5 +407,14 @@ namespace FMODUnity
             }
             return false;
         }
+
+        public void ChangeEvent(EventReference newEvent)
+        {
+            EventReference = newEvent;
+
+            instance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
+
+            Lookup();
+        }
     }
 }
