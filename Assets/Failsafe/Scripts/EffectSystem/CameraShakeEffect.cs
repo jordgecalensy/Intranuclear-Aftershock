@@ -19,8 +19,8 @@ namespace Failsafe.Scripts.EffectSystem
 
         // === Спринт ===
         [Header("Sprinting Shake Settings")]
-        private readonly float _sprintIntensity = 0.3f; // амплитуда тряски при спринте
-        private readonly float _sprintSpeed = 11f;      // частота тряски при спринте
+        private readonly float _sprintIntensity = 0.12f; // амплитуда тряски при спринте
+        private readonly float _sprintSpeed = 7f;      // частота тряски при спринте
 
         private float _shakeTime = 0f;
 
