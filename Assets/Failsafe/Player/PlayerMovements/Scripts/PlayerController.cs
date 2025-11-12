@@ -15,6 +15,7 @@ using Failsafe.Scripts.EffectSystem;
 using Failsafe.Items; // ← добавь это
 
 
+
 namespace Failsafe.PlayerMovements
 {
     /// <summary>
@@ -37,14 +38,15 @@ namespace Failsafe.PlayerMovements
         private PlayerLedgeController _ledgeController;
         private PlayerNoiseController _noiseController;
         private StepController _stepController;
-        private bool _isLowHpEffectActive = false; //добавил
-        private bool _isVisorEffectActive = false; //добавил
+        private bool _isLowHpEffectActive = false;
+        private bool _isVisorEffectActive = false;
+        private bool _effectManagerHasShake = false;
 
         public BehaviorStateMachine StateMachine => _behaviorStateMachine;
         public PlayerMovementController PlayerMovementController => _movementController;
         public PlayerRotationController PlayerRotationController => _playerRotationController;
 
-      [Inject]  private readonly PlayerMovementController _movementController; // readonly и инжектим
+        [Inject] private readonly PlayerMovementController _movementController; // readonly и инжектим
 
         public PlayerController(
             PlayerMovementParameters movementParametrs,
@@ -80,10 +82,8 @@ namespace Failsafe.PlayerMovements
             _stepController = new StepController(_playerView.CharacterController, _movementParametrs, _playerView.FootstepEvent);
 
             InitializeStateMachine();
-            
 
         }
-
 
 
         private void InitializeStateMachine()
@@ -218,9 +218,26 @@ namespace Failsafe.PlayerMovements
                 // Сбрасываем триггер после обработки
                 _inputHandler.VisorTrigger.ReleaseTrigger();
             }
-
+            // --- Camera Shake ---
+            bool isMoving = _inputHandler.MovementInput.x != 0 || _inputHandler.MovementInput.y != 0;
+            if (isMoving)
+            {
+                if (!_effectManagerHasShake)
+                {
+                    _effectManager.ApplyEffect(new CameraShakeEffect(
+                        _playerRotationController,
+                        _inputHandler
+                    ));
+                    _effectManagerHasShake = true;
+                }
+            }
+            else if (_effectManagerHasShake)
+            {
+                _effectManager.RemoveEffect<CameraShakeEffect>();
+                _effectManagerHasShake = false;
+            }
         }
-        
+
 
         public void FixedTick()
         {
