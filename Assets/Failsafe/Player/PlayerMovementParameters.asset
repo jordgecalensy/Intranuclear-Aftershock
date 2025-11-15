@@ -15,20 +15,20 @@ MonoBehaviour:
   WalkSpeed:
     BaseValue: 3.5
   RunSpeed:
-    BaseValue: 7
+    BaseValue: 6.5
   CrouchSpeed:
-    BaseValue: 1.75
-  RunDurationBeforeSlide: 0.5
-  SlideSpeed: 4.2
-  MaxSlideTime: 1.5
-  MinSlideTime: 0.8
+    BaseValue: 2
+  RunDurationBeforeSlide: 0.75
+  SlideSpeed: 5
+  MaxSlideTime: 2
+  MinSlideTime: 1
   JumpMaxHeight:
     BaseValue: 1.5
   JumpMaxSpeed:
     BaseValue: 8
   JumpMinDuration: 0.1
   JumpDuration: 0.5
-  AirMovementSpeed: 0.5
+  AirMovementSpeed: 0.75
   GravityForce: 8
   InitialGravityStrength: 0.1
   TimeToFullGravityForce: 0.5
@@ -47,16 +47,16 @@ MonoBehaviour:
   ClimbOnMaxDistanceToLedge: 1
   ClimbOnLedgeMaxHeight: 2
   FallDamageEnabled: 1
-  FallDamageStartHeight: 3.5
-  FallDamageBase: 8
+  FallDamageStartHeight: 4.5
+  FallDamageBase: 10
   FallDamageHeightStep: 1
-  FallDamageStepAmount: 4
-  SlowMinorHeight: 3.5
-  HeavyLandingHeight: 7
+  FallDamageStepAmount: 3
+  SlowMinorHeight: 4.5
+  HeavyLandingHeight: 8
   MinorSlowMultiplier: 0.88
-  MinorSlowDuration: 1
+  MinorSlowDuration: 0.75
   MainSlowMultiplier: 0.65
-  MainSlowDuration: 3
+  MainSlowDuration: 4
   LandingRecoverDuration: 1.29
   FlybyNoiseHeight: 2
   FlybyNoiseRadius: 7
