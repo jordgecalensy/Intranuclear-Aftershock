@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe90df974fc04c65a7f0875b8e45328e, type: 3}
   m_Name: PlayerModelParameters
   m_EditorClassIdentifier: 
-  <MaxHealth>k__BackingField: 500
-  <MaxStamina>k__BackingField: 100
+  <MaxHealth>k__BackingField: 150
+  <MaxStamina>k__BackingField: 125
   RegenerateStaminaPerSecond: 20
-  RegenerationDelay: 1
-  StaminaForJump: 25
-  StaminaForRunPerSecond: 20
+  RegenerationDelay: 1.2
+  StaminaForJump: 10
+  StaminaForRunPerSecond: 15
   ThrowPower:
-    BaseValue: 10
+    BaseValue: 14
   ThrowTorquePower:
-    BaseValue: 3
+    BaseValue: 4
