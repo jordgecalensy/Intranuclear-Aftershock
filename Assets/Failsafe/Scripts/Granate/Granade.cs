@@ -5,6 +5,8 @@ using System.Collections;
 public abstract class Granade : MonoBehaviour
 {
     [SerializeField] protected GranadeData Data;
+    [SerializeField] protected GameObject MineTrigger;
+
     protected bool ItsMineState = false;
     protected bool InstaledMine = false;
     public void Explosion()
@@ -32,7 +34,7 @@ public abstract class Granade : MonoBehaviour
                 if (hit.collider.GetComponent<Rigidbody>() != null)
                 {
                     Debug.Log($"Rigidbody: {hit.collider.name}");
-                    hit.collider.GetComponent<Rigidbody>().AddForce(directionToEnemy, ForceMode.Impulse); 
+                    hit.collider.GetComponent<Rigidbody>().AddForce(directionToEnemy * Data.ExplosionForce, ForceMode.Impulse); 
                 }
             }
         }
@@ -58,13 +60,7 @@ public abstract class Granade : MonoBehaviour
         Debug.Log("collide " + gameObject + " With " + collision.gameObject.name);
         transform.SetParent(collision.transform);
         gameObject.GetComponent<Rigidbody>().isKinematic = true;
-    }
-    protected void OnTriggerEnter(Collider other)
-    {
-        
-    }
-    private void OnTriggerStay(Collider other)
-    {
-        Debug.Log(other.gameObject.name);
+        gameObject.GetComponent<Collider>().enabled = false;
+        MineTrigger.SetActive(true);
     }
 }
