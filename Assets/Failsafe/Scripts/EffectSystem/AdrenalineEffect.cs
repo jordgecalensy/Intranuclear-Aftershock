@@ -18,9 +18,9 @@ namespace Failsafe.Scripts.EffectSystem
         {
             _playerMovementParameters = playerMovementParameters;
             _speedModificator = new MultiplierFloat(SpeedMultiplier, priority: 100);
-            _adrenalineMaterial = Resources.Load<Material>("StimpckEffect");
+            _adrenalineMaterial = Resources.Load<Material>("BoostMaterial");
             if (_adrenalineMaterial == null)
-                Debug.LogWarning("PlayerController: не найден материал LowHealthEffect в Resources/");
+                Debug.LogWarning("PlayerController: не найден материал BoostMaterial в Resources/");
 
             _duration = duration;
             IsUniqueEffect = true;

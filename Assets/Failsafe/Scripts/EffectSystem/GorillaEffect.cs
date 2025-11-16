@@ -17,7 +17,7 @@ namespace Failsafe.Scripts.EffectSystem
         {
             _playerModelParameters = playerModelParameters;
             _throwPowerModificator = new MultiplierFloat(ThrowPowerMultiplier, priority: 100);
-            _gorillaMaterial = Resources.Load<Material>("StimpckEffect");
+            _gorillaMaterial = Resources.Load<Material>("GorillaEffect");
             if (_gorillaMaterial == null)
                 Debug.LogWarning("PlayerController: не найден материал в Resources/");
 
