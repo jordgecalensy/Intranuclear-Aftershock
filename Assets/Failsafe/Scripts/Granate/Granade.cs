@@ -16,24 +16,27 @@ public abstract class Granade : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(transform.position, directionToEnemy, out hit, Data.ExplosionRadius))
             {
-                if(hitInfo.name != hit.collider.name)
+                if (hitInfo.name != hit.collider.name)
                 {
-                    if (hitInfo.name == "Player")
-                    {
-                        Debug.Log(hit.collider.name);
-                        Debug.Log($"{hitInfo.gameObject.name} за препядствием");
-                    }
+                    if (hitInfo.tag == "Player" || hitInfo.tag == "Enemy")
+                        Debug.Log($"{hitInfo.gameObject.name} за препядствием {hit.collider.name}");
                     continue;
                 }
-            }
-            if (hitInfo.GetComponent<DamageableComponent>() != null)
-            {
-                DamageableComponent damageableComponent = hitInfo.GetComponent<DamageableComponent>();
-                damageableComponent.TakeDamage(new FlatDamage(Data.ExplosionDamage));
-                Debug.Log($"{hitInfo} Take {Data.ExplosionDamage} Damage");
-                ExplosionEffect();
+                if (hit.collider.GetComponent<DamageableComponent>() != null)
+                {
+                    DamageableComponent damageableComponent = hit.collider.GetComponent<DamageableComponent>();
+                    damageableComponent.TakeDamage(new FlatDamage(Data.ExplosionDamage));
+                    Debug.Log($"{hit.collider.name} Take {Data.ExplosionDamage} Damage");
+                    ExplosionEffect();
+                }
+                if (hit.collider.GetComponent<Rigidbody>() != null)
+                {
+                    Debug.Log($"Rigidbody: {hit.collider.name}");
+                    hit.collider.GetComponent<Rigidbody>().AddForce(directionToEnemy, ForceMode.Impulse); 
+                }
             }
         }
+        SingleExplosionEffect();
         Destroy(gameObject);
     }
     public void ActiveMineState()
@@ -42,7 +45,11 @@ public abstract class Granade : MonoBehaviour
     }
     protected virtual void ExplosionEffect()
     {
-        //тут пишутся эффекты для разных гранат
+        //эффекты для разных гранат
+    }
+    protected virtual void SingleExplosionEffect()
+    {
+        //Одиночный эффект перед взрывом гранаты
     }
     protected void OnCollisionEnter(Collision collision)
     {
