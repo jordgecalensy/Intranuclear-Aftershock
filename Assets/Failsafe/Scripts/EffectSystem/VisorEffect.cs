@@ -9,7 +9,7 @@ namespace Failsafe.Scripts.EffectSystem
         private Material _visorMaterial;
         private ObjectXRay[] _xrayObjects;
         private Transform _player;
-        private float _xrayRadius = 10f;
+        private float _xrayRadius = 20f;
         private GameObject _visorEffectObject;
         private StudioEventEmitter _visorLoopEmitter;
         private StudioEventEmitter _visorOnEmitter;
