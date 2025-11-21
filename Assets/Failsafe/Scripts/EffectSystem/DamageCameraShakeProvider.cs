@@ -26,10 +26,10 @@ public class DamageCameraShakeProvider
 
     private (float Intensity, float Duration, float Frequency) SelectPreset(float damage)
     {
-        if (damage >= 30) return (0.65f, 0.38f, 18f);
-        if (damage >= 15) return (0.35f, 0.28f, 18f);
-        if (damage >= 1)  return (0.15f, 0.18f, 18f);
-        return (0.10f, 0.15f, 15f);
+        if (damage >= 30) return (3.5f, 0.6f, 8f);
+        if (damage >= 15) return (1.1f, 0.4f, 18f);
+        if (damage >= 1)  return (0.45f, 0.25f, 20f);
+        return (0.25f, 0.15f, 20f);
     }
 }
  
