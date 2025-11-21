@@ -1,75 +1,119 @@
 using UnityEngine;
 using Failsafe.PlayerMovements.Controllers;
+using System.Collections.Generic;
+using Failsafe.Scripts.EffectSystem;
 
 namespace Failsafe.Scripts.EffectSystem
 {
-    /// <summary>
-    /// Эффект тряски камеры через микровращение головы.
-    /// Отдельные параметры для ходьбы и спринта.
-    /// </summary>
-    public class CameraShakeEffect : Effect
+    public class CameraShakeEffect : Effect, IReapplicableEffect
     {
-        private readonly PlayerRotationController _rotationController;
-        private readonly InputHandler _input;
+        private readonly PlayerRotationController _rotation;
 
-        // === Ходьба ===
-        [Header("Walking Shake Settings")]
-        private readonly float _walkIntensity = 0f;   // амплитуда тряски при ходьбе (в градусах)
-        private readonly float _walkSpeed = 0f;        // частота тряски при ходьбе
-
-        // === Спринт ===
-        [Header("Sprinting Shake Settings")]
-        private readonly float _sprintIntensity = 0.12f; // амплитуда тряски при спринте
-        private readonly float _sprintSpeed = 7f;      // частота тряски при спринте
-
-        private float _shakeTime = 0f;
-
-        public CameraShakeEffect(PlayerRotationController rotationController, InputHandler input)
+        private struct ShakeImpulse
         {
-            _rotationController = rotationController;
-            _input = input;
+            public float Time;
+            public float Duration;
+            public float Intensity;
+            public float Frequency;
+        }
 
-            _duration = Mathf.Infinity;
-            IsUniqueEffect = true;
+        private readonly List<ShakeImpulse> _impulses = new();
+
+        // Храним параметры, чтобы OnReapply мог использовать их
+        private readonly float _initialIntensity;
+        private readonly float _initialDuration;
+        private readonly float _initialFrequency;
+
+        public CameraShakeEffect(
+            PlayerRotationController rotation,
+            float intensity,
+            float duration,
+            float frequency)
+        {
+            _rotation = rotation;
+            _initialIntensity = intensity;
+            _initialDuration  = duration;
+            _initialFrequency = frequency;
+
+            _duration = duration; // эффект бесконечный
+            IsUniqueEffect = true;      // только один shake-эффект
         }
 
         public override void ApplyEffect()
         {
-            _shakeTime = 0f;
+            // первый запуск → добавляем первый импульс
+            AddImpulseDamage(_initialIntensity, _initialDuration, _initialFrequency);
         }
 
         public override void ClearEffect()
         {
-            // вращение головы вернётся к базовому в контроллере
+            _impulses.Clear();
+
+            if (_rotation != null)
+            {
+                _rotation.HeadTransform.localRotation =
+                    Quaternion.Euler(_rotation.HeadLocalRotation);
+            } 
+        }
+
+        /// <summary>
+        /// Вызывается EffectManager, если эффект уже применяется.
+        /// Продлеваем, добавляя новый импульс.
+        /// </summary>
+        public void OnReapply(Effect other)
+        {
+            if (other is CameraShakeEffect reapplied)
+            {
+                _duration = reapplied._duration + (Time.time - StarteAt);
+                AddImpulseDamage(reapplied._initialIntensity, reapplied._initialDuration, reapplied._initialFrequency);
+            }
+        }
+
+        /// <summary>
+        /// Добавляет новый shake-импульс
+        /// </summary>
+        private void AddImpulseDamage(float intensity, float duration, float frequency)
+        {
+            _impulses.Add(new ShakeImpulse
+            {
+                Time = 0f,
+                Duration = duration,
+                Intensity = intensity,
+                Frequency = frequency
+            });
         }
 
         public override void Update()
         {
-            if (_rotationController == null || _input == null)
+            if (_rotation == null)
                 return;
 
-            bool isMoving = _input.MovementInput.x != 0 || _input.MovementInput.y != 0;
-            bool isSprinting = _input.SprintTriggered;
+            float x = 0;
+            float y = 0;
 
-            if (!isMoving)
-                return;
+            for (int i = _impulses.Count - 1; i >= 0; i--)
+            {
+                var imp = _impulses[i];
+                imp.Time += Time.deltaTime;
 
-            // выбираем параметры в зависимости от состояния
-            float intensity = isSprinting ? _sprintIntensity : _walkIntensity;
-            float shakeSpeed = isSprinting ? _sprintSpeed : _walkSpeed;
+                if (imp.Time > imp.Duration)
+                {
+                    _impulses.RemoveAt(i);
+                    continue;
+                }
 
-            _shakeTime += Time.deltaTime * shakeSpeed;
+                float shake = Mathf.Sin(imp.Time * imp.Frequency) * imp.Intensity;
+                x += shake;
+                y += shake * 0.5f;
 
-            // синусоида даёт мягкое естественное покачивание
-            float verticalShake = Mathf.Sin(_shakeTime * 1.3f) * intensity;
-            float horizontalShake = Mathf.Cos(_shakeTime * 1.7f) * intensity * 0.8f;
+                _impulses[i] = imp;
+            }
 
-            // применяем поверх текущего вращения головы
-            float shakenVertical = _rotationController.HeadLocalRotation.x + verticalShake;
-            float shakenHorizontal = _rotationController.HeadLocalRotation.y + horizontalShake;
-
-            _rotationController.HeadTransform.localRotation =
-                Quaternion.Euler(shakenVertical, shakenHorizontal, 0f);
+            _rotation.HeadTransform.localRotation =
+                Quaternion.Euler(
+                    _rotation.HeadLocalRotation.x + x,
+                    _rotation.HeadLocalRotation.y + y,
+                    0f);
         }
     }
 }
