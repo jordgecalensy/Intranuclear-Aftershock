@@ -55,7 +55,7 @@ namespace Failsafe.Player
         {
             _itemNames = _items.Select(x => x.GetType().Name).Concat(new string[1] { "" }).ToArray();
             //пока вписываю конкретный итем чтобы сразу можно было тестить как только запустился
-            ItemName = "Adrenaline";
+            ItemName = "Stimpack";
         }
 
         void Update()

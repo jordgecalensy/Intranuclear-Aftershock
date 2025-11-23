@@ -73,6 +73,7 @@ namespace Failsafe.Player.View
                 Debug.LogWarning($"Не задан компонент {nameof(PlayerView)}.{nameof(CharacterController)}");
             if (FootstepEvent.IsNull)
                 Debug.LogWarning($"Не задан компонент {nameof(PlayerView)}.{nameof(FootstepEvent)}");
+
         }
     }
 

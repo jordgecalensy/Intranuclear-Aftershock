@@ -1615,6 +1615,7 @@ GameObject:
   - component: {fileID: 2307031734720968503}
   - component: {fileID: 2677351307390855897}
   - component: {fileID: 6073071214146362726}
+  - component: {fileID: 4388551472208041899}
   m_Layer: 10
   m_Name: Walker_Patrol_Bot_1 1
   m_TagString: Enemy
@@ -1632,8 +1633,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -12.15, y: -2.281, z: -2.5711164}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4718649036610950731}
   - {fileID: 897296480088713354}
@@ -1662,13 +1663,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DebugMode: 0
   useRootMotion: 1
-  _laserBeamPrefab: {fileID: 7565026735645175051, guid: 6dde5c04a18cc734c8a0900d8498b580, type: 3}
-  _laserProjectilePrefab: {fileID: 0}
   _laserSpawnPoint: {fileID: 2787837512202065222}
-  _manualPoints: []
+  _manualPoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  _corpseModel: {fileID: 2521625710871764778, guid: 64bc8ea45d5c24b47b98b27a11ed7dd5, type: 3}
   seePlayer: 0
   hearPlayer: 0
-  _enemyConfig: {fileID: 0}
+  _enemyConfig: {fileID: 11400000, guid: 724be6a3266871249b346fdf1bb26a46, type: 2}
   jumpTrigger: Jump
   landTrigger: Land
   baseArcHeight: 1.2
@@ -1698,8 +1703,16 @@ MonoBehaviour:
     m_Bits: 1056
   _eyePosition: {fileID: 2787837512202065222}
   Target: {fileID: 0}
-  _targets: []
-  _chestIndex: 0
+  _targets:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  _chestIndex: 2
 --- !u!114 &8993564496396878420
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1731,7 +1744,7 @@ NavMeshAgent:
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120
-  m_StoppingDistance: 2
+  m_StoppingDistance: 5
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 0
   m_AutoRepath: 1
@@ -1825,6 +1838,13 @@ MonoBehaviour:
       Data3: 1178802572
       Data4: 193561070
     Path: event:/SFX/ENEMIES/WALKER/RELOAD
+  die:
+    Guid:
+      Data1: -1525639166
+      Data2: 1185408330
+      Data3: -246764102
+      Data4: 1164190650
+    Path: event:/SFX/ENEMIES/WALKER/DEATH
 --- !u!114 &3325948451869141101
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1995,6 +2015,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51a9f10290fb40dba09100153c7f7e6f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &4388551472208041899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5441590585779604949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 093043f5af7756746b721c65fec1680b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _config: {fileID: 11400000, guid: 22e18573ab2349a42a26a9865501c2a8, type: 2}
 --- !u!1 &5568232610338988830
 GameObject:
   m_ObjectHideFlags: 0

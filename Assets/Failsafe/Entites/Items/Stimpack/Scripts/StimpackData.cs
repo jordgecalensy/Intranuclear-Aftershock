@@ -6,6 +6,10 @@ namespace Failsafe.Items
     public class StimpackData : ScriptableObject
     {
         /// <summary>
+        /// Длительность визуального эффекта
+        /// </summary>
+        public float Duration; 
+        /// <summary>
         /// На сколько лечит
         /// </summary>
         public int HealAmount;

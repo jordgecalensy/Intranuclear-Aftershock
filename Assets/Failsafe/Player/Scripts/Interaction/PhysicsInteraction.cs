@@ -17,7 +17,7 @@ namespace Failsafe.Player.Scripts.Interaction
 
         [Header("Carrying")]
         [SerializeField] private float _carryingDistance = 2.5f;
-        [SerializeField] private float _carrySpeed = 10f;
+        [SerializeField] private float _carrySpeed = 4f;
 
         [Tooltip("Индекс слоя (0–31), в который временно помещается переносимый объект.")]
         [SerializeField, Range(0, 31)] private int _carryingLayerIndex = 0;
