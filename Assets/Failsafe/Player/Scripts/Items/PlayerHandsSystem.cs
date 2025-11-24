@@ -25,8 +25,6 @@ public class PlayerHandsSystem : ITickable
     // Пропускать начальную анимацию при повторном применении, скорее всего нужно вынести в параметры предмета или в UseResult
     private bool _skipStartDelay;
 
-    private ItemType _itemInHandType;
-
     public PlayerHandsSystem(PlayerHandsContainer playerHandsSystem, InputHandler inputHandler, PlayerView playerView)
     {
         _playerHandsContainer = playerHandsSystem;
@@ -41,18 +39,8 @@ public class PlayerHandsSystem : ITickable
         };
     }
 
-    [Obsolete("Используется для теста разных действий. Тип предмета должен быть определен в предмете")]
-    private void TestSelectItemType()
-    {
-        if (Input.GetKey(KeyCode.Alpha1)) _itemInHandType = ItemType.Consumable;
-        if (Input.GetKey(KeyCode.Alpha2)) _itemInHandType = ItemType.Grenade;
-        if (Input.GetKey(KeyCode.Alpha3)) _itemInHandType = ItemType.Gun;
-        if (Input.GetKey(KeyCode.Alpha4)) _itemInHandType = ItemType.GroundItem;
-    }
-
     public void Tick()
     {
-        TestSelectItemType();
         if (_inputHandler.UseTrigger.IsTriggered && CanUseItemInHand())
         {
             UseItemInHand().Forget();
@@ -75,19 +63,13 @@ public class PlayerHandsSystem : ITickable
     {
         if (!_skipStartDelay)
         {
-            // Если предмет - расходник, запускаем анимацию
-            if (_itemInHandType == ItemType.Consumable)
-            {
-                _playerView.Animator.SetTrigger("Heal");
-            }
-
-            OnItemStartUsing?.Invoke(_itemInHandType);
+            OnItemStartUsing?.Invoke(_playerHandsContainer.ItemInHand.ItemObject.ItemData.Type);
             _usingState = UsingState.Start;
             await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseStartDelay));
         }
         _usingState = UsingState.Using;
 
-        var useResult = _actionsWithItems[_itemInHandType].Execute(_playerHandsContainer);
+        var useResult = _actionsWithItems[_playerHandsContainer.ItemInHand.ItemObject.ItemData.Type].Execute(_playerHandsContainer);
 
         if (useResult.UsageType == UsageType.ClickToUse)
         {
@@ -104,31 +86,6 @@ public class PlayerHandsSystem : ITickable
         }
         return useResult;
     }
-}
-
-// TODO перенести в предметы
-public enum ItemType
-{
-    /// <summary>
-    /// Расходник
-    /// </summary>
-    Consumable,
-    /// <summary>
-    /// Пистолет
-    /// </summary>
-    Gun,
-    /// <summary>
-    /// Граната
-    /// </summary>
-    Grenade,
-    /// <summary>
-    /// Выбрасываемый на землю предмет
-    /// </summary>
-    GroundItem,
-    /// <summary>
-    /// Инструмент
-    /// </summary>
-    Tool
 }
 
 /// <summary>
