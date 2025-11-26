@@ -40,7 +40,9 @@ namespace Failsafe.PlayerMovements
         private StepController _stepController;
         private bool _isLowHpEffectActive = false;
         private bool _isVisorEffectActive = false;
-        private bool _effectManagerHasShake = false;
+        private MovementCameraShakeProvider _movementShakeProvider;
+        private DamageCameraShakeProvider _damageShakeProvider;
+        private float _prevHealth;
 
         public BehaviorStateMachine StateMachine => _behaviorStateMachine;
         public PlayerMovementController PlayerMovementController => _movementController;
@@ -80,9 +82,29 @@ namespace Failsafe.PlayerMovements
             _ledgeController = new PlayerLedgeController(_playerView.PlayerTransform, _playerView.PlayerCamera, _playerView.PlayerGrabPoint, _movementParametrs);
             _noiseController = new PlayerNoiseController(_playerView.PlayerTransform, _noiseParametrs, _signalManager);
             _stepController = new StepController(_playerView.CharacterController, _movementParametrs, _playerView.FootstepEvent);
+            _prevHealth = _health.CurrentHealth;
+            _movementShakeProvider =
+                new MovementCameraShakeProvider(_inputHandler, _effectManager, _playerRotationController);
+
+            _damageShakeProvider =
+                new DamageCameraShakeProvider(_effectManager, _playerRotationController);
+            _health.OnHealthChanged += HandleHealthChanged;
+
+            
+
 
             InitializeStateMachine();
 
+        }
+
+        private void HandleHealthChanged(float newValue)
+        {
+            float damage = _prevHealth - newValue;
+
+            if (damage > 0)
+                _damageShakeProvider.ApplyDamage(damage);
+
+            _prevHealth = newValue;
         }
 
 
@@ -178,6 +200,7 @@ namespace Failsafe.PlayerMovements
 
         public void Tick()
         {
+            _movementShakeProvider.Tick();
             _ledgeController.HandleFindingLedge();
             _playerRotationController.HandlePlayerRotation();
             _behaviorStateMachine.Update();
@@ -218,24 +241,8 @@ namespace Failsafe.PlayerMovements
                 // Сбрасываем триггер после обработки
                 _inputHandler.VisorTrigger.ReleaseTrigger();
             }
-            // --- Camera Shake ---
-            bool isMoving = _inputHandler.MovementInput.x != 0 || _inputHandler.MovementInput.y != 0;
-            if (isMoving)
-            {
-                if (!_effectManagerHasShake)
-                {
-                    _effectManager.ApplyEffect(new CameraShakeEffect(
-                        _playerRotationController,
-                        _inputHandler
-                    ));
-                    _effectManagerHasShake = true;
-                }
-            }
-            else if (_effectManagerHasShake)
-            {
-                _effectManager.RemoveEffect<CameraShakeEffect>();
-                _effectManagerHasShake = false;
-            }
+            
+            // ============ DAMAGE SHAKE CHECK ============
         }
 
 

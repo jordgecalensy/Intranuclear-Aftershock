@@ -45,14 +45,16 @@ MonoBehaviour:
   SearchRadius: 9.03
   offsetSearchingPoint: 10
   changePointInterval: 5
-  enemyHealth: 100
-  MinStunTime: 200
+  enemyHealth: 80
+  MinStunTime: 400
   MaxStunTime: 1500
-  StunMultiplier: 10
+  StunMultiplier: 5
   attackType: 1
-  Damage: 50
+  _laserVfxPrefab: {fileID: 2475054416915123218, guid: 46189586e314ab44c84d11737cf1cf53, type: 3}
+  _laserProjectilePrefab: {fileID: 0}
+  Damage: 45
   AttackRangeMin: 18
   AttackRangeMax: 45
   AttackDuration: 5
   AttackDelay: 1.66
-  AttackCooldown: 2
+  AttackCooldown: 2.2
