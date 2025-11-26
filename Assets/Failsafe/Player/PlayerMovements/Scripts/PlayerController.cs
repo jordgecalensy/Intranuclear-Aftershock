@@ -103,7 +103,7 @@ namespace Failsafe.PlayerMovements
 
             if (damage > 0)
                 _damageShakeProvider.ApplyDamage(damage);
-                _effectManager.ApplyEffect(new DamageEffect(0.25f));
+                _effectManager.ApplyEffect(new DamageHitEffect(0.25f));
 
             _prevHealth = newValue;
         }

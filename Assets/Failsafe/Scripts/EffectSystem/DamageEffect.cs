@@ -4,85 +4,107 @@ using FMODUnity;
 
 namespace Failsafe.Scripts.EffectSystem
 {
-    public class DamageEffect : Effect, IReapplicableEffect
+public class DamageHitEffect : Effect, IReapplicableEffect
+{
+    private Material _damageHitMaterial;
+    private CustomPassVolume _customPassVolume;
+    private StudioEventEmitter _damageHitEmitter;
+
+    private EventReference _damageHitEvent;
+
+    private float _initialAlpha = 1f;      // стартовое значение альфа
+    private float _currentAlpha = 1f;      // текущее значение
+    private float _fadeOutStart = 0.2f;    // за сколько секунд до конца начинаем fade
+
+    private const string _alphaIntensity = "_AlphaIntensity";
+
+    public DamageHitEffect(float duration, float fadeOutStart = 0.2f, float initialAlpha = 1f)
     {
-        private Material _damageMaterial;
-        private CustomPassVolume _customPassVolume;
-        private StudioEventEmitter _damageEmitter;
+        _duration = duration;
+        IsUniqueEffect = true;
 
-        private EventReference _damageEvent;
+        _initialAlpha = initialAlpha;
+        _currentAlpha = initialAlpha;
+        _fadeOutStart = fadeOutStart;
 
-        /// <summary>
-        /// Базовая длительность эффекта
-        /// </summary>
+        _damageHitMaterial = Resources.Load<Material>("TakingDamage");
+        if (_damageHitMaterial == null)
+            Debug.LogWarning("DamageHitEffect: материал DamageHitEffect не найден!");
 
-        public DamageEffect(float duration)
+        _damageHitEvent = EventReference.Find("event:/UI/LowHP/LowHealthSFX");
+    }
+
+    public override void ApplyEffect()
+    {
+        _customPassVolume = new GameObject("DamageHitEffectPass")
+            .AddComponent<CustomPassVolume>();
+
+        _customPassVolume.isGlobal = true;
+        _customPassVolume.injectionPoint = CustomPassInjectionPoint.AfterPostProcess;
+
+        var pass = new CustomPassDrawer(_damageHitMaterial);
+        _customPassVolume.customPasses.Add(pass);
+
+        // Звук
+        _damageHitEmitter = _customPassVolume.gameObject.AddComponent<StudioEventEmitter>();
+        _damageHitEmitter.EventReference = _damageHitEvent;
+        _damageHitEmitter.Play();
+
+        SetAlpha(_initialAlpha);
+    }
+
+    public override void Update()
+    {
+        float remaining = ElapsedAt - Time.time;
+
+        if (remaining <= _fadeOutStart)
         {
-            _damageMaterial = Resources.Load<Material>("StimpckEffect");
-            if (_damageMaterial == null)
-                Debug.LogWarning("DamageEffect: не найден материал DamageEffect в Resources/");
+            float t = Mathf.Clamp01(remaining / _fadeOutStart);
 
-            _duration = duration;     // <-- 🔥 задаём длительность здесь
-            IsUniqueEffect = true;
-
-            _damageEvent = EventReference.Find("event:/UI/LowHP/LowHealthSFX");
-        }
-
-        public override void ApplyEffect()
-        {
-            // --- Создаём volume
-            _customPassVolume = new GameObject("DamageEffectPass")
-                .AddComponent<CustomPassVolume>();
-            _customPassVolume.isGlobal = true;
-            _customPassVolume.injectionPoint = CustomPassInjectionPoint.AfterPostProcess;
-
-            var pass = new CustomPassDrawer(_damageMaterial);
-            _customPassVolume.customPasses.Add(pass);
-
-            // --- Создание и проигрывание звука
-            _damageEmitter = _customPassVolume.gameObject.AddComponent<StudioEventEmitter>();
-            _damageEmitter.EventReference = _damageEvent;
-            _damageEmitter.Play();
-
-            Debug.Log("DamageEffect applied");
-        }
-
-        public override void ClearEffect()
-        {
-            if (_damageEmitter != null)
-                _damageEmitter.Stop();
-
-            if (_customPassVolume != null)
-                Object.Destroy(_customPassVolume.gameObject);
-
-            Debug.Log("DamageEffect cleared");
-        }
-
-        /// <summary>
-        /// Срабатывает, если эффект был вызван повторно
-        /// </summary>
-        public void OnReapply(Effect newEffect)
-        {
-            DamageEffect reapplied = newEffect as DamageEffect;
-            if (reapplied == null)
-                return;
-
-            Debug.Log("DamageEffect reapplied — extending duration");
-
-            // 1. Узнаём, сколько времени осталось у эффекта
-            float remaining = ElapsedAt - Time.time;
-            if (remaining < 0f)
-                remaining = 0f;
-
-            // 2. Новая длительность = оставшееся время + длительность нового вызова
-            _duration = remaining + reapplied._duration;
-
-            // 3. Перезапускаем звук (визуальный пасс уже включён)
-            if (_damageEmitter != null)
-            {
-                _damageEmitter.Stop();
-                _damageEmitter.Play();
-            }
+            _currentAlpha = Mathf.Lerp(0f, _initialAlpha, t);
+            SetAlpha(_currentAlpha);
         }
     }
+
+    public override void ClearEffect()
+    {
+        if (_damageHitEmitter != null)
+            _damageHitEmitter.Stop();
+
+        if (_customPassVolume != null)
+            Object.Destroy(_customPassVolume.gameObject);
+    }
+
+    private void SetAlpha(float value)
+    {
+        if (_damageHitMaterial != null)
+            _damageHitMaterial.SetFloat(_alphaIntensity, value);
+    }
+
+    public void OnReapply(Effect newEffect)
+    {
+        DamageHitEffect reapplied = newEffect as DamageHitEffect;
+        if (reapplied == null)
+            return;
+
+        float remaining = ElapsedAt - Time.time;
+        if (remaining < 0f)
+            remaining = 0f;
+
+        // продлеваем эффект на длительность нового вызова
+        _duration = remaining + reapplied._duration;
+
+        // сбрасываем AlphaIntensity
+        _currentAlpha = _initialAlpha;
+        SetAlpha(_initialAlpha);
+
+        // звук
+        if (_damageHitEmitter != null)
+        {
+            _damageHitEmitter.Stop();
+            _damageHitEmitter.Play();
+        }
+    }
+}
+
 }
