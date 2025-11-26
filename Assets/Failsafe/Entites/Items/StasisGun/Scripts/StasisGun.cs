@@ -1,9 +1,10 @@
 using UnityEngine;
 using VContainer;
+using VContainer.Unity;
 
 namespace Failsafe.Items
 {
-    public class StasisGun : IUsable, IUpdatable, IAltUsable
+    public class StasisGun : IUsable, ITickable, IAltUsable
     {
         StasisGunData _data;
         EnergyContainer _energyContainer;
@@ -18,7 +19,7 @@ namespace Failsafe.Items
             _energyContainer = new EnergyContainer(_data);
         }
 
-        public void Update()
+        public void Tick()
         {
             if (_fireRateTimer > 0)
             {
@@ -30,7 +31,6 @@ namespace Failsafe.Items
                 _isDefaultMode = !_isDefaultMode;
                 Debug.Log("Default mode is " + _isDefaultMode);
             }
-
         }
 
 
@@ -66,11 +66,7 @@ namespace Failsafe.Items
                     else
                         AltMode(hit);
                 }
-
             }
-
-
-
         }
 
         void DefaultMode(RaycastHit hit)
