@@ -18,7 +18,7 @@ namespace Failsafe.Scripts.EffectSystem
         {
             _playerMovementParameters = playerMovementParameters;
             _jumpModificator = new MultiplierFloat(JumpMultiplier, priority: 100);
-            _tushkanMaterial = Resources.Load<Material>("StimpckEffect");
+            _tushkanMaterial = Resources.Load<Material>("TushkanEffect");
             if (_tushkanMaterial == null)
                 Debug.LogWarning("PlayerController: не найден материал в Resources/");
 

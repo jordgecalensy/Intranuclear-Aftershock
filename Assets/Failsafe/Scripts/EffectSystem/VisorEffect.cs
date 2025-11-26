@@ -43,8 +43,18 @@ namespace Failsafe.Scripts.EffectSystem
             _xrayObjects = Object.FindObjectsOfType<ObjectXRay>();
             Debug.Log($"VisorEffect: найдено {_xrayObjects.Length} XRay-объектов.");
 
+            var prefab = Resources.Load<GameObject>("ScannerVisorVFX");
+
             // Создаём Custom Pass Volume
             _visorEffectObject = new GameObject("VisorEffect");
+            _visorEffectObject.transform.SetParent(_player, false);
+
+                // Вешаем VFX префаб
+            if (prefab != null)
+                Object.Instantiate(prefab, _visorEffectObject.transform);
+            else
+                Debug.LogError("VisorEffect: ScannerVFX prefab not found!");
+
             _customPassVolume = _visorEffectObject.AddComponent<CustomPassVolume>();
             _customPassVolume.isGlobal = true;
             _customPassVolume.injectionPoint = CustomPassInjectionPoint.AfterPostProcess;

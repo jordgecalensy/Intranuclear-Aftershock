@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: StimpckEffect
-  m_Shader: {fileID: -6465566751694194690, guid: 52da79d3471715f43a1c60f8885e857d, type: 3}
+  m_Name: BoostMaterial
+  m_Shader: {fileID: -6465566751694194690, guid: b89ef282aeb4ee044ad26ac818cf362a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -23,7 +23,11 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _SampleTexture2D_bb68a549cf8f48e88210805dbbb10dc6_Texture_1_Texture2D:
+    - _SampleTexture2D_8421dabe3b9842a28db18cbb9a40fd28_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: a98b9da15106749439e84c104f575589, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_daa3e3905e934e47b4fec4182943d539_Texture_1_Texture2D:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -41,11 +45,13 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Alpha: 0.8
-    - _BlinkAmount: 1
-    - _MaskContrast: 0.95
-    - _MaskSize: 0.3
+    - _AlphaOfEffect: 0.05
+    - _ColorAlpha: 0.2
+    - _MaskContrast: 0.754
+    - _MaskSize: 0.374
     m_Colors:
-    - _EffectColor: {r: 0.23346215, g: 0.9811321, b: 0.12495547, a: 0}
+    - _Color: {r: 2.9392729, g: 0, b: 0, a: 0.2}
+    - _InitialColor: {r: 64, g: 0, b: 0, a: 0}
+    - _IntialEffectColor: {r: 4, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

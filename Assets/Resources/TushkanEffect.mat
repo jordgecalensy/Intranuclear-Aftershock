@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: StimpckEffect
-  m_Shader: {fileID: -6465566751694194690, guid: 52da79d3471715f43a1c60f8885e857d, type: 3}
+  m_Name: TushkanEffect
+  m_Shader: {fileID: -6465566751694194690, guid: 3b56c24fd6d35a245ad5cfdedd979570, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -23,10 +23,6 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _SampleTexture2D_bb68a549cf8f48e88210805dbbb10dc6_Texture_1_Texture2D:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -41,11 +37,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Alpha: 0.8
-    - _BlinkAmount: 1
-    - _MaskContrast: 0.95
-    - _MaskSize: 0.3
+    - _EffectSpeed: 1
     m_Colors:
-    - _EffectColor: {r: 0.23346215, g: 0.9811321, b: 0.12495547, a: 0}
+    - _EffectColor: {r: 0.50401205, g: 0.18823528, b: 1.8666667, a: 1}
+    - _EffectScoope: {r: 0.5, g: 0.5, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
