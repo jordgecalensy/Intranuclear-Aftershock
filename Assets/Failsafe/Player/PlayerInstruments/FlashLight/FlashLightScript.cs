@@ -4,31 +4,31 @@ using UnityEngine;
 
 public class flashlight : MonoBehaviour
 {
-    public Light light_fonarik; //свет фонарика
-    public bool Vkl; //включен или выключен фонарик
-    public bool OnChangeColor=true; //можно ли включать светофильтр
-    public bool OnSpotRange=true; //можно ли изменять пучек света
-    public bool OnStrobos=true; //можно ли включать страбоскоп
-    public float time_miganieVkl; //интервал мигания
-    public float minAngle=30f; //минимальная длина луча
-    public float maxAngle=80f; //максимальная длина луча
-    public float speedAngle=5f; //скорость изменения длины луча
-    public float speedRange=2f; //скорость изменения пучка света
-    public float minRange=30f; //минимальный размер пучка света
-    public float maxRange=80f; //максимальный размер пучка света
-    private Color colorStan; //базовый цвет фонарика
-    public Color colorSvetofiltr; //цвет светофильтр
-    public AudioSource asF; //компонент аудиосорс для звука
-    private bool activeStrob=false; //активен ли страбоскоп
-    private bool strabmigan=false; //активно ли мигание страбоскопа
-    private float time_fiks_miganie; //фикисрованное время мигания
-    private bool colChande = false; //изменен ли цвет
+    public Light light_fonarik; //СЃРІРµС‚ С„РѕРЅР°СЂРёРєР°
+    public bool Vkl; //РІРєР»СЋС‡РµРЅ РёР»Рё РІС‹РєР»СЋС‡РµРЅ С„РѕРЅР°СЂРёРє
+    public bool OnChangeColor=true; //РјРѕР¶РЅРѕ Р»Рё РІРєР»СЋС‡Р°С‚СЊ СЃРІРµС‚РѕС„РёР»СЊС‚СЂ
+    public bool OnSpotRange=true; //РјРѕР¶РЅРѕ Р»Рё РёР·РјРµРЅСЏС‚СЊ РїСѓС‡РµРє СЃРІРµС‚Р°
+    public bool OnStrobos=true; //РјРѕР¶РЅРѕ Р»Рё РІРєР»СЋС‡Р°С‚СЊ СЃС‚СЂР°Р±РѕСЃРєРѕРї
+    public float time_miganieVkl; //РёРЅС‚РµСЂРІР°Р» РјРёРіР°РЅРёСЏ
+    public float minAngle=30f; //РјРёРЅРёРјР°Р»СЊРЅР°СЏ РґР»РёРЅР° Р»СѓС‡Р°
+    public float maxAngle=80f; //РјР°РєСЃРёРјР°Р»СЊРЅР°СЏ РґР»РёРЅР° Р»СѓС‡Р°
+    public float speedAngle=5f; //СЃРєРѕСЂРѕСЃС‚СЊ РёР·РјРµРЅРµРЅРёСЏ РґР»РёРЅС‹ Р»СѓС‡Р°
+    public float speedRange=2f; //СЃРєРѕСЂРѕСЃС‚СЊ РёР·РјРµРЅРµРЅРёСЏ РїСѓС‡РєР° СЃРІРµС‚Р°
+    public float minRange=30f; //РјРёРЅРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ РїСѓС‡РєР° СЃРІРµС‚Р°
+    public float maxRange=80f; //РјР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ РїСѓС‡РєР° СЃРІРµС‚Р°
+    private Color colorStan; //Р±Р°Р·РѕРІС‹Р№ С†РІРµС‚ С„РѕРЅР°СЂРёРєР°
+    public Color colorSvetofiltr; //С†РІРµС‚ СЃРІРµС‚РѕС„РёР»СЊС‚СЂ
+    public AudioSource asF; //РєРѕРјРїРѕРЅРµРЅС‚ Р°СѓРґРёРѕСЃРѕСЂСЃ РґР»СЏ Р·РІСѓРєР°
+    private bool activeStrob=false; //Р°РєС‚РёРІРµРЅ Р»Рё СЃС‚СЂР°Р±РѕСЃРєРѕРї
+    private bool strabmigan=false; //Р°РєС‚РёРІРЅРѕ Р»Рё РјРёРіР°РЅРёРµ СЃС‚СЂР°Р±РѕСЃРєРѕРїР°
+    private float time_fiks_miganie; //С„РёРєРёСЃСЂРѕРІР°РЅРЅРѕРµ РІСЂРµРјСЏ РјРёРіР°РЅРёСЏ
+    private bool colChande = false; //РёР·РјРµРЅРµРЅ Р»Рё С†РІРµС‚
     // Start is called before the first frame update
     void Start()
     {
-        colorStan=light_fonarik.color;//задаем базовый цвет света исходя из выставленного цвета в инспекторе
-        Proverka(); //проверяем включен или выключен фонарик при старте
-        time_fiks_miganie=time_miganieVkl; //синхронизируем время мигания 
+        colorStan=light_fonarik.color;//Р·Р°РґР°РµРј Р±Р°Р·РѕРІС‹Р№ С†РІРµС‚ СЃРІРµС‚Р° РёСЃС…РѕРґСЏ РёР· РІС‹СЃС‚Р°РІР»РµРЅРЅРѕРіРѕ С†РІРµС‚Р° РІ РёРЅСЃРїРµРєС‚РѕСЂРµ
+        Proverka(); //РїСЂРѕРІРµСЂСЏРµРј РІРєР»СЋС‡РµРЅ РёР»Рё РІС‹РєР»СЋС‡РµРЅ С„РѕРЅР°СЂРёРє РїСЂРё СЃС‚Р°СЂС‚Рµ
+        time_fiks_miganie=time_miganieVkl; //СЃРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµРј РІСЂРµРјСЏ РјРёРіР°РЅРёСЏ 
         
     }
 
@@ -36,56 +36,56 @@ public class flashlight : MonoBehaviour
     void Update()
     {
         if(OnChangeColor==true){
-            ChangeColor();//замена цвета (светофильтр)
+            ChangeColor();//Р·Р°РјРµРЅР° С†РІРµС‚Р° (СЃРІРµС‚РѕС„РёР»СЊС‚СЂ)
         }
         if(OnSpotRange==true){
-            SpotRange();//Изменение пучка света (области освещения)
+            SpotRange();//РР·РјРµРЅРµРЅРёРµ РїСѓС‡РєР° СЃРІРµС‚Р° (РѕР±Р»Р°СЃС‚Рё РѕСЃРІРµС‰РµРЅРёСЏ)
         }
         
-        //включаем и выключаем фонарик
+        //РІРєР»СЋС‡Р°РµРј Рё РІС‹РєР»СЋС‡Р°РµРј С„РѕРЅР°СЂРёРє
         FlashLightOnOF();
     }
    
    
    
-   //включение и выключение фонарика
+   //РІРєР»СЋС‡РµРЅРёРµ Рё РІС‹РєР»СЋС‡РµРЅРёРµ С„РѕРЅР°СЂРёРєР°
     public void FlashLightOnOF(){
-         if (Input.GetKeyDown (KeyCode.F) && Vkl == false) // если нажали клавишу F и фонарик выключен
+         if (Input.GetKeyDown (KeyCode.F) && Vkl == false) // РµСЃР»Рё РЅР°Р¶Р°Р»Рё РєР»Р°РІРёС€Сѓ F Рё С„РѕРЅР°СЂРёРє РІС‹РєР»СЋС‡РµРЅ
 		{
 			
-			light_fonarik.enabled=true; // включаем свет
-            Vkl = true; // указываем, что фонарик включен
-            asF.Play();// проигрываем звук
+			light_fonarik.enabled=true; // РІРєР»СЋС‡Р°РµРј СЃРІРµС‚
+            Vkl = true; // СѓРєР°Р·С‹РІР°РµРј, С‡С‚Рѕ С„РѕРЅР°СЂРёРє РІРєР»СЋС‡РµРЅ
+            asF.Play();// РїСЂРѕРёРіСЂС‹РІР°РµРј Р·РІСѓРє
 		           
 		}
-        //выключаем фонарик
-		else if (Input.GetKeyDown (KeyCode.F) && Vkl == true) // если нажали клавишу F и фонарик включен
+        //РІС‹РєР»СЋС‡Р°РµРј С„РѕРЅР°СЂРёРє
+		else if (Input.GetKeyDown (KeyCode.F) && Vkl == true) // РµСЃР»Рё РЅР°Р¶Р°Р»Рё РєР»Р°РІРёС€Сѓ F Рё С„РѕРЅР°СЂРёРє РІРєР»СЋС‡РµРЅ
 		{
 			
-			light_fonarik.enabled=false; //выключаем свет
-            Vkl = false; // указываем, что фонарик выключен
-            asF.Play();// проигрываем звук
-            activeStrob=false; //октлючаем страбоскоп
+			light_fonarik.enabled=false; //РІС‹РєР»СЋС‡Р°РµРј СЃРІРµС‚
+            Vkl = false; // СѓРєР°Р·С‹РІР°РµРј, С‡С‚Рѕ С„РѕРЅР°СЂРёРє РІС‹РєР»СЋС‡РµРЅ
+            asF.Play();// РїСЂРѕРёРіСЂС‹РІР°РµРј Р·РІСѓРє
+            activeStrob=false; //РѕРєС‚Р»СЋС‡Р°РµРј СЃС‚СЂР°Р±РѕСЃРєРѕРї
 			
 		}
-       else if(Input.GetKeyDown (KeyCode.T) && Vkl == true && activeStrob==false && OnStrobos==true ){//включаем страбоскоп по нажатию кнопки T
+       else if(Input.GetKeyDown (KeyCode.T) && Vkl == true && activeStrob==false && OnStrobos==true ){//РІРєР»СЋС‡Р°РµРј СЃС‚СЂР°Р±РѕСЃРєРѕРї РїРѕ РЅР°Р¶Р°С‚РёСЋ РєРЅРѕРїРєРё T
                 activeStrob=true;
                 asF.Play();
             }
-            else if(Input.GetKeyDown (KeyCode.T) && Vkl == true && activeStrob==true && OnStrobos==true){ ////выключаем страбоскоп по нажатию кнопки T
+            else if(Input.GetKeyDown (KeyCode.T) && Vkl == true && activeStrob==true && OnStrobos==true){ ////РІС‹РєР»СЋС‡Р°РµРј СЃС‚СЂР°Р±РѕСЃРєРѕРї РїРѕ РЅР°Р¶Р°С‚РёСЋ РєРЅРѕРїРєРё T
                 activeStrob=false;
-                light_fonarik.enabled=true;//включаем свет фонарика, так как при выключение страбоскопа, может отключатся свет фонарика
+                light_fonarik.enabled=true;//РІРєР»СЋС‡Р°РµРј СЃРІРµС‚ С„РѕРЅР°СЂРёРєР°, С‚Р°Рє РєР°Рє РїСЂРё РІС‹РєР»СЋС‡РµРЅРёРµ СЃС‚СЂР°Р±РѕСЃРєРѕРїР°, РјРѕР¶РµС‚ РѕС‚РєР»СЋС‡Р°С‚СЃСЏ СЃРІРµС‚ С„РѕРЅР°СЂРёРєР°
                 asF.Play();
             }
-        else if (activeStrob==true){//активируем страбоскоп
-            stroboscop();//включаем страбоскоп
+        else if (activeStrob==true){//Р°РєС‚РёРІРёСЂСѓРµРј СЃС‚СЂР°Р±РѕСЃРєРѕРї
+            stroboscop();//РІРєР»СЋС‡Р°РµРј СЃС‚СЂР°Р±РѕСЃРєРѕРї
         }
     }
   
   
   
   
-    //Проверяем статус фонарика и включаем или выключаем
+    //РџСЂРѕРІРµСЂСЏРµРј СЃС‚Р°С‚СѓСЃ С„РѕРЅР°СЂРёРєР° Рё РІРєР»СЋС‡Р°РµРј РёР»Рё РІС‹РєР»СЋС‡Р°РµРј
     public void Proverka() {
        if(Vkl == true)
         {
@@ -100,17 +100,17 @@ public class flashlight : MonoBehaviour
    
    
    
-    //стробоскоп
+    //СЃС‚СЂРѕР±РѕСЃРєРѕРї
     public void stroboscop(){              
-        time_miganieVkl-=Time.deltaTime;//уменьшаем вреям
+        time_miganieVkl-=Time.deltaTime;//СѓРјРµРЅСЊС€Р°РµРј РІСЂРµСЏРј
 
-        if(time_miganieVkl<0&&strabmigan==true){//выключаем свет
+        if(time_miganieVkl<0&&strabmigan==true){//РІС‹РєР»СЋС‡Р°РµРј СЃРІРµС‚
             light_fonarik.enabled=false;
             time_miganieVkl=time_fiks_miganie;
             strabmigan=false;
         }
 
-        else if(time_miganieVkl<0&&strabmigan==false){//включаем свет
+        else if(time_miganieVkl<0&&strabmigan==false){//РІРєР»СЋС‡Р°РµРј СЃРІРµС‚
             light_fonarik.enabled=true;
             time_miganieVkl=time_fiks_miganie;
             strabmigan=true;
@@ -118,45 +118,45 @@ public class flashlight : MonoBehaviour
     }
    
    
-    //изменение пучка света
+    //РёР·РјРµРЅРµРЅРёРµ РїСѓС‡РєР° СЃРІРµС‚Р°
     public void SpotRange(){
-        if(Input.GetAxis("Mouse ScrollWheel") > 0f ) { // Двигаем колесико мышки вверх
-        light_fonarik.spotAngle=light_fonarik.spotAngle+speedAngle;//увеличиваем длину луча
-        light_fonarik.range=light_fonarik.range-speedRange; //уменьшаем пучек света
+        if(Input.GetAxis("Mouse ScrollWheel") > 0f ) { // Р”РІРёРіР°РµРј РєРѕР»РµСЃРёРєРѕ РјС‹С€РєРё РІРІРµСЂС…
+        light_fonarik.spotAngle=light_fonarik.spotAngle+speedAngle;//СѓРІРµР»РёС‡РёРІР°РµРј РґР»РёРЅСѓ Р»СѓС‡Р°
+        light_fonarik.range=light_fonarik.range-speedRange; //СѓРјРµРЅСЊС€Р°РµРј РїСѓС‡РµРє СЃРІРµС‚Р°
         
-        if(light_fonarik.spotAngle>maxAngle){//Если длина луча больше максимального значения
-        light_fonarik.spotAngle=maxAngle;//длину луча фиксируем на максимальное значение
+        if(light_fonarik.spotAngle>maxAngle){//Р•СЃР»Рё РґР»РёРЅР° Р»СѓС‡Р° Р±РѕР»СЊС€Рµ РјР°РєСЃРёРјР°Р»СЊРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ
+        light_fonarik.spotAngle=maxAngle;//РґР»РёРЅСѓ Р»СѓС‡Р° С„РёРєСЃРёСЂСѓРµРј РЅР° РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ
         }
 
-        if(light_fonarik.range<minRange){//Если пучек света меньше минимального значения
-        light_fonarik.range=minRange;//пучек света фиксируем на минимальном значении
+        if(light_fonarik.range<minRange){//Р•СЃР»Рё РїСѓС‡РµРє СЃРІРµС‚Р° РјРµРЅСЊС€Рµ РјРёРЅРёРјР°Р»СЊРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ
+        light_fonarik.range=minRange;//РїСѓС‡РµРє СЃРІРµС‚Р° С„РёРєСЃРёСЂСѓРµРј РЅР° РјРёРЅРёРјР°Р»СЊРЅРѕРј Р·РЅР°С‡РµРЅРёРё
         }
         } 
        
        
-        else if(Input.GetAxis("Mouse ScrollWheel") < 0f ) { // // Двигаем колесико мышки вниз
-        light_fonarik.spotAngle=light_fonarik.spotAngle-speedAngle;//уменьшаем длину луча
-        light_fonarik.range=light_fonarik.range+speedRange; //увеличиваем пучек света
+        else if(Input.GetAxis("Mouse ScrollWheel") < 0f ) { // // Р”РІРёРіР°РµРј РєРѕР»РµСЃРёРєРѕ РјС‹С€РєРё РІРЅРёР·
+        light_fonarik.spotAngle=light_fonarik.spotAngle-speedAngle;//СѓРјРµРЅСЊС€Р°РµРј РґР»РёРЅСѓ Р»СѓС‡Р°
+        light_fonarik.range=light_fonarik.range+speedRange; //СѓРІРµР»РёС‡РёРІР°РµРј РїСѓС‡РµРє СЃРІРµС‚Р°
         
-        if(light_fonarik.spotAngle<minAngle){//Если длина луча меньше минимального значения
-        light_fonarik.spotAngle=minAngle;//длину луча фиксируем на минимальном значении
+        if(light_fonarik.spotAngle<minAngle){//Р•СЃР»Рё РґР»РёРЅР° Р»СѓС‡Р° РјРµРЅСЊС€Рµ РјРёРЅРёРјР°Р»СЊРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ
+        light_fonarik.spotAngle=minAngle;//РґР»РёРЅСѓ Р»СѓС‡Р° С„РёРєСЃРёСЂСѓРµРј РЅР° РјРёРЅРёРјР°Р»СЊРЅРѕРј Р·РЅР°С‡РµРЅРёРё
         }
 
-        if(light_fonarik.range>maxRange){//Если пучек света больше максимального значения
-        light_fonarik.range=maxRange;//пучек света фиксируем на максимальном значении
+        if(light_fonarik.range>maxRange){//Р•СЃР»Рё РїСѓС‡РµРє СЃРІРµС‚Р° Р±РѕР»СЊС€Рµ РјР°РєСЃРёРјР°Р»СЊРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ
+        light_fonarik.range=maxRange;//РїСѓС‡РµРє СЃРІРµС‚Р° С„РёРєСЃРёСЂСѓРµРј РЅР° РјР°РєСЃРёРјР°Р»СЊРЅРѕРј Р·РЅР°С‡РµРЅРёРё
         }
         }
      }
     
     
-    //измениение цвета фонарика (светофильтр)
+    //РёР·РјРµРЅРёРµРЅРёРµ С†РІРµС‚Р° С„РѕРЅР°СЂРёРєР° (СЃРІРµС‚РѕС„РёР»СЊС‚СЂ)
     public void ChangeColor(){
-        if(Input.GetKeyDown (KeyCode.C) && Vkl == true && colChande==false){//изменяем цвет фонаря на светофильтр
+        if(Input.GetKeyDown (KeyCode.C) && Vkl == true && colChande==false){//РёР·РјРµРЅСЏРµРј С†РІРµС‚ С„РѕРЅР°СЂСЏ РЅР° СЃРІРµС‚РѕС„РёР»СЊС‚СЂ
         light_fonarik.color=colorSvetofiltr;
         colChande=true;
         asF.Play();
         }
-        else if(Input.GetKeyDown (KeyCode.C) && Vkl == true && colChande==true){//изменяем цвет фонаря на базовый
+        else if(Input.GetKeyDown (KeyCode.C) && Vkl == true && colChande==true){//РёР·РјРµРЅСЏРµРј С†РІРµС‚ С„РѕРЅР°СЂСЏ РЅР° Р±Р°Р·РѕРІС‹Р№
         light_fonarik.color=colorStan;
         colChande=false;
         asF.Play();
