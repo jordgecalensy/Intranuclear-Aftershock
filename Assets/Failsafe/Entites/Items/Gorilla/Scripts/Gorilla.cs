@@ -27,6 +27,8 @@ namespace Failsafe.Items
             return ItemUseResult.Consumed;
         }
 
+        public void AltMode() { }
+
         public void GetItemUseDelays(out float startUseDelay, out float useDelay)
         {
             startUseDelay = _data.StartUseDelay;

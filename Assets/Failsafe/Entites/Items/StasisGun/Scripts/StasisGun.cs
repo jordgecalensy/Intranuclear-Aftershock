@@ -4,7 +4,7 @@ using VContainer.Unity;
 
 namespace Failsafe.Items
 {
-    public class StasisGun : IUsable, ITickable, IAltUsable
+    public class StasisGun : IUsable, ITickable
     {
         StasisGunData _data;
         EnergyContainer _energyContainer;
@@ -24,12 +24,6 @@ namespace Failsafe.Items
             if (_fireRateTimer > 0)
             {
                 _fireRateTimer -= Time.deltaTime;
-
-            }
-            if (Input.GetKeyDown(KeyCode.LeftAlt))
-            {
-                _isDefaultMode = !_isDefaultMode;
-                Debug.Log("Default mode is " + _isDefaultMode);
             }
         }
 
@@ -40,13 +34,7 @@ namespace Failsafe.Items
             return new ItemUseResult { ItemStateAfterUse = ItemState.Hold, UsageType = UsageType.ClickToUse };
         }
 
-        public ItemUseResult AltUse()
-        {
-            ChangeMode();
-            return new ItemUseResult { ItemStateAfterUse = ItemState.Hold, UsageType = UsageType.ClickToUse };
-        }
-
-        public void ChangeMode()
+        public void AltMode()
         {
             _isDefaultMode = !_isDefaultMode;
             Debug.Log("Default mode is " + _isDefaultMode);

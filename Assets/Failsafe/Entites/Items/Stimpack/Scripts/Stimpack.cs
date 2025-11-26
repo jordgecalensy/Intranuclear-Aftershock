@@ -19,7 +19,7 @@ namespace Failsafe.Items
             _playerHealth = playerHealth;
             _data = data;
             _maxHealthModificator = new AdderFloat(_data.MaxHealthBonus);
-            _effectManager = effectManager; // ← присваиваем
+            _effectManager = effectManager;
             _effect = new StimpackEffect(_data.Duration, _playerHealth, _maxHealthModificator, _data.HealAmount);
         }
 
@@ -29,6 +29,7 @@ namespace Failsafe.Items
             _effectManager.ApplyEffect(_effect);
             return ItemUseResult.Consumed;
         }
+        public void AltMode() { }
 
         public void GetItemUseDelays(out float startUseDelay, out float useDelay)
         {

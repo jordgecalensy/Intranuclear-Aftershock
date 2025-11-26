@@ -45,6 +45,11 @@ public class PlayerHandsSystem : ITickable
         {
             UseItemInHand().Forget();
         }
+        if (_inputHandler.AltModeTrigger.IsTriggered)
+        {
+            _inputHandler.AltModeTrigger.ReleaseTrigger();
+            _playerHandsContainer.ItemInHand.ItemUsable.AltMode();
+        }
         if (!_inputHandler.UseTrigger.IsPressed)
         {
             _skipStartDelay = false;
