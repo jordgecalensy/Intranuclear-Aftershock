@@ -23,6 +23,7 @@ namespace Failsafe.Items
             _effectManager.ApplyEffect(_effect);
             return ItemUseResult.Consumed;
         }
+        public void AltMode() { }
 
         public void GetItemUseDelays(out float startUseDelay, out float useDelay)
         {

@@ -5,6 +5,7 @@ public class Stasisable : MonoBehaviour
 {
     private Rigidbody _rb;
     private Coroutine _startedCoroutine;
+    private Vector3 _objectVelocity;
 
     void Start()
     {
@@ -34,13 +35,15 @@ public class Stasisable : MonoBehaviour
 
     IEnumerator FreezeRigidbodyWithInertion(float duration)
     {
-        _rb.useGravity = false;
-        //_rb.linearDamping = 1;
+        _objectVelocity = _rb.linearVelocity;
+        _rb.isKinematic = true;
+        _rb.constraints = RigidbodyConstraints.FreezeAll;
+
         yield return new WaitForSeconds(duration);
-        _rb.useGravity = true;
+
         _rb.isKinematic = false;
         _rb.constraints = RigidbodyConstraints.None;
-        //_rb.linearDamping = 0;
+        _rb.AddForce(_objectVelocity, ForceMode.VelocityChange);
         _startedCoroutine = null;
     }
 

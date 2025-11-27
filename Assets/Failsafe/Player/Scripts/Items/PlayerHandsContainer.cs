@@ -22,8 +22,8 @@ public class PlayerHandsContainer
 {
     public enum HandState { EmptyHands, ItemInHand }
 
-    public event Action OnItemTaked;
-    public event Action OnItemDroped;
+    public event Action<ItemType> OnItemTaken;
+    public event Action OnItemDropped;
     public HandState State => _handState;
     public ItemInHand ItemInHand => _itemInHand;
 
@@ -80,7 +80,7 @@ public class PlayerHandsContainer
         _handState = HandState.ItemInHand;
         _itemInHand.ItemUsable.GetItemUseDelays(out _itemUseStartDelay, out _itemUseDelay);
         Debug.Log("Предмет взят в руку");
-        OnItemTaked?.Invoke();
+        OnItemTaken?.Invoke(_itemInHand.ItemObject.ItemData.Type);
         return true;
     }
 
@@ -99,7 +99,7 @@ public class PlayerHandsContainer
         _rightHandItemPlace.DetachChildren();
         _itemInHand = null;
         _handState = HandState.EmptyHands;
-        OnItemDroped?.Invoke();
+        OnItemDropped?.Invoke();
         return item;
     }
 

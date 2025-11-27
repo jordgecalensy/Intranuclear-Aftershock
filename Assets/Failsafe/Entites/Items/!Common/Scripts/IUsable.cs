@@ -10,6 +10,11 @@ namespace Failsafe.Items
         /// </summary>
         public ItemUseResult Use();
 
+        /// <summary>
+        /// Переключить режим
+        /// </summary>
+        public void AltMode();
+
         public void GetItemUseDelays(out float startDelay, out float useDelay);
     }
 }
