@@ -2,45 +2,38 @@ using UnityEngine;
 
 namespace Failsafe.Inventory
 {
+    /// 3D-представление предмета на доске. Drag&drop,
+    /// освобождение клеток на время драга, назначение в квикбар (с учётом span).
     public class Item3DView : MonoBehaviour
     {
-        // ---- Публично/внешне ----
         public ItemInstance Inst { get; private set; }
 
-        // ---- Внутренние ссылки ----
         private CaseProxy _board;
         private InventoryController _ctrl;
         private GameObject _model;
 
-        // ---- Драг-состояние ----
         private bool _drag;
+        private bool _freedOnDrag;
         private Rotation _rot = Rotation.R0;
         private Vector3 _origPos;
         private Quaternion _origRot;
         private GridCoord _origGridPos;
         private Rotation _origGridRot;
         private bool _hasOrigPlacement;
-        private bool _freedOnDrag; // NEW: клетки освобождены?
 
-        // ---- Рендер/тент ----
         private Renderer[] _renderers;
         private MaterialPropertyBlock _mpb;
         private static readonly int _ColorId     = Shader.PropertyToID("_Color");
         private static readonly int _BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int _TintId      = Shader.PropertyToID("_TintColor");
 
-        private Color _tintNormal     = Color.white;
-        private Color _tintDragNeutral= new Color(1f, 0.95f, 0.60f, 1f);
-        private Color _tintDragValid  = new Color(0.60f, 1f, 0.60f, 1f);
-        private Color _tintDragInvalid= new Color(1f, 0.60f, 0.60f, 1f);
+        private Color _tintNormal      = Color.white;
+        private Color _tintDragNeutral = new Color(1f, 0.95f, 0.60f, 1f);
+        private Color _tintDragValid   = new Color(0.60f, 1f, 0.60f, 1f);
+        private Color _tintDragInvalid = new Color(1f, 0.60f, 0.60f, 1f);
 
-        // ---- Геометрия/масштаб ----
         private Vector3 _baseScale = Vector3.one;
-
-        // ---- Коллайдеры для хит-теста ----
         private Collider[] _colliders;
-
-        // ================== API ==================
 
         public void Bind(ItemInstance inst, CaseProxy board, InventoryController ctrl)
         {
@@ -127,25 +120,17 @@ namespace Failsafe.Inventory
             AlignModelBottomCenterToOrigin_Local();
         }
 
-        // ================== Update: drag/use ==================
-
         private void Update()
         {
             if (_ctrl == null || _board == null || Inst == null) return;
-            if (!Cursor.visible) return; // когда инвентарь закрыт — мышь залочена
+            if (!Cursor.visible) return;
 
-            // ПКМ/F → использовать (если не тянем сейчас)
             if (!_drag)
             {
                 bool wantsUse = Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.F);
-                if (wantsUse && RayHitsThis())
-                {
-                    TryUseInInventory();
-                    return;
-                }
+                if (wantsUse && RayHitsThis()) { TryUseInInventory(); return; }
             }
 
-            // --- Старт драга ЛКМ ---
             if (Input.GetMouseButtonDown(0))
             {
                 if (RayHitsThis())
@@ -164,9 +149,7 @@ namespace Failsafe.Inventory
                         _origGridRot = place.Value.rot;
                         _rot = _origGridRot;
 
-                        // NEW: временно освободить клетки своего предмета,
-                        // чтобы валидатор не считал их занятыми
-                        grid.FreeByInstance(Inst.Id);
+                        grid.FreeByInstance(Inst.Id); // освобождаем свои клетки на время драга
                         _freedOnDrag = true;
                     }
                     else
@@ -181,51 +164,50 @@ namespace Failsafe.Inventory
 
             if (_drag)
             {
-                // Поворот во время драга
                 if (Inst.Def.canRotate && Input.GetKeyDown(KeyCode.R))
-                {
                     _rot = NextRotation(_rot);
-                }
 
-                // Назначение в слот цифрами 1..N (и NumPad)
                 for (int k = 0; k < _ctrl.Model.QuickbarSlots.Length; k++)
                 {
                     if (Input.GetKeyDown(KeyCode.Alpha1 + k) || Input.GetKeyDown(KeyCode.Keypad1 + k))
                     {
-                        _ctrl.Service.Remove(_ctrl.playerGridId, Inst);
-                        if (!_ctrl.Service.AssignQuickbarSlot(k, Inst, true))
-                            _ctrl.Service.TryAdd(_ctrl.playerGridId, Inst); // вернуть, если не вышло
-
-                        EndDrag(false); // НЕ восстанавливаем старые клетки
+                        TryAssignToQuickbarIndex(k);
                         return;
                     }
                 }
 
-                // Револьвер E
-                if (Input.GetKeyDown(KeyCode.E))
+                int qSlot; Vector3 qWorld;
+                if (_board.ScreenToQuickbarSlot(Input.mousePosition, out qSlot, out qWorld))
                 {
-                    _ctrl.Service.Remove(_ctrl.playerGridId, Inst);
-                    if (!_ctrl.Service.TryAssignQuickbarNext(Inst))
-                        _ctrl.Service.TryAdd(_ctrl.playerGridId, Inst);
+                    int span = Mathf.Clamp(Inst.Def.quickbarSpan, 1, 2);
+                    bool valid = IsQuickbarPlacementValid(qSlot, span);
 
-                    EndDrag(false); // НЕ восстанавливаем старые клетки
+                    _board.ShowQuickbarDockHoverSpan(qSlot, span, valid);
+                    _board.ClearHover();
+                    SetDragTint(valid ? _tintDragValid : _tintDragInvalid);
+
+                    if (Input.GetMouseButtonUp(0) && valid)
+                    {
+                        AssignToQuickbar(qSlot, span);
+                        EndDrag(false);
+                    }
+                    else if (Input.GetMouseButtonUp(0) && !valid)
+                    {
+                        RestoreOriginalPlacementGrid();
+                        SnapBackToOriginalTile();
+                        EndDrag(false);
+                    }
                     return;
                 }
-
-                // Выкинуть Q
-                if (Input.GetKeyDown(KeyCode.Q))
+                else
                 {
-                    _ctrl.Service.Remove(_ctrl.playerGridId, Inst);
-                    _ctrl.DropToWorld(Inst);
-                    Destroy(gameObject);
-                    return;
+                    _board.ClearQuickbarDockHover();
                 }
 
-                // Следуем за курсором
                 int cx, cy; Vector3 worldOnBoard;
                 if (_board.ScreenToCell(Input.mousePosition, out cx, out cy, out worldOnBoard))
                 {
-                    GridCoord pos = new GridCoord(cx, cy);
+                    var pos = new GridCoord(cx, cy);
                     bool can = _ctrl.Placement.CanPlace(_ctrl.Model.Grids[_ctrl.playerGridId], Inst.Def, pos, _rot);
 
                     Vector3 center = _board.CellToWorldCenter(cx, cy);
@@ -234,6 +216,37 @@ namespace Failsafe.Inventory
 
                     _board.ShowHover(Inst.Def, pos, _rot, can);
                     SetDragTint(can ? _tintDragValid : _tintDragInvalid);
+
+                    if (Input.GetMouseButtonUp(0))
+                    {
+                        bool ok = _ctrl.Service.TryMove(_ctrl.playerGridId, Inst, pos, _rot);
+                        if (ok)
+                        {
+                            var p = _ctrl.Model.Grids[_ctrl.playerGridId].GetPlacement(Inst.Id);
+                            if (p.HasValue)
+                            {
+                                Vector3 center2 = _board.CellToWorldCenter(p.Value.pos.X, p.Value.pos.Y);
+                                transform.position = center2;
+                                transform.rotation = _board.RotationToWorld(p.Value.rot);
+                            }
+                            _freedOnDrag = false;
+                            EndDrag(false);
+                        }
+                        else
+                        {
+                            if (TryStackIntoTargetUnderCursor())
+                            {
+                                _freedOnDrag = false;
+                                EndDrag(false);
+                            }
+                            else
+                            {
+                                RestoreOriginalPlacementGrid();
+                                SnapBackToOriginalTile();
+                                EndDrag(false);
+                            }
+                        }
+                    }
                 }
                 else
                 {
@@ -242,46 +255,9 @@ namespace Failsafe.Inventory
 
                     _board.ClearHover();
                     SetDragTint(_tintDragInvalid);
-                }
 
-                // Завершение драга
-                if (Input.GetMouseButtonUp(0))
-                {
-                    if (_board.ScreenToCell(Input.mousePosition, out cx, out cy, out worldOnBoard))
+                    if (Input.GetMouseButtonUp(0))
                     {
-                        bool ok = _ctrl.Service.TryMove(_ctrl.playerGridId, Inst, new GridCoord(cx, cy), _rot);
-                        if (ok)
-                        {
-                            var p = _ctrl.Model.Grids[_ctrl.playerGridId].GetPlacement(Inst.Id);
-                            if (p.HasValue)
-                            {
-                                Vector3 center = _board.CellToWorldCenter(p.Value.pos.X, p.Value.pos.Y);
-                                transform.position = center;
-                                transform.rotation = _board.RotationToWorld(p.Value.rot);
-                            }
-                            _freedOnDrag = false;
-                            EndDrag(false);
-                        }
-                        else
-                        {
-                            // Попробовать стекнуть
-                            if (TryStackIntoTargetUnderCursor())
-                            {
-                                _freedOnDrag = false; // инстанс, скорее всего, удалён
-                                EndDrag(false);
-                            }
-                            else
-                            {
-                                // Отмена: вернуть старое бронирование и визуально откатиться
-                                RestoreOriginalPlacementGrid();
-                                SnapBackToOriginalTile();
-                                EndDrag(false);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Вне инвентаря → дроп
                         _ctrl.Service.Remove(_ctrl.playerGridId, Inst);
                         _ctrl.DropToWorld(Inst);
                         Destroy(gameObject);
@@ -290,15 +266,62 @@ namespace Failsafe.Inventory
             }
         }
 
-        // ================== Helpers ==================
+        // -------- quickbar helpers --------
+        private bool IsQuickbarPlacementValid(int index, int span)
+        {
+            var slots = _ctrl.Model.QuickbarSlots;
+            if (span <= 1)
+                return index >= 0 && index < slots.Length && string.IsNullOrEmpty(slots[index]);
 
-        private void EndDrag(bool resetToOriginalVisual)
+            if (index < 0 || index >= slots.Length - 1) return false;
+            return string.IsNullOrEmpty(slots[index]) && string.IsNullOrEmpty(slots[index + 1]);
+        }
+
+        private void AssignToQuickbar(int index, int span)
+        {
+            _ctrl.Service.Remove(_ctrl.playerGridId, Inst);
+
+            if (span <= 1)
+            {
+                _ctrl.Service.AssignQuickbarSlot(index, Inst, true);
+            }
+            else
+            {
+                var ok1 = _ctrl.Service.AssignQuickbarSlot(index, Inst, true);
+                var ok2 = _ctrl.Service.AssignQuickbarSlot(index + 1, Inst, true);
+                if (!ok1 || !ok2)
+                {
+                    if (ok1) _ctrl.Service.AssignQuickbarSlot(index, null, true);
+                    _ctrl.Service.TryAdd(_ctrl.playerGridId, Inst);
+                }
+            }
+
+            _freedOnDrag = false;
+        }
+
+        private void TryAssignToQuickbarIndex(int k)
+        {
+            int span = Mathf.Clamp(Inst.Def.quickbarSpan, 1, 2);
+            bool valid = IsQuickbarPlacementValid(k, span);
+            if (!valid)
+            {
+                RestoreOriginalPlacementGrid();
+                SnapBackToOriginalTile();
+                EndDrag(false);
+                return;
+            }
+            AssignToQuickbar(k, span);
+            EndDrag(false);
+        }
+
+        // -------- other helpers --------
+        private void EndDrag(bool resetToOriginal)
         {
             _drag = false;
             _board.ClearHover();
+            _board.ClearQuickbarDockHover();
             SetDragTint(_tintNormal);
-
-            if (resetToOriginalVisual) SnapBackToOriginalTile();
+            if (resetToOriginal) SnapBackToOriginalTile();
         }
 
         private void RestoreOriginalPlacementGrid()
@@ -329,27 +352,25 @@ namespace Failsafe.Inventory
         {
             if (_model == null) return;
 
-            // NB: действия юзов — оставлены как у тебя
             if (!_ctrl.Model.Instances.ContainsKey(Inst.Id))
             {
                 Destroy(gameObject);
-            }
-            else
-            {
-                var grid = _ctrl.Model.Grids[_ctrl.playerGridId];
-                var p = grid.GetPlacement(Inst.Id);
-                if (p.HasValue)
-                {
-                    Vector3 center = _board.CellToWorldCenter(p.Value.pos.X, p.Value.pos.Y);
-                    transform.position = center;
-                    transform.rotation = _board.RotationToWorld(p.Value.rot);
-                }
                 return;
+            }
+
+            var grid = _ctrl.Model.Grids[_ctrl.playerGridId];
+            var p = grid.GetPlacement(Inst.Id);
+            if (p.HasValue)
+            {
+                Vector3 center = _board.CellToWorldCenter(p.Value.pos.X, p.Value.pos.Y);
+                transform.position = center;
+                transform.rotation = _board.RotationToWorld(p.Value.rot);
             }
 
             var wi = _model.GetComponentInChildren<WorldItem>();
             if (wi && wi.IsUsable()) wi.Use();
         }
+
         private bool TryStackIntoTargetUnderCursor()
         {
             if (Inst.Def.maxStack <= 1) return false;
@@ -357,34 +378,32 @@ namespace Failsafe.Inventory
             var cam = _ctrl.playerCamera ? _ctrl.playerCamera : Camera.main;
             if (!cam) return false;
 
-            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-            RaycastHit[] hits = Physics.RaycastAll(ray, 100f);
-            float minDist = float.MaxValue;
-            Item3DView best = null;
+            var ray = cam.ScreenPointToRay(Input.mousePosition);
+            if (!Physics.Raycast(ray, out var hit, 3f)) return false;
 
-            for (int i = 0; i < hits.Length; i++)
-            {
-                var v = hits[i].collider ? hits[i].collider.GetComponentInParent<Item3DView>() : null;
-                if (v == null || v == this) continue;
-                if (v.Inst == null || v.Inst.Def != Inst.Def) continue; // только одинаковый тип
-                if (hits[i].distance < minDist)
-                {
-                    minDist = hits[i].distance;
-                    best = v;
-                }
-            }
+            var other = hit.collider ? hit.collider.GetComponentInParent<Item3DView>() : null;
+            if (other == null || other == this) return false;
 
-            if (best != null)
+            return _ctrl.Service.TryStack(Inst, other.Inst);
+        }
+
+        private void EnsureCollider(GameObject root)
+        {
+            _colliders = root.GetComponentsInChildren<Collider>(true);
+            if (_colliders != null && _colliders.Length > 0) return;
+
+            var mf = root.GetComponentInChildren<MeshFilter>();
+            if (mf)
             {
-                bool ok = _ctrl.Service.TryStack(Inst, best.Inst);
-                if (ok)
-                {
-                    // этот инстанс удалён → уничтожаем вью
-                    Destroy(gameObject);
-                    return true;
-                }
+                var box = root.AddComponent<BoxCollider>();
+                box.center = mf.sharedMesh.bounds.center;
+                box.size   = mf.sharedMesh.bounds.size;
             }
-            return false;
+            else
+            {
+                root.AddComponent<BoxCollider>();
+            }
+            _colliders = root.GetComponentsInChildren<Collider>(true);
         }
 
         private bool RayHitsThis()
@@ -392,19 +411,11 @@ namespace Failsafe.Inventory
             var cam = _ctrl.playerCamera ? _ctrl.playerCamera : Camera.main;
             if (!cam) return false;
 
-            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, 100f))
+            var ray = cam.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out var hit, 10f))
             {
-                if (hit.collider == null) return false;
-                // ищем среди наших коллайдеров
-                if (_colliders != null)
-                {
-                    for (int i = 0; i < _colliders.Length; i++)
-                        if (_colliders[i] == hit.collider) return true;
-                }
-                // запасной путь — сравнить родителя
-                return hit.collider.GetComponentInParent<Item3DView>() == this;
+                for (int i = 0; i < _colliders.Length; i++)
+                    if (hit.collider == _colliders[i]) return true;
             }
             return false;
         }
@@ -412,44 +423,31 @@ namespace Failsafe.Inventory
         private void SetDragTint(Color c)
         {
             if (_renderers == null) return;
-            if (_mpb == null) _mpb = new MaterialPropertyBlock();
-
             for (int i = 0; i < _renderers.Length; i++)
             {
                 var r = _renderers[i];
                 if (!r) continue;
+                _mpb ??= new MaterialPropertyBlock();
                 r.GetPropertyBlock(_mpb);
-                _mpb.SetColor(_ColorId, c);
-                _mpb.SetColor(_BaseColorId, c);
-                _mpb.SetColor(_TintId, c);
+                if (r.sharedMaterial && r.sharedMaterial.HasProperty(_BaseColorId)) _mpb.SetColor(_BaseColorId, c);
+                else if (r.sharedMaterial && r.sharedMaterial.HasProperty(_ColorId)) _mpb.SetColor(_ColorId, c);
+                if (r.sharedMaterial && r.sharedMaterial.HasProperty(_TintId)) _mpb.SetColor(_TintId, c);
                 r.SetPropertyBlock(_mpb);
             }
         }
 
-        private static Rotation NextRotation(Rotation r)
+        private Vector2Int GetRotatedFootprintExtents(ItemDefinition def, Rotation r)
         {
-            if (r == Rotation.R0) return Rotation.R90;
-            if (r == Rotation.R90) return Rotation.R180;
-            if (r == Rotation.R180) return Rotation.R270;
-            return Rotation.R0;
+            return r == Rotation.R90 || r == Rotation.R270
+                ? new Vector2Int(def.shapeHeight, def.shapeWidth)
+                : new Vector2Int(def.shapeWidth, def.shapeHeight);
         }
 
-        // ---- Геометрия/Bounds ----
-
-        private void EnsureCollider(GameObject root)
+        private void AlignModelBottomCenterToOrigin_Local()
         {
-            var cols = root.GetComponentsInChildren<Collider>(true);
-            if (cols != null && cols.Length > 0) return;
-
-            // Добавим BoxCollider по локальному AABB модели
-            var lb = CalcLocalAABBRelativeToRoot(root.transform, root);
-            var bc = root.AddComponent<BoxCollider>();
-            bc.center = lb.center;
-            bc.size   = new Vector3(
-                Mathf.Max(0.01f, lb.size.x),
-                Mathf.Max(0.01f, lb.size.y),
-                Mathf.Max(0.01f, lb.size.z)
-            );
+            var b = CalcLocalAABBRelativeToRoot(transform, _model);
+            var offset = new Vector3(b.center.x, b.min.y, b.center.z);
+            _model.transform.localPosition -= offset;
         }
 
         private Bounds CalcLocalAABBRelativeToRoot(Transform root, GameObject go)
@@ -457,18 +455,16 @@ namespace Failsafe.Inventory
             bool has = false;
             Bounds aabb = new Bounds(Vector3.zero, Vector3.zero);
 
-            // MeshFilter
             var mfs = go.GetComponentsInChildren<MeshFilter>(true);
             for (int i = 0; i < mfs.Length; i++)
             {
                 var mesh = mfs[i].sharedMesh;
                 if (!mesh) continue;
                 Matrix4x4 m = root.worldToLocalMatrix * mfs[i].transform.localToWorldMatrix;
-                Bounds b = mesh.bounds; // локальные bounds меша
+                Bounds b = mesh.bounds;
                 EncapsulateTransformedAABB(ref aabb, ref has, m, b);
             }
 
-            // SkinnedMeshRenderer
             var smrs = go.GetComponentsInChildren<SkinnedMeshRenderer>(true);
             for (int i = 0; i < smrs.Length; i++)
             {
@@ -499,42 +495,16 @@ namespace Failsafe.Inventory
             }
         }
 
-        private void AlignModelBottomCenterToOrigin_Local()
+        private Rotation NextRotation(Rotation r)
         {
-            if (_model == null) return;
-            Bounds lb = CalcLocalAABBRelativeToRoot(transform, _model); // в локали view
-            Vector3 offset = new Vector3(lb.center.x, lb.min.y, lb.center.z);
-            _model.transform.localPosition -= offset;
-        }
-
-        private Vector2Int GetRotatedFootprintExtents(ItemDefinition def, Rotation rot)
-        {
-            int w = def.shapeWidth, h = def.shapeHeight;
-            bool any = false;
-            int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
-
-            for (int sy = 0; sy < h; sy++)
-            for (int sx = 0; sx < w; sx++)
+            return r switch
             {
-                if (!def.Occupies(sx, sy)) continue;
-                any = true;
-                var pr = RotatePoint(sx, sy, w, h, rot);
-                int rx = pr.x, ry = pr.y;
-                if (rx < minX) minX = rx; if (ry < minY) minY = ry;
-                if (rx > maxX) maxX = rx; if (ry > maxY) maxY = ry;
-            }
-
-            if (!any) return new Vector2Int(1, 1);
-            return new Vector2Int(maxX - minX + 1, maxY - minY + 1);
-        }
-
-        private (int x, int y) RotatePoint(int x, int y, int w, int h, Rotation r)
-        {
-            if (r == Rotation.R0)   return (x, y);
-            if (r == Rotation.R90)  return (h - 1 - y, x);
-            if (r == Rotation.R180) return (w - 1 - x, h - 1 - y);
-            if (r == Rotation.R270) return (y, w - 1 - x);
-            return (x, y);
+                Rotation.R0   => Rotation.R90,
+                Rotation.R90  => Rotation.R180,
+                Rotation.R180 => Rotation.R270,
+                Rotation.R270 => Rotation.R0,
+                _             => Rotation.R0
+            };
         }
     }
 }
