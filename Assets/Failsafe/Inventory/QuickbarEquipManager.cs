@@ -4,16 +4,14 @@ using Failsafe.Items;
 
 namespace Failsafe.Inventory
 {
-    /// Менеджер экипа из квикбара: предметы закреплены в слоте и не возвращаются в инвентарь при переключении.
     public class QuickbarEquipManager : MonoBehaviour
     {
         [Header("Refs")]
         public InventoryController inventory;
-        public Transform handsFallbackAttach;   // если нет PlayerHandsContainer
-        public PlayerView playerView;          // опционально
-        public PlayerHandsContainer hands;     // опционально
+        public Transform handsFallbackAttach;
+        public PlayerView playerView;
+        public PlayerHandsContainer hands;
 
-        [Header("Options")]
         public bool dropOnReturnFail = true;
 
         private int _activeSlot = -1;
@@ -52,9 +50,7 @@ namespace Failsafe.Inventory
                 _activeSlot = slotIndex; _equippedInstanceId = id; return;
             }
 
-            // убрать c доски
-            inventory.Service.Remove(inventory.playerGridId, inst);
-
+            // НЕ убираем предмет из инвентаря. Просто спавним визуал для рук.
             var prefab = inst.Def.WorldPrefab;
             if (!prefab)
             {
@@ -62,7 +58,7 @@ namespace Failsafe.Inventory
                 _activeSlot = slotIndex; _equippedInstanceId = id; return;
             }
 
-            var go = Object.Instantiate(prefab);
+            var go = Instantiate(prefab);
             var itemComponent = go.GetComponent<Item>();
 
             if (hands != null && itemComponent != null)
@@ -88,7 +84,6 @@ namespace Failsafe.Inventory
             _equippedInstanceId = id;
         }
 
-        /// Убирает предмет из рук, НО НЕ возвращает его в инвентарь.
         public void UnequipCurrent()
         {
             if (_equippedInstanceId == null) return;

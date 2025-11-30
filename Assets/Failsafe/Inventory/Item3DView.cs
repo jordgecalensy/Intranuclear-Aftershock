@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace Failsafe.Inventory
 {
-    /// 3D-представление предмета на доске. Drag&drop,
-    /// освобождение клеток на время драга, назначение в квикбар (с учётом span).
     public class Item3DView : MonoBehaviour
     {
         public ItemInstance Inst { get; private set; }
@@ -33,6 +31,7 @@ namespace Failsafe.Inventory
         private Color _tintDragInvalid = new Color(1f, 0.60f, 0.60f, 1f);
 
         private Vector3 _baseScale = Vector3.one;
+        private float _globalScaleMultiplier = 1f;
         private Collider[] _colliders;
 
         public void Bind(ItemInstance inst, CaseProxy board, InventoryController ctrl)
@@ -58,6 +57,11 @@ namespace Failsafe.Inventory
             }
         }
 
+        public void SetGlobalScaleMultiplier(float mul)
+        {
+            _globalScaleMultiplier = Mathf.Max(0.0001f, mul);
+        }
+
         public void SetWorldPose(Vector3 center, Quaternion rot, float cellSize, int defW, int defH, Rotation gridRot)
         {
             transform.SetPositionAndRotation(center, rot);
@@ -67,7 +71,7 @@ namespace Failsafe.Inventory
 
             if (def.poseMode == InventoryPoseMode.ManualMeters || def.poseMode == InventoryPoseMode.ManualCells)
             {
-                _model.transform.localScale    = def.manualLocalScale;
+                _model.transform.localScale    = def.manualLocalScale * _globalScaleMultiplier;
                 _model.transform.localRotation = Quaternion.Euler(def.manualLocalEuler);
 
                 if (def.poseMode == InventoryPoseMode.ManualMeters)
@@ -108,13 +112,13 @@ namespace Failsafe.Inventory
                 {
                     _model.transform.localScale = new Vector3(_baseScale.x * sx,
                                                               _baseScale.y * Mathf.Min(sx, sz),
-                                                              _baseScale.z * sz) * Mathf.Max(def.scaleMultiplier, 0.0001f);
+                                                              _baseScale.z * sz) * Mathf.Max(def.scaleMultiplier, 0.0001f) * _globalScaleMultiplier;
                     AlignModelBottomCenterToOrigin_Local();
                     return;
                 }
                 else k = Mathf.Min(sx, sz);
             }
-            k *= Mathf.Max(def.scaleMultiplier, 0.0001f);
+            k *= Mathf.Max(def.scaleMultiplier, 0.0001f) * _globalScaleMultiplier;
 
             _model.transform.localScale = _baseScale * k;
             AlignModelBottomCenterToOrigin_Local();
@@ -258,6 +262,7 @@ namespace Failsafe.Inventory
 
                     if (Input.GetMouseButtonUp(0))
                     {
+                        // дроп в мир — удаляем из инвентаря
                         _ctrl.Service.Remove(_ctrl.playerGridId, Inst);
                         _ctrl.DropToWorld(Inst);
                         Destroy(gameObject);
@@ -266,7 +271,8 @@ namespace Failsafe.Inventory
             }
         }
 
-        // -------- quickbar helpers --------
+        // ===== quickbar logic (changed) =====
+
         private bool IsQuickbarPlacementValid(int index, int span)
         {
             var slots = _ctrl.Model.QuickbarSlots;
@@ -279,23 +285,31 @@ namespace Failsafe.Inventory
 
         private void AssignToQuickbar(int index, int span)
         {
-            _ctrl.Service.Remove(_ctrl.playerGridId, Inst);
-
+            // ВАЖНО: теперь НЕ удаляем предмет из инвентаря.
+            // Просто пробуем назначить слот(ы) в сервисе.
             if (span <= 1)
             {
-                _ctrl.Service.AssignQuickbarSlot(index, Inst, true);
+                var ok = _ctrl.Service.AssignQuickbarSlot(index, Inst, true);
+                if (!ok)
+                {
+                    // не удалось назначить — оставляем всё как было
+                    RestoreOriginalPlacementGrid();
+                }
             }
             else
             {
+                // назначаем последовательно; если не получилось — откатываем уже поставленные
                 var ok1 = _ctrl.Service.AssignQuickbarSlot(index, Inst, true);
                 var ok2 = _ctrl.Service.AssignQuickbarSlot(index + 1, Inst, true);
                 if (!ok1 || !ok2)
                 {
                     if (ok1) _ctrl.Service.AssignQuickbarSlot(index, null, true);
-                    _ctrl.Service.TryAdd(_ctrl.playerGridId, Inst);
+                    if (ok2) _ctrl.Service.AssignQuickbarSlot(index + 1, null, true);
+                    RestoreOriginalPlacementGrid();
                 }
             }
 
+            // не меняем флаг _freedOnDrag — предмет всё ещё может занимать свои клетки
             _freedOnDrag = false;
         }
 
@@ -314,7 +328,8 @@ namespace Failsafe.Inventory
             EndDrag(false);
         }
 
-        // -------- other helpers --------
+        // ===== остальные хелперы (без изменений) =====
+
         private void EndDrag(bool resetToOriginal)
         {
             _drag = false;
@@ -414,8 +429,11 @@ namespace Failsafe.Inventory
             var ray = cam.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out var hit, 10f))
             {
-                for (int i = 0; i < _colliders.Length; i++)
-                    if (hit.collider == _colliders[i]) return true;
+                if (_colliders != null)
+                {
+                    for (int i = 0; i < _colliders.Length; i++)
+                        if (hit.collider == _colliders[i]) return true;
+                }
             }
             return false;
         }

@@ -19,7 +19,7 @@ namespace Failsafe.Inventory
         public int shapeWidth = 1;
         public int shapeHeight = 1;
         [Tooltip("true = клетка занята. Размер равен shapeWidth x shapeHeight.")]
-        public bool[] shapeMask = new bool[1] { true };
+        public bool[] footprint = new bool[1] { true };
 
         [Header("Stack/Flags")]
         public int maxStack = 1;
@@ -52,8 +52,8 @@ namespace Failsafe.Inventory
         {
             if (x < 0 || y < 0 || x >= shapeWidth || y >= shapeHeight) return false;
             int idx = y * shapeWidth + x;
-            if (shapeMask == null || idx < 0 || idx >= shapeMask.Length) return false;
-            return shapeMask[idx];
+            if (footprint == null || idx < 0 || idx >= footprint.Length) return false;
+            return footprint[idx];
         }
     }
 }

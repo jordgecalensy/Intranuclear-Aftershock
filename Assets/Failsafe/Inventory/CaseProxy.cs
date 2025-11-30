@@ -5,13 +5,15 @@ namespace Failsafe.Inventory
 {
     public enum QuickbarDockSide { Bottom, Top, Left, Right }
 
-    /// Визуальная доска кейса с сеткой и «рядом/колонкой квикбара» из таких же тайлов.
     public class CaseProxy : MonoBehaviour
     {
+        [Header("Optional Layout Settings (ScriptableObject)")]
+        public InventoryLayoutSettings layout; // если задан — берем дефолты оттуда
+
         [Header("Board Roots")]
         public Transform boardRoot;
 
-        [Header("Grid Units (meters)")]
+        [Header("Grid Units (meters) — used if layout == null or to override)")]
         [Min(0.005f)] public float cellSize = 0.06f;
         [Min(0.0f)]   public float cellGap  = 0.004f;
         [Tooltip("Смещение по Y для посадки предметов над плоскостью доски.")]
@@ -25,28 +27,29 @@ namespace Failsafe.Inventory
 
         [Header("Quickbar Dock (on board)")]
         public bool quickbarDockEnabled = true;
-        [Min(0f)] public float quickbarRowGap = 0.02f;
+        [Min(0f)] public float quickbarRowGap = 0.02f; // зазор между сеткой и рядом/колонкой квикбара
         [Tooltip("Если не задано — используется cellTilePrefab.")]
         public GameObject quickbarTilePrefab;
         [Tooltip("Если не задано — используется highlightValid/Invalid.")]
         public Material quickbarHighlightValid;
         public Material quickbarHighlightInvalid;
-        [Tooltip("Расположение ряда/колонки квикбара.")]
+        [Tooltip("Расположение ряда квикбара относительно сетки.")]
         public QuickbarDockSide quickbarDockSide = QuickbarDockSide.Right;
 
-        // runtime
+        // --- runtime ---
         private InventoryController _ctrl;
         private string _gridId;
         private int _w, _h;
         private bool _inited;
 
         private readonly Dictionary<string, Item3DView> _views = new();
-        private readonly List<GameObject> _gridTiles = new();
-        private readonly List<GameObject> _hoverTiles = new();
+        private readonly List<GameObject> _gridTiles = new();     // декоративные квадраты сетки
+        private readonly List<GameObject> _hoverTiles = new();    // плитки ховера по сетке
 
-        private readonly List<GameObject> _qTiles = new();
-        private readonly List<GameObject> _qHoverTiles = new();
-        private Vector3[] _qCentersLocal;
+        // Квикбар-ряд/колонка на доске
+        private readonly List<GameObject> _qTiles      = new();   // постоянные тайлы квикбара
+        private readonly List<GameObject> _qHoverTiles = new();   // подсветка ховера квикбара
+        private Vector3[] _qCentersLocal;                         // центры слотов квикбара (локальные)
         private float _gridTotalW, _gridTotalH;
 
         private int QuickbarSlotsCount => _ctrl?.Model?.QuickbarSlots?.Length ?? 0;
@@ -63,9 +66,21 @@ namespace Failsafe.Inventory
             _inited = true;
 
             SubscribeServiceEvents(true);
+
+            ApplyLayoutIfAny();
             BuildTilesVisual();
             BuildQuickbarDockTiles();
             RenderExistingItems();
+        }
+
+        private void Start()
+        {
+            if (layout != null && layout.applyOnStart && !_inited)
+            {
+                ApplyLayoutIfAny();
+                BuildTilesVisual();
+                BuildQuickbarDockTiles();
+            }
         }
 
         private void OnDestroy()
@@ -84,17 +99,18 @@ namespace Failsafe.Inventory
         private void SubscribeServiceEvents(bool on)
         {
             if (_ctrl == null || _ctrl.Service == null) return;
+
             if (on)
             {
-                _ctrl.Service.OnItemAdded   += HandleAdded;
-                _ctrl.Service.OnItemMoved   += HandleMoved;
-                _ctrl.Service.OnItemRemoved += HandleRemoved;
+                _ctrl.Service.OnItemAdded    += HandleAdded;
+                _ctrl.Service.OnItemMoved    += HandleMoved;
+                _ctrl.Service.OnItemRemoved  += HandleRemoved;
             }
             else
             {
-                _ctrl.Service.OnItemAdded   -= HandleAdded;
-                _ctrl.Service.OnItemMoved   -= HandleMoved;
-                _ctrl.Service.OnItemRemoved -= HandleRemoved;
+                _ctrl.Service.OnItemAdded    -= HandleAdded;
+                _ctrl.Service.OnItemMoved    -= HandleMoved;
+                _ctrl.Service.OnItemRemoved  -= HandleRemoved;
             }
         }
 
@@ -147,6 +163,40 @@ namespace Failsafe.Inventory
 
         // =================== Visual Build / Render ===================
 
+        /// <summary>
+        /// Применяет layout (если он задан) к публичным полям CaseProxy.
+        /// Можно вызывать извне перед RebuildFromLayout().
+        /// </summary>
+        public void ApplyLayoutIfAny()
+        {
+            if (layout == null) return;
+            cellSize = layout.cellSize;
+            cellGap = layout.cellGap;
+            itemYOffset = layout.itemYOffset;
+            quickbarRowGap = layout.quickbarRowGap;
+            quickbarDockSide = layout.quickbarDockSide;
+        }
+
+        /// <summary>
+        /// Перестраивает визуал (тайлы + квикбар) согласно текущему layout/параметрам.
+        /// Вызывать при изменениях в layout в рантайме.
+        /// </summary>
+        public void RebuildFromLayout()
+        {
+            ApplyLayoutIfAny();
+            // очистим все визуальные тайлы и перестроим
+            ClearTiles(_gridTiles);
+            ClearTiles(_hoverTiles);
+            ClearTiles(_qTiles);
+            ClearTiles(_qHoverTiles);
+
+            BuildTilesVisual();
+            BuildQuickbarDockTiles();
+
+            // пересоздать/обновить позицию существующих view'шек
+            RenderExistingItems();
+        }
+
         private void BuildTilesVisual()
         {
             ClearTiles(_gridTiles);
@@ -180,8 +230,17 @@ namespace Failsafe.Inventory
 
                 var place = grid.GetPlacement(inst.Id);
                 if (!place.HasValue) continue;
-                if (_views.ContainsKey(inst.Id)) continue;
 
+                // если view уже есть — обновим её позицию/масштаб
+                if (_views.TryGetValue(inst.Id, out var v) && v)
+                {
+                    var p = place.Value;
+                    var center = CellToWorldCenter(p.pos.X, p.pos.Y);
+                    v.SetWorldPose(center, RotationToWorld(p.rot), cellSize, inst.Def.shapeWidth, inst.Def.shapeHeight, p.rot);
+                    continue;
+                }
+
+                // иначе — создадим
                 SpawnView(inst);
             }
         }
@@ -193,6 +252,10 @@ namespace Failsafe.Inventory
 
             var view = go.AddComponent<Item3DView>();
             view.Bind(inst, this, _ctrl);
+
+            if (layout != null)
+                view.SetGlobalScaleMultiplier(layout.itemScaleMultiplier);
+
             _views[inst.Id] = view;
 
             var grid = _ctrl.Model.Grids[_gridId];
@@ -301,6 +364,8 @@ namespace Failsafe.Inventory
                     float x = startXRow + i * step;
                     _qCentersLocal[i] = new Vector3(x, 0f, zRow);
 
+                    if (layout != null && !layout.createQuickbarTiles) continue;
+
                     var go = Instantiate(prefab, boardRoot, false);
                     FitTileToCell(go);
                     go.transform.localPosition = new Vector3(x, 0.0005f, zRow);
@@ -319,6 +384,8 @@ namespace Failsafe.Inventory
                 {
                     float z = startZCol + i * step;
                     _qCentersLocal[i] = new Vector3(xCol, 0f, z);
+
+                    if (layout != null && !layout.createQuickbarTiles) continue;
 
                     var go = Instantiate(prefab, boardRoot, false);
                     FitTileToCell(go);
@@ -479,11 +546,12 @@ namespace Failsafe.Inventory
             return (x, y);
         }
 
+        // =================== Helpers: тайлы/габариты ===================
+
         private void FitTileToCell(GameObject go)
         {
             if (!go) return;
 
-            // Нормализуем ориентацию под XZ и жёстко подгоняем масштаб под cellSize
             var aabb0 = CalcLocalAABBRelativeTo(go.transform, go);
             bool looksXY = aabb0.size.z < 0.0001f && aabb0.size.y >= 0.0001f;
             go.transform.localRotation = looksXY ? Quaternion.Euler(90f, 0f, 0f) : Quaternion.identity;

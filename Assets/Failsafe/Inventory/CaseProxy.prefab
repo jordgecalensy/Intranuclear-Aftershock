@@ -153,10 +153,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 253638aa7590bc7489791b1d3048d980, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  layout: {fileID: 11400000, guid: 782459b5738304a439ad915474fc5a0f, type: 2}
   boardRoot: {fileID: 4303208976570031481}
-  cellSize: 0.08
-  cellGap: 0.05
+  cellSize: 0.04
+  cellGap: 0.03
   itemYOffset: 0.01
   cellTilePrefab: {fileID: 4520348123477082960, guid: 9f9ae569b6e09714d832ea80695f1088, type: 3}
   highlightValid: {fileID: 2100000, guid: 204bb2fb96dbfd24da8d6e83b3b75f08, type: 2}
   highlightInvalid: {fileID: 2100000, guid: 11627d1a90e368e438041b438b8c0abf, type: 2}
+  quickbarDockEnabled: 1
+  quickbarRowGap: 0.02
+  quickbarTilePrefab: {fileID: 0}
+  quickbarHighlightValid: {fileID: 0}
+  quickbarHighlightInvalid: {fileID: 0}
+  quickbarDockSide: 2

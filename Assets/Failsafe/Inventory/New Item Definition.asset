@@ -12,19 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f27a7ea1a94af3e40928c7126129db4b, type: 3}
   m_Name: New Item Definition
   m_EditorClassIdentifier: 
+  itemId: 
+  displayName: Stasis Pistol
   WorldPrefab: {fileID: 3476105994228615322, guid: 891805a4dc521f84e892469f049d494e, type: 3}
-  displayName: 
   shapeWidth: 3
   shapeHeight: 2
-  footprint: 010101010000
+  footprint: 010000000000
   maxStack: 1
   isHeavy: 0
-  canRotate: 1
-  fitMode: 2
-  scaleMultiplier: 3
-  poseMode: 1
-  manualLocalScale: {x: 0.0001, y: 0.0001, z: 0.0001}
-  manualLocalEuler: {x: 0, y: 180, z: 90}
-  manualLocalPositionMeters: {x: 3, y: 3, z: 3}
+  poseMode: 0
+  fitMode: 0
+  scaleMultiplier: 0.1
+  manualLocalPositionMeters: {x: 0, y: 0, z: 0}
   manualOffsetCellsXZ: {x: 0, y: 0}
   manualOffsetY: 0
+  manualLocalEuler: {x: 0, y: 0, z: 0}
+  manualLocalScale: {x: 1, y: 1, z: 1}
+  quickbarIcon: {fileID: 0}
+  quickbarSpan: 1
+  canRotate: 1

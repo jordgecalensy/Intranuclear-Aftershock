@@ -1,7 +1,6 @@
 using System;
-// InventoryController.cs
-using System;
 using UnityEngine;
+using Failsafe.Inventory; // Добавлено явно для доступа к WorldItem, ItemInstance
 
 namespace Failsafe.Inventory
 {
@@ -15,6 +14,10 @@ namespace Failsafe.Inventory
         public string playerGridId = "case";
         public int gridWidth = 10;
         public int gridHeight = 6;
+
+        [Header("Item Interaction")] // <-- НОВАЯ СЕКЦИЯ ДЛЯ ПОДБОРА
+        public KeyCode pickupKey = KeyCode.N;
+        public float pickupRange = 2.5f; // Максимальная дальность подбора
 
         [Header("Noise FX on Open")]
         public float noiseRadius = 6f;
@@ -51,7 +54,8 @@ namespace Failsafe.Inventory
         private bool _open;
         private CursorLockMode _savedLock;
         private bool _savedVisible;
-        private bool _cursorStateSaved;        private CaseProxy _spawnedCase;
+        private bool _cursorStateSaved;        
+        private CaseProxy _spawnedCase;
 
         private void Awake()
         {
@@ -62,15 +66,50 @@ namespace Failsafe.Inventory
             Placement = new PlacementService();
             Service   = new PlacementService.InventoryService(Model, Placement);
 
-            Model.Grids[playerGridId] = new InventoryGrid(playerGridId, gridWidth, gridHeight);
+            if (!Model.Grids.ContainsKey(playerGridId))
+                Model.Grids[playerGridId] = new InventoryGrid(playerGridId, gridWidth, gridHeight);
 
             SetOpen(false);
         }
 
         private void Update()
         {
+            // Логика открытия/закрытия
             if (Input.GetKeyDown(toggleKey1) || Input.GetKeyDown(toggleKey2)) SetOpen(!_open);
             else if (_open && Input.GetKeyDown(closeKey)) SetOpen(false);
+
+            // ЛОГИКА ПОДБОРА НА 'N'
+            if (Input.GetKeyDown(pickupKey) && !IsOpen) 
+            {
+                TryPickupItem();
+            }
+        }
+        
+        // МЕТОД ПОДБОРА ПРЕДМЕТА ЧЕРЕЗ RAYCAST
+        private void TryPickupItem()
+        {
+            if (playerCamera == null)
+            {
+                Debug.LogError("InventoryController: playerCamera не назначен. Назначьте главную камеру в Инспекторе.");
+                return;
+            }
+
+            Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
+            
+            if (Physics.Raycast(ray, out RaycastHit hit, pickupRange))
+            {
+                // WorldItem должен быть доступен, так как он в том же namespace
+                WorldItem wi = hit.collider.GetComponentInParent<WorldItem>(); 
+                
+                if (wi != null)
+                {
+                    if (wi.TryPickupTap()) 
+                    {
+                        Debug.Log($"[Inventory] Поднят предмет: {wi.definition.displayName}");
+                        return;
+                    }
+                }
+            }
         }
 
         public void SetOpen(bool open)
@@ -166,7 +205,7 @@ namespace Failsafe.Inventory
             }
         }
 
-        // Дроп предмета из инвентаря в мир
+        // Дроп предмета из инвентаря в мир (ItemInstance и WorldItem доступны)
         public void DropToWorld(ItemInstance inst, float forward = 1.1f)
         {
             if (inst?.Def?.WorldPrefab == null || player == null) return;
@@ -177,7 +216,5 @@ namespace Failsafe.Inventory
             wi.BindFromInstance(inst);
             wi.ToWorldState();
         }
-        
-        
     }
 }
