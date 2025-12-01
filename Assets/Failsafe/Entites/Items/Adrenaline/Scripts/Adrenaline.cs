@@ -32,6 +32,7 @@ namespace Failsafe.Items
 
         public void AltMode() { }
 
+        public void ParseItem(Item item_object) { }
         public void GetItemUseDelays(out float startUseDelay, out float useDelay)
         {
             startUseDelay = _data.StartUseDelay;

@@ -7,6 +7,7 @@ namespace Failsafe.Items
     public class StasisGun : IUsable, ITickable
     {
         StasisGunData _data;
+        private Item _stasisGunItem;
         EnergyContainer _energyContainer;
         private bool _isDefaultMode = true;
         float _fireRateTimer = 0;
@@ -40,7 +41,10 @@ namespace Failsafe.Items
             Debug.Log("Default mode is " + _isDefaultMode);
         }
 
-
+        public void ParseItem(Item item)
+        {
+            _stasisGunItem = item;
+        }
         public void Shoot(RaycastHit hit)
         {
             if (_fireRateTimer <= 0 && !_energyContainer.IsEmpty())

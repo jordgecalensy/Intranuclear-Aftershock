@@ -71,6 +71,7 @@ public class PlayerHandsContainer
         itemObject.ToInventoryState();
         itemObject.transform.SetParent(_rightHandItemPlace, false);
         itemObject.transform.localPosition = Vector3.zero;
+        usableItem.ParseItem(itemObject);
         var itemInHand = new ItemInHand
         {
             ItemObject = itemObject,
