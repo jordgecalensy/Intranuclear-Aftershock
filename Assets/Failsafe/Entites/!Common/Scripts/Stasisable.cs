@@ -1,10 +1,13 @@
+using FMODUnity;
 using System.Collections;
 using UnityEngine;
 
+[RequireComponent(typeof(StudioEventEmitter))]
 public class Stasisable : MonoBehaviour
 {
     private Rigidbody _rb;
     private Coroutine _startedCoroutine;
+    [SerializeField] private FMODUnity.EventReference _stasisEnd;
     private Vector3 _objectVelocity;
 
     void Start()
@@ -27,6 +30,7 @@ public class Stasisable : MonoBehaviour
 
         yield return new WaitForSeconds(duration);
 
+        SoundUtils3D.Play(this.gameObject, _stasisEnd);
         _rb.isKinematic = false;
         _rb.constraints = RigidbodyConstraints.None;
         _startedCoroutine = null;
@@ -41,6 +45,7 @@ public class Stasisable : MonoBehaviour
 
         yield return new WaitForSeconds(duration);
 
+        SoundUtils3D.Play(this.gameObject, _stasisEnd);
         _rb.isKinematic = false;
         _rb.constraints = RigidbodyConstraints.None;
         _rb.AddForce(_objectVelocity, ForceMode.VelocityChange);

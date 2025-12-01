@@ -6,7 +6,7 @@ namespace Failsafe.Items
 {
     public class StasisGun : IUsable, ITickable
     {
-        StasisGunData _data;
+        private StasisGunData _data;
         private Item _stasisGunItem;
         EnergyContainer _energyContainer;
         private bool _isDefaultMode = true;
@@ -37,6 +37,7 @@ namespace Failsafe.Items
 
         public void AltMode()
         {
+            SoundUtils3D.Play(_stasisGunItem.gameObject, _data.ModeSwitchSFX);
             _isDefaultMode = !_isDefaultMode;
             Debug.Log("Default mode is " + _isDefaultMode);
         }
@@ -51,6 +52,7 @@ namespace Failsafe.Items
             {
                 _fireRateTimer = _data.FireRate;
                 _energyContainer.UseChargeAmount();
+                SoundUtils3D.Play(_stasisGunItem.gameObject, _data.GunshotSFX);
                 if (hit.collider != null)
                 {
                     if (_isDefaultMode)
@@ -59,6 +61,7 @@ namespace Failsafe.Items
                         AltMode(hit);
                 }
             }
+            else if (_energyContainer.IsEmpty()) SoundUtils3D.Play(_stasisGunItem.gameObject, _data.EmptyShotSFX);
         }
 
         void DefaultMode(RaycastHit hit)
