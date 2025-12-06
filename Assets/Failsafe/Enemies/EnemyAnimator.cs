@@ -164,6 +164,11 @@ public class EnemyAnimator
         _animator.SetTrigger("Attack");
     }
 
+    public void TryDeath()
+    {
+        _animator.SetTrigger("Die");
+    }
+
     public bool IsInAction()
     {
         var state = _animator.GetCurrentAnimatorStateInfo(0);

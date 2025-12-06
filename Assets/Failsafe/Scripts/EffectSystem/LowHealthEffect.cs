@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
+using FMODUnity;
 
 namespace Failsafe.Scripts.EffectSystem
 {
@@ -7,6 +8,10 @@ namespace Failsafe.Scripts.EffectSystem
     {
         private Material _lowHpMaterial;
         private CustomPassVolume _customPassVolume;
+        private StudioEventEmitter _lowHealthEmitter;
+
+        private EventReference _lowHealthEvent;
+
 
 
         public LowHealthEffect()
@@ -17,31 +22,36 @@ namespace Failsafe.Scripts.EffectSystem
 
             _duration = Mathf.Infinity;
             IsUniqueEffect = true;
+
+            _lowHealthEvent = EventReference.Find("event:/UI/LowHP/LowHealthSFX");
         }
 
         public override void ApplyEffect()
         {
-            if (_lowHpMaterial == null)
-            {
-                Debug.LogError("LowHealthEffect: материал не задан!");
-                return;
-            }
-
             // Создаём CustomPassVolume динамически
-            _customPassVolume = new GameObject("LowHealthEffectVolume")
+            _customPassVolume = new GameObject("LowHealthEffect")
                 .AddComponent<CustomPassVolume>();
             _customPassVolume.isGlobal = true;
             _customPassVolume.injectionPoint = CustomPassInjectionPoint.AfterPostProcess;
 
             // Добавляем кастомный пасс
-            var pass = new CustomPassDrawer { EffectMaterial = _lowHpMaterial };
+            var pass = new CustomPassDrawer(_lowHpMaterial);
             _customPassVolume.customPasses.Add(pass);
+
+            // Создаём объект для фонового звука
+            _lowHealthEmitter = _customPassVolume.gameObject.AddComponent<StudioEventEmitter>();
+            _lowHealthEmitter.EventReference = _lowHealthEvent;
+            _lowHealthEmitter.Play();
 
             Debug.Log("Low Health HDRP effect applied");
         }
 
         public override void ClearEffect()
         {
+            if (_lowHealthEmitter != null)
+            {
+                _lowHealthEmitter.Stop();
+            }
             if (_customPassVolume != null)
             {
                 Object.Destroy(_customPassVolume.gameObject);

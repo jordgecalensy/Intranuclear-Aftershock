@@ -11,7 +11,7 @@ public static class SoundUtils3D
             // Если другой EventReference — установить новый
             if (emitter.EventReference.Guid != eventReference.Guid)
             {
-                emitter.EventReference = eventReference;
+                emitter.ChangeEvent(eventReference);
             }
 
             emitter.Play();

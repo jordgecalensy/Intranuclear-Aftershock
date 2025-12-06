@@ -32,6 +32,8 @@ public class InputHandler
     private const string _grabLedge = "GrabLedge";
     private const string _zoom = "Zoom";
     private const string _use = "Use";
+    private const string _altMode = "AltMode";
+    private const string _visor = "Visor"; ///Добавил 
 
     private InputAction _movementAction;
     private InputAction _rotationAction;
@@ -43,6 +45,9 @@ public class InputHandler
     private InputAction _grabLedgeAction;
     private InputAction _zoomAction;
     private InputAction _useAction;
+    private InputAction _altModeAction;
+    private InputAction _visorAction; ///Добавил
+
 
     public List<InputAction> PerformedActions = new List<InputAction>();
 
@@ -57,6 +62,8 @@ public class InputHandler
     public InputTrigger GrabLedgeTrigger { get; private set; } = new InputTrigger();
     public bool ZoomTriggered { get; private set; }
     public InputTrigger UseTrigger { get; private set; } = new InputTrigger();
+    public InputTrigger AltModeTrigger { get; private set; } = new InputTrigger();
+    public InputTrigger VisorTrigger { get; private set; } = new InputTrigger();
 
 
     /// <summary>
@@ -83,6 +90,8 @@ public class InputHandler
         _grabLedgeAction = mapReference.FindAction(_grabLedge);
         _zoomAction = mapReference.FindAction(_zoom);
         _useAction = mapReference.FindAction(_use);
+        _altModeAction = mapReference.FindAction(_altMode);
+        _visorAction = mapReference.FindAction(_visor);
 
         SubscribeActionValuesToInputEvents();
     }
@@ -137,6 +146,12 @@ public class InputHandler
         _useAction.performed += UseTrigger.OnInputStart;
         _useAction.canceled += UseTrigger.OnInputCancel;
 
+        _altModeAction.performed += AltModeTrigger.OnInputStart;
+        _altModeAction.canceled += AltModeTrigger.OnInputCancel;
+
+        _visorAction.performed += VisorTrigger.OnInputStart;
+        _visorAction.canceled += VisorTrigger.OnInputCancel;
+
     }
 
     public class InputTrigger
@@ -158,7 +173,7 @@ public class InputHandler
 
         public void OnInputCancel(InputAction.CallbackContext context)
         {
-            IsTriggered = false;
+            IsTriggered = false; 
             IsPressed = false;
         }
 

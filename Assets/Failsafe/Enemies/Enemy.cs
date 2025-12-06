@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks.Triggers;
 using DMDungeonGenerator;
 using Failsafe.Enemies.Sensors;
 using Failsafe.Scripts.Health;
@@ -24,6 +25,7 @@ public class Enemy : MonoBehaviour
     private LaserBeamController _activeLaser;
     [SerializeField] private Transform _laserSpawnPoint; // Точка спавна лазера, если нужно
     [SerializeField] private List<Transform> _manualPoints; // Привязать вручную через инспектор
+    [SerializeField] private GameObject _corpseModel; // Труп
     public BehaviorState currentState;
     public AwarenessMeter _awarenessMeter;
     public bool seePlayer;
@@ -105,6 +107,7 @@ public class Enemy : MonoBehaviour
         var checkState = new CheckState(_sensors, transform, _enemyMovePatterns, _enemyNavMeshActions, _enemyConfig);
         var disabledState = new DisabledState(_animator);
         var stunnedState = new StunnedState(_enemyAnimator, _enemyNavMeshActions, transform);
+        var deathState = new EnemyDeathState(_enemyAnimator, _enemyNavMeshActions, _animator);
 
 
         defaultState.AddTransition(chasingState, _awarenessMeter.IsChasing);
@@ -118,7 +121,7 @@ public class Enemy : MonoBehaviour
         searchingState.AddTransition(chasingState, _awarenessMeter.IsChasing);
         checkState.AddTransition(chasingState, _awarenessMeter.IsChasing);
 
-        var forcedStates = new List<BehaviorForcedState> {disabledState, stunnedState};
+        var forcedStates = new List<BehaviorForcedState> {disabledState, stunnedState, deathState};
         _stateMachine = new BehaviorStateMachine(defaultState, forcedStates);
 
         if(_manualPoints.Count > 0)
@@ -131,8 +134,8 @@ public class Enemy : MonoBehaviour
             // Ищем комнату, в которой находится противник
            _enemyGetData.RoomCheck();
         }
-        
 
+        _health.OnDeath += DeathState;
     }
 
     void Update()
@@ -153,12 +156,16 @@ public class Enemy : MonoBehaviour
         {
             _enemyAnimator.IsOff();
         }
-        
     }
 
     public void DisableState(float? duration = null)
     {
         _stateMachine.ForseChangeState<DisabledState>(duration);
+    }
+
+    public void DeathState()
+    {
+        _stateMachine.ForseChangeState<EnemyDeathState>();
     }
 
     public void StunnedState(Vector3 direction, float? duration = null)
@@ -330,5 +337,11 @@ public class Enemy : MonoBehaviour
                     }
             }
 
+    }
+
+    public void ReplaceWithDummy()
+    {
+        Instantiate(_corpseModel, transform.position, transform.rotation);
+        Destroy(this.gameObject);
     }
 }

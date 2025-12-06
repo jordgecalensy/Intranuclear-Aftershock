@@ -7,6 +7,7 @@ public class EnemyAudioManager : MonoBehaviour
     [SerializeField] private FMODUnity.EventReference walk;
     [SerializeField] private FMODUnity.EventReference run;
     [SerializeField] private FMODUnity.EventReference reload;
+    [SerializeField] private FMODUnity.EventReference die;
 
 
     public void StepEvent()
@@ -22,5 +23,10 @@ public class EnemyAudioManager : MonoBehaviour
     public void ReloadEvent()
     {
         SoundUtils3D.Play(this.gameObject, reload);
+    }
+
+    public void DeathEvent()
+    {
+        SoundUtils3D.Play(this.gameObject, die);
     }
 }

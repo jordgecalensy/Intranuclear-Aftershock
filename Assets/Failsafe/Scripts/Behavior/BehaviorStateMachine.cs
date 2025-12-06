@@ -98,7 +98,11 @@ public class BehaviorStateMachine
     public void ForseChangeState<T>(float? duration = null) where T : BehaviorForcedState
     {
         var nextState = _forcedStates.FirstOrDefault(x => x.GetType() == typeof(T));
-        if (nextState != null)
+        if (_currentState is EnemyDeathState || nextState == null)
+        {
+            return;
+        }
+        else
         {
             ForseChangeState(nextState, duration);
         }

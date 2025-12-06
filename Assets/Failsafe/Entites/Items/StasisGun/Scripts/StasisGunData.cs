@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-[CreateAssetMenu(fileName = "StasisGunData", menuName = "ScriptableObjects/Entities/Items/Components/StasisGunData")]
+[CreateAssetMenu(fileName = "StasisGunData", menuName = "ScriptableObjects/Entities/Items/StasisGunData")]
 public class StasisGunData : ScriptableObject
 {
     public float StasisDuration;

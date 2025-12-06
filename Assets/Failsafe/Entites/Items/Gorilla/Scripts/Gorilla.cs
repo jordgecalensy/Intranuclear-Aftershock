@@ -9,15 +9,15 @@ namespace Failsafe.Items
 {
     public class Gorilla : IUsable
     {
-        GorillaData _data;
+        private GorillaData _data;
 
-        IEffectManager _effectManager;
-        GorillaEffect _effect;
+        private readonly IEffectManager _effectManager;
+        private GorillaEffect _effect;
         public Gorilla(GorillaData data, PlayerModelParameters playerModelParameters, IEffectManager effectManager)
         {
             _data = data;
             _effectManager = effectManager;
-            _effect = new GorillaEffect(playerModelParameters, data);
+            _effect = new GorillaEffect(_data.Duration, playerModelParameters, _data.ThrowPowerMultiplier);
         }
 
 
@@ -27,35 +27,12 @@ namespace Failsafe.Items
             return ItemUseResult.Consumed;
         }
 
+        public void AltMode() { }
+
         public void GetItemUseDelays(out float startUseDelay, out float useDelay)
         {
             startUseDelay = _data.StartUseDelay;
             useDelay = _data.UseDelay;
-        }
-    }
-
-    public class GorillaEffect : Effect
-    {
-        private PlayerModelParameters _playerModelParameters;
-        private IModificator<float> _throwPowerModificator;
-        public GorillaEffect(PlayerModelParameters playerModelParameters, GorillaData data)
-        {
-            _playerModelParameters = playerModelParameters;
-            _throwPowerModificator = new MultiplierFloat(data.ThrowPowerMultiplier, priority: 100);
-            _duration = data.Duration;
-            IsUniqueEffect = true;
-        }
-        public override void ApplyEffect()
-        {
-
-            _playerModelParameters.ThrowPower.AddModificator(_throwPowerModificator);
-            _playerModelParameters.ThrowTorquePower.AddModificator(_throwPowerModificator);
-        }
-
-        public override void ClearEffect()
-        {
-            _playerModelParameters.ThrowPower.RemoveModificator(_throwPowerModificator);
-            _playerModelParameters.ThrowTorquePower.RemoveModificator(_throwPowerModificator);
         }
     }
 }

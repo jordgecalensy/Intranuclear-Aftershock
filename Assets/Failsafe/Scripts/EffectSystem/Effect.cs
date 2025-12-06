@@ -10,6 +10,7 @@ namespace Failsafe.Scripts.EffectSystem
     {
         protected float _duration;
         private float _startedAt;
+        public float StarteAt => _startedAt;
 
         public float ElapsedAt => _startedAt + _duration;
 

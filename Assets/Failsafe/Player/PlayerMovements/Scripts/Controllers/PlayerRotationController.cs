@@ -17,6 +17,7 @@ namespace Failsafe.PlayerMovements.Controllers
 
         private float _verticalMinAngle = -75f;
         private float _certicalMaxAngle = 90f;
+        public Transform HeadTransform => _headTransform; 
 
         public Vector3 HeadDirection => _headTransform.forward;
         public Vector3 HeadLocalRotation => new Vector3(-_cameraVerticalRotation, _cameraHorizontalRotation, 0);

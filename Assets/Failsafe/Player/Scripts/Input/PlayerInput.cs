@@ -180,6 +180,24 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Visor"",
+                    ""type"": ""Button"",
+                    ""id"": ""32946ab6-15e0-468a-8837-9389ea678e5e"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""AltMode"",
+                    ""type"": ""Button"",
+                    ""id"": ""fc3e21df-423c-4973-8b35-3a87824dc73e"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -347,6 +365,28 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""action"": ""Zoom"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""81ff7c50-ebb0-4add-a1c4-05bc957f6b9c"",
+                    ""path"": ""<Keyboard>/y"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Visor"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ab76920d-ae57-494a-8529-f53b1d795648"",
+                    ""path"": ""<Keyboard>/leftAlt"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""AltMode"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -365,6 +405,8 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         m_Player_Attack = m_Player.FindAction("Attack", throwIfNotFound: true);
         m_Player_GrabLedge = m_Player.FindAction("GrabLedge", throwIfNotFound: true);
         m_Player_Zoom = m_Player.FindAction("Zoom", throwIfNotFound: true);
+        m_Player_Visor = m_Player.FindAction("Visor", throwIfNotFound: true);
+        m_Player_AltMode = m_Player.FindAction("AltMode", throwIfNotFound: true);
     }
 
     ~@PlayerInput()
@@ -455,6 +497,8 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Attack;
     private readonly InputAction m_Player_GrabLedge;
     private readonly InputAction m_Player_Zoom;
+    private readonly InputAction m_Player_Visor;
+    private readonly InputAction m_Player_AltMode;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -506,6 +550,14 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/Zoom".
         /// </summary>
         public InputAction @Zoom => m_Wrapper.m_Player_Zoom;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Visor".
+        /// </summary>
+        public InputAction @Visor => m_Wrapper.m_Player_Visor;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/AltMode".
+        /// </summary>
+        public InputAction @AltMode => m_Wrapper.m_Player_AltMode;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -562,6 +614,12 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
             @Zoom.started += instance.OnZoom;
             @Zoom.performed += instance.OnZoom;
             @Zoom.canceled += instance.OnZoom;
+            @Visor.started += instance.OnVisor;
+            @Visor.performed += instance.OnVisor;
+            @Visor.canceled += instance.OnVisor;
+            @AltMode.started += instance.OnAltMode;
+            @AltMode.performed += instance.OnAltMode;
+            @AltMode.canceled += instance.OnAltMode;
         }
 
         /// <summary>
@@ -603,6 +661,12 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
             @Zoom.started -= instance.OnZoom;
             @Zoom.performed -= instance.OnZoom;
             @Zoom.canceled -= instance.OnZoom;
+            @Visor.started -= instance.OnVisor;
+            @Visor.performed -= instance.OnVisor;
+            @Visor.canceled -= instance.OnVisor;
+            @AltMode.started -= instance.OnAltMode;
+            @AltMode.performed -= instance.OnAltMode;
+            @AltMode.canceled -= instance.OnAltMode;
         }
 
         /// <summary>
@@ -713,5 +777,19 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnZoom(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Visor" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnVisor(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "AltMode" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnAltMode(InputAction.CallbackContext context);
     }
 }

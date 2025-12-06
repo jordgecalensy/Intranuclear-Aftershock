@@ -12,6 +12,8 @@ using Failsafe.Player.View;
 using VContainer.Unity;
 using Failsafe.Player.Model;
 using Failsafe.Scripts.EffectSystem;
+using Failsafe.Items; // ← добавь это
+
 
 
 namespace Failsafe.PlayerMovements
@@ -36,13 +38,17 @@ namespace Failsafe.PlayerMovements
         private PlayerLedgeController _ledgeController;
         private PlayerNoiseController _noiseController;
         private StepController _stepController;
-        private bool _isLowHpEffectActive = false; //добавил
+        private bool _isLowHpEffectActive = false;
+        private bool _isVisorEffectActive = false;
+        private MovementCameraShakeProvider _movementShakeProvider;
+        private DamageCameraShakeProvider _damageShakeProvider;
+        private float _prevHealth;
 
         public BehaviorStateMachine StateMachine => _behaviorStateMachine;
         public PlayerMovementController PlayerMovementController => _movementController;
         public PlayerRotationController PlayerRotationController => _playerRotationController;
 
-      [Inject]  private readonly PlayerMovementController _movementController; // readonly и инжектим
+        [Inject] private readonly PlayerMovementController _movementController; // readonly и инжектим
 
         public PlayerController(
             PlayerMovementParameters movementParametrs,
@@ -76,12 +82,31 @@ namespace Failsafe.PlayerMovements
             _ledgeController = new PlayerLedgeController(_playerView.PlayerTransform, _playerView.PlayerCamera, _playerView.PlayerGrabPoint, _movementParametrs);
             _noiseController = new PlayerNoiseController(_playerView.PlayerTransform, _noiseParametrs, _signalManager);
             _stepController = new StepController(_playerView.CharacterController, _movementParametrs, _playerView.FootstepEvent);
+            _prevHealth = _health.CurrentHealth;
+            _movementShakeProvider =
+                new MovementCameraShakeProvider(_inputHandler, _effectManager, _playerRotationController);
+
+            _damageShakeProvider =
+                new DamageCameraShakeProvider(_effectManager, _playerRotationController);
+            _health.OnHealthChanged += HandleHealthChanged;
+
+            
+
 
             InitializeStateMachine();
-            
 
         }
 
+        private void HandleHealthChanged(float newValue)
+        {
+            float damage = _prevHealth - newValue;
+
+            if (damage > 0)
+                _damageShakeProvider.ApplyDamage(damage);
+                _effectManager.ApplyEffect(new DamageHitEffect(0.25f));
+
+            _prevHealth = newValue;
+        }
 
 
         private void InitializeStateMachine()
@@ -176,6 +201,7 @@ namespace Failsafe.PlayerMovements
 
         public void Tick()
         {
+            _movementShakeProvider.Tick();
             _ledgeController.HandleFindingLedge();
             _playerRotationController.HandlePlayerRotation();
             _behaviorStateMachine.Update();
@@ -185,7 +211,7 @@ namespace Failsafe.PlayerMovements
                 _behaviorStateMachine.ForseChangeState<DeathState>();
                 return;
             }
-            
+
             float currentHpPercent = _health.CurrentHealth / _health.MaxHealth;
             if (currentHpPercent <= 0.2f && !_isLowHpEffectActive)
             {
@@ -197,7 +223,29 @@ namespace Failsafe.PlayerMovements
                 _effectManager.RemoveEffect<LowHealthEffect>();
                 _isLowHpEffectActive = false;
             }
+
+            if (_inputHandler.VisorTrigger.IsTriggered)
+            {
+                if (!_isVisorEffectActive)
+                {
+                    Debug.Log("Visor включен");
+                    _effectManager.ApplyEffect(new VisorEffect(_playerView.PlayerTransform));
+                    _isVisorEffectActive = true;
+                }
+                else
+                {
+                    Debug.Log("Visor выключен");
+                    _effectManager.RemoveEffect<VisorEffect>();
+                    _isVisorEffectActive = false;
+                }
+
+                // Сбрасываем триггер после обработки
+                _inputHandler.VisorTrigger.ReleaseTrigger();
+            }
+            
+            // ============ DAMAGE SHAKE CHECK ============
         }
+
 
         public void FixedTick()
         {

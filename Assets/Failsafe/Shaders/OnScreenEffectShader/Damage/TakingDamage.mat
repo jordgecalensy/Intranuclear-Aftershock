@@ -23,12 +23,36 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _DistortionTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _GatherTexture2D_2e461df9bb7443328ff45070bfe41f7f_Texture_1_Texture2D:
         m_Texture: {fileID: 2800000, guid: 60dfd52fff743854295cd6a943861a0e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GatherTexture2D_3bbb7c7eb2dc46059454a89b5c155ae2_Texture_1_Texture2D:
         m_Texture: {fileID: 2800000, guid: 60dfd52fff743854295cd6a943861a0e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GatherTexture2D_9a36846714564bddba6a440b4ae46f48_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 60dfd52fff743854295cd6a943861a0e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NoiseTexture:
+        m_Texture: {fileID: 2800000, guid: fa83dfe7fc04e054eb08a3b48e855e23, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2DLOD_d69abca70a4443efbcc3b765c7197da8_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 8ddedd8c0e038e94c9b4fed4519b5147, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_5cd595d8c829405cba2cd8ae8d0764d1_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: fa83dfe7fc04e054eb08a3b48e855e23, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_eb67fd5207ab4e56b33e87f406c6edc4_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: fa83dfe7fc04e054eb08a3b48e855e23, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -45,14 +69,25 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _FlickerFrequency: 2
+    - _FlickerIntensity: 1000
+    - _FlickerIntenstiy: 100000
+    - _FlickerStrenght: 10
     - _Fullscreen_AlphaBlendOperation: 0
     - _Fullscreen_BlendMode: 3
     - _Fullscreen_ColorBlendOperation: 0
+    - _Fullscreen_DepthTest: 8
     - _Fullscreen_DepthWrite: 0
     - _Fullscreen_DstAlphaBlend: 1
     - _Fullscreen_DstColorBlend: 1
     - _Fullscreen_SrcAlphaBlend: 1
     - _Fullscreen_SrcColorBlend: 5
+    - _GlitchFlicker: 0.9
+    - _NoiseAmmount: 10
+    - _NoiseFrequency: 10
+    - _ScanLinesStrength: -1
+    - _VignettIntensity: 100
+    - _VignettPower: 15
     - _sOMTEHING: 0.001
     m_Colors: []
   m_BuildTextureStacks: []
