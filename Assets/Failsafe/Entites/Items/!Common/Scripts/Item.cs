@@ -8,6 +8,8 @@ public class Item : Prop
     public List<ActionsGroup> ActionsGroups;
     private Rigidbody _rigidbody;
     private BoxCollider _collider;
+    private Transform _handlePoint;
+    public Transform HandlePoint => _handlePoint;
 
     private void Awake()
     {
@@ -17,6 +19,7 @@ public class Item : Prop
         }
         _rigidbody = gameObject.GetComponent<Rigidbody>();
         _collider = gameObject.GetComponent<BoxCollider>();
+        _handlePoint = transform.Find("HandlePoint");
     }
 
 
