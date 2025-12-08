@@ -68,9 +68,10 @@ public class PlayerHandsContainer
         {
             Debug.Log("TryTakeItemInHand. Не найден скрипт для предмета " + itemObject.name);
         }
+        Transform handlePoint = itemObject.HandlePoint;
         itemObject.ToInventoryState();
         itemObject.transform.SetParent(_rightHandItemPlace, false);
-        itemObject.transform.localPosition = Vector3.zero;
+        itemObject.transform.localPosition = handlePoint.localPosition*-1;
         usableItem.ParseItem(itemObject);
         var itemInHand = new ItemInHand
         {
