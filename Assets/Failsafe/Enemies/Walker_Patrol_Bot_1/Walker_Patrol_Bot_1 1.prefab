@@ -1616,6 +1616,7 @@ GameObject:
   - component: {fileID: 2677351307390855897}
   - component: {fileID: 6073071214146362726}
   - component: {fileID: 4388551472208041899}
+  - component: {fileID: 4948907210411337118}
   m_Layer: 10
   m_Name: Walker_Patrol_Bot_1 1
   m_TagString: Enemy
@@ -2028,6 +2029,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _config: {fileID: 11400000, guid: 22e18573ab2349a42a26a9865501c2a8, type: 2}
+--- !u!114 &4948907210411337118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5441590585779604949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d40d05721fa59684fa54b97a814b02e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stasisEnd:
+    Guid:
+      Data1: 1565740607
+      Data2: 1311392178
+      Data3: 1971754895
+      Data4: -883757678
+    Path: event:/SFX/ITEMS/STASIS_GUN/StasislEffectOff
+  _stasisMaterial: {fileID: 2100000, guid: e89baa730afc6504d869da076eda85c2, type: 2}
 --- !u!1 &5568232610338988830
 GameObject:
   m_ObjectHideFlags: 0

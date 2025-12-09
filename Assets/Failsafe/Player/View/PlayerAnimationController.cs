@@ -12,6 +12,7 @@ namespace Failsafe.Player
     {
         private readonly PlayerController _playerController;
         private readonly PlayerHandsSystem _playerHandsSystem;
+        private readonly PlayerHandsContainer _playerHandsContainer;
         private readonly Animator _animator;
         private readonly Transform _payerTransform;
         private readonly int _upperBodyLayerId;
@@ -31,6 +32,8 @@ namespace Failsafe.Player
         private int _slidingId = Animator.StringToHash("Sliding");
         private int _healId = Animator.StringToHash("Heal");
         private int _deadId = Animator.StringToHash("Dead");
+        private int _pickUpId = Animator.StringToHash("PickUp");
+        private int _shootId = Animator.StringToHash("Shoot");
 
         // --- НОВОЕ: настройки синхронизации скорости анимации ---
         private const bool  AnimFollowMoveMultiplier = true; // включить/выключить привязку
@@ -40,7 +43,7 @@ namespace Failsafe.Player
         private float _defaultAnimSpeed = 1f;                // чтобы вернуть при Dispose
         // --------------------------------------------------------
 
-        public PlayerAnimationController(PlayerController playerController, PlayerView playerView, PlayerHandsSystem playerHandsSystem)
+        public PlayerAnimationController(PlayerController playerController, PlayerView playerView, PlayerHandsSystem playerHandsSystem, PlayerHandsContainer playerHandsContainer)
         {
             _playerController = playerController;
             _animator = playerView.Animator;
@@ -49,6 +52,8 @@ namespace Failsafe.Player
 
             _upperBodyLayerId = _animator.GetLayerIndex("UpperBody");
             if (_animator != null) _defaultAnimSpeed = _animator.speed;
+            _playerHandsContainer = playerHandsContainer;
+
         }
 
         public void Tick()
@@ -96,6 +101,7 @@ namespace Failsafe.Player
             _playerController.StateMachine.GetState<JumpState>().OnEnter += OnStartJumping;
             _playerController.StateMachine.GetState<JumpState>().OnExit += OnFinishJumping;
             _playerHandsSystem.OnItemStartUsing += OnUseItem;
+            _playerHandsContainer.OnItemTaken += OnTakeItem;
         }
 
         public void Dispose()
@@ -120,8 +126,23 @@ namespace Failsafe.Player
 
         public void OnUseItem(ItemType itemType)
         {
-            _animator.SetTrigger(_healId);
-            ActivateLayerForSeconds(_upperBodyLayerId, 2.5f).Forget();
+            switch (itemType)
+            {
+                case ItemType.Consumable:
+                    _animator.SetTrigger(_healId);
+                    ActivateLayerForSeconds(_upperBodyLayerId, 2.5f).Forget();
+                    break;
+                case ItemType.Gun:
+                    _animator.SetTrigger(_shootId);
+                    break;
+            }
+        }
+
+        public void OnTakeItem(ItemType itemType)
+        {
+            _animator.SetInteger("Item", (int)itemType+1);
+            _animator.SetTrigger(_pickUpId);
+            _animator.SetLayerWeight(_upperBodyLayerId, 1);
         }
 
         private async UniTask ActivateLayerForSeconds(int layerId, float seconds)

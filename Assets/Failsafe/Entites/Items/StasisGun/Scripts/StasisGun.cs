@@ -6,7 +6,8 @@ namespace Failsafe.Items
 {
     public class StasisGun : IUsable, ITickable
     {
-        StasisGunData _data;
+        private StasisGunData _data;
+        private Item _stasisGunItem;
         EnergyContainer _energyContainer;
         private bool _isDefaultMode = true;
         float _fireRateTimer = 0;
@@ -36,49 +37,31 @@ namespace Failsafe.Items
 
         public void AltMode()
         {
+            SoundUtils3D.Play(_stasisGunItem.gameObject, _data.ModeSwitchSFX);
             _isDefaultMode = !_isDefaultMode;
             Debug.Log("Default mode is " + _isDefaultMode);
         }
 
-
+        public void ParseItem(Item item)
+        {
+            _stasisGunItem = item;
+        }
         public void Shoot(RaycastHit hit)
         {
             if (_fireRateTimer <= 0 && !_energyContainer.IsEmpty())
             {
                 _fireRateTimer = _data.FireRate;
                 _energyContainer.UseChargeAmount();
+                SoundUtils3D.Play(_stasisGunItem.gameObject, _data.GunshotSFX);
                 if (hit.collider != null)
                 {
-                    if (_isDefaultMode)
-                        DefaultMode(hit);
-                    else
-                        AltMode(hit);
+                    if (hit.collider.GetComponentInParent<Stasisable>() != null)
+                    {
+                        hit.collider.GetComponentInParent<Stasisable>().StasisHit(_data.StasisDuration, _isDefaultMode);
+                    }
                 }
             }
-        }
-
-        void DefaultMode(RaycastHit hit)
-        {
-            if (hit.collider.GetComponent<Stasisable>() != null)
-            {
-                hit.collider.GetComponent<Stasisable>().StartStasis(_data.StasisDuration);
-            }
-            else if (hit.collider.GetComponentInParent<Enemy>() != null)
-            {
-                hit.collider.GetComponentInParent<Enemy>().DisableState(_data.StasisDuration);
-            }
-        }
-
-        void AltMode(RaycastHit hit)
-        {
-            if (hit.collider.GetComponent<Stasisable>() != null)
-            {
-                hit.collider.GetComponent<Stasisable>().StartStasisWithInertion(_data.StasisDuration);
-            }
-            else if (hit.collider.GetComponentInParent<Enemy>() != null)
-            {
-                hit.collider.GetComponentInParent<Enemy>().DisableState(_data.StasisDuration);
-            }
+            else if (_energyContainer.IsEmpty()) SoundUtils3D.Play(_stasisGunItem.gameObject, _data.EmptyShotSFX);
         }
 
         RaycastHit Raycast()
