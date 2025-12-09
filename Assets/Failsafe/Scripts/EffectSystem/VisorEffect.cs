@@ -9,7 +9,7 @@ namespace Failsafe.Scripts.EffectSystem
         private Material _visorMaterial;
         private ObjectXRay[] _xrayObjects;
         private Transform _player;
-        private float _xrayRadius = 20f;
+        private float _xrayRadius = 30f;
         private GameObject _visorEffectObject;
         private StudioEventEmitter _visorLoopEmitter;
         private StudioEventEmitter _visorOnEmitter;
@@ -32,9 +32,9 @@ namespace Failsafe.Scripts.EffectSystem
             _player = PlayerTransform;
 
             // FMOD события можно потом внедрить через DI или ScriptableObject
-            _visorOnEvent = EventReference.Find("event:/UI/VISOR/visorON");
-            _visorOffEvent = EventReference.Find("event:/UI/VISOR/visorOFF");
-            _visorLoopEvent = EventReference.Find("event:/UI/VISOR/visorLoop");
+            _visorOnEvent = FMODUnity.RuntimeManager.PathToEventReference("event:/UI/VISOR/visorON");
+            _visorOffEvent = FMODUnity.RuntimeManager.PathToEventReference("event:/UI/VISOR/visorOFF");
+            _visorLoopEvent = FMODUnity.RuntimeManager.PathToEventReference("event:/UI/VISOR/visorLoop");
         }
 
         public override void ApplyEffect()
@@ -53,7 +53,7 @@ namespace Failsafe.Scripts.EffectSystem
             _customPassVolume.customPasses.Add(pass);
 
             // Создаём объект для фонового звука
-            _visorLoopEmitter = _visorEffectObject.AddComponent<StudioEventEmitter>();
+            /*_visorLoopEmitter = _visorEffectObject.AddComponent<StudioEventEmitter>();
             _visorLoopEmitter.EventReference = _visorLoopEvent;
 
             _visorOnEmitter = _visorEffectObject.AddComponent<StudioEventEmitter>();
@@ -65,7 +65,7 @@ namespace Failsafe.Scripts.EffectSystem
             _visorOffEmitter.Stop();
             _visorOnEmitter.Play();
             _visorLoopEmitter.Play();
-
+*/
             Debug.Log("VisorEffect активирован");
         }
 
@@ -84,13 +84,13 @@ namespace Failsafe.Scripts.EffectSystem
 
         public override void ClearEffect()
         {
-            if (_visorLoopEmitter != null)
+            /*if (_visorLoopEmitter != null)
             {
                 _visorLoopEmitter.Stop();
                 _visorOnEmitter.Stop();
                 _visorOffEmitter.Play();
             }
-
+*/
             // выключаем все подсветки
             
             if (_xrayObjects != null)

@@ -216,7 +216,7 @@ public class MusicZoneManager : MonoBehaviour
         lastTimelinePosMs = 0;
         playtimeSeconds = 0f;
 
-        Log($"[PlayMusic] '{eventRef.Path}' lenMs={currentEventLengthMs}");
+        //Log($"[PlayMusic] '{eventRef.Path}' lenMs={currentEventLengthMs}");
 
         if (fadeInDuration > 0f)
             StartCoroutine(FadeIn(currentMusicInstance, fadeInDuration));
