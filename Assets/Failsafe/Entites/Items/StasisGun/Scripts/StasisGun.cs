@@ -55,37 +55,13 @@ namespace Failsafe.Items
                 SoundUtils3D.Play(_stasisGunItem.gameObject, _data.GunshotSFX);
                 if (hit.collider != null)
                 {
-                    if (_isDefaultMode)
-                        DefaultMode(hit);
-                    else
-                        AltMode(hit);
+                    if (hit.collider.GetComponentInParent<Stasisable>() != null)
+                    {
+                        hit.collider.GetComponentInParent<Stasisable>().StasisHit(_data.StasisDuration, _isDefaultMode);
+                    }
                 }
             }
             else if (_energyContainer.IsEmpty()) SoundUtils3D.Play(_stasisGunItem.gameObject, _data.EmptyShotSFX);
-        }
-
-        void DefaultMode(RaycastHit hit)
-        {
-            if (hit.collider.GetComponent<Stasisable>() != null)
-            {
-                hit.collider.GetComponent<Stasisable>().StartStasis(_data.StasisDuration);
-            }
-            else if (hit.collider.GetComponentInParent<Enemy>() != null)
-            {
-                hit.collider.GetComponentInParent<Enemy>().DisableState(_data.StasisDuration);
-            }
-        }
-
-        void AltMode(RaycastHit hit)
-        {
-            if (hit.collider.GetComponent<Stasisable>() != null)
-            {
-                hit.collider.GetComponent<Stasisable>().StartStasisWithInertion(_data.StasisDuration);
-            }
-            else if (hit.collider.GetComponentInParent<Enemy>() != null)
-            {
-                hit.collider.GetComponentInParent<Enemy>().DisableState(_data.StasisDuration);
-            }
         }
 
         RaycastHit Raycast()
