@@ -73,11 +73,11 @@ MonoBehaviour:
     m_Bits: 57335
   tickInterval: 0.25
   maxTargetsPerTick: 64
-  initialRadius: 3
-  maxRadius: 1000
-  radiusGrowPerSec: 5
-  intensity: 5
-  intensityGrowPerSec: 0.5
+  initialRadius: 1
+  maxRadius: 10
+  radiusGrowPerSec: 0.01
+  intensity: 0.1
+  intensityGrowPerSec: 0.1
   mediumThreshold: 10
   strongThreshold: 25
   peakIntensity: 55
@@ -86,9 +86,9 @@ MonoBehaviour:
   extinguishAt: 0
   destroyOnExtinguish: 1
   extinguishFadeTime: 0
-  weakContactDps: 50
-  mediumContactDps: 250
-  strongContactDps: 400
+  weakContactDps: 1
+  mediumContactDps: 2
+  strongContactDps: 3
   dotBaseDuration: 1
   dotTickInterval: 1
   dotDpsPerIntensity: 8
