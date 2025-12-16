@@ -5,7 +5,7 @@
 			<value>Walker_Reboot</value>
 		</property>
 		<property name="outputFormat">
-			<value>1</value>
+			<value>2</value>
 		</property>
 		<relationship name="folder">
 			<destination>{ed3e122c-c269-41e5-950f-32be4a71c418}</destination>
@@ -172,6 +172,7 @@
 	<object class="MixerBusEffectChain" id="{51549385-4508-4d73-a8c3-e79297cefb8c}">
 		<relationship name="effects">
 			<destination>{54402a4d-2f57-48a2-adf8-327b24861444}</destination>
+			<destination>{f796834b-ff28-4407-8fe5-daad38934550}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{560202ce-3333-4661-8b4a-daa11d244af6}" />
@@ -220,6 +221,7 @@
 	</object>
 	<object class="MixerBusPanner" id="{8720b8ce-4feb-481c-8042-5157a797be9b}" />
 	<object class="MixerBusFader" id="{54402a4d-2f57-48a2-adf8-327b24861444}" />
+	<object class="SpatialiserEffect" id="{f796834b-ff28-4407-8fe5-daad38934550}" />
 	<object class="MixerBusFader" id="{9c02dbc8-021b-4e1f-b8e0-86fdfe328a0a}" />
 	<object class="MixerBusFader" id="{e49e2251-d9b7-4daa-9935-fd3090977552}" />
 	<object class="PitchShifterEffect" id="{cbc8926e-c25b-4fe8-b030-52bfd8194ac4}">

@@ -5,7 +5,7 @@
 			<value>Walker_Laser_Shot</value>
 		</property>
 		<property name="outputFormat">
-			<value>1</value>
+			<value>2</value>
 		</property>
 		<relationship name="folder">
 			<destination>{ed3e122c-c269-41e5-950f-32be4a71c418}</destination>
@@ -168,7 +168,6 @@
 		<property name="length">
 			<value>0.9764822871348664</value>
 		</property>
-		<property name="name" />
 		<relationship name="commandTarget">
 			<destination>{4b4f202e-b4b9-4589-8c19-4346ee81890b}</destination>
 		</relationship>
@@ -374,6 +373,7 @@
 	<object class="MixerBusEffectChain" id="{ae45344e-0c6e-4349-9812-9bdaee774fd1}">
 		<relationship name="effects">
 			<destination>{115d7bfa-e3fa-4b5c-b11a-074dbc0b3652}</destination>
+			<destination>{48e5cf35-2834-49c3-9d55-3dfb3b6584ae}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{4f4e8484-0469-401d-b931-9a915fdebe25}" />
@@ -500,6 +500,7 @@
 		</relationship>
 	</object>
 	<object class="MixerBusFader" id="{115d7bfa-e3fa-4b5c-b11a-074dbc0b3652}" />
+	<object class="SpatialiserEffect" id="{48e5cf35-2834-49c3-9d55-3dfb3b6584ae}" />
 	<object class="AutomationPoint" id="{600e9bb9-f88d-4ca4-89da-93b6c3873d75}">
 		<property name="position">
 			<value>0.40000000000000002</value>

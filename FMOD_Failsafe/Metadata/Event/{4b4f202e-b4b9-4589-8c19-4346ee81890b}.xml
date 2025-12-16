@@ -5,7 +5,7 @@
 			<value>Walker_Overheat</value>
 		</property>
 		<property name="outputFormat">
-			<value>1</value>
+			<value>2</value>
 		</property>
 		<relationship name="folder">
 			<destination>{ed3e122c-c269-41e5-950f-32be4a71c418}</destination>
@@ -158,6 +158,7 @@
 	<object class="MixerBusEffectChain" id="{be737b97-964d-4628-a080-3f2d44a403f4}">
 		<relationship name="effects">
 			<destination>{28c5f9b2-ae3d-4e00-bc40-509300df3bb9}</destination>
+			<destination>{0b5e6d8b-9f70-49af-8a1c-875ca404080c}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{fe013d16-aece-425c-badb-1b719269eaf5}" />
@@ -207,6 +208,7 @@
 	</object>
 	<object class="MixerBusPanner" id="{7bd6a0de-0ca3-48e8-9e9c-b0c7cb1e16e8}" />
 	<object class="MixerBusFader" id="{28c5f9b2-ae3d-4e00-bc40-509300df3bb9}" />
+	<object class="SpatialiserEffect" id="{0b5e6d8b-9f70-49af-8a1c-875ca404080c}" />
 	<object class="MixerBusFader" id="{e1eddc81-664c-4b42-9e77-66003a72968c}" />
 	<object class="PitchShifterEffect" id="{bc1afa0f-6cd6-4b8a-bd41-11a7477948d7}">
 		<property name="pitch">

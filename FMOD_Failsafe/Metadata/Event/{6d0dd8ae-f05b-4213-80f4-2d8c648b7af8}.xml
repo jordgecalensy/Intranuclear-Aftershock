@@ -5,7 +5,7 @@
 			<value>Walker_Laser_Collision</value>
 		</property>
 		<property name="outputFormat">
-			<value>0</value>
+			<value>2</value>
 		</property>
 		<relationship name="folder">
 			<destination>{ed3e122c-c269-41e5-950f-32be4a71c418}</destination>
@@ -133,6 +133,7 @@
 	<object class="MixerBusEffectChain" id="{37c321f7-9e79-4063-9ee0-f76bc4555144}">
 		<relationship name="effects">
 			<destination>{35bc6fd9-7531-46be-bb32-4318f530c146}</destination>
+			<destination>{9ddc3714-4a1d-44e7-beec-a867437dfc32}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{43c76a49-5d9d-42c7-a83f-aa46a39d09ed}" />
@@ -144,5 +145,6 @@
 	</object>
 	<object class="MixerBusPanner" id="{d4d7ec80-604a-4c43-ba7d-61ef10a51f31}" />
 	<object class="MixerBusFader" id="{35bc6fd9-7531-46be-bb32-4318f530c146}" />
+	<object class="SpatialiserEffect" id="{9ddc3714-4a1d-44e7-beec-a867437dfc32}" />
 	<object class="MixerBusFader" id="{35de4dbd-beb5-4cc1-9113-aa9f97cae492}" />
 </objects>

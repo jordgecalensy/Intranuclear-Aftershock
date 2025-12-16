@@ -5,7 +5,7 @@
 			<value>Walker_Idle_Scaner</value>
 		</property>
 		<property name="outputFormat">
-			<value>1</value>
+			<value>2</value>
 		</property>
 		<relationship name="folder">
 			<destination>{ed3e122c-c269-41e5-950f-32be4a71c418}</destination>
@@ -132,6 +132,7 @@
 	<object class="MixerBusEffectChain" id="{55a026eb-80d0-4357-896b-36d18e0f735c}">
 		<relationship name="effects">
 			<destination>{618bf4ad-32a8-43eb-9501-ccb6add09a5b}</destination>
+			<destination>{0aef61c2-658b-41c6-9dab-d06ddd05987a}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{42899434-cede-46f2-acb2-9ea3e07ee06c}" />
@@ -151,5 +152,6 @@
 	</object>
 	<object class="MixerBusPanner" id="{ab64f38d-ba04-4f93-ad84-ab599d59ce3d}" />
 	<object class="MixerBusFader" id="{618bf4ad-32a8-43eb-9501-ccb6add09a5b}" />
+	<object class="SpatialiserEffect" id="{0aef61c2-658b-41c6-9dab-d06ddd05987a}" />
 	<object class="MixerBusFader" id="{c92b51d7-b6c7-48ae-8764-b279d05f17cd}" />
 </objects>

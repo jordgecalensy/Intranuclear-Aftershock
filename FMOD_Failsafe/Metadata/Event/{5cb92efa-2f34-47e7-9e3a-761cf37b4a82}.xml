@@ -5,7 +5,7 @@
 			<value>Walker_Laser_Accumulate</value>
 		</property>
 		<property name="outputFormat">
-			<value>1</value>
+			<value>2</value>
 		</property>
 		<relationship name="folder">
 			<destination>{ed3e122c-c269-41e5-950f-32be4a71c418}</destination>
@@ -133,6 +133,7 @@
 	<object class="MixerBusEffectChain" id="{eb4d4c25-cb3c-4a1e-9168-5ede137036b4}">
 		<relationship name="effects">
 			<destination>{d9984b80-9106-4d98-99a9-16a87b647c32}</destination>
+			<destination>{e33c1ede-eb0f-40de-99fc-87d9dbe5f8a0}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{32a5d4ce-4077-44a3-a90b-5c53b988695d}" />
@@ -164,5 +165,6 @@
 	</object>
 	<object class="MixerBusPanner" id="{61bbaee0-5485-4672-a165-b7e18d0c32f6}" />
 	<object class="MixerBusFader" id="{d9984b80-9106-4d98-99a9-16a87b647c32}" />
+	<object class="SpatialiserEffect" id="{e33c1ede-eb0f-40de-99fc-87d9dbe5f8a0}" />
 	<object class="MixerBusFader" id="{f4a45915-ed48-4b48-becb-b023fa346050}" />
 </objects>

@@ -5,7 +5,7 @@
 			<value>Walker_Servo</value>
 		</property>
 		<property name="outputFormat">
-			<value>0</value>
+			<value>2</value>
 		</property>
 		<relationship name="folder">
 			<destination>{ed3e122c-c269-41e5-950f-32be4a71c418}</destination>
@@ -161,6 +161,7 @@
 	<object class="MixerBusEffectChain" id="{16b2fe8b-db47-4a63-88a1-be93ec228c90}">
 		<relationship name="effects">
 			<destination>{803846ce-63be-4bc3-a64b-33df70b870e6}</destination>
+			<destination>{a9e11116-8796-4766-a614-c3b3d11d116f}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{f6956cc6-f662-4c29-ae9a-86df8315a891}" />
@@ -272,5 +273,6 @@
 	</object>
 	<object class="MixerBusPanner" id="{7169dea7-ddb4-4ba7-880f-4a3aa92769d4}" />
 	<object class="MixerBusFader" id="{803846ce-63be-4bc3-a64b-33df70b870e6}" />
+	<object class="SpatialiserEffect" id="{a9e11116-8796-4766-a614-c3b3d11d116f}" />
 	<object class="MixerBusFader" id="{5af6f778-3bf0-4ed0-a24a-4e8b954aced0}" />
 </objects>

@@ -5,7 +5,7 @@
 			<value>Walker_State_Voice</value>
 		</property>
 		<property name="outputFormat">
-			<value>1</value>
+			<value>2</value>
 		</property>
 		<relationship name="folder">
 			<destination>{ed3e122c-c269-41e5-950f-32be4a71c418}</destination>
@@ -71,7 +71,11 @@
 			<destination>{b331f060-d98a-4c4c-bcaa-9fc0e78aab52}</destination>
 		</relationship>
 	</object>
-	<object class="Timeline" id="{82f66e3d-aa13-4f44-ba02-00fa2f65c24c}" />
+	<object class="Timeline" id="{82f66e3d-aa13-4f44-ba02-00fa2f65c24c}">
+		<property name="isProxyEnabled">
+			<value>false</value>
+		</property>
+	</object>
 	<object class="ParameterProxy" id="{43527383-25aa-4d2d-8ff6-d6dae0ea610b}">
 		<relationship name="modules">
 			<destination>{8cb0e6f1-b023-415a-b61a-e140ca09c160}</destination>
@@ -151,6 +155,7 @@
 	<object class="MixerBusEffectChain" id="{abd6b844-9591-410b-bc5e-4d0b61062460}">
 		<relationship name="effects">
 			<destination>{40939e17-e464-423b-b98c-323158ff01cd}</destination>
+			<destination>{2c5bb6ac-1f5d-4d0a-a141-32918ffdd31a}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{4c54dc19-d301-489a-8532-be1d7ac77ce2}" />
@@ -202,5 +207,6 @@
 	</object>
 	<object class="MixerBusPanner" id="{3bdce673-c7b8-4996-a182-b739467d15fa}" />
 	<object class="MixerBusFader" id="{40939e17-e464-423b-b98c-323158ff01cd}" />
+	<object class="SpatialiserEffect" id="{2c5bb6ac-1f5d-4d0a-a141-32918ffdd31a}" />
 	<object class="MixerBusFader" id="{0609f847-39c8-46b0-8058-6e6587172dbe}" />
 </objects>

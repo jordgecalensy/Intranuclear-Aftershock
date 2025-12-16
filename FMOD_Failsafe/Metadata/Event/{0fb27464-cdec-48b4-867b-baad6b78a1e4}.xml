@@ -5,7 +5,7 @@
 			<value>Walker_Idle_Foley</value>
 		</property>
 		<property name="outputFormat">
-			<value>0</value>
+			<value>2</value>
 		</property>
 		<relationship name="folder">
 			<destination>{ed3e122c-c269-41e5-950f-32be4a71c418}</destination>
@@ -139,6 +139,7 @@
 	<object class="MixerBusEffectChain" id="{d6cdae95-7817-4db7-8cdd-4c578f1b8d57}">
 		<relationship name="effects">
 			<destination>{03b9a82a-6a37-4140-acc3-d01c91fed888}</destination>
+			<destination>{23657e7c-7ec2-4c44-86c6-ef242a8ff33e}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{c533893c-f4b7-46ec-9e9f-d3898839553a}" />
@@ -200,5 +201,6 @@
 	</object>
 	<object class="MixerBusPanner" id="{7fa80a5c-487b-4d5b-ab4b-6eaa2c886ad3}" />
 	<object class="MixerBusFader" id="{03b9a82a-6a37-4140-acc3-d01c91fed888}" />
+	<object class="SpatialiserEffect" id="{23657e7c-7ec2-4c44-86c6-ef242a8ff33e}" />
 	<object class="MixerBusFader" id="{cd647521-f34d-4293-8b6a-3748402dd9f7}" />
 </objects>
