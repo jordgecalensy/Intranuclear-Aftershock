@@ -147,8 +147,8 @@ Transform:
   m_GameObject: {fileID: 68805808}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -1.74}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.9, y: 0.9, z: 0.9}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1401393208}
@@ -168,7 +168,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -351,10 +351,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26f6c3ddd043d0746944024b53cd00b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  movable: 1
   targetPoint: {fileID: 518994560}
   moveSpeed: 3
+  moveInFixedUpdate: 1
+  canDealDamage: 1
+  damagePlayers: 1
+  damageEnemies: 0
+  playerLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  enemyLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  playerTag: Player
+  enemyTag: Enemy
   damageAmount: 10
   damageInterval: 1
+  damageTrigger: {fileID: 0}
+  autoAddKinematicRigidbody: 1
+  stickPlayerOnTop: 1
+  topTolerance: 0.15
+  stickOnlyPlayers: 1
+  freezeByStasis: 1
+  freezeAlsoDamage: 1
 --- !u!65 &189938438
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -692,10 +712,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26f6c3ddd043d0746944024b53cd00b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  movable: 1
   targetPoint: {fileID: 343318144}
   moveSpeed: 3
+  moveInFixedUpdate: 1
+  canDealDamage: 1
+  damagePlayers: 1
+  damageEnemies: 0
+  playerLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  enemyLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  playerTag: Player
+  enemyTag: Enemy
   damageAmount: 10
   damageInterval: 1
+  damageTrigger: {fileID: 0}
+  autoAddKinematicRigidbody: 1
+  stickPlayerOnTop: 1
+  topTolerance: 0.15
+  stickOnlyPlayers: 1
+  freezeByStasis: 1
+  freezeAlsoDamage: 1
 --- !u!65 &508553532
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1505,10 +1545,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26f6c3ddd043d0746944024b53cd00b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  movable: 1
   targetPoint: {fileID: 1389957065}
   moveSpeed: 3
+  moveInFixedUpdate: 1
+  canDealDamage: 1
+  damagePlayers: 1
+  damageEnemies: 0
+  playerLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  enemyLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  playerTag: Player
+  enemyTag: Enemy
   damageAmount: 10
   damageInterval: 1
+  damageTrigger: {fileID: 0}
+  autoAddKinematicRigidbody: 1
+  stickPlayerOnTop: 1
+  topTolerance: 0.15
+  stickOnlyPlayers: 1
+  freezeByStasis: 1
+  freezeAlsoDamage: 1
 --- !u!65 &868102793
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5019,6 +5079,9 @@ GameObject:
   - component: {fileID: 1401393206}
   - component: {fileID: 1401393205}
   - component: {fileID: 1401393204}
+  - component: {fileID: 1401393210}
+  - component: {fileID: 1401393209}
+  - component: {fileID: 1401393211}
   m_Layer: 0
   m_Name: Cube (7)
   m_TagString: Untagged
@@ -5038,10 +5101,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26f6c3ddd043d0746944024b53cd00b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  movable: 1
   targetPoint: {fileID: 300923535}
   moveSpeed: 3
+  moveInFixedUpdate: 1
+  canDealDamage: 1
+  damagePlayers: 1
+  damageEnemies: 0
+  playerLayers:
+    serializedVersion: 2
+    m_Bits: 64
+  enemyLayers:
+    serializedVersion: 2
+    m_Bits: 1024
+  playerTag: Player
+  enemyTag: Enemy
   damageAmount: 10
   damageInterval: 1
+  damageTrigger: {fileID: 1401393205}
+  autoAddKinematicRigidbody: 1
+  stickPlayerOnTop: 1
+  topTolerance: 0.15
+  stickOnlyPlayers: 1
+  freezeByStasis: 1
+  freezeAlsoDamage: 1
 --- !u!65 &1401393205
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5132,6 +5215,73 @@ Transform:
   - {fileID: 68805809}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1401393209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1401393202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d40d05721fa59684fa54b97a814b02e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stasisEnd:
+    Guid:
+      Data1: 0
+      Data2: 0
+      Data3: 0
+      Data4: 0
+    Path: 
+  _stasisMaterial: {fileID: -9103484930961366303, guid: 83aa1803a222fff43a016070240b64f3, type: 3}
+--- !u!114 &1401393210
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1401393202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a6610d2e704f1648819acc8d7460285, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CollisionTag: 
+  EventReference:
+    Guid:
+      Data1: 0
+      Data2: 0
+      Data3: 0
+      Data4: 0
+    Path: 
+  Event: 
+  EventPlayTrigger: 0
+  EventStopTrigger: 0
+  AllowFadeout: 1
+  TriggerOnce: 0
+  Preload: 0
+  NonRigidbodyVelocity: 0
+  Params: []
+  OverrideAttenuation: 0
+  OverrideMinDistance: -1
+  OverrideMaxDistance: -1
+--- !u!208 &1401393211
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1401393202}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0}
+  m_TimeToStationary: 0.5
 --- !u!1001 &1510287871
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5644,10 +5794,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26f6c3ddd043d0746944024b53cd00b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  movable: 1
   targetPoint: {fileID: 1974147827}
   moveSpeed: 3
+  moveInFixedUpdate: 1
+  canDealDamage: 1
+  damagePlayers: 1
+  damageEnemies: 0
+  playerLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  enemyLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  playerTag: Player
+  enemyTag: Enemy
   damageAmount: 10
   damageInterval: 1
+  damageTrigger: {fileID: 0}
+  autoAddKinematicRigidbody: 1
+  stickPlayerOnTop: 1
+  topTolerance: 0.15
+  stickOnlyPlayers: 1
+  freezeByStasis: 1
+  freezeAlsoDamage: 1
 --- !u!65 &1929181851
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5845,6 +6015,63 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &2003292487
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3262717108679775886, guid: 30ac8d4a14b3a4b4a9c41f22e5b3e3b8, type: 3}
+      propertyPath: m_Name
+      value: StasisGun
+      objectReference: {fileID: 0}
+    - target: {fileID: 5575020062436731130, guid: 30ac8d4a14b3a4b4a9c41f22e5b3e3b8, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1.1632867
+      objectReference: {fileID: 0}
+    - target: {fileID: 5575020062436731130, guid: 30ac8d4a14b3a4b4a9c41f22e5b3e3b8, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.082999706
+      objectReference: {fileID: 0}
+    - target: {fileID: 5575020062436731130, guid: 30ac8d4a14b3a4b4a9c41f22e5b3e3b8, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -15.822765
+      objectReference: {fileID: 0}
+    - target: {fileID: 5575020062436731130, guid: 30ac8d4a14b3a4b4a9c41f22e5b3e3b8, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5575020062436731130, guid: 30ac8d4a14b3a4b4a9c41f22e5b3e3b8, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5575020062436731130, guid: 30ac8d4a14b3a4b4a9c41f22e5b3e3b8, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5575020062436731130, guid: 30ac8d4a14b3a4b4a9c41f22e5b3e3b8, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5575020062436731130, guid: 30ac8d4a14b3a4b4a9c41f22e5b3e3b8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5575020062436731130, guid: 30ac8d4a14b3a4b4a9c41f22e5b3e3b8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5575020062436731130, guid: 30ac8d4a14b3a4b4a9c41f22e5b3e3b8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 30ac8d4a14b3a4b4a9c41f22e5b3e3b8, type: 3}
 --- !u!1 &2057237384
 GameObject:
   m_ObjectHideFlags: 0
@@ -6119,6 +6346,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Fire_test
       objectReference: {fileID: 0}
+    - target: {fileID: 1038033941714168738, guid: 7c66916875205ff4da5fb2ec27a3e046, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6036416342203293477, guid: 7c66916875205ff4da5fb2ec27a3e046, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -6195,4 +6426,5 @@ SceneRoots:
   - {fileID: 508553535}
   - {fileID: 343318144}
   - {fileID: 9190895997304805818}
-  - {fileID: 1677172326}
+  - {fileID: 3325073637892267410}
+  - {fileID: 2003292487}
