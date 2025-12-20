@@ -73,27 +73,27 @@ MonoBehaviour:
     m_Bits: 57335
   tickInterval: 0.25
   maxTargetsPerTick: 64
-  initialRadius: 1
-  maxRadius: 10
-  radiusGrowPerSec: 0.01
-  intensity: 0.1
-  intensityGrowPerSec: 0.1
-  mediumThreshold: 10
-  strongThreshold: 25
-  peakIntensity: 55
-  sustainIntensity: 1.2
-  burnoutDecayPerSec: 0.5
+  initialRadius: 4.5
+  maxRadius: 9
+  radiusGrowPerSec: 0.03
+  intensity: 3
+  intensityGrowPerSec: 0.02
+  mediumThreshold: 7
+  strongThreshold: 12
+  peakIntensity: 15
+  sustainIntensity: 2
+  burnoutDecayPerSec: 0.01
   extinguishAt: 0
   destroyOnExtinguish: 1
   extinguishFadeTime: 0
-  weakContactDps: 1
-  mediumContactDps: 2
-  strongContactDps: 3
-  dotBaseDuration: 1
-  dotTickInterval: 1
-  dotDpsPerIntensity: 8
-  mediumDotIntensity: 1
-  strongDotIntensity: 2
+  weakContactDps: 8
+  mediumContactDps: 15
+  strongContactDps: 25
+  dotBaseDuration: 3
+  dotTickInterval: 0.4
+  dotDpsPerIntensity: 6
+  mediumDotIntensity: 10
+  strongDotIntensity: 15
   enableSpreading: 0
   firePrefab: {fileID: 619633842068393331}
   spreadEvery: 10
@@ -190,6 +190,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6036416342203293477}
     m_Modifications:
+    - target: {fileID: 1269116497251491764, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
+      propertyPath: ShapeModule.angle
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 1269116497251491764, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
+      propertyPath: ShapeModule.radius.value
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 1269116497251491764, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
+      propertyPath: InitialModule.startSize.scalar
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 1269116497251491764, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
+      propertyPath: InitialModule.startSize.minScalar
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 1269116497251491764, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
+      propertyPath: InitialModule.startLifetime.minScalar
+      value: 1.4
+      objectReference: {fileID: 0}
     - target: {fileID: 4813742185296152605, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
       propertyPath: m_Name
       value: Fire
@@ -200,11 +220,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6781961821943565790, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.409
+      value: 0.74
       objectReference: {fileID: 0}
     - target: {fileID: 6781961821943565790, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.1849995
+      value: 0.42
       objectReference: {fileID: 0}
     - target: {fileID: 6781961821943565790, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
       propertyPath: m_LocalRotation.w
