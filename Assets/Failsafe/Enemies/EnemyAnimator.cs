@@ -14,8 +14,6 @@ public class EnemyAnimator
 
     private bool _isTurning = false;
     private bool _waitingForTurnToFinish = false;
-    private bool _inCooldown = false;
-    private bool _inAttack = false;
     private bool _wasGrounded = true;
     private bool _wasOnLink = false;
 
@@ -23,6 +21,23 @@ public class EnemyAnimator
     private readonly int _idleAnimationCount = 3; // Количество ваших idle анимаций
     private bool _isIdleAnimationPlaying = false;
     // --------------------------------------------
+    private static readonly int IsAttackingHash = Animator.StringToHash("IsAttacking");
+    private static readonly int IsReloadingHash = Animator.StringToHash("IsReloading");
+    
+    public void SetCombatState(bool attacking, bool reloading)
+    {
+        // взаимно исключаем
+        if (attacking) reloading = false;
+        if (reloading) attacking = false;
+
+        _animator.SetBool(IsAttackingHash, attacking);
+        _animator.SetBool(IsReloadingHash, reloading);
+    }
+    
+    public void SetAttacking(bool value) => SetCombatState(value, false);
+    public void SetReloading(bool value) => SetCombatState(false, value);
+    public void ClearCombat() => SetCombatState(false, false);
+
 
     public EnemyAnimator( NavMeshAgent navMeshAgent, Animator animator, Transform transform, bool useRootMotion)
     {
@@ -172,7 +187,7 @@ public class EnemyAnimator
     public bool IsInAction()
     {
         var state = _animator.GetCurrentAnimatorStateInfo(0);
-        return (state.IsTag("Attack") || state.IsTag("Reload")) && _inAttack;
+        return (state.IsTag("Attack") || state.IsTag("Reload"));
     }
 
     public void TryReload()
@@ -182,7 +197,6 @@ public class EnemyAnimator
 
     public void isReloading(bool isReloading)
     {
-        _inCooldown = isReloading;
         _animator.SetBool("isReloading", isReloading);
     }
 
