@@ -126,6 +126,9 @@
 	<object class="MixerBusPanner" id="{f4bd0762-faa5-4486-94ee-478324775589}" />
 	<object class="MixerBusFader" id="{fef01a68-71d0-44e2-9ff7-58e0a192e3dc}" />
 	<object class="PluginEffect" id="{ef1aad29-1756-48d0-9756-ee853e0b30b3}">
+		<property name="bypass">
+			<value>true</value>
+		</property>
 		<relationship name="plugin">
 			<destination>{29d3dfa5-6c87-40eb-ab0f-cf8a923830bc}</destination>
 		</relationship>
@@ -177,7 +180,6 @@
 		<property name="name">
 			<value>SourcePos</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-2</value>
 		</property>
@@ -186,7 +188,6 @@
 		<property name="name">
 			<value>OverallGain</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-1</value>
 		</property>
@@ -515,7 +516,6 @@
 		<property name="name">
 			<value>SimOutputs</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>0</value>
 		</property>
@@ -532,7 +532,6 @@
 		<property name="name">
 			<value>DistRange</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-6</value>
 		</property>

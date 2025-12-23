@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="ParameterPreset" id="{ec3b2185-235a-4344-a69e-0d2cc4dff26a}">
+		<property name="name">
+			<value>Enemy_Movement_State</value>
+		</property>
+		<relationship name="folder">
+			<destination>{264c946c-a878-4476-983c-812b0ad0b90d}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{9a768791-eec9-485a-80c7-2e623f193f3f}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{9a768791-eec9-485a-80c7-2e623f193f3f}">
+		<property name="parameterType">
+			<value>1</value>
+		</property>
+		<property name="maximum">
+			<value>2</value>
+		</property>
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+		<property name="isExposedRecursively">
+			<value>false</value>
+		</property>
+	</object>
+</objects>
