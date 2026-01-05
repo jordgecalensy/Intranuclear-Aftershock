@@ -1,37 +1,65 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
-/// Компонент, который вызывает стан врага, при столкновении врага с другими объектами
+/// Компонент, обрабатывающий физические столкновения.
+/// Вызывает состояние StunnedState при сильном ударе или поворачивает врага при слабом.
 /// </summary>
 public class EnemyPhysicsStunComponent : MonoBehaviour
 {
     private Enemy_ScriptableObject _physicsStunData;
-    private Collider[] _enemyColliders;
     private Enemy _enemy;
-    private EnemyNavMeshActions _enemyNavMeshActions;
+
     void Start()
     {
-        _enemyColliders = GetComponentsInChildren<Collider>();
         _enemy = GetComponent<Enemy>();
-        _physicsStunData = _enemy.EnemyConfig;
-        _enemyNavMeshActions = _enemy.EnemyNavMesh;
+        // EnemyNavMeshActions здесь больше не нужен, так как мы не используем навигацию для реакции на физику
+        if (_enemy != null)
+        {
+            _physicsStunData = _enemy.EnemyConfig;
+        }
     }
 
     void OnCollisionEnter(Collision collision)
     {
+        // Проверка на корректность данных столкновения
+        if (_enemy == null || _physicsStunData == null || collision.rigidbody == null) return;
+
+        // Расчет "силы" стана на основе кинетической энергии
         var stunTime = Mathf.Pow(collision.relativeVelocity.magnitude, 2) * collision.rigidbody.mass * _physicsStunData.StunMultiplier;
-        Vector3 ImpactDirection = collision.impulse.normalized * -5f; //5 случайное значение, нам важно само направление
+        
+        // Вектор направления удара (откуда прилетело)
+        // -5f — инвертируем импульс, чтобы враг повернулся лицом к опасности
+        Vector3 impactDirection = collision.impulse.normalized * -5f; 
+
         if (stunTime > _physicsStunData.MinStunTime)
         {
+            // Ограничиваем максимальное время стана
             stunTime = Mathf.Min(stunTime, (float)_physicsStunData.MaxStunTime);
-            _enemy.StunnedState(ImpactDirection, stunTime / 1000);
-            Debug.Log("Стан: " + stunTime / 1000 + "с");
+            
+            // Передаем направление и время в Enemy (который переведет StateMachine)
+            _enemy.StunnedState(impactDirection, stunTime / 1000f);
+            
+            Debug.Log($"Physics Stun applied: {stunTime / 1000f}s");
         }
         else
         {
-            _enemyNavMeshActions.RotateToPoint(transform.position + ImpactDirection);
+            // Слабый удар: просто поворачиваемся к источнику угрозы
+            RotateToImpact(impactDirection);
+        }
+    }
+
+    /// <summary>
+    /// Локальный метод поворота к источнику удара.
+    /// Используется мгновенный поворот, так как это реакция на физический импульс.
+    /// </summary>
+    private void RotateToImpact(Vector3 direction)
+    {
+        direction.y = 0; // Игнорируем наклон по вертикали
+        
+        if (direction.sqrMagnitude > 0.001f)
+        {
+            Quaternion lookRotation = Quaternion.LookRotation(direction);
+            transform.rotation = lookRotation;
         }
     }
 }

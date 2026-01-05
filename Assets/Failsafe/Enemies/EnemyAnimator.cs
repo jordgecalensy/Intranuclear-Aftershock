@@ -1,243 +1,124 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.AI;
 
+/// <summary>
+/// VIEW: Отвечает ТОЛЬКО за параметры аниматора.
+/// Получает данные от EnemyMovement.
+/// </summary>
 public class EnemyAnimator
 {
-    private readonly NavMeshAgent _navMeshAgent;
     private readonly Animator _animator;
-    private readonly Transform _transform;
-    private EnemyAudioManager _audioManager;
-    private readonly MonoBehaviour _coroutineRunner; // Для запуска корутин
-    private Coroutine _traversalCoroutine = null; // Ссылка на активную корутину
-    private readonly bool _useRootMotion;
+    private readonly EnemyMovement _movement;
 
-    private bool _isTurning = false;
-    private bool _waitingForTurnToFinish = false;
-    private bool _wasGrounded = true;
-    private bool _wasOnLink = false;
-
-    // --- Поля для случайных Idle анимаций ---
-    private readonly int _idleAnimationCount = 3; // Количество ваших idle анимаций
-    private bool _isIdleAnimationPlaying = false;
-    // --------------------------------------------
+    // Хеши
+    private static readonly int SpeedHash = Animator.StringToHash("Speed");
+    private static readonly int TurnAngleHash = Animator.StringToHash("TurnAngle");
     private static readonly int IsAttackingHash = Animator.StringToHash("IsAttacking");
     private static readonly int IsReloadingHash = Animator.StringToHash("IsReloading");
-    
-    public void SetCombatState(bool attacking, bool reloading)
+    private static readonly int IdleIndexHash = Animator.StringToHash("IdleIndex");
+    private static readonly int PlayIdleHash = Animator.StringToHash("PlayIdle");
+    private static readonly int AlertHash = Animator.StringToHash("Alert");
+    // Сглаживание
+    private float _currentTurnAngle;
+    private float _turnVelocity;
+    private const float TurnSmoothTime = 0.1f;
+
+    // Idle
+    private readonly int _idleAnimationCount = 3;
+    private bool _isIdlePlaying;
+
+    public EnemyAnimator(Animator animator, EnemyMovement movement)
     {
-        // взаимно исключаем
-        if (attacking) reloading = false;
-        if (reloading) attacking = false;
-
-        _animator.SetBool(IsAttackingHash, attacking);
-        _animator.SetBool(IsReloadingHash, reloading);
-    }
-    
-    public void SetAttacking(bool value) => SetCombatState(value, false);
-    public void SetReloading(bool value) => SetCombatState(false, value);
-    public void ClearCombat() => SetCombatState(false, false);
-
-
-    public EnemyAnimator( NavMeshAgent navMeshAgent, Animator animator, Transform transform, bool useRootMotion)
-    {
-        _navMeshAgent = navMeshAgent;
         _animator = animator;
-        _transform = transform;
-        _useRootMotion = useRootMotion;
-        _navMeshAgent.updatePosition = false;
-        _navMeshAgent.updateRotation = false;
+        _movement = movement;
     }
 
     public void UpdateAnimator()
     {
         if (IsInAction())
         {
-            _isIdleAnimationPlaying = false; // Сбрасываем флаг, когда враг атакует или перезаряжается
+            _isIdlePlaying = false;
             return;
         }
 
+        UpdateLocomotion();
         HandleIdleAnimations();
+    }
 
-        if (_useRootMotion)
+    private void UpdateLocomotion()
+    {
+        // 1. Угол: Вычисляем визуальный наклон тела
+        // Берем вектор желаемой скорости от Мотора
+        Vector3 targetDir = _movement.DesiredVelocity;
+        float rawAngle = 0f;
+        
+        if (targetDir.sqrMagnitude > 0.1f)
         {
-            if (_isTurning)
-            {
-                var state = _animator.GetCurrentAnimatorStateInfo(0);
-
-                if (state.IsTag("Turn") && state.normalizedTime >= 0.98f)
-                {
-                    _isTurning = false;
-                    _animator.SetFloat("TurnAngle", 0f);
-                }
-
-                _animator.SetFloat("Speed", 0f);
-                return;
-            }
-
-            // Вход в поворот
-            if (ShouldStartTurn(out float clampedAngle))
-            {
-                _isTurning = true;
-                _animator.SetFloat("TurnAngle", clampedAngle);
-                _animator.CrossFade("TurnInPlace", 0.1f);
-                _animator.SetFloat("Speed", 0f);
-                return;
-            }
+            rawAngle = Vector3.SignedAngle(_animator.transform.forward, targetDir, Vector3.up);
         }
 
-        UpdateSpeedBlend();
-    }
-    private bool ShouldStartTurn(out float clampedAngle)
-    {
-        clampedAngle = 0f;
+        _currentTurnAngle = Mathf.SmoothDampAngle(_currentTurnAngle, rawAngle, ref _turnVelocity, TurnSmoothTime);
+        _animator.SetFloat(TurnAngleHash, Mathf.Clamp(_currentTurnAngle, -90f, 90f));
 
-        Vector3 desiredDirection = _navMeshAgent.desiredVelocity;
-        if (desiredDirection.sqrMagnitude < 0.01f)
-            return false;
-
-        if (_navMeshAgent.velocity.magnitude > 0.1f)
-            return false;
-
-        float signedAngle = Vector3.SignedAngle(_transform.forward, desiredDirection.normalized, Vector3.up);
-
-        if (Mathf.Abs(signedAngle) < 25f)
-            return false; 
-
-        clampedAngle = Mathf.Clamp(signedAngle, -180f, 180f);
-        return true;
-    }
-    
-    public void ApplyRoot()
-    {
-        _animator.applyRootMotion = true;
-
-    }
-   
-
-    private void UpdateSpeedBlend()
-    {
-        if (_isTurning)
+        // 2. Скорость: 
+        // Если Мотор говорит "Я кручусь на месте", мы ставим Speed=1, чтобы BlendTree играл Turn Animation
+        if (_movement.IsRotatingInPlace)
         {
-            _animator.SetFloat("Speed", 0f);
-            return;
-        }
-
-        float velocity = _navMeshAgent.velocity.magnitude;
-        
-        _animator.SetFloat("Speed", velocity);
-    }
-
-
-    public void ApplyRootMotion()
-    {
-        
-
-        // Получаем текущую позицию агента на навмеш
-        Vector3 agentNextPos = _navMeshAgent.nextPosition;
-
-        // Считаем дельту из root motion
-        Vector3 rootDelta = _animator.deltaPosition;
-        rootDelta.y = 0f;
-
-        // Предлагаемую новую позицию
-        Vector3 proposedPos = _transform.position + rootDelta;
-
-        // Обновляем позицию агента
-        _navMeshAgent.nextPosition = proposedPos;
-
-        // Перемещаем трансформ только в пределах навмеша
-        _transform.position = _navMeshAgent.nextPosition;
-
-        // Поворот
-        if (_isTurning)
-        {
-            _transform.rotation = _animator.rootRotation;
+            _animator.SetFloat(SpeedHash, 1f); 
         }
         else
         {
-            Vector3 desiredVelocity = _navMeshAgent.desiredVelocity;
-            if (desiredVelocity.sqrMagnitude > 0.001f)
-            {
-                Quaternion targetRotation = Quaternion.LookRotation(desiredVelocity.normalized);
-                _transform.rotation = Quaternion.Slerp(_transform.rotation, targetRotation, Time.deltaTime * 10f);
-            }
+            _animator.SetFloat(SpeedHash, _movement.CurrentSpeed);
         }
     }
 
-    public void TryStun()
+    public void OnAnimatorMove()
     {
-        _animator.SetTrigger("Stun");
+        // Передаем дельту перемещения в Мотор
+        _movement.ApplyRootMotion(_animator.deltaPosition);
     }
 
-    public void isInStun(bool state)
-    {
-        _animator.SetBool("isInStun", state);
-    }
-    public void TryAttack()
-    {
-        _animator.SetTrigger("Attack");
-    }
-
-    public void TryDeath()
-    {
-        _animator.SetTrigger("Die");
-    }
-
-    public bool IsInAction()
-    {
-        var state = _animator.GetCurrentAnimatorStateInfo(0);
-        return (state.IsTag("Attack") || state.IsTag("Reload"));
-    }
-
-    public void TryReload()
-    {
-        _animator.SetTrigger("Reload");
-    }
-
-    public void isReloading(bool isReloading)
-    {
-        _animator.SetBool("isReloading", isReloading);
-    }
-
-    public void isAttacking()
-    {
-        _animator.SetTrigger("isAttacking");
-    }
-
-    public void StartMove(float speed)
-    {
-        _animator.SetFloat("Speed", speed );
-    }
+    // --- Idle и Боевка ---
 
     public void HandleIdleAnimations()
     {
-        var currentStateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-        _isIdleAnimationPlaying = currentStateInfo.IsTag("Idle");
-
-        // Если враг стоит на месте и сейчас не проигрывается idle-анимация, запустить новую.
-        if (_navMeshAgent.velocity.magnitude < 0.1f && !_isIdleAnimationPlaying)
+        // Условия для Idle: Скорость ~0, не крутимся, не прыгаем
+        if (_movement.CurrentSpeed < 0.1f && !_movement.IsRotatingInPlace && !_movement.IsBusy && !_isIdlePlaying)
         {
-            PlayRandomIdleAnimation();
+            PlayRandomIdle();
         }
     }
 
-    public void PlayRandomIdleAnimation()
+    private void PlayRandomIdle()
     {
         if (_idleAnimationCount <= 0) return;
-        int randomIndex = Random.Range(0, _idleAnimationCount);
-        _animator.SetInteger("IdleIndex", randomIndex);
-        _animator.SetTrigger("PlayIdle");
+        _animator.SetInteger(IdleIndexHash, Random.Range(0, _idleAnimationCount));
+        _animator.SetTrigger(PlayIdleHash);
+        _isIdlePlaying = true; 
     }
-
-    public void IsActive()
+    
+    public void SetCombatState(bool attacking, bool reloading)
     {
-        _animator.SetBool("IsActivated", true);
+        if (attacking) reloading = false;
+        _animator.SetBool(IsAttackingHash, attacking);
+        _animator.SetBool(IsReloadingHash, reloading);
     }
-
-    public void IsOff()
+    public void SetAttacking(bool v) => SetCombatState(v, false);
+    public void SetReloading(bool v) => SetCombatState(false, v);
+    public void ClearCombat() => SetCombatState(false, false);
+    
+    public bool IsInAction()
     {
-        _animator.SetBool("IsActivated", false);
-
+        var state = _animator.GetCurrentAnimatorStateInfo(0);
+        return state.IsTag("Attack") || state.IsTag("Reload");
     }
+    public void TryAlert()
+    {
+        // Сбрасываем другие триггеры, чтобы не было накладок (опционально)
+        _animator.ResetTrigger(PlayIdleHash); 
+        _animator.SetTrigger(AlertHash);
+    }
+    // Триггеры
+    public void TryStun() => _animator.SetTrigger("Stun");
+    public void IsInStun(bool state) => _animator.SetBool("isInStun", state);
+    public void TryDeath() => _animator.SetTrigger("Die");
 }
