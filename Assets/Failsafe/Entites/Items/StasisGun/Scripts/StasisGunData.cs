@@ -14,4 +14,8 @@ public class StasisGunData : ScriptableObject
     /// Кулдаун изпользования предмета
     /// </summary>
     public float UseDelay;
+
+    public FMODUnity.EventReference GunshotSFX;
+    public FMODUnity.EventReference EmptyShotSFX;
+    public FMODUnity.EventReference ModeSwitchSFX;
 }

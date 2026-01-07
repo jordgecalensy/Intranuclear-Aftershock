@@ -160,15 +160,15 @@ PrefabInstance:
       objectReference: {fileID: -5495902117074765545, guid: 75d7bd5e6b88e6f4e83c3dcc9922920e, type: 3}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2
+      value: 1.35
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2
+      value: 1.35
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalScale.z
-      value: 2
+      value: 1.35
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalPosition.x
@@ -214,6 +214,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: StasisGun
       objectReference: {fileID: 0}
+    - target: {fileID: 6488371708496910974, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6488371708496910974, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.1
+      objectReference: {fileID: 0}
     - target: {fileID: 8698710065664658633, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -231,6 +239,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       insertIndex: 4
       addedObject: {fileID: 1504587065093498463}
+    - targetCorrespondingSourceObject: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8029552662481157455}
   m_SourcePrefab: {fileID: 100100000, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
 --- !u!1 &3262717108679775886 stripped
 GameObject:
@@ -279,6 +290,88 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.036, y: 0.14, z: 0.082}
   m_Center: {x: 0, y: 0, z: -0.084}
+--- !u!114 &8029552662481157455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3262717108679775886}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59c3684b22f00604a97bb68037fcf4cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  directBinaural: 1
+  interpolation: 0
+  perspectiveCorrection: 0
+  distanceAttenuation: 0
+  distanceAttenuationInput: 0
+  distanceAttenuationValue: 1
+  airAbsorption: 0
+  airAbsorptionInput: 0
+  airAbsorptionLow: 1
+  airAbsorptionMid: 1
+  airAbsorptionHigh: 1
+  directivity: 0
+  directivityInput: 0
+  dipoleWeight: 0
+  dipolePower: 0
+  directivityValue: 1
+  occlusion: 1
+  occlusionInput: 0
+  occlusionType: 1
+  occlusionRadius: 2
+  occlusionSamples: 40
+  occlusionValue: 1
+  transmission: 1
+  transmissionType: 0
+  transmissionInput: 0
+  transmissionLow: 1
+  transmissionMid: 1
+  transmissionHigh: 1
+  maxTransmissionSurfaces: 1
+  directMixLevel: 1
+  reflections: 1
+  reflectionsType: 0
+  useDistanceCurveForReflections: 0
+  currentBakedSource: {fileID: 0}
+  reverbTimeLow: 0
+  reverbTimeMid: 0
+  reverbTimeHigh: 0
+  hybridReverbEQLow: 1
+  hybridReverbEQMid: 1
+  hybridReverbEQHigh: 1
+  hybridReverbDelay: 0
+  applyHRTFToReflections: 0
+  reflectionsMixLevel: 1
+  pathing: 0
+  pathingProbeBatch: {fileID: 0}
+  pathValidation: 1
+  findAlternatePaths: 1
+  pathingEQ:
+  - 1
+  - 1
+  - 1
+  pathingSH:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  applyHRTFToPathing: 0
+  pathingMixLevel: 1
 --- !u!4 &5575020062436731130 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}

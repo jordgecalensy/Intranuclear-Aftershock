@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="ParameterPreset" id="{0afbc638-d295-49de-bc1d-2d3d085b8ce9}">
+		<property name="name">
+			<value>Overheat_Value</value>
+		</property>
+		<relationship name="folder">
+			<destination>{404a2f38-e116-468e-bdc3-918d6ad85f50}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{4236b175-90ca-40eb-b7ce-12869547c37e}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{4236b175-90ca-40eb-b7ce-12869547c37e}">
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+		<relationship name="modulators">
+			<destination>{169820f3-c9d6-48c8-9ed5-2f82dd293b05}</destination>
+		</relationship>
+	</object>
+	<object class="RandomizerModulator" id="{169820f3-c9d6-48c8-9ed5-2f82dd293b05}">
+		<property name="nameOfPropertyBeingModulated">
+			<value>cursorPosition</value>
+		</property>
+	</object>
+</objects>

@@ -28,40 +28,40 @@ public class StasisGunOLD : MonoBehaviour
         Debug.Log("Default mode is " + _isDefaultMode);
     }
 
-    public void Shoot(RaycastHit hit)
-    {
-        if (_fireRateTimer <= 0 && !_energyContainer1.IsEmpty())
-        {
-            _fireRateTimer = Data.FireRate;
-            _energyContainer1.UseChargeAmount();
-            if (_isDefaultMode)
-                DefaultMode(hit);
-            else
-                AltMode(hit);
-        }
-    }
+    //public void Shoot(RaycastHit hit)
+    //{
+    //    if (_fireRateTimer <= 0 && !_energyContainer1.IsEmpty())
+    //    {
+    //        _fireRateTimer = Data.FireRate;
+    //        _energyContainer1.UseChargeAmount();
+    //        if (_isDefaultMode)
+    //            DefaultMode(hit);
+    //        else
+    //            AltMode(hit);
+    //    }
+    //}
 
-    void DefaultMode(RaycastHit hit)
-    {
-        if (hit.collider.GetComponent<Stasisable>() != null)
-        {
-            hit.collider.GetComponent<Stasisable>().StartStasis(Data.StasisDuration);
-        }
-        else if (hit.collider.GetComponentInParent<Enemy>() != null)
-        {
-            hit.collider.GetComponentInParent<Enemy>().DisableState(Data.StasisDuration);
-        }
-    }
-
-    void AltMode(RaycastHit hit)
-    {
-        if (hit.collider.GetComponent<Stasisable>() != null)
-        {
-            hit.collider.GetComponent<Stasisable>().StartStasisWithInertion(Data.StasisDuration);
-        }
-        else if (hit.collider.GetComponentInParent<Enemy>() != null)
-        {
-            hit.collider.GetComponentInParent<Enemy>().DisableState(Data.StasisDuration);
-        }
-    }
+    //void DefaultMode(RaycastHit hit)
+    //{
+    //    if (hit.collider.GetComponent<Stasisable>() != null)
+    //    {
+    //        hit.collider.GetComponent<Stasisable>().StartStasis(Data.StasisDuration);
+    //    }
+    //    else if (hit.collider.GetComponentInParent<Enemy>() != null)
+    //    {
+    //        hit.collider.GetComponentInParent<Enemy>().DisableState(Data.StasisDuration);
+    //    }
+    //}
+    //
+    //void AltMode(RaycastHit hit)
+    //{
+    //    if (hit.collider.GetComponent<Stasisable>() != null)
+    //    {
+    //        hit.collider.GetComponent<Stasisable>().StartStasisWithInertion(Data.StasisDuration);
+    //    }
+    //    else if (hit.collider.GetComponentInParent<Enemy>() != null)
+    //    {
+    //        hit.collider.GetComponentInParent<Enemy>().DisableState(Data.StasisDuration);
+    //    }
+    //}
 }

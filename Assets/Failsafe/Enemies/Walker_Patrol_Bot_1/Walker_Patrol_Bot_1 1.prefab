@@ -258,7 +258,7 @@ Transform:
   m_GameObject: {fileID: 433091506679707695}
   serializedVersion: 2
   m_LocalRotation: {x: 0.0062441533, y: -4.2707175e-11, z: -0.0000000068032064, w: 0.9999805}
-  m_LocalPosition: {x: 0, y: 0.00198, z: 0.00945}
+  m_LocalPosition: {x: -0, y: 0.00146, z: 0.00494}
   m_LocalScale: {x: 1.0000001, y: 1, z: 1.8054756}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1616,6 +1616,7 @@ GameObject:
   - component: {fileID: 2677351307390855897}
   - component: {fileID: 6073071214146362726}
   - component: {fileID: 4388551472208041899}
+  - component: {fileID: 4948907210411337118}
   m_Layer: 10
   m_Name: Walker_Patrol_Bot_1 1
   m_TagString: Enemy
@@ -1633,7 +1634,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -12.15, y: -2.281, z: -2.5711164}
-  m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4718649036610950731}
@@ -1823,28 +1824,28 @@ MonoBehaviour:
       Data2: 1294633938
       Data3: 1935908264
       Data4: 1560691874
-    Path: event:/SFX/ENEMIES/WALKER/WALK
+    Path: event:/SFX/ENEMIES/WALKER/Walker_Step
   run:
     Guid:
-      Data1: -1324622343
-      Data2: 1150955697
-      Data3: -1934170732
-      Data4: -1054884654
-    Path: event:/SFX/ENEMIES/WALKER/RUN
+      Data1: 1450731233
+      Data2: 1294633938
+      Data3: 1935908264
+      Data4: 1560691874
+    Path: event:/SFX/ENEMIES/WALKER/Walker_Step
   reload:
     Guid:
       Data1: 1263476782
       Data2: 1166652601
       Data3: 1178802572
       Data4: 193561070
-    Path: event:/SFX/ENEMIES/WALKER/RELOAD
+    Path: event:/SFX/ENEMIES/WALKER/Walker_Overheat
   die:
     Guid:
       Data1: -1525639166
       Data2: 1185408330
       Data3: -246764102
       Data4: 1164190650
-    Path: event:/SFX/ENEMIES/WALKER/DEATH
+    Path: event:/SFX/ENEMIES/WALKER/Walker_Death
 --- !u!114 &3325948451869141101
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2028,6 +2029,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _config: {fileID: 11400000, guid: 22e18573ab2349a42a26a9865501c2a8, type: 2}
+--- !u!114 &4948907210411337118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5441590585779604949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d40d05721fa59684fa54b97a814b02e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stasisEnd:
+    Guid:
+      Data1: 1565740607
+      Data2: 1311392178
+      Data3: 1971754895
+      Data4: -883757678
+    Path: event:/SFX/ITEMS/STASIS_GUN/StasislEffectOff
+  _stasisMaterial: {fileID: 2100000, guid: e89baa730afc6504d869da076eda85c2, type: 2}
 --- !u!1 &5568232610338988830
 GameObject:
   m_ObjectHideFlags: 0
