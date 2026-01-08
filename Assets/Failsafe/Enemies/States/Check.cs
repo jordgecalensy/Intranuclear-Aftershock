@@ -13,17 +13,23 @@ public class CheckState : BehaviorState
 
     private Sensor[] _sensors;
     private EnemyMovePatterns _enemyMovePatterns;
-    private EnemyNavMeshActions _enemyNavMeshActions;
+    
+    // ЗАМЕНА: Новый класс Motor
+    private EnemyMovement _movement; 
+    
     private Enemy_ScriptableObject _config;
     private Transform _transform;
     
     public bool CheckEnd() => _checkTimer >= _config.CheckDuration;
-    public CheckState(Sensor[] sensors, Transform transform, EnemyMovePatterns enemyMovePatterns, EnemyNavMeshActions enemyNavMeshActions, Enemy_ScriptableObject config)
+
+    // Конструктор обновлен
+    public CheckState(Sensor[] sensors, Transform transform, EnemyMovePatterns enemyMovePatterns, 
+                      EnemyMovement movement, Enemy_ScriptableObject config)
     {
         _sensors = sensors;
         _transform = transform;
         _enemyMovePatterns = enemyMovePatterns;
-        _enemyNavMeshActions = enemyNavMeshActions;
+        _movement = movement;
         _config = config;
     }
 
@@ -42,7 +48,9 @@ public class CheckState : BehaviorState
             {
                 _originPoint = sensor.SignalSourcePosition.Value;
                 _searchDirection = (sensor.SignalSourcePosition.Value - _transform.position).normalized;
-                _enemyNavMeshActions.MoveToPoint(_originPoint, _config.PatrolingSpeed);
+                
+                // Команда Мотору: Иди проверять шум
+                _movement.MoveTo(_originPoint, _config.PatrolingSpeed);
                 break;
             }
         }
@@ -52,10 +60,12 @@ public class CheckState : BehaviorState
     {
         base.Update();
 
+        // 1. Идем к источнику шума
         if (!_hasReachedOrigin)
         {
-            if (_enemyNavMeshActions.IsPointReached())
+            if (_movement.IsPointReached(1.0f))
             {
+                _movement.Stop();
                 _hasReachedOrigin = true;
                 _isWaiting = true;
                 _waitTimer = _config.PatrollingWaitTime;
@@ -63,6 +73,7 @@ public class CheckState : BehaviorState
             return;
         }
 
+        // 2. Ждем на точке
         if (_isWaiting)
         {
             _waitTimer -= Time.deltaTime;
@@ -74,8 +85,10 @@ public class CheckState : BehaviorState
             return;
         }
 
-        if (_enemyNavMeshActions.IsPointReached())
+        // 3. Идем в случайную точку рядом
+        if (_movement.IsPointReached(1.0f))
         {
+            _movement.Stop();
             _checkTimer += Time.deltaTime;
             _isWaiting = true;
             _waitTimer = _config.changePointInterval;
@@ -84,8 +97,9 @@ public class CheckState : BehaviorState
 
     private void PickPoint(Vector3 center)
     {
+        // Ваша логика случайной точки вокруг
         _targetPoint = _enemyMovePatterns.RandomPointAround(_originPoint, _config.CheckRadius);
-        _enemyNavMeshActions.MoveToPoint(_targetPoint, _config.PatrolingSpeed);
+        _movement.MoveTo(_targetPoint, _config.PatrolingSpeed);
     }
 
     public override void Exit()

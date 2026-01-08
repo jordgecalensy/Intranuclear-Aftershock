@@ -6,19 +6,16 @@ using UnityEngine.AI;
 public class AttackState : BehaviorState
 {
     private enum Phase { Delay, Attack, Reload }
-
     private Sensor[] _sensors;
     private Transform _transform;
     private Transform _target;
     private Transform _targetPoint;
-    private NavMeshAgent _navMeshAgent;
     private Enemy_ScriptableObject _enemyConfig;
 
-    private EnemyNavMeshActions _enemyNavMeshActions;
+    private EnemyMovement _movement; // <-- Новый класс
     private EnemyAnimator _enemyAnimator;
 
     private float _distanceToPlayer;
-
     private LaserBeamController _activeLaser;
     private GameObject _laserPrefab;
     private GameObject _laserProjectilePrefab;
@@ -27,26 +24,19 @@ public class AttackState : BehaviorState
     private DamageableComponent _targetDamageable;
     private bool _hasLOSThisFrame;
     private bool _targetPointLocked;
-
     private Phase _phase = Phase.Delay;
     private float _phaseTimer = 0f;
     private bool _attackSpawned = false;
 
-    public AttackState(
-        Sensor[] sensors,
-        Transform currentTransform,
-        EnemyNavMeshActions enemyNavMeshActions,
-        EnemyAnimator enemyAnimator,
-        Transform laserOrigin,
-        Enemy_ScriptableObject enemyConfig)
+    public AttackState(Sensor[] sensors, Transform currentTransform, EnemyMovement movement,
+        EnemyAnimator enemyAnimator, Transform laserOrigin, Enemy_ScriptableObject enemyConfig)
     {
         _sensors = sensors;
         _transform = currentTransform;
-        _enemyNavMeshActions = enemyNavMeshActions;
+        _movement = movement;
         _enemyAnimator = enemyAnimator;
         _enemyConfig = enemyConfig;
         _laserOrigin = laserOrigin;
-        _navMeshAgent = null;
 
         if (_enemyConfig != null)
         {
@@ -57,23 +47,18 @@ public class AttackState : BehaviorState
 
     public bool PlayerOutOfAttackRange()
     {
-        // даём стейт-машине выйти только когда мы в ожидании (Delay) и реально не можем атаковать
         return _phase == Phase.Delay && (_targetPoint == null || _distanceToPlayer > _enemyConfig.AttackRangeMax);
     }
 
     public override void Enter()
     {
         base.Enter();
-
-        _enemyNavMeshActions.StopMoving();
-
+        _movement.Stop(); // Останавливаемся
         ResetTargetLock();
         DestroyLaserIfAny();
-
         _phase = Phase.Delay;
         _phaseTimer = 0f;
         _attackSpawned = false;
-
         _enemyAnimator.ClearCombat();
     }
 
@@ -84,68 +69,59 @@ public class AttackState : BehaviorState
 
         UpdateTargetFromSensors();
 
-        // нет цели/точки или вне радиуса — отменяем атаку и держим locomotion
         if (_targetPoint == null || _distanceToPlayer > _enemyConfig.AttackRangeMax)
         {
             CancelCombatToDelay();
             return;
         }
 
-        _enemyNavMeshActions.RotateToPoint(_targetPoint.position, 5f);
+        // Прицеливание стоя
+        _movement.LookAt(_targetPoint.position);
 
         switch (_phase)
         {
             case Phase.Delay:
-            {
                 _enemyAnimator.ClearCombat();
-
-                if (_phaseTimer >= _enemyConfig.AttackDelay)
-                    EnterAttackPhase();
-
+                if (_phaseTimer >= _enemyConfig.AttackDelay) EnterAttackPhase();
                 break;
-            }
 
             case Phase.Attack:
-            {
                 _enemyAnimator.SetAttacking(true);
-
-                if (!_attackSpawned)
-                {
-                    SpawnAttackOnce();
-                    _attackSpawned = true;
-                }
-
+                if (!_attackSpawned) { SpawnAttackOnce(); _attackSpawned = true; }
                 TickLaserDamageIfNeeded();
-
-                if (_phaseTimer >= _enemyConfig.AttackDuration)
-                    EnterReloadPhase();
-
+                if (_phaseTimer >= _enemyConfig.AttackDuration) EnterReloadPhase();
                 break;
-            }
 
             case Phase.Reload:
-            {
                 _enemyAnimator.SetReloading(true);
-
-                if (_phaseTimer >= _enemyConfig.AttackCooldown)
-                    EnterDelayPhase();
-
+                if (_phaseTimer >= _enemyConfig.AttackCooldown) EnterDelayPhase();
                 break;
-            }
         }
     }
 
     public override void Exit()
     {
         base.Exit();
-
         DestroyLaserIfAny();
         _enemyAnimator.ClearCombat();
-
-        _enemyNavMeshActions.ResumeMoving();
-
         ResetTargetLock();
         _target = null;
+    }
+    /// <summary>
+    /// Локальный метод для поворота стоящего агента к цели.
+    /// Заменяет удаленный RotateToPoint из NavMeshActions.
+    /// </summary>
+    private void RotateTowardsTarget(Vector3 targetPosition)
+    {
+        Vector3 direction = targetPosition - _transform.position;
+        direction.y = 0f; // Игнорируем высоту, чтобы враг не наклонялся
+
+        if (direction.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            // Скорость поворота можно вынести в конфиг, пока hardcoded 5f
+            _transform.rotation = Quaternion.Slerp(_transform.rotation, targetRotation, Time.deltaTime * 5f);
+        }
     }
 
     private void EnterAttackPhase()
@@ -153,7 +129,6 @@ public class AttackState : BehaviorState
         _phase = Phase.Attack;
         _phaseTimer = 0f;
         _attackSpawned = false;
-        // анимация включится через bool в Update (или можно сразу тут)
         _enemyAnimator.SetAttacking(true);
     }
 
@@ -162,13 +137,10 @@ public class AttackState : BehaviorState
         _phase = Phase.Reload;
         _phaseTimer = 0f;
 
-        // заканчиваем эффекты атаки
         DestroyLaserIfAny();
-
-        // фиксируем reload loop
         _enemyAnimator.SetReloading(true);
-
-        // если хочешь, чтобы каждый цикл заново искал "лучший" targetPoint
+        
+        // Сброс лока, чтобы при следующем выстреле выбрать актуальную точку
         ResetTargetLock();
     }
 
@@ -179,7 +151,6 @@ public class AttackState : BehaviorState
         _attackSpawned = false;
 
         _enemyAnimator.ClearCombat();
-
         ResetTargetLock();
     }
 

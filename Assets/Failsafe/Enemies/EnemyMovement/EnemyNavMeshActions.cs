@@ -8,72 +8,51 @@ public class EnemyNavMeshActions
 
     public NavMeshAgent Agent => _navMeshAgent;
     public Transform   Model => _enemyPos;
+
     public EnemyNavMeshActions(NavMeshAgent navMeshAgent, Transform transform)
     {
         _navMeshAgent = navMeshAgent;
         _enemyPos =  transform;
     }
+
     public void MoveToPoint(Vector3 point, float speed)
     {
-        _navMeshAgent.isStopped = false;
-        _navMeshAgent.speed = speed;
-        _navMeshAgent.SetDestination(point);
-    }
-
-
-    public void RunToPoint(Vector3 point, float speed)
-    {
-        _navMeshAgent.isStopped = false;
-        _navMeshAgent.speed = speed;
-        _navMeshAgent.SetDestination(point);
+        if (_navMeshAgent.isOnNavMesh)
+        {
+            _navMeshAgent.isStopped = false;
+            _navMeshAgent.speed = speed;
+            _navMeshAgent.SetDestination(point);
+        }
     }
 
     public void StopMoving()
     {
-        _navMeshAgent.isStopped = true;
-        _navMeshAgent.speed = 0f;
+        if (_navMeshAgent.isOnNavMesh)
+        {
+            _navMeshAgent.isStopped = true;
+            _navMeshAgent.velocity = Vector3.zero;
+        }
     }
 
     public void ResumeMoving()
     {
-        _navMeshAgent.isStopped = false;
+        if (_navMeshAgent.isOnNavMesh)
+        {
+            _navMeshAgent.isStopped = false;
+        }
     }
     
     public bool IsPointReached()
     {
-        if (Vector3.Distance(_navMeshAgent.destination, _enemyPos.position) <= _navMeshAgent.stoppingDistance)
+        if (!_navMeshAgent.hasPath && !_navMeshAgent.pathPending) return true;
+
+        if (_navMeshAgent.remainingDistance <= _navMeshAgent.stoppingDistance)
         {
             if (!_navMeshAgent.hasPath || _navMeshAgent.velocity.sqrMagnitude < 0.05f)
             {
-                StopMoving();
                 return true;
             }
         }
         return false;
     }
-    
-    public void RotateToPoint(Vector3 targetPoint, float rotationSpeed = 5f)
-    {
-        Vector3 direction = targetPoint - _enemyPos.position;
-        direction.y = 0f; // Игнорируем вертикаль (Y)
-
-        if (direction.sqrMagnitude < 0.001f)
-            return;
-
-        Quaternion targetRotation = Quaternion.LookRotation(direction, Vector3.up);
-        _enemyPos.rotation = Quaternion.Slerp(_enemyPos.rotation, targetRotation, Time.deltaTime * rotationSpeed);
-    }
-    
-    public void UpdateAgentRotation(float rotationSpeed = 20f) 
-    {
-        Vector3 direction = _navMeshAgent.desiredVelocity;
-
-        if (direction.sqrMagnitude > 0.1f) 
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(direction.normalized);
-            _enemyPos.rotation = Quaternion.Slerp(_enemyPos.rotation, targetRotation, Time.deltaTime * rotationSpeed);
-        }
-    }
-    
-    
 }

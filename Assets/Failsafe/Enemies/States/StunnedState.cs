@@ -1,20 +1,17 @@
 ﻿using UnityEngine;
 
-/// <summary>
-/// Состояние cтана
-/// </summary>
 public class StunnedState : BehaviorForcedState
 {
     private float _stunProgress;
     private Transition _transitionToPreviousState;
     private Vector3 _impactDirection = Vector3.zero;
-    private EnemyNavMeshActions _enemyNavMeshActions;
+    private EnemyMovement _movement; // <-- Новый класс
     private EnemyAnimator _enemyAnimator;
     private Transform _transform;
 
-    public StunnedState(EnemyAnimator enemyAnimator, EnemyNavMeshActions navMeshActions, Transform transform)
+    public StunnedState(EnemyAnimator enemyAnimator, EnemyMovement movement, Transform transform)
     {
-        _enemyNavMeshActions = navMeshActions;
+        _movement = movement;
         _enemyAnimator = enemyAnimator;
         _transform = transform;
     }
@@ -22,25 +19,25 @@ public class StunnedState : BehaviorForcedState
     public override void Enter()
     {
         base.Enter();
+        _movement.Stop(); // Полная остановка
         _enemyAnimator.TryStun();
-        _enemyAnimator.isInStun(true);
+        _enemyAnimator.IsInStun(true);
         _stunProgress = 0;
         _transitionToPreviousState = new Transition(this, PreviousState, IsStateFinished);
-        Debug.Log("Enter StunnedState");
     }
 
     public override void Update()
     {
         _stunProgress += Time.deltaTime;
-        //Debug.Log(_stunProgress);
     }
 
     public override void Exit()
     {
-        _enemyAnimator.isInStun(false);
+        _enemyAnimator.IsInStun(false);
         if (!_impactDirection.Equals(Vector3.zero))
         {
-            _enemyNavMeshActions.RotateToPoint(_transform.position + _impactDirection);
+            // Разворачиваем к источнику удара
+            _movement.LookAt(_transform.position + _impactDirection);
             _impactDirection = Vector3.zero;
         }
     }
@@ -49,10 +46,8 @@ public class StunnedState : BehaviorForcedState
 
     public override Transition DecideTransition()
     {
-        if (IsStateFinished())
-            return _transitionToPreviousState;
-        else
-            return null;
+        if (IsStateFinished()) return _transitionToPreviousState;
+        else return null;
     }
 
     public void SetDirection(Vector3 impactDirection)
