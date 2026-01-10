@@ -5,7 +5,7 @@
 			<value>Walker_Death</value>
 		</property>
 		<property name="outputFormat">
-			<value>2</value>
+			<value>5</value>
 		</property>
 		<relationship name="folder">
 			<destination>{ed3e122c-c269-41e5-950f-32be4a71c418}</destination>
@@ -190,7 +190,6 @@
 		<relationship name="effects">
 			<destination>{0f231918-ca32-4fbf-bce9-f5b21faedf1e}</destination>
 			<destination>{90a4172f-2c31-4ed7-ac82-c796a9c7fcb8}</destination>
-			<destination>{283217e9-664a-460c-9149-043c75c519ba}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{bfb7319d-d4d8-4d84-b5e6-2e0ae1faf3a8}" />
@@ -260,14 +259,10 @@
 	<object class="MixerBusPanner" id="{60f3ed31-3485-4376-b252-85a60b33b80d}" />
 	<object class="MixerBusFader" id="{0f231918-ca32-4fbf-bce9-f5b21faedf1e}" />
 	<object class="PluginEffect" id="{90a4172f-2c31-4ed7-ac82-c796a9c7fcb8}">
-		<property name="bypass">
-			<value>true</value>
-		</property>
 		<relationship name="plugin">
 			<destination>{6999a5c0-faa0-4a20-aa37-1344c16edf1e}</destination>
 		</relationship>
 	</object>
-	<object class="SpatialiserEffect" id="{283217e9-664a-460c-9149-043c75c519ba}" />
 	<object class="MixerBusFader" id="{0ff46eb3-b96a-41da-8802-590e7db8d958}" />
 	<object class="MixerBusFader" id="{eb9f34c7-e2ff-489d-9c94-e9c9e2ecff8b}" />
 	<object class="MixerBusFader" id="{3c9bd6c2-20c7-485f-8924-2f17ceebaa3e}" />
