@@ -506,7 +506,7 @@ Transform:
   - {fileID: 475251584834042431}
   - {fileID: 2787837512202065222}
   m_Father: {fileID: 8676018224302908071}
-  m_LocalEulerAnglesHint: {x: 7.954983, y: -31.197365, z: -6.4497695}
+  m_LocalEulerAnglesHint: {x: 6.532731, y: 2.6238187e-11, z: 0.00000077960846}
 --- !u!65 &6137719068691716678
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -560,7 +560,7 @@ Transform:
   m_Children:
   - {fileID: 5252322116160407251}
   m_Father: {fileID: 9111299131299554155}
-  m_LocalEulerAnglesHint: {x: 0.34245992, y: -7.4473844, z: 84.1631}
+  m_LocalEulerAnglesHint: {x: 0.009784246, y: -9.339523, z: 89.33816}
 --- !u!65 &6393608937142317766
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -925,7 +925,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2394800270987738458}
-  m_LocalEulerAnglesHint: {x: 67.68802, y: -0.9643307, z: 0.5556135}
+  m_LocalEulerAnglesHint: {x: 89.717445, y: -179.02692, z: -178.82913}
 --- !u!65 &1217172721805219905
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -978,7 +978,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6382771369531776977}
-  m_LocalEulerAnglesHint: {x: 0.00000036673734, y: -0.00000078989586, z: -0.000000112842265}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &4316154320964640941
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1032,7 +1032,7 @@ Transform:
   m_Children:
   - {fileID: 3909945133532888999}
   m_Father: {fileID: 4065101176749063078}
-  m_LocalEulerAnglesHint: {x: -44.991177, y: 1.9869359, z: -3.0408084}
+  m_LocalEulerAnglesHint: {x: -48.307465, y: 0.33335763, z: -0.45611548}
 --- !u!65 &8769958226945923327
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1273,7 +1273,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5252322116160407251}
-  m_LocalEulerAnglesHint: {x: 68.26547, y: 0.9562963, z: -0.5412214}
+  m_LocalEulerAnglesHint: {x: 89.93438, y: 0.22824588, z: 0}
 --- !u!65 &4709842747119060137
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1327,7 +1327,7 @@ Transform:
   m_Children:
   - {fileID: 4919089848495422104}
   m_Father: {fileID: 7758459831222804948}
-  m_LocalEulerAnglesHint: {x: -44.25869, y: -1.9764665, z: 3.129507}
+  m_LocalEulerAnglesHint: {x: -48.335365, y: -0.29665312, z: 0.4055631}
 --- !u!65 &3806440206864788167
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1381,7 +1381,7 @@ Transform:
   m_Children:
   - {fileID: 7758459831222804948}
   m_Father: {fileID: 6382771369531776977}
-  m_LocalEulerAnglesHint: {x: 7.0007553, y: 32.599262, z: -91.908005}
+  m_LocalEulerAnglesHint: {x: -6.54878, y: 4.681512, z: -86.25849}
 --- !u!65 &84083411450592784
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1571,7 +1571,7 @@ Transform:
   m_Children:
   - {fileID: 4065101176749063078}
   m_Father: {fileID: 6382771369531776977}
-  m_LocalEulerAnglesHint: {x: -45.270798, y: 32.425014, z: 92.41113}
+  m_LocalEulerAnglesHint: {x: -6.912473, y: -6.036217, z: 85.76519}
 --- !u!65 &1242546035971903874
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1608,7 +1608,6 @@ GameObject:
   - component: {fileID: 1444448667796523294}
   - component: {fileID: 549660405066039400}
   - component: {fileID: 6678524845735673363}
-  - component: {fileID: 6775870886951891066}
   - component: {fileID: 3325948451869141101}
   - component: {fileID: 3193436742333253775}
   - component: {fileID: 4551226578461979612}
@@ -1617,6 +1616,7 @@ GameObject:
   - component: {fileID: 6073071214146362726}
   - component: {fileID: 4388551472208041899}
   - component: {fileID: 4948907210411337118}
+  - component: {fileID: 131522579115976752}
   m_Layer: 10
   m_Name: Walker_Patrol_Bot_1 1
   m_TagString: Enemy
@@ -1680,9 +1680,6 @@ MonoBehaviour:
   baseArcHeight: 1.2
   speedXZ: 4
   speedY: 3
-  minDuration: 0.35
-  endSnapTolerance: 0.25
-  scaleArcByUpDelta: 1
 --- !u!114 &202986098991734307
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1806,46 +1803,6 @@ MonoBehaviour:
   OverrideAttenuation: 0
   OverrideMinDistance: -1
   OverrideMaxDistance: -1
---- !u!114 &6775870886951891066
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5441590585779604949}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ce3f99b8b2e5ece4ba22e4841ca69696, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  walk:
-    Guid:
-      Data1: 1450731233
-      Data2: 1294633938
-      Data3: 1935908264
-      Data4: 1560691874
-    Path: event:/SFX/ENEMIES/WALKER/Walker_Step
-  run:
-    Guid:
-      Data1: 1450731233
-      Data2: 1294633938
-      Data3: 1935908264
-      Data4: 1560691874
-    Path: event:/SFX/ENEMIES/WALKER/Walker_Step
-  reload:
-    Guid:
-      Data1: 1263476782
-      Data2: 1166652601
-      Data3: 1178802572
-      Data4: 193561070
-    Path: event:/SFX/ENEMIES/WALKER/Walker_Overheat
-  die:
-    Guid:
-      Data1: -1525639166
-      Data2: 1185408330
-      Data3: -246764102
-      Data4: 1164190650
-    Path: event:/SFX/ENEMIES/WALKER/Walker_Death
 --- !u!114 &3325948451869141101
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1896,8 +1853,8 @@ MonoBehaviour:
   directivityValue: 1
   occlusion: 1
   occlusionInput: 0
-  occlusionType: 1
-  occlusionRadius: 2
+  occlusionType: 0
+  occlusionRadius: 0.2
   occlusionSamples: 40
   occlusionValue: 1
   transmission: 1
@@ -2049,6 +2006,114 @@ MonoBehaviour:
       Data4: -883757678
     Path: event:/SFX/ITEMS/STASIS_GUN/StasislEffectOff
   _stasisMaterial: {fileID: 2100000, guid: e89baa730afc6504d869da076eda85c2, type: 2}
+--- !u!114 &131522579115976752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5441590585779604949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce3f99b8b2e5ece4ba22e4841ca69696, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _movement:
+    Step:
+      Guid:
+        Data1: 1450731233
+        Data2: 1294633938
+        Data3: 1935908264
+        Data4: 1560691874
+      Path: event:/SFX/ENEMIES/WALKER/Walker_Step
+    Servo:
+      Guid:
+        Data1: -1324622343
+        Data2: 1150955697
+        Data3: -1934170732
+        Data4: -1054884654
+      Path: event:/SFX/ENEMIES/WALKER/Walker_Servo
+    Land:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+  _combat:
+    LaserAccumulate:
+      Guid:
+        Data1: 1555640058
+        Data2: 1206333236
+        Data3: 477510302
+        Data4: -2109047821
+      Path: event:/SFX/ENEMIES/WALKER/Walker_Laser_Accumulate
+    LaserLoop:
+      Guid:
+        Data1: 45212366
+        Data2: 1205642725
+        Data3: 1223703687
+        Data4: 285327345
+      Path: event:/SFX/ENEMIES/WALKER/Walker_Laser_Shot
+    LaserImpact:
+      Guid:
+        Data1: 1829623982
+        Data2: 1108602971
+        Data3: -1943145344
+        Data4: -126186652
+      Path: event:/SFX/ENEMIES/WALKER/Walker_Laser_Collision
+    Overheat:
+      Guid:
+        Data1: 1263476782
+        Data2: 1166652601
+        Data3: 1178802572
+        Data4: 193561070
+      Path: event:/SFX/ENEMIES/WALKER/Walker_Overheat
+    Reboot:
+      Guid:
+        Data1: -804279482
+        Data2: 1270454087
+        Data3: 942568085
+        Data4: -855957544
+      Path: event:/SFX/ENEMIES/WALKER/Walker_Reboot
+  _voice:
+    StateVoice:
+      Guid:
+        Data1: -262409152
+        Data2: 1077764010
+        Data3: 1263843730
+        Data4: -313391367
+      Path: event:/SFX/ENEMIES/WALKER/Walker_State_Voice
+    Damage:
+      Guid:
+        Data1: 1030471023
+        Data2: 1125447975
+        Data3: 1511785896
+        Data4: -423055415
+      Path: event:/SFX/ENEMIES/WALKER/Walker_Damage_Voice
+    Death:
+      Guid:
+        Data1: -1525639166
+        Data2: 1185408330
+        Data3: -246764102
+        Data4: 1164190650
+      Path: event:/SFX/ENEMIES/WALKER/Walker_Death
+  _idle:
+    Scanner:
+      Guid:
+        Data1: 144038879
+        Data2: 1262251391
+        Data3: -1431884642
+        Data4: 324076437
+      Path: event:/SFX/ENEMIES/WALKER/Walker_Idle_Scaner
+    Foley:
+      Guid:
+        Data1: 263353444
+        Data2: 1219808748
+        Data3: -1380287610
+        Data4: -459179925
+      Path: event:/SFX/ENEMIES/WALKER/Walker_Idle_Foley
+  _runThreshold: 3.5
 --- !u!1 &5568232610338988830
 GameObject:
   m_ObjectHideFlags: 0
@@ -2081,7 +2146,7 @@ Transform:
   m_Children:
   - {fileID: 2394800270987738458}
   m_Father: {fileID: 475251584834042431}
-  m_LocalEulerAnglesHint: {x: 0.42395183, y: 7.418027, z: -83.62637}
+  m_LocalEulerAnglesHint: {x: 0.008330696, y: 9.375716, z: -89.41275}
 --- !u!65 &7724793213003113916
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2133,7 +2198,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8676018224302908071}
-  m_LocalEulerAnglesHint: {x: 0, y: -0.000013568707, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -0.000013660378, z: 0}
 --- !u!1 &6384887915764601299
 GameObject:
   m_ObjectHideFlags: 0
