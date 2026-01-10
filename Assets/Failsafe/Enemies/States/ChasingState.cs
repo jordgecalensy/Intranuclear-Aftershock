@@ -16,10 +16,11 @@ public class ChasingState : BehaviorState
     private readonly float _jumpActivationDistance = 15f; 
     private float _distanceToPlayer;
     private bool _playerInSight;
+    private EnemyAudioManager _audio;
 
     public ChasingState(Sensor[] sensors, Transform currentTransform, EnemyMovement movement, 
                         EnemyMemory enemyMemory, NavMeshAgent navMeshAgent, Enemy_ScriptableObject enemyConfig, 
-                        EnemyAnimator enemyAnimator)
+                        EnemyAnimator enemyAnimator, EnemyAudioManager audio)
     {
         _sensors = sensors;
         _transform = currentTransform;
@@ -28,6 +29,7 @@ public class ChasingState : BehaviorState
         _enemyConfig = enemyConfig;
         _enemyAnimator = enemyAnimator;
         _enemyMemory = enemyMemory;
+        _audio = audio;
     }
 
     public bool PlayerInAttackRange() => _playerInSight && (_distanceToPlayer < _enemyConfig.AttackRangeMin);
@@ -37,6 +39,7 @@ public class ChasingState : BehaviorState
         base.Enter();
         _playerInSight = false;
         _navMeshAgent.stoppingDistance = _enemyConfig.AttackRangeMin;
+        _audio.PlayStateVoice(2);
     }
 
     public override void Update()

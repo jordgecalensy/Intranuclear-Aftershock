@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -21,13 +22,14 @@ public class SearchingState : BehaviorState
     // ЗАМЕНА: Используем новый класс Motor
     private EnemyMovement _movement; 
     private EnemyMemory _enemyMemory;
+    private EnemyAudioManager _audio;
 
     public bool SearchingEnd() => _searchTimer >= _enemyConfig.SearchingDuration;
 
     // Конструктор обновлен: принимаем EnemyMovement вместо NavMeshActions
     public SearchingState(Sensor[] sensors, Transform currentTransform, EnemyMovePatterns enemyMovePatterns,
                           EnemyMovement movement, EnemyMemory enemyMemory, 
-                          NavMeshAgent navMeshAgent, Enemy_ScriptableObject enemyConfig)
+                          NavMeshAgent navMeshAgent, [CanBeNull] Enemy_ScriptableObject enemyConfig, EnemyAudioManager audio)
     {
         _sensors = sensors;
         _transform = currentTransform;
@@ -36,6 +38,7 @@ public class SearchingState : BehaviorState
         _enemyMovePatterns = enemyMovePatterns;
         _movement = movement;
         _enemyMemory = enemyMemory;
+        _audio = audio;
     }
 
     public override void Enter()
@@ -54,7 +57,7 @@ public class SearchingState : BehaviorState
         
         // Команда Мотору: Иди в точку
         _movement.MoveTo(_searchOrigin, _enemyConfig.SearchingSpeed);
-
+        _audio.PlayStateVoice(1);
         Debug.Log("Enter SearchingState: going to last known player position");
     }
 

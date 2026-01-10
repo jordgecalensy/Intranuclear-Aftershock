@@ -19,18 +19,20 @@ public class CheckState : BehaviorState
     
     private Enemy_ScriptableObject _config;
     private Transform _transform;
+    private EnemyAudioManager _audio;
     
     public bool CheckEnd() => _checkTimer >= _config.CheckDuration;
 
     // Конструктор обновлен
     public CheckState(Sensor[] sensors, Transform transform, EnemyMovePatterns enemyMovePatterns, 
-                      EnemyMovement movement, Enemy_ScriptableObject config)
+                      EnemyMovement movement, Enemy_ScriptableObject config, EnemyAudioManager audio)
     {
         _sensors = sensors;
         _transform = transform;
         _enemyMovePatterns = enemyMovePatterns;
         _movement = movement;
         _config = config;
+        _audio = audio;
     }
 
     public override void Enter()
@@ -40,7 +42,7 @@ public class CheckState : BehaviorState
         _isWaiting = false;
         _waitTimer = 0f;
         _checkTimer = 0f;
-
+        _audio.PlayStateVoice(1);
         // Берём первую активную точку сигнала
         foreach (var sensor in _sensors)
         {

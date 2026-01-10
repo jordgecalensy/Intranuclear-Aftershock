@@ -46,7 +46,7 @@ public class Enemy : MonoBehaviour
     
     private EnemyMovePatterns _enemyMovePatterns;
     private EnemyMemory _enemyMemory;
-
+    private EnemyAudioManager _audioManager;
     [Header("Anim triggers (имена)")]
     [SerializeField] private string jumpTrigger = "Jump";
     [SerializeField] private string landTrigger = "Land";
@@ -92,6 +92,11 @@ public class Enemy : MonoBehaviour
         
         _awarenessMeter.Initialize();
         _awarenessMeter.ApplyCalmSensorParams();
+        
+        _audioManager = GetComponent<EnemyAudioManager>();
+            if (_audioManager == null) 
+                Debug.LogError("EnemyAudioManager component missing on Enemy!");
+          
     }
 
     private void Start()
@@ -103,31 +108,31 @@ public class Enemy : MonoBehaviour
         
         // AlertState (Промежуточное состояние обнаружения)
         // Длительность 1.5 сек (или вынесите в конфиг)
-        var alertState = new AlertState(_enemyMovement, _enemyAnimator, _sensors, 1.5f);
+        var alertState = new AlertState(_enemyMovement, _enemyAnimator, _sensors, _audioManager, 1.5f);
         
         var chasingState = new ChasingState(
             _sensors, transform, _enemyMovement, _enemyMemory, 
-            _navMeshAgent, _enemyConfig, _enemyAnimator 
+            _navMeshAgent, _enemyConfig, _enemyAnimator, _audioManager
         );
         
         var patrolState = new PatrolState(
             _sensors, transform, _enemyMovePatterns, _enemyMovement, 
-            _enemyGetData, _navMeshAgent, _enemyConfig
+            _enemyGetData, _navMeshAgent, _enemyConfig, _audioManager
         );
         
         var attackState = new AttackState(
             _sensors, transform, _enemyMovement, _enemyAnimator, 
-            _laserSpawnPoint, _enemyConfig
+            _laserSpawnPoint, _enemyConfig, _audioManager
         );
         
         var searchingState = new SearchingState(
             _sensors, transform, _enemyMovePatterns, _enemyMovement, 
-            _enemyMemory, _navMeshAgent, _enemyConfig
+            _enemyMemory, _navMeshAgent, _enemyConfig, _audioManager
         );
         
         var checkState = new CheckState(
             _sensors, transform, _enemyMovePatterns, _enemyMovement, 
-            _enemyConfig
+            _enemyConfig, _audioManager
         );
         
         var disabledState = new DisabledState(_animator, _enemyMovement);
@@ -169,6 +174,7 @@ public class Enemy : MonoBehaviour
         }
 
         _health.OnDeath += DeathState;
+        _health.OnHealthChanged += (damage) => _audioManager.PlayDamageVoice();
     }
 
     void Update()
@@ -200,11 +206,13 @@ public class Enemy : MonoBehaviour
     public void DisableState(float? duration = null)
     {
         _stateMachine.ForseChangeState<DisabledState>(duration);
+        
     }
 
     public void DeathState()
     {
         _stateMachine.ForseChangeState<EnemyDeathState>();
+
     }
 
     public void StunnedState(Vector3 direction, float? duration = null)
