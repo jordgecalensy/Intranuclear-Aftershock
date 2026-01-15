@@ -13,15 +13,33 @@ MonoBehaviour:
   m_Name: TestData
   m_EditorClassIdentifier: 
   _phrases:
-  - Text: phrase 1
-    Audio: {fileID: 8300000, guid: 8546f026e30f3c64085ad412ca3270d3, type: 3}
+  - Text: 1
+    FMODEvent:
+      Guid:
+        Data1: 502374643
+        Data2: 1120406873
+        Data3: -674551670
+        Data4: -913910045
+      Path: event:/MUSIC/AMBIENT/AMB_1_DARK
     Weight: 1
     Once: 1
-  - Text: phrase 2
-    Audio: {fileID: 8300000, guid: af0e33a1b1f847f4f80e106592282d96, type: 3}
+  - Text: 
+    FMODEvent:
+      Guid:
+        Data1: 1995429603
+        Data2: 1194542027
+        Data3: 1799069318
+        Data4: 255865168
+      Path: event:/MUSIC/AMBIENT/AMB_2_DRONES
     Weight: 10
     Once: 0
-  - Text: phrase 3
-    Audio: {fileID: 8300000, guid: 94bc8546fe222904c9fd6e0438c1b6fc, type: 3}
+  - Text: 
+    FMODEvent:
+      Guid:
+        Data1: -791237688
+        Data2: 1227451515
+        Data3: 604553109
+        Data4: 1612572102
+      Path: event:/MUSIC/AMBIENT/AMB_3_BREATH
     Weight: 5
     Once: 0

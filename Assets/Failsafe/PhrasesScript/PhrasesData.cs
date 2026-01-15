@@ -1,3 +1,4 @@
+using FMODUnity;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,7 +15,7 @@ namespace Failsafe.PhrasesScript
     public class Phrase
     {
         public string Text;
-        public AudioClip Audio;
+        public EventReference FMODEvent;
         public int Weight = 1;
         public bool Once = false;
     }
