@@ -7,18 +7,19 @@ namespace Failsafe.PhrasesScript
     public class PhrasesManager : MonoBehaviour
     {
         [SerializeField] private PhrasesData _phrasesData;
+        [SerializeField] private int _phraseIndex = 0;
         [SerializeField] private AudioSource _audioSource;
         [SerializeField] private bool _allowInterrupt = false;
         [SerializeField] private bool _oneUsing = false;
+        [SerializeField] private bool _nextPhrase = false;
 
-        private List<Phrase> _phrases = new List<Phrase>();
-        private Dictionary<Phrase, bool> _usedPhrases = new Dictionary<Phrase, bool>();
+        private Phrase _phrase;
         private bool _used = false;
 
         private void Awake()
         {
             ValidateComponents();
-            LoadPhrases();
+            LoadPhrase();
         }
 
         private void ValidateComponents()
@@ -29,77 +30,36 @@ namespace Failsafe.PhrasesScript
                 _audioSource = gameObject.AddComponent<AudioSource>();
             }
             _audioSource.playOnAwake = false;
-
-            if (_phrasesData == null)
-            {
-                Debug.LogError("PhrasesData is not assigned!");
-            }
         }
 
-        private void LoadPhrases()
+        private void LoadPhrase()
         {
-            if (_phrasesData == null)
+            if (_phrasesData == null || _phrasesData.Phrases.Count == 0)
             {
+                Debug.LogError("PhrasesData is null or contains no phrases!");
                 return;
             }
 
-            _phrases.Clear();
-            _usedPhrases.Clear();
-
-            foreach (var phraseData in _phrasesData.Phrases)
-            {
-                if (phraseData.Audio == null)
-                {
-                    Debug.LogWarning($"Phrase '{phraseData.Text}' has no AudioClip assigned!");
-                    continue;
-                }
-
-                _phrases.Add(phraseData);
-                _usedPhrases[phraseData] = false;
-            }
-
-            if (_phrases.Count == 0)
-            {
-                Debug.LogWarning("No valid phrases loaded!");
-            }
-        }
-
-        private Phrase GetPhrase()
-        {
-            if (_phrases == null || _phrases.Count == 0)
-            {
-                Debug.LogWarning("No phrases available!");
-                return null;
-            }
-
-            var availableOnce = _phrases
-                .Where(p => p.Once && !_usedPhrases[p])
-                .OrderByDescending(p => p.Weight)
+            var sortedPhrases = _phrasesData.Phrases
+                .OrderByDescending(p => p.Once)
+                .ThenByDescending(p => p.Weight)
                 .ToList();
 
-            if (availableOnce.Count > 0)
+            if (_phraseIndex < 0 || _phraseIndex >= sortedPhrases.Count)
             {
-                return availableOnce[0];
+                Debug.LogError($"Phrase index {_phraseIndex} is out of bounds!");
+                return;
             }
 
-            var availableRegular = _phrases
-                .Where(p => !p.Once && !_usedPhrases[p])
-                .ToList();
-
-            if (availableRegular.Count == 0)
-            {
-                Debug.LogWarning("All phrases have been used!");
-                return null;
-            }
-
-            return availableRegular[0];
+            _phrase = sortedPhrases[_phraseIndex];
+            Debug.Log($"Loaded phrase: {_phrase.Text}");
         }
 
         public void PlayPhrase()
         {
             if (_oneUsing && _used)
             {
-                Debug.Log("Phrase already used in one-using mode. Skipping.");
+                Debug.Log("Phrase already used. Skipping.");
                 return;
             }
 
@@ -109,16 +69,15 @@ namespace Failsafe.PhrasesScript
                 return;
             }
 
-            var phrase = GetPhrase();
-            if (phrase == null)
+            if (_phrase == null)
             {
-                Debug.LogWarning("No phrase available to play!");
+                Debug.LogWarning("No phrase assigned!");
                 return;
             }
 
-            if (phrase.Audio == null)
+            if (_phrase.Audio == null)
             {
-                Debug.LogError($"Phrase '{phrase.Text}' has no AudioClip!");
+                Debug.LogError($"Phrase '{_phrase.Text}' has no AudioClip!");
                 return;
             }
 
@@ -127,7 +86,7 @@ namespace Failsafe.PhrasesScript
                 _audioSource.Stop();
             }
 
-            _audioSource.clip = phrase.Audio;
+            _audioSource.clip = _phrase.Audio;
             _audioSource.Play();
 
             if (_oneUsing)
@@ -135,9 +94,18 @@ namespace Failsafe.PhrasesScript
                 _used = true;
             }
 
-            _usedPhrases[phrase] = true;
+            Debug.Log($"Playing phrase: {_phrase.Text}");
+        }
 
-            Debug.Log($"Playing phrase: {phrase.Text}");
+        public Phrase GetPhrase()
+        {
+            return _phrase;
+        }
+
+        public void LoadNextPhrase()
+        {
+            _phraseIndex++;
+            LoadPhrase();
         }
 
         public void StopPlayingPhrase()
@@ -148,29 +116,20 @@ namespace Failsafe.PhrasesScript
             }
         }
 
-        public void ResetUsedPhrases()
-        {
-            foreach (var phrase in _phrases)
-            {
-                _usedPhrases[phrase] = false;
-            }
-            Debug.Log("All phrases reset.");
-        }
-
-        public void ResetOneUsing()
+        public void ResetUsed()
         {
             _used = false;
-            Debug.Log("One-using reset.");
+            Debug.Log("Phrase usage reset.");
         }
 
-        public bool HasAvailablePhrases()
+        public bool IsPlaying()
         {
-            return _phrases.Any(p => !_usedPhrases[p]);
+            return _audioSource != null && _audioSource.isPlaying;
         }
 
-        public int GetAvailablePhrasesCount()
+        public bool IsUsed()
         {
-            return _phrases.Count(p => !_usedPhrases[p]);
+            return _used;
         }
     }
 }
