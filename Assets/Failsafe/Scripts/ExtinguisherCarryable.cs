@@ -142,8 +142,14 @@ public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsert
 
     IEnumerator MoveWithDelay(Vector3 targetPos, Quaternion targetRot, float speed, float delayTime)
     {
-        yield return new WaitForSeconds(delayTime);
-        rb.isKinematic = true;
+        float timer = 0f;
+        while (timer < delayTime)
+        {
+            if (IsGrabbed)
+                yield break;
+            timer += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
         while ((Vector3.Distance(rb.position, targetPos) > 0.001f ||
                Quaternion.Angle(rb.rotation, targetRot) > 0.1f) &&
                IsGrabbed == false)
@@ -162,8 +168,8 @@ public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsert
     public void OnInserted(Transform holderTransform, float speed, float delayTime)
     {
         OnDropped();
+        rb.isKinematic = true;
         StartCoroutine(MoveWithDelay(holderTransform.position, holderTransform.rotation, speed, delayTime));
-        Debug.Log("Extinguisher inserted");
         TryFullRefill();
     }
 

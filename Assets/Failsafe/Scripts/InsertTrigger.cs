@@ -4,7 +4,7 @@ public sealed class InsertTrigger : MonoBehaviour
 {
     [SerializeField] private Transform holdPoint;
     [SerializeField] private float speed = 2f;
-    [SerializeField] private float delayTime = 10f;
+    [SerializeField] private float delayTime = 2f;
     private bool _isHolding;
     private IInsertable _currentInsertable;
 
