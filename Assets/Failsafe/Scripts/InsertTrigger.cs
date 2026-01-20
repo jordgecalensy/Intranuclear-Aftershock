@@ -4,6 +4,7 @@ public sealed class InsertTrigger : MonoBehaviour
 {
     [SerializeField] private Transform holdPoint;
     [SerializeField] private float speed = 2f;
+    [SerializeField] private float delayTime = 10f;
     private bool _isHolding;
     private IInsertable _currentInsertable;
 
@@ -12,7 +13,7 @@ public sealed class InsertTrigger : MonoBehaviour
         if (_currentInsertable != null) {
             if (!_isHolding && !_currentInsertable.IsGrabbed)
             {
-                _currentInsertable.OnInserted(holdPoint, speed);
+                _currentInsertable.OnInserted(holdPoint, speed, delayTime);
                 _isHolding = true;
             }
 
