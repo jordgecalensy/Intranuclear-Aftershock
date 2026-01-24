@@ -351,10 +351,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26f6c3ddd043d0746944024b53cd00b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rotate: 0
+  rotationAxis: {x: 0, y: 1, z: 0}
+  rotationSpeed: 90
+  useCycle: 0
+  activeTime: 2
+  inactiveTime: 2
+  visualModel: {fileID: 0}
   movable: 1
-  targetPoint: {fileID: 518994560}
   moveSpeed: 3
   moveInFixedUpdate: 1
+  waitAtWaypoint: 0
+  waypoints: []
   canDealDamage: 1
   damagePlayers: 1
   damageEnemies: 0
@@ -712,10 +720,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26f6c3ddd043d0746944024b53cd00b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rotate: 0
+  rotationAxis: {x: 0, y: 1, z: 0}
+  rotationSpeed: 90
+  useCycle: 0
+  activeTime: 2
+  inactiveTime: 2
+  visualModel: {fileID: 0}
   movable: 1
-  targetPoint: {fileID: 343318144}
   moveSpeed: 3
   moveInFixedUpdate: 1
+  waitAtWaypoint: 0
+  waypoints: []
   canDealDamage: 1
   damagePlayers: 1
   damageEnemies: 0
@@ -1545,10 +1561,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26f6c3ddd043d0746944024b53cd00b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rotate: 0
+  rotationAxis: {x: 0, y: 1, z: 0}
+  rotationSpeed: 90
+  useCycle: 0
+  activeTime: 2
+  inactiveTime: 2
+  visualModel: {fileID: 0}
   movable: 1
-  targetPoint: {fileID: 1389957065}
   moveSpeed: 3
   moveInFixedUpdate: 1
+  waitAtWaypoint: 0
+  waypoints: []
   canDealDamage: 1
   damagePlayers: 1
   damageEnemies: 0
@@ -5101,10 +5125,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26f6c3ddd043d0746944024b53cd00b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rotate: 1
+  rotationAxis: {x: 0, y: 1, z: 0}
+  rotationSpeed: 90
+  useCycle: 1
+  activeTime: 2
+  inactiveTime: 2
+  visualModel: {fileID: 68805808}
   movable: 1
-  targetPoint: {fileID: 300923535}
   moveSpeed: 3
   moveInFixedUpdate: 1
+  waitAtWaypoint: 1
+  waypoints:
+  - {fileID: 1401393208}
+  - {fileID: 518994560}
+  - {fileID: 1974147827}
+  - {fileID: 343318144}
   canDealDamage: 1
   damagePlayers: 1
   damageEnemies: 0
@@ -5794,10 +5830,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26f6c3ddd043d0746944024b53cd00b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rotate: 0
+  rotationAxis: {x: 0, y: 1, z: 0}
+  rotationSpeed: 90
+  useCycle: 0
+  activeTime: 2
+  inactiveTime: 2
+  visualModel: {fileID: 0}
   movable: 1
-  targetPoint: {fileID: 1974147827}
   moveSpeed: 3
   moveInFixedUpdate: 1
+  waitAtWaypoint: 0
+  waypoints: []
   canDealDamage: 1
   damagePlayers: 1
   damageEnemies: 0
@@ -6426,5 +6470,5 @@ SceneRoots:
   - {fileID: 508553535}
   - {fileID: 343318144}
   - {fileID: 9190895997304805818}
-  - {fileID: 3325073637892267410}
   - {fileID: 2003292487}
+  - {fileID: 1677172326}
