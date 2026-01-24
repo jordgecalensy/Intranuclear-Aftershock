@@ -24,6 +24,7 @@ namespace Failsafe.GameSceneServices
 
             builder.RegisterEntryPoint<EnemySpawnSystem>().AsSelf();
             builder.RegisterEntryPoint<EffectManager>().As<IEffectManager>();
+            
         }
     }
 }
