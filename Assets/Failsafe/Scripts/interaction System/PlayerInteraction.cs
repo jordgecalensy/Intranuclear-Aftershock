@@ -12,9 +12,6 @@ public class PlayerInteraction: MonoBehaviour
     [Inject]
     private InputHandler _inputHandler;
     
-
-
-    
     void Update()
     {
 

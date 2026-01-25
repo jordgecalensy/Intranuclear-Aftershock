@@ -6,48 +6,50 @@ namespace Failsafe.Player.UI
 {
     public class PlayerUIController : MonoBehaviour
     {
-        [Header("Health & Stamina")]
+        [Header("Здоровье и Стамина")]
         [SerializeField] private Slider _healthSlider;
         [SerializeField] private Slider[] _staminaSegments;
         [SerializeField] private float _healthCurvePower = 1.5f;
 
-        [Header("Crosshair Sprites")]
+        [Header("Базовые Спрайты")]
         [SerializeField] private Sprite _whiteCircle;
         [SerializeField] private Sprite _whiteTriangle;
         [SerializeField] private Sprite _whiteCrosshair;
 
-        [Header("Crosshair Settings")]
-        [SerializeField] private Image _mainCursorImage; // Объект Crosshair из префаба [cite: 71]
-        [SerializeField] private Color _orangeColor = new Color(1f, 0.45f, 0f);
+        [Header("Настройки Прицела")]
+        [SerializeField] private Image _mainCursorImage;
+        [SerializeField] private float _scaleSpeed = 8f; //
+        private float _targetScale = 1f;
 
-        [Header("Awareness Cubes")]
+        [Header("Awareness (Кубики)")]
         [SerializeField] private Image[] _awarenessCubes;
         private float _lastAwareness;
         private Coroutine _blinkCoroutine;
 
+        private void Update()
+        {
+            // Плавное изменение масштаба RectTransform
+            float current = _mainCursorImage.rectTransform.localScale.x;
+            float next = Mathf.Lerp(current, _targetScale, Time.deltaTime * _scaleSpeed);
+            _mainCursorImage.rectTransform.localScale = new Vector3(next, next, 1f);
+        }
+
+        public void SetTargetScale(float scale) => _targetScale = scale;
+
         public void UpdateCursorVisual(bool hasItem, bool isInteractable, bool isConsole, bool isEnemy)
         {
-            // Сбрасываем в белый по умолчанию
-            _mainCursorImage.color = Color.white;
+            // Оранжевый если враг или предмет, иначе белый
+            _mainCursorImage.color = (isInteractable || isEnemy) ? new Color(1f, 0.45f, 0f) : Color.white;
 
             if (isConsole)
             {
                 _mainCursorImage.sprite = _whiteTriangle;
+                _mainCursorImage.color = Color.white; // Консоль всегда белая
                 return;
             }
 
-            if (hasItem)
-            {
-                _mainCursorImage.sprite = _whiteCrosshair;
-                // Красим в оранжевый, если это враг или предмет
-                if (isEnemy || isInteractable) _mainCursorImage.color = _orangeColor;
-            }
-            else
-            {
-                _mainCursorImage.sprite = _whiteCircle;
-                // Красим в оранжевый, если это предмет или враг
-                if (isInteractable || isEnemy) _mainCursorImage.color = _orangeColor;
-            }
+            // Выбор спрайта в зависимости от наличия предмета
+            _mainCursorImage.sprite = hasItem ? _whiteCrosshair : _whiteCircle;
         }
 
         public void UpdateHealthUI(float current, float max)
@@ -67,6 +69,7 @@ namespace Failsafe.Player.UI
         {
             bool growing = value > _lastAwareness + 0.01f;
             _lastAwareness = value;
+            
             _awarenessCubes[0].gameObject.SetActive(value > 0);
             _awarenessCubes[1].gameObject.SetActive(value >= 25);
             _awarenessCubes[2].gameObject.SetActive(value >= 100);

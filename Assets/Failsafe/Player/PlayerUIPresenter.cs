@@ -9,8 +9,8 @@ namespace Failsafe.Player.Scripts
     public class PlayerUIPresenter : IInitializable, ITickable
     {
         private readonly PlayerUIController _view;
-        private readonly IStamina _stamina; //
-        private readonly IHealth _health; //
+        private readonly IStamina _stamina;
+        private readonly IHealth _health;
 
         public PlayerUIPresenter(PlayerUIController view, IStamina stamina, IHealth health)
         {
@@ -25,7 +25,6 @@ namespace Failsafe.Player.Scripts
         {
             _view.UpdateStaminaUI(_stamina.CurrentStamina, _stamina.MaxStamina);
             _view.UpdateHealthUI(_health.CurrentHealth, _health.MaxHealth);
-            // Если есть менеджер врагов, передавай сюда AlertnessValue
         }
     }
 }
