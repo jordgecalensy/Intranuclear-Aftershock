@@ -1,5 +1,8 @@
 using Failsafe.Items;
 using Failsafe.Player.Model;
+using Failsafe.Player.Scripts;
+using Failsafe.Player.Scripts.Interaction;
+using Failsafe.Player.UI;
 using Failsafe.Player.View;
 using Failsafe.PlayerMovements;
 using Failsafe.Scripts.Health;
@@ -66,7 +69,9 @@ protected override void Configure(IContainerBuilder builder)
     builder.RegisterEntryPoint<PlayerHandsSystem>(Lifetime.Scoped).AsSelf();
     builder.RegisterEntryPoint<PlayerAnimationController>(Lifetime.Scoped);
     builder.RegisterEntryPoint<PlayerCameraController>(Lifetime.Scoped);
-
+    builder.RegisterComponentInHierarchy<PlayerUIController>();
+    builder.RegisterComponentInHierarchy<PlayerCrosshairRaycaster>();
+    builder.RegisterEntryPoint<PlayerUIPresenter>();
     builder.Register<PlayerMovementController>(Lifetime.Scoped);  
 
     // ✅ Менеджер эффектов (он же ITickable через EntryPoint)
