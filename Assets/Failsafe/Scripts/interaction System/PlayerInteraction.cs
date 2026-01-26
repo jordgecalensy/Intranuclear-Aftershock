@@ -24,7 +24,6 @@ public class PlayerInteraction : MonoBehaviour
             var interactable = hitInfo.collider.GetComponent<Interactable>();
             if (interactable != null)
             {
-                targetScale = _hoverSize;
 
                 if (_inputHandler.GrabOrDropAction.WasPressedThisFrame()) //использовал триггер GrapOrDrop так как не смг создать свой
                 {
