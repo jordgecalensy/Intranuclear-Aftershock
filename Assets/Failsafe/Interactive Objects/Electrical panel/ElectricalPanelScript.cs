@@ -4,6 +4,7 @@ public class ElectricalPanelScript : Interactable
 {
     [SerializeField]private PowerSource _powerSource;
     [SerializeField]private bool _isEnable;
+    [SerializeField] private ElectroShieldInsertTrigger _electroShieldInsertTrigger;
     private void Start()
     {
         _powerSource.SetEnable(_isEnable);
