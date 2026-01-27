@@ -1,7 +1,6 @@
-using System.Collections;
 using UnityEngine;
 
-public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsertable
+public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable
 {
     [Header("Extinguish")]
     [SerializeField] private LayerMask fireMask;
@@ -19,32 +18,27 @@ public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsert
 
     [Header("FX")]
     [SerializeField] private ParticleSystem sprayFx;
-    private Rigidbody rb;
 
     // runtime
     private readonly Collider[] _hits = new Collider[64];
     private Transform _cam;
     private bool _using;
     private float _chargeLeft;
-    private bool _isGrabbed = false;
 
     // --- публичные геттеры для UI/логики ---
     public float ChargeLeftSeconds => _chargeLeft;
     public float ChargeMaxSeconds => maxChargeSeconds;
     public float Charge01 => maxChargeSeconds > 0f ? Mathf.Clamp01(_chargeLeft / maxChargeSeconds) : 0f;
     public bool IsEmpty => _chargeLeft <= 0.0001f;
-    public bool IsGrabbed => _isGrabbed;
 
     private void Awake()
     {
         _chargeLeft = Mathf.Max(0f, maxChargeSeconds);
-        rb = GetComponent<Rigidbody>();
     }
 
     public void OnGrabbed(Transform playerCamera)
     {
         _cam = playerCamera;
-        _isGrabbed = true;
     }
 
     public void OnUseStart()
@@ -120,7 +114,6 @@ public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsert
     {
         OnUseStop();
         _cam = null;
-        _isGrabbed = false;
     }
 
     // --- Пополнение (если понадобится) ---
@@ -140,41 +133,41 @@ public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsert
 
     // --- Вставка/извлечение в/из держатель ---
 
-    IEnumerator MoveWithDelay(Vector3 targetPos, Quaternion targetRot, float speed, float delayTime)
-    {
-        float timer = 0f;
-        while (timer < delayTime)
-        {
-            if (IsGrabbed)
-                yield break;
-            timer += Time.fixedDeltaTime;
-            yield return new WaitForFixedUpdate();
-        }
-        while ((Vector3.Distance(rb.position, targetPos) > 0.001f ||
-               Quaternion.Angle(rb.rotation, targetRot) > 0.1f) &&
-               IsGrabbed == false)
-        {
-            rb.MovePosition(
-                Vector3.MoveTowards(rb.position, targetPos, speed * Time.fixedDeltaTime)
-            );
-            rb.MoveRotation(
-                Quaternion.RotateTowards(rb.rotation, targetRot, speed * Time.fixedDeltaTime * 360)
-            );
-            yield return new WaitForFixedUpdate();
-        }
-        if (IsGrabbed == false) rb.position = targetPos;
-    }
+    // IEnumerator MoveWithDelay(Vector3 targetPos, Quaternion targetRot, float speed, float delayTime)
+    // {
+    //     float timer = 0f;
+    //     while (timer < delayTime)
+    //     {
+    //         if (IsGrabbed)
+    //             yield break;
+    //         timer += Time.fixedDeltaTime;
+    //         yield return new WaitForFixedUpdate();
+    //     }
+    //     while ((Vector3.Distance(rb.position, targetPos) > 0.001f ||
+    //            Quaternion.Angle(rb.rotation, targetRot) > 0.1f) &&
+    //            IsGrabbed == false)
+    //     {
+    //         rb.MovePosition(
+    //             Vector3.MoveTowards(rb.position, targetPos, speed * Time.fixedDeltaTime)
+    //         );
+    //         rb.MoveRotation(
+    //             Quaternion.RotateTowards(rb.rotation, targetRot, speed * Time.fixedDeltaTime * 360)
+    //         );
+    //         yield return new WaitForFixedUpdate();
+    //     }
+    //     if (IsGrabbed == false) rb.position = targetPos;
+    // }
 
-    public void OnInserted(Transform holderTransform, float speed, float delayTime)
-    {
-        OnDropped();
-        rb.isKinematic = true;
-        StartCoroutine(MoveWithDelay(holderTransform.position, holderTransform.rotation, speed, delayTime));
-        TryFullRefill();
-    }
+    // public void OnInserted(Transform holderTransform, float speed, float delayTime)
+    // {
+    //     OnDropped();
+    //     rb.isKinematic = true;
+    //     StartCoroutine(MoveWithDelay(holderTransform.position, holderTransform.rotation, speed, delayTime));
+    //     TryFullRefill();
+    // }
 
-    public void OnEjected()
-    {
-        rb.isKinematic = false;
-    }
+    // public void OnEjected()
+    // {
+    //     rb.isKinematic = false;
+    // }
 }

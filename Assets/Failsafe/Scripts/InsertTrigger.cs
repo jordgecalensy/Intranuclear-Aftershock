@@ -1,41 +1,24 @@
+using Failsafe.Player.Scripts.Interaction;
 using UnityEngine;
 
 public sealed class InsertTrigger : MonoBehaviour
 {
     [SerializeField] private Transform holdPoint;
-    [SerializeField] private float speed = 2f;
-    [SerializeField] private float delayTime = 2f;
-    private bool _isHolding;
-    private IInsertable _currentInsertable;
-
-    private void FixedUpdate()
-    {
-        if (_currentInsertable != null) {
-            if (!_isHolding && !_currentInsertable.IsGrabbed)
-            {
-                _currentInsertable.OnInserted(holdPoint, speed, delayTime);
-                _isHolding = true;
-            }
-
-            if (_isHolding && _currentInsertable.IsGrabbed)
-            {
-                _currentInsertable.OnEjected();
-                _isHolding = false;
-            }
-        }
-    }
+    private ExtinguisherInsertable _currentInsertable;
 
     private void OnTriggerEnter(Collider other)
     {
-        if (_currentInsertable != null) return;
-
-        _currentInsertable = other.GetComponent<IInsertable>();
+        _currentInsertable = other.GetComponent<ExtinguisherInsertable>();
+        if (_currentInsertable == null) return;
+        if (_currentInsertable.IsInInsertTrigger) return;
+        _currentInsertable.OnInserted(holdPoint);
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (_currentInsertable != null && other.GetComponent<IInsertable>() == _currentInsertable)
+        if (_currentInsertable != null && other.GetComponent<ExtinguisherInsertable>() == _currentInsertable)
         {
+            _currentInsertable.OnEjected();
             _currentInsertable = null;
         }
     }
