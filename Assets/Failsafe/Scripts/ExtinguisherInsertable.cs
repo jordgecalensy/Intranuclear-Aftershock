@@ -9,6 +9,7 @@ public sealed class ExtinguisherInsertable : MonoBehaviour, IInsertable
     private PhysicsController _physicsController;
     private bool _inInsertTrigger = false;
     private Transform _holderTransform;
+    private IEnterable _charger;
 
     public bool IsInserted => _physicsController.IsInserted;
     public bool IsGrabbed => _physicsController.IsGrabbed;
@@ -25,20 +26,22 @@ public sealed class ExtinguisherInsertable : MonoBehaviour, IInsertable
         if (_inInsertTrigger && !IsGrabbed && !IsInserted)
         {
             _physicsController.Insert(_holderTransform, 2f);
-            Debug.Log("Inserted extinguisher into holder via FixedUpdate");
+            _charger.OnEntered();
         }
         else if (IsGrabbed && IsInserted)
         {
             _physicsController.Eject();
+            _charger.OnExited();
         }
     }
 
-    public void OnInserted(Transform holderTransform)
+    public void OnInserted(Transform holderTransform, IEnterable charger)
     {
         if (extinguisherCarryable != null)
         {
             extinguisherCarryable.OnUseStop();
         }
+        _charger = charger;
         _inInsertTrigger = true;
         _holderTransform = holderTransform;
     }
@@ -46,5 +49,6 @@ public sealed class ExtinguisherInsertable : MonoBehaviour, IInsertable
     public void OnEjected()
     {
         _inInsertTrigger = false;
+        _charger = null;
     }
 }

@@ -75,7 +75,6 @@ namespace Failsafe.Player.Scripts.Interaction
         public bool Grab(Transform grabPoint, PhysicsInteraction physicsInteraction, bool fixRotation = false)
         {
             if (_occupied) return false;
-            if (_isInserted) Eject();
             _grabPoint = grabPoint;
             _physicsInteraction = physicsInteraction;
             _rb.useGravity = false;
@@ -88,15 +87,6 @@ namespace Failsafe.Player.Scripts.Interaction
         }
 
         public void Release()
-        {
-            _grabPoint = null;
-            _physicsInteraction?.Released();
-            _physicsInteraction = null;
-            _rb.useGravity = true;
-            gameObject.layer = _cachedCarryingLayer;
-        }
-
-        public void ForceRelease()
         {
             _grabPoint = null;
             _physicsInteraction?.Released();
@@ -175,7 +165,6 @@ namespace Failsafe.Player.Scripts.Interaction
         {
             _isInserted = true;
             MoveToPosition(holderTransform.position, holderTransform.rotation, speed);
-            Debug.Log("Object inserted: " + holderTransform.position);
         }
 
         public void Eject()

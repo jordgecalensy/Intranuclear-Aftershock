@@ -160,6 +160,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3087654973552563636}
   - component: {fileID: 1761184116201273852}
+  - component: {fileID: 6816321517857643116}
   m_Layer: 0
   m_Name: ElectroShield
   m_TagString: Untagged
@@ -201,7 +202,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _powerSource: {fileID: 0}
   _isEnable: 0
-  _electroShieldInsertTrigger: {fileID: 0}
+  _uiController: {fileID: 6816321517857643116}
+--- !u!114 &6816321517857643116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1061862703388699473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95a53739eadb8410fb546cb7ac2b54d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _ui1: {fileID: 4571145211901837491}
+  _ui2: {fileID: 5746954637043043620}
+  _switchTime: 2
 --- !u!1 &2082397496791671367
 GameObject:
   m_ObjectHideFlags: 0
@@ -899,6 +915,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   holdPoint: {fileID: 6713308675851536802}
+  charger: {fileID: 1061862703388699473}
 --- !u!1 &8584500938333418649
 GameObject:
   m_ObjectHideFlags: 0

@@ -4,6 +4,8 @@ using UnityEngine;
 public sealed class InsertTrigger : MonoBehaviour
 {
     [SerializeField] private Transform holdPoint;
+
+    [SerializeField] private IEnterable charger;
     private ExtinguisherInsertable _currentInsertable;
 
     private void OnTriggerEnter(Collider other)
@@ -11,7 +13,7 @@ public sealed class InsertTrigger : MonoBehaviour
         _currentInsertable = other.GetComponent<ExtinguisherInsertable>();
         if (_currentInsertable == null) return;
         if (_currentInsertable.IsInInsertTrigger) return;
-        _currentInsertable.OnInserted(holdPoint);
+        _currentInsertable.OnInserted(holdPoint, charger);
     }
 
     private void OnTriggerExit(Collider other)

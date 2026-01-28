@@ -1,10 +1,12 @@
 using UnityEngine;
 
-public class ElectricalPanelScript : Interactable
+public class ElectricalPanelScript : Interactable, IEnterable
 {
     [SerializeField]private PowerSource _powerSource;
     [SerializeField]private bool _isEnable;
-    [SerializeField] private ElectroShieldInsertTrigger _electroShieldInsertTrigger;
+    [SerializeField] private UIController _uiController;
+    private bool isBattaryInsert = false;
+
     private void Start()
     {
         _powerSource.SetEnable(_isEnable);
@@ -17,5 +19,18 @@ public class ElectricalPanelScript : Interactable
     protected override void Interact()
     {
         OnEnablePowerSource();
+    }
+
+    public void OnEntered()
+    {
+        isBattaryInsert = true;
+        _uiController.HideAll();
+    }
+
+    public void OnExited()
+    {
+        isBattaryInsert = false;
+        _uiController.Show();
+        Debug.Log("Exited");
     }
 }
