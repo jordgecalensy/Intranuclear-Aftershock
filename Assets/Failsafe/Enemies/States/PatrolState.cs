@@ -16,11 +16,12 @@ public class PatrolState : BehaviorState
 
     private float _waitTimer;
     private bool _isWaiting;
+    private EnemyAudioManager _audio;
 
     // Конструктор обновлен
     public PatrolState(Sensor[] sensors, Transform enemyPos, EnemyMovePatterns enemyMovePatterns, 
                        EnemyMovement movement, EnemyGetData enemyGetData, 
-                       NavMeshAgent navMeshAgent, Enemy_ScriptableObject enemyConfig)
+                       NavMeshAgent navMeshAgent, Enemy_ScriptableObject enemyConfig, EnemyAudioManager audio)
     {
         _enemyMovePatterns = enemyMovePatterns;
         _movement = movement;
@@ -28,6 +29,7 @@ public class PatrolState : BehaviorState
         _enemyConfig = enemyConfig;
         _enemyPos = enemyPos;
         _enemyGetData = enemyGetData;
+        _audio = audio;
     }
 
     public override void Enter()
@@ -35,6 +37,7 @@ public class PatrolState : BehaviorState
         base.Enter();
         _navMeshAgent.stoppingDistance = 1f;
         ChoosePatrolStyle();
+        _audio.PlayStateVoice(0);
     }
 
     private void ChoosePatrolStyle()

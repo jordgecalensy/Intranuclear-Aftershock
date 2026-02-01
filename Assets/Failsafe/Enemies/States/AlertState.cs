@@ -10,13 +10,15 @@ public class AlertState : BehaviorState
     private float _duration;
     private Vector3 _targetPosition;
     private bool _hasTarget;
+    private EnemyAudioManager _audio;
 
-    public AlertState(EnemyMovement movement, EnemyAnimator enemyAnimator, Sensor[] sensors, float duration = 1.5f)
+    public AlertState(EnemyMovement movement, EnemyAnimator enemyAnimator, Sensor[] sensors, EnemyAudioManager audio, float duration = 1.5f)
     {
         _movement = movement;
         _enemyAnimator = enemyAnimator;
         _sensors = sensors;
         _duration = duration; // Длительность анимации (можно вынести в конфиг)
+        _audio = audio;
     }
 
     public override void Enter()
@@ -28,7 +30,7 @@ public class AlertState : BehaviorState
 
         // 2. Запуск анимации "А!"
         _enemyAnimator.TryAlert();
-
+        _audio.PlayStateVoice(2);
         // 3. Ищем, на что мы среагировали
         _hasTarget = false;
         foreach (var sensor in _sensors)
