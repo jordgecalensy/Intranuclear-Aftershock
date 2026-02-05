@@ -1,15 +1,13 @@
 using Failsafe.Player.Scripts.Interaction;
 using UnityEngine;
 
-public sealed class ExtinguisherInsertable : MonoBehaviour, IInsertable
+public class Insertable : MonoBehaviour
 {
-    
-    // [Header("Extinguisher")]
-    private ExtinguisherCarryable extinguisherCarryable;
     private PhysicsController _physicsController;
     private bool _inInsertTrigger = false;
     private Transform _holderTransform;
     private IEnterable _charger;
+    private IInsertable _owner;
 
     public bool IsInserted => _physicsController.IsInserted;
     public bool IsGrabbed => _physicsController.IsGrabbed;
@@ -18,7 +16,7 @@ public sealed class ExtinguisherInsertable : MonoBehaviour, IInsertable
     private void Awake()
     {
         _physicsController = PhysicsController.Create(gameObject);
-        extinguisherCarryable = GetComponent<ExtinguisherCarryable>();
+        _owner = GetComponent<IInsertable>();
     }
 
     private void FixedUpdate()
@@ -27,28 +25,27 @@ public sealed class ExtinguisherInsertable : MonoBehaviour, IInsertable
         {
             _physicsController.Insert(_holderTransform, 2f);
             _charger.OnEntered();
+            _owner?.OnInserted();
         }
         else if (IsGrabbed && IsInserted)
         {
             _physicsController.Eject();
             _charger.OnExited();
+            _owner?.OnEjected();
+            _owner = null;
+            _charger = null;
         }
     }
 
-    public void OnInserted(Transform holderTransform, IEnterable charger)
+    public void EnterTrigger(Transform holderTransform, IEnterable charger)
     {
-        if (extinguisherCarryable != null)
-        {
-            extinguisherCarryable.OnUseStop();
-        }
-        _charger = charger;
         _inInsertTrigger = true;
         _holderTransform = holderTransform;
+        _charger = charger;
     }
 
-    public void OnEjected()
+    public void ExitTrigger()
     {
         _inInsertTrigger = false;
-        _charger = null;
     }
 }

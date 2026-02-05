@@ -4,23 +4,29 @@ using UnityEngine;
 public sealed class InsertTrigger : MonoBehaviour
 {
     [SerializeField] private Transform holdPoint;
+    [SerializeField] private GameObject charger;
+    private Insertable _currentInsertable;
+    private IEnterable _charger;
 
-    [SerializeField] private IEnterable charger;
-    private ExtinguisherInsertable _currentInsertable;
+    private void Awake()
+    {
+        _charger = charger.GetComponent<IEnterable>();
+    }
 
     private void OnTriggerEnter(Collider other)
     {
-        _currentInsertable = other.GetComponent<ExtinguisherInsertable>();
+        if (!_charger.IsRightType(other)) return;
+        _currentInsertable = other.GetComponent<Insertable>();
         if (_currentInsertable == null) return;
         if (_currentInsertable.IsInInsertTrigger) return;
-        _currentInsertable.OnInserted(holdPoint, charger);
+        _currentInsertable.EnterTrigger(holdPoint, _charger);
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (_currentInsertable != null && other.GetComponent<ExtinguisherInsertable>() == _currentInsertable)
+        if (_currentInsertable != null && other.GetComponent<Insertable>() == _currentInsertable)
         {
-            _currentInsertable.OnEjected();
+            _currentInsertable.ExitTrigger();
             _currentInsertable = null;
         }
     }

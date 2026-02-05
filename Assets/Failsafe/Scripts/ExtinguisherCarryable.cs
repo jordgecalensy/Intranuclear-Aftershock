@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable
+public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsertable
 {
     [Header("Extinguish")]
     [SerializeField] private LayerMask fireMask;
@@ -132,6 +132,16 @@ public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable
     }
 
     // --- Вставка/извлечение в/из держатель ---
+
+    public void OnInserted()
+    {
+        
+    }
+
+    public void OnEjected()
+    {
+        
+    }
 
     // IEnumerator MoveWithDelay(Vector3 targetPos, Quaternion targetRot, float speed, float delayTime)
     // {

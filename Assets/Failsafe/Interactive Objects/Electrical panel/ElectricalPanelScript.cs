@@ -33,4 +33,9 @@ public class ElectricalPanelScript : Interactable, IEnterable
         _uiController.Show();
         Debug.Log("Exited");
     }
+
+    public bool IsRightType(Component candidate)
+    {
+        return candidate.GetComponent<ElectroBattary>() != null;
+    }
 }

@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace Failsafe.Player.Scripts.Interaction
 {
+    /// <summary>Управление физикой объекта при захвате, перемещении и вставке</summary>
+    [RequireComponent(typeof(Rigidbody))]
     public sealed class PhysicsController : MonoBehaviour
     {
         private Rigidbody _rb;
@@ -11,11 +13,11 @@ namespace Failsafe.Player.Scripts.Interaction
         private bool _fixRotation;
         private PhysicsInteraction _physicsInteraction;
         private int _carryingLayerIndex = 8; // слой для рейкаста
-        private float _rotKp = 500f;
-        private float _rotKd = 50f;
+        private float _rotKp = 500f;   // коэффициент P для удержания поворота
+        private float _rotKd = 50f;    // коэффициент D для демпфирования
         private float _toTargetSpeed = 4f;
         private int _cachedCarryingLayer;
-        private Vector3 _grabHelperVector = new Vector3(0f, 0.1f, 0f);
+        private Vector3 _grabHelperVector = new Vector3(0f, 0.1f, 0f); // смещение при захвате
         private bool _occupied = false;
         private bool _isInserted = false;
         public bool IsInserted => _isInserted;
@@ -23,6 +25,7 @@ namespace Failsafe.Player.Scripts.Interaction
 
 
 
+        /// <summary>Получить или добавить контроллер на объект</summary>
         public static PhysicsController Create(GameObject parent)
         {
             var controller = parent.GetComponent<PhysicsController>();
@@ -66,18 +69,21 @@ namespace Failsafe.Player.Scripts.Interaction
             }
         }
 
+        /// <summary>Тянет объект к точке захвата</summary>
         private void DragObject()
             {
                 Vector3 toTarget = _grabPoint.position - transform.position;
                 _rb.linearVelocity = toTarget * _toTargetSpeed;
             }
 
+        /// <summary>Захватывает объект в точке grabPoint. Возвращает false, если объект занят</summary>
         public bool Grab(Transform grabPoint, PhysicsInteraction physicsInteraction, bool fixRotation = false)
         {
             if (_occupied) return false;
             _grabPoint = grabPoint;
             _physicsInteraction = physicsInteraction;
             _rb.useGravity = false;
+            // хак для предотвращения залипания на поверхности
             _rb.transform.position += _grabHelperVector;
             _cachedCarryingLayer = gameObject.layer;
             gameObject.layer = _carryingLayerIndex;
@@ -86,6 +92,7 @@ namespace Failsafe.Player.Scripts.Interaction
             return true;
         }
 
+        /// <summary>Отпускает объект, возвращает слой и гравитацию</summary>
         public void Release()
         {
             _grabPoint = null;
@@ -95,6 +102,7 @@ namespace Failsafe.Player.Scripts.Interaction
             gameObject.layer = _cachedCarryingLayer;
         }
 
+        /// <summary>Бросает объект с заданной силой</summary>
         public void Throw(float throwForce, float throwTorque, Transform direction)
         {
             _grabPoint = null;
@@ -116,6 +124,7 @@ namespace Failsafe.Player.Scripts.Interaction
             );
         }
 
+        /// <summary>PD-регулятор для удержания заданной ориентации</summary>
         private void RotationHold(Quaternion targetRotation, float kp, float kd)
         {
             if (!_rb) return;
@@ -135,6 +144,7 @@ namespace Failsafe.Player.Scripts.Interaction
             _rb.AddTorque(torque, ForceMode.Acceleration);
         }
 
+        /// <summary>плавное перемещение к позиции и повороту</summary>
         IEnumerator Move(Vector3 targetPos, Quaternion targetRot, float speed)
         {
             DisablePhysics();
@@ -156,17 +166,20 @@ namespace Failsafe.Player.Scripts.Interaction
             _occupied = false;
         }
 
+        /// <summary>Запускает плавное перемещение к целевой позиции и повороту</summary>
         public void MoveToPosition(Vector3 targetPosition, Quaternion targetRotation, float speed)
         {
             StartCoroutine(Move(targetPosition, targetRotation, speed));
         }
 
+        /// <summary>Вставляет объект в держатель (позиция + поворот holder'а)</summary>
         public void Insert(Transform holderTransform, float speed)
         {
             _isInserted = true;
             MoveToPosition(holderTransform.position, holderTransform.rotation, speed);
         }
 
+        /// <summary>Выталкивает объект из слота, включает физику</summary>
         public void Eject()
         {
             _isInserted = false;

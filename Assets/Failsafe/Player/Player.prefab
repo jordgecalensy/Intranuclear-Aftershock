@@ -34,6 +34,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6033173754768017829}
+  - {fileID: 6600794924190419292}
   m_Father: {fileID: 374109433352817470}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &374109432981789075
@@ -391,6 +392,7 @@ MonoBehaviour:
   _maxPickupDistance: 4
   _carryingDistance: 2.5
   _carrySpeed: 10
+  _grabPoint: {fileID: 6600794924190419292}
   _carryingLayerIndex: 0
   _carryingDistanceShorteningTo: 0.8
   _alignMode: 1
@@ -398,7 +400,6 @@ MonoBehaviour:
   _rotKd: 5
   _grabHelperVector: {x: 0, y: 0.01, z: 0}
   CarryingObject: {fileID: 0}
-  CarryingBody: {fileID: 0}
   _playerCameraTransform: {fileID: 374109432981789085}
   _currentCarryingDistance: 0
   _draggablePositionOffset: {x: 0, y: 1, z: 0}
@@ -565,6 +566,37 @@ MonoBehaviour:
   _crosshairImage: {fileID: 4000581551284009262}
   _hoverSize: 0.6
   _scaleSpeed: 8
+--- !u!1 &596282662349454538
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6600794924190419292}
+  m_Layer: 0
+  m_Name: GrabPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6600794924190419292
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596282662349454538}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0, y: 0, z: 2.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 374109432981789085}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &934749311656323593
 GameObject:
   m_ObjectHideFlags: 0
