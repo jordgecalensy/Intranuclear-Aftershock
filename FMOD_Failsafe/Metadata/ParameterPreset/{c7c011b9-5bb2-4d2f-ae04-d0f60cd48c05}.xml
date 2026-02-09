@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="ParameterPreset" id="{c7c011b9-5bb2-4d2f-ae04-d0f60cd48c05}">
+		<property name="name">
+			<value>In_Spider_Fan_Pitch</value>
+		</property>
+		<relationship name="folder">
+			<destination>{264c946c-a878-4476-983c-812b0ad0b90d}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{4e552769-d6fd-4d90-bf6e-40851d94bc6f}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{4e552769-d6fd-4d90-bf6e-40851d94bc6f}">
+		<property name="minimum">
+			<value>-1</value>
+		</property>
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+		<relationship name="modulators">
+			<destination>{a5280e6b-8dc1-49f1-942a-20bb466924e4}</destination>
+		</relationship>
+	</object>
+	<object class="SeekModulator" id="{a5280e6b-8dc1-49f1-942a-20bb466924e4}">
+		<property name="nameOfPropertyBeingModulated">
+			<value>cursorPosition</value>
+		</property>
+		<property name="speedAscending">
+			<value>0.74000000953674316</value>
+		</property>
+		<property name="speedDescending">
+			<value>0.50999999046325684</value>
+		</property>
+		<property name="asymmetric">
+			<value>true</value>
+		</property>
+	</object>
+</objects>
