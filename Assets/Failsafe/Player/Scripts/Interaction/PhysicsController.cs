@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -7,10 +8,11 @@ namespace Failsafe.Player.Scripts.Interaction
     [RequireComponent(typeof(Rigidbody))]
     public sealed class PhysicsController : MonoBehaviour
     {
+        public event Action Grabbed;
+        public event Action Released;
         private Rigidbody _rb;
         private Transform _grabPoint;
         private bool _fixRotation;
-        private PhysicsInteraction _physicsInteraction;
         private int _carryingLayerIndex = 8; // слой для рейкаста
         private float _rotKp = 500f;   // коэффициент P для удержания поворота
         private float _rotKd = 50f;    // коэффициент D для демпфирования
@@ -18,14 +20,14 @@ namespace Failsafe.Player.Scripts.Interaction
         private int _cachedCarryingLayer;
         private Vector3 _grabHelperVector = new Vector3(0f, 0.1f, 0f); // смещение при захвате
         private bool _occupied = false;
-        private bool _isInserted = false;
-        public bool IsInserted => _isInserted;
+        private bool _isAttached = false;
+        public bool IsAttached => _isAttached;
         public bool IsGrabbed => _grabPoint != null;
 
 
 
         /// <summary>Получить или добавить контроллер на объект</summary>
-        public static PhysicsController Create(GameObject parent)
+        public static PhysicsController GetOrCreate(GameObject parent)
         {
             var controller = parent.GetComponent<PhysicsController>();
             if (controller != null) return controller;
@@ -76,11 +78,10 @@ namespace Failsafe.Player.Scripts.Interaction
             }
 
         /// <summary>Захватывает объект в точке grabPoint. Возвращает false, если объект занят</summary>
-        public bool Grab(Transform grabPoint, PhysicsInteraction physicsInteraction, bool fixRotation = false)
+        public bool Grab(Transform grabPoint, bool fixRotation = false)
         {
             if (_occupied) return false;
             _grabPoint = grabPoint;
-            _physicsInteraction = physicsInteraction;
             _rb.useGravity = false;
             // хак для предотвращения залипания на поверхности
             _rb.transform.position += _grabHelperVector;
@@ -88,6 +89,7 @@ namespace Failsafe.Player.Scripts.Interaction
             gameObject.layer = _carryingLayerIndex;
             _rb.angularVelocity = Vector3.zero;
             _fixRotation = fixRotation;
+            Grabbed?.Invoke();
             return true;
         }
 
@@ -95,18 +97,15 @@ namespace Failsafe.Player.Scripts.Interaction
         public void Release()
         {
             _grabPoint = null;
-            _physicsInteraction?.Released();
-            _physicsInteraction = null;
             _rb.useGravity = true;
             gameObject.layer = _cachedCarryingLayer;
+            Released?.Invoke();
         }
 
         /// <summary>Бросает объект с заданной силой</summary>
         public void Throw(float throwForce, float throwTorque, Transform direction)
         {
             _grabPoint = null;
-            _physicsInteraction?.Released();
-            _physicsInteraction = null;
             _rb.useGravity = true;
             gameObject.layer = _cachedCarryingLayer;
             // _rb.AddForce(_rb.transform.forward * throwForceMultiplier, ForceMode.VelocityChange);
@@ -121,6 +120,7 @@ namespace Failsafe.Player.Scripts.Interaction
                 direction.forward * throwTorque,
                 ForceMode.Impulse
             );
+            Released?.Invoke();
         }
 
         /// <summary>PD-регулятор для удержания заданной ориентации</summary>
@@ -172,16 +172,16 @@ namespace Failsafe.Player.Scripts.Interaction
         }
 
         /// <summary>Вставляет объект в держатель (позиция + поворот holder'а)</summary>
-        public void Insert(Transform holderTransform, float speed)
+        public void Attach(Transform holderTransform, float speed)
         {
-            _isInserted = true;
+            _isAttached = true;
             MoveToPosition(holderTransform.position, holderTransform.rotation, speed);
         }
 
         /// <summary>Выталкивает объект из слота, включает физику</summary>
-        public void Eject()
+        public void Detach()
         {
-            _isInserted = false;
+            _isAttached = false;
             EnablePhysics();
         }
     }

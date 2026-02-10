@@ -176,14 +176,15 @@ namespace Failsafe.Player.Scripts.Interaction
             }
 
             CarryingObject = hitInfo.rigidbody.gameObject;
-            _physicsController = PhysicsController.Create(CarryingObject);
+            _physicsController = PhysicsController.GetOrCreate(CarryingObject);
             _carryUsable = CarryingObject.GetComponent<ICarryUsable>();
 
             var fixRotation = true;
-            if (!_physicsController.Grab(_grabPoint, this, fixRotation)) {
+            if (!_physicsController.Grab(_grabPoint, fixRotation)) {
                 Released();
                 return;
             }
+            _physicsController.Released += Released;
             _carryUsable?.OnGrabbed(_grabPoint);
             Debug.Log($"Grabbed carryable: {_carryUsable}");
 
@@ -200,6 +201,9 @@ namespace Failsafe.Player.Scripts.Interaction
             CarryingObject = null;
             IsDragging = false;
             _carryUsable = null;
+            if (_physicsController != null)
+                _physicsController.Released -= Released;
+            _physicsController = null;
         }
 
         public void ThrowObject(float throwForceMultiplier)

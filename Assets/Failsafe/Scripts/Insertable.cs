@@ -9,27 +9,58 @@ public class Insertable : MonoBehaviour
     private IEnterable _charger;
     private IInsertable _owner;
 
-    public bool IsInserted => _physicsController.IsInserted;
+    public bool IsInserted => _physicsController.IsAttached;
     public bool IsGrabbed => _physicsController.IsGrabbed;
     public bool IsInInsertTrigger => _inInsertTrigger;
 
     private void Awake()
     {
-        _physicsController = PhysicsController.Create(gameObject);
         _owner = GetComponent<IInsertable>();
+        _physicsController = PhysicsController.GetOrCreate(gameObject);
+
+        _physicsController.Released += TryInsert;
+        _physicsController.Grabbed += TryEject;
     }
 
-    private void FixedUpdate()
+    private void OnDestroy()
+    {
+        _physicsController.Released -= TryInsert;
+        _physicsController.Grabbed -= TryEject;
+    }
+
+    // private void FixedUpdate()
+    // {
+    //     if (_inInsertTrigger && !IsGrabbed && !IsInserted)
+    //     {
+    //         _physicsController.Insert(_holderTransform, 2f);
+    //         _charger.OnEntered();
+    //         _owner?.OnInserted();
+    //     }
+    //     else if (IsGrabbed && IsInserted)
+    //     {
+    //         _physicsController.Eject();
+    //         _charger.OnExited();
+    //         _owner?.OnEjected();
+    //         _owner = null;
+    //         _charger = null;
+    //     }
+    // }
+
+    private void TryInsert()
     {
         if (_inInsertTrigger && !IsGrabbed && !IsInserted)
         {
-            _physicsController.Insert(_holderTransform, 2f);
+            _physicsController.Attach(_holderTransform, 2f);
             _charger.OnEntered();
             _owner?.OnInserted();
         }
-        else if (IsGrabbed && IsInserted)
+    }
+
+    private void TryEject()
+    {
+        if (IsInserted)
         {
-            _physicsController.Eject();
+            _physicsController.Detach();
             _charger.OnExited();
             _owner?.OnEjected();
             _owner = null;
@@ -42,6 +73,7 @@ public class Insertable : MonoBehaviour
         _inInsertTrigger = true;
         _holderTransform = holderTransform;
         _charger = charger;
+        TryInsert();
     }
 
     public void ExitTrigger()
