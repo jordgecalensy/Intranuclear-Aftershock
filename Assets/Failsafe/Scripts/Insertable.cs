@@ -78,6 +78,8 @@ public class Insertable : MonoBehaviour
 
     public void ExitTrigger()
     {
+        _holderTransform = null;
+        _charger = null;
         _inInsertTrigger = false;
     }
 }
