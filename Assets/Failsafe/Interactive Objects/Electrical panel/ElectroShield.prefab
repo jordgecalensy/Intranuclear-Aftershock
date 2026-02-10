@@ -203,6 +203,8 @@ MonoBehaviour:
   _powerSource: {fileID: 0}
   _isEnable: 0
   _uiController: {fileID: 6816321517857643116}
+  _triggerCollider: {fileID: 2109557975404029607}
+  _holdPoint: {fileID: 6713308675851536802}
 --- !u!114 &6816321517857643116
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -858,7 +860,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5309804062612541136}
   - component: {fileID: 2109557975404029607}
-  - component: {fileID: 5867713923103213807}
   m_Layer: 2
   m_Name: insert_trigger
   m_TagString: Untagged
@@ -902,20 +903,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 0.61278844}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &5867713923103213807
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8436601302920118517}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7fc728a1eb3a147648b306d35ca3598c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  holdPoint: {fileID: 6713308675851536802}
-  charger: {fileID: 1061862703388699473}
 --- !u!1 &8584500938333418649
 GameObject:
   m_ObjectHideFlags: 0

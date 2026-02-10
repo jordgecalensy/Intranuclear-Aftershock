@@ -3,14 +3,18 @@ using UnityEngine;
 
 public sealed class InsertTrigger : MonoBehaviour
 {
-    [SerializeField] private Transform holdPoint;
-    [SerializeField] private GameObject charger;
-    private Insertable _currentInsertable;
+    private Transform _holdPoint;
     private IEnterable _charger;
+    private Insertable _currentInsertable;
 
-    private void Awake()
+    public static InsertTrigger GetOrCreate(GameObject parent, IEnterable charger, Transform holdPoint)
     {
-        _charger = charger.GetComponent<IEnterable>();
+        var trigger = parent.GetComponent<InsertTrigger>();
+        if (trigger != null) return trigger;
+        trigger = parent.AddComponent<InsertTrigger>();
+        trigger._charger = charger;
+        trigger._holdPoint = holdPoint;
+        return trigger;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -19,7 +23,7 @@ public sealed class InsertTrigger : MonoBehaviour
         _currentInsertable = other.GetComponent<Insertable>();
         if (_currentInsertable == null) return;
         if (_currentInsertable.IsInInsertTrigger) return;
-        _currentInsertable.EnterTrigger(holdPoint, _charger);
+        _currentInsertable.EnterTrigger(_holdPoint, _charger);
     }
 
     private void OnTriggerExit(Collider other)

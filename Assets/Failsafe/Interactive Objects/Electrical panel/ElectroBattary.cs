@@ -1,6 +1,7 @@
 using Failsafe.Player.Scripts.Interaction;
 using UnityEngine;
 
+[RequireComponent(typeof(Insertable))]
 public sealed class ElectroBattary : MonoBehaviour, IInsertable, ICarryUsable
 {
     public void OnInserted()

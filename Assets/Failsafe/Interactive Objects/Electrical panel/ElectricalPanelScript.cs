@@ -6,6 +6,15 @@ public class ElectricalPanelScript : Interactable, IEnterable
     [SerializeField]private bool _isEnable;
     [SerializeField] private UIController _uiController;
     private bool isBattaryInsert = false;
+    [Header("InsertTrigger")]
+    [SerializeField] private Collider _triggerCollider;
+    [SerializeField] private Transform _holdPoint;
+    private InsertTrigger _insertTrigger;
+
+    private void Awake()
+    {
+        _insertTrigger = InsertTrigger.GetOrCreate(_triggerCollider.gameObject, this, _holdPoint);
+    }
 
     private void Start()
     {

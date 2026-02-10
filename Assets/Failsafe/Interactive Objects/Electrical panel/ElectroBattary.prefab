@@ -144,10 +144,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1347480745102917620}
-  - component: {fileID: 2368838598258644199}
-  - component: {fileID: 3413646565170687643}
   - component: {fileID: 2869538177834198958}
   - component: {fileID: 4377543973536293901}
+  - component: {fileID: 5792807595421126648}
+  - component: {fileID: 1592762307063041229}
   m_Layer: 0
   m_Name: ElectroBattary
   m_TagString: Untagged
@@ -171,30 +171,6 @@ Transform:
   - {fileID: 4119918354754130233}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2368838598258644199
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5732331993119023966}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea64492ad2bea440683dbfd9d6ccd885, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &3413646565170687643
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5732331993119023966}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62b5927b3dc5d4ac8a1db87ba141d5ef, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!54 &2869538177834198958
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -243,6 +219,30 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.38, y: 1.75, z: 1.08}
   m_Center: {x: 0, y: -0.1, z: -0.01}
+--- !u!114 &5792807595421126648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5732331993119023966}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62b5927b3dc5d4ac8a1db87ba141d5ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1592762307063041229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5732331993119023966}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea64492ad2bea440683dbfd9d6ccd885, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7033086714335788589
 GameObject:
   m_ObjectHideFlags: 0
