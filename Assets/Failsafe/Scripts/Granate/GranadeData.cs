@@ -1,6 +1,6 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-[CreateAssetMenu(fileName = "New GranadeData", menuName = "Granade Data", order = 51)]
+[CreateAssetMenu(fileName = "GranadeData", menuName = "ScriptableObjects/Entities/Items/GranadeData")]
 public class GranadeData : ScriptableObject
 {
     [SerializeField] private GameObject _granadePref;
@@ -10,6 +10,8 @@ public class GranadeData : ScriptableObject
     [SerializeField] private int _explosionDamage;
     [SerializeField] private float _explosionRadius;
     [SerializeField] private float _explosionForce;
+    [SerializeField] private float _startUseDelay;
+    [SerializeField] private float _useDelay;
 
     public GameObject GranadePref 
     {
@@ -51,6 +53,20 @@ public class GranadeData : ScriptableObject
         get
         {
             return _explosionForce;
+        }
+    }
+    public float StartUseDelay
+    {
+        get
+        {
+            return _startUseDelay;
+        }
+    }
+    public float UseDelay
+    {
+        get
+        {
+            return _useDelay;
         }
     }
 

@@ -1,4 +1,4 @@
-using Failsafe.Items;
+﻿using Failsafe.Items;
 using UnityEngine;
 
 public class ThrowItemAction : IActionWithItem
@@ -15,12 +15,19 @@ public class ThrowItemAction : IActionWithItem
 
     public ItemUseResult Execute(PlayerHandsContainer playerHandsContainer)
     {
+
+
+
         var direction = _cameraTransform.forward;
+        var useResult = playerHandsContainer.ItemInHand.ItemUsable?.Use() ?? ItemUseResult.Consumed;
         var item = playerHandsContainer.DropItemFromHand();
         item.Use();
+        Debug.Log("sd");
         item.gameObject.transform.position = _cameraTransform.position + _cameraTransform.rotation * _startPosition;
+        Debug.Log(item.gameObject.transform.position);
         var itemRb = item.GetComponent<Rigidbody>();
         itemRb.AddForce(direction * _throwForce, ForceMode.Impulse);
-        return new ItemUseResult { };
+
+        return useResult;
     }
 }

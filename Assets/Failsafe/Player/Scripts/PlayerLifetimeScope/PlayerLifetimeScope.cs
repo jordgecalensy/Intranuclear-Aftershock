@@ -88,6 +88,7 @@ protected override void Configure(IContainerBuilder builder)
             builder.Register<Adrenaline>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
             builder.Register<Tushkan>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
             builder.Register<Gorilla>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+            builder.Register<NewTestGranade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
         }
     }
 }
