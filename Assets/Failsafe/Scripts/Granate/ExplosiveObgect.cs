@@ -3,7 +3,7 @@ using UnityEngine;
 
 public abstract class ExplosiveObgect : MonoBehaviour
 {
-    [SerializeField] protected GranadeData Data;
+    [SerializeField] protected ExplosiveObjectData Data;
     public void Explosion()
     {
         Debug.Log("boom");
