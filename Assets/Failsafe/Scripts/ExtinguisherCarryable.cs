@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable
+public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsertable
 {
     [Header("Extinguish")]
     [SerializeField] private LayerMask fireMask;
@@ -130,4 +130,54 @@ public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable
         _chargeLeft = maxChargeSeconds;
         return true;
     }
+
+    // --- Вставка/извлечение в/из держатель ---
+
+    public void OnInserted()
+    {
+        
+    }
+
+    public void OnEjected()
+    {
+        
+    }
+
+    // IEnumerator MoveWithDelay(Vector3 targetPos, Quaternion targetRot, float speed, float delayTime)
+    // {
+    //     float timer = 0f;
+    //     while (timer < delayTime)
+    //     {
+    //         if (IsGrabbed)
+    //             yield break;
+    //         timer += Time.fixedDeltaTime;
+    //         yield return new WaitForFixedUpdate();
+    //     }
+    //     while ((Vector3.Distance(rb.position, targetPos) > 0.001f ||
+    //            Quaternion.Angle(rb.rotation, targetRot) > 0.1f) &&
+    //            IsGrabbed == false)
+    //     {
+    //         rb.MovePosition(
+    //             Vector3.MoveTowards(rb.position, targetPos, speed * Time.fixedDeltaTime)
+    //         );
+    //         rb.MoveRotation(
+    //             Quaternion.RotateTowards(rb.rotation, targetRot, speed * Time.fixedDeltaTime * 360)
+    //         );
+    //         yield return new WaitForFixedUpdate();
+    //     }
+    //     if (IsGrabbed == false) rb.position = targetPos;
+    // }
+
+    // public void OnInserted(Transform holderTransform, float speed, float delayTime)
+    // {
+    //     OnDropped();
+    //     rb.isKinematic = true;
+    //     StartCoroutine(MoveWithDelay(holderTransform.position, holderTransform.rotation, speed, delayTime));
+    //     TryFullRefill();
+    // }
+
+    // public void OnEjected()
+    // {
+    //     rb.isKinematic = false;
+    // }
 }
