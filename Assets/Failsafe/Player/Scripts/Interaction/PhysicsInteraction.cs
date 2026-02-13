@@ -69,13 +69,7 @@ namespace Failsafe.Player.Scripts.Interaction
         private const float _maxForceMultiplier = 3f;
 
         private int _cachedCarryingLayer;
-
-        [Header("Crosshair")]
-        [SerializeField] private Image _crosshairImage;
-        [SerializeField] private float _normalSize = 0.2f;
-        [SerializeField] private float _hoverSize = 0.6f;
-        [SerializeField] private float _scaleSpeed = 8f;
-
+        
         public bool IsDragging { get; private set; }
 
         private void Awake()
@@ -91,7 +85,6 @@ namespace Failsafe.Player.Scripts.Interaction
 
         private void Update()
         {
-            UpdateCrosshairScale();
 
             if (_inputHandler.GrabOrDropAction.WasPressedThisFrame())
                 GrabOrDrop();
@@ -225,25 +218,7 @@ namespace Failsafe.Player.Scripts.Interaction
             _currentCarryingDistance = _carryingDistance;
         }
 
-        private void UpdateCrosshairScale()
-        {
-            float targetScale = _normalSize;
-
-            if (!IsDragging)
-            {
-                Ray ray = new Ray(_playerCameraTransform.position, _playerCameraTransform.forward);
-                if (Physics.Raycast(ray, out RaycastHit hit, _maxPickupDistance))
-                {
-                    if (hit.rigidbody != null)
-                        targetScale = _hoverSize;
-                }
-            }
-
-            float current = _crosshairImage.rectTransform.localScale.x;
-            float next = Mathf.Lerp(current, targetScale, Time.deltaTime * _scaleSpeed);
-            _crosshairImage.rectTransform.localScale = new Vector3(next, next, 1f);
-        }
-
+      
         private Quaternion GetTargetRotation()
         {
             switch (_alignMode)

@@ -36,8 +36,13 @@ public class Stasisable : MonoBehaviour
         if (_enemy == null)
         {
             _objectVelocity = _rb.linearVelocity;
+            _rb.angularVelocity = Vector3.zero;
             _rb.isKinematic = true;
             _rb.constraints = RigidbodyConstraints.FreezeAll;
+            if (this.gameObject.GetComponent<DamageObstacle>())
+            {
+                this.gameObject.GetComponent<DamageObstacle>().SetStasis(true);
+            }
         }
 
         yield return new WaitForSeconds(duration);
@@ -49,6 +54,10 @@ public class Stasisable : MonoBehaviour
             _rb.constraints = RigidbodyConstraints.None;
             if (!defaultMode)
                 _rb.AddForce(_objectVelocity, ForceMode.VelocityChange);
+            if (this.gameObject.GetComponent<DamageObstacle>())
+            {
+                this.gameObject.GetComponent<DamageObstacle>().SetStasis(false);
+            }
         }
 
         _startedCoroutine = null;
