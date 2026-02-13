@@ -19,7 +19,7 @@ namespace Failsafe.Player.Scripts.Interaction
         [SerializeField] private float _carryingDistance = 2.5f;
         [SerializeField] private float _carrySpeed = 4f;
         [SerializeField] private Transform _grabPoint;
-        [SerializeField] private LayerMask _mask = LayerMask.GetMask("CarryObject");
+        [SerializeField] private LayerMask _mask = LayerMask.GetMask("CarryObjects");
 
         [Tooltip("Индекс слоя (0–31), в который временно помещается переносимый объект.")]
         [SerializeField, Range(0, 31)] private int _carryingLayerIndex = 0;
