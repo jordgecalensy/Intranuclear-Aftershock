@@ -1,4 +1,4 @@
-using Failsafe.Items;
+﻿using Failsafe.Items;
 using Failsafe.Player.Model;
 using Failsafe.Player.View;
 using Failsafe.PlayerMovements;
@@ -88,7 +88,12 @@ protected override void Configure(IContainerBuilder builder)
             builder.Register<Adrenaline>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
             builder.Register<Tushkan>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
             builder.Register<Gorilla>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
-            builder.Register<NewTestGranade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+            builder.Register<EmpGranade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+            builder.Register<FragGranade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+            builder.Register<FireGranade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+            builder.Register<StasisGranade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+            builder.Register<ScanGranade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+
         }
     }
 }

@@ -2,7 +2,7 @@
 
 public class MineTrigger : MonoBehaviour
 {
-    [SerializeField] private Granade _granade;
+    [SerializeField] private OldGranade _granade;
     private void OnTriggerStay(Collider other)
     {
         if (other.gameObject.tag == "Player" || other.gameObject.tag == "Enemy")

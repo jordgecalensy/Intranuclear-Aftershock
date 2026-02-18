@@ -24,7 +24,6 @@ public class ThrowItemAction : IActionWithItem
         item.Use();
         Debug.Log("sd");
         item.gameObject.transform.position = _cameraTransform.position + _cameraTransform.rotation * _startPosition;
-        Debug.Log(item.gameObject.transform.position);
         var itemRb = item.GetComponent<Rigidbody>();
         itemRb.AddForce(direction * _throwForce, ForceMode.Impulse);
 

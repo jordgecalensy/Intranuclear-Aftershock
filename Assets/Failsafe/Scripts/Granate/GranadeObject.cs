@@ -3,12 +3,12 @@ using System.Collections;
 
 public class GranadeObject : ExplosiveObgect
 {
-    public void ActivesionGranade(GranadeData granadeData)
+    public void ActivesionGranade(ThrowGranadeData granadeData)
     {
-        Debug.Log("Tik tak");
         StartCoroutine(ExplosionGranadeTimer(granadeData));
+        Debug.Log("Tik tak");
     }
-    private IEnumerator ExplosionGranadeTimer(GranadeData granadeData)
+    protected IEnumerator ExplosionGranadeTimer(ThrowGranadeData granadeData)
     {
         yield return new WaitForSeconds(granadeData.GranadeTimer);
         Explosion();

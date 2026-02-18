@@ -1,12 +1,12 @@
 ﻿using Failsafe.Scripts.Damage.Implementation;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public abstract class ExplosiveObgect : MonoBehaviour
 {
     [SerializeField] protected ExplosiveObjectData Data;
     public void Explosion()
     {
-        Debug.Log("boom");
         Collider[] hitsInfo = Physics.OverlapSphere(transform.position, Data.ExplosionRadius);
         foreach (var hitInfo in hitsInfo)
         {
@@ -14,35 +14,42 @@ public abstract class ExplosiveObgect : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(transform.position, directionToEnemy, out hit, Data.ExplosionRadius))
             {
-                if (hitInfo.name != hit.collider.name)
-                {
-                    if (hitInfo.tag == "Player" || hitInfo.tag == "Enemy")
-                        Debug.Log($"{hitInfo.gameObject.name} за препядствием {hit.collider.name}");
-                    continue;
-                }
-                if (hit.collider.GetComponent<DamageableComponent>() != null)
-                {
-                    DamageableComponent damageableComponent = hit.collider.GetComponent<DamageableComponent>();
-                    damageableComponent.TakeDamage(new FlatDamage(Data.ExplosionDamage));
-                    Debug.Log($"{hit.collider.name} Take {Data.ExplosionDamage} Damage");
-                    ExplosionEffect();
-                }
-                if (hit.collider.GetComponent<Rigidbody>() != null)
-                {
-                    Debug.Log($"Rigidbody: {hit.collider.name}");
-                    hit.collider.GetComponent<Rigidbody>().AddForce(directionToEnemy * Data.ExplosionForce, ForceMode.Impulse);
-                }
+                if (HitsChecking(hit, hitInfo)) continue;
+                DamagebleExplosionEffect(hitInfo);
+                PhysicsExplosionEffect(hitInfo, directionToEnemy);
             }
         }
         SingleExplosionEffect();
         Destroy(gameObject);
     }
-    protected virtual void ExplosionEffect()
+    protected virtual bool HitsChecking(RaycastHit hit, Collider hitInfo)
     {
-        //эффекты для разных гранат
+        if (hitInfo.name != hit.collider.name)
+        {
+            if (hitInfo.tag == "Player" || hitInfo.tag == "Enemy")
+                Debug.Log($"{hitInfo.gameObject.name} за препядствием {hit.collider.name}");
+            return true;
+        }
+        return false;
+    }
+    protected virtual void DamagebleExplosionEffect(Collider hitInfo)
+    {
+        if (hitInfo.GetComponent<DamageableComponent>() == null) return;
+        DamageableComponent damageableComponent = hitInfo.GetComponent<DamageableComponent>();
+        damageableComponent.TakeDamage(new FlatDamage(Data.ExplosionDamage));
+        Debug.Log($"{hitInfo.name} Take {Data.ExplosionDamage} Damage");
+    }
+    protected virtual void PhysicsExplosionEffect(Collider hitInfo, Vector3 directionToEnemy)
+    {
+        if (hitInfo.GetComponent<Rigidbody>() == null) return;
+        Debug.Log($"Rigidbody: {hitInfo.name}");
+        hitInfo.GetComponent<Rigidbody>().AddForce(directionToEnemy * Data.ExplosionForce, ForceMode.Impulse);
+
     }
     protected virtual void SingleExplosionEffect()
     {
-        //Одиночный эффект перед взрывом гранаты
+        var Vfx = Instantiate(Data.ExplosiveVFX, gameObject.transform.position, Quaternion.identity);
+        Destroy(Vfx, Data.LifeTimeVFX); //можно сделать автоматически но андрей бяка
+        //Одиночный эффект после взрыва гранаты
     }
 }

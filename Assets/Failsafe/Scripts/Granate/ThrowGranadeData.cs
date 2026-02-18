@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 [CreateAssetMenu(fileName = "GranadeData", menuName = "ScriptableObjects/Entities/Items/GranadeData")]
-public class GranadeData : ScriptableObject
+public class ThrowGranadeData : ScriptableObject
 {
 
     [SerializeField] private float _throwForce;

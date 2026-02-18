@@ -1,66 +1,34 @@
-﻿using Failsafe.Scripts.Damage.Implementation;
+﻿using Failsafe.Items;
 using UnityEngine;
-using System.Collections;
+using VContainer;
+using VContainer.Unity;
 
-public abstract class Granade : MonoBehaviour
+public class Granade : IUsable
 {
-    [SerializeField] protected GranadeData Data;
-    [SerializeField] protected GameObject MineTrigger;
+    public ThrowGranadeData Data;
+    protected Item GranadeItem;
 
-    protected bool ItsMineState = false;
-    protected bool InstaledMine = false;
-    public void Explosion()
+    protected Granade(ThrowGranadeData data)
     {
-        //Collider[] hitsInfo = Physics.OverlapSphere(transform.position, Data.ExplosionRadius);
-        //foreach (var hitInfo in hitsInfo)
-        //{
-        //    Vector3 directionToEnemy = (hitInfo.transform.position - transform.position).normalized;
-        //    RaycastHit hit;
-        //    if (Physics.Raycast(transform.position, directionToEnemy, out hit, Data.ExplosionRadius))
-        //    {
-        //        if (hitInfo.name != hit.collider.name)
-        //        {
-        //            if (hitInfo.tag == "Player" || hitInfo.tag == "Enemy")
-        //                Debug.Log($"{hitInfo.gameObject.name} за препядствием {hit.collider.name}");
-        //            continue;
-        //        }
-        //        if (hit.collider.GetComponent<DamageableComponent>() != null)
-        //        {
-        //            DamageableComponent damageableComponent = hit.collider.GetComponent<DamageableComponent>();
-        //            damageableComponent.TakeDamage(new FlatDamage(Data.ExplosionDamage));
-        //            Debug.Log($"{hit.collider.name} Take {Data.ExplosionDamage} Damage");
-        //            ExplosionEffect();
-        //        }
-        //        if (hit.collider.GetComponent<Rigidbody>() != null)
-        //        {
-        //            Debug.Log($"Rigidbody: {hit.collider.name}");
-        //            hit.collider.GetComponent<Rigidbody>().AddForce(directionToEnemy * Data.ExplosionForce, ForceMode.Impulse); 
-        //        }
-        //    }
-        //}
-        SingleExplosionEffect();
-        Destroy(gameObject);
+        Data = data;
     }
-    public void ActiveMineState()
+    public void ParseItem(Item item_object)
     {
-        ItsMineState = true;
+        GranadeItem = item_object;
     }
-    protected virtual void ExplosionEffect()
+    public ItemUseResult Use()
     {
-        //эффекты для разных гранат
+        GranadeItem.gameObject.GetComponent<GranadeObject>().ActivesionGranade(Data);
+        Debug.Log("Use");
+        return new ItemUseResult { ItemStateAfterUse = ItemState.Drop, UsageType = UsageType.HoldToUse };
     }
-    protected virtual void SingleExplosionEffect()
+    public void AltMode()
     {
-        //Одиночный эффект перед взрывом гранаты
+
     }
-    protected void OnCollisionEnter(Collision collision)
+    public void GetItemUseDelays(out float startUseDelay, out float useDelay)
     {
-        if (!ItsMineState) return;
-        if (collision.gameObject.tag == "Player") return;
-        Debug.Log("collide " + gameObject + " With " + collision.gameObject.name);
-        transform.SetParent(collision.transform);
-        gameObject.GetComponent<Rigidbody>().isKinematic = true;
-        gameObject.GetComponent<Collider>().enabled = false;
-        MineTrigger.SetActive(true);
+        startUseDelay = Data.StartUseDelay;
+        useDelay = Data.UseDelay;
     }
 }
