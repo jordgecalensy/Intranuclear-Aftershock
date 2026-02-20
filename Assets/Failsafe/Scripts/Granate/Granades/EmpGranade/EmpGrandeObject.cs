@@ -18,7 +18,8 @@ public class EmpGrandeObject : GranadeObject
         Debug.Log("on enemy effect");
         var OnEnemyEffect = Instantiate(Data.OnEnemyEffect, hitInfo.transform);
         Destroy(OnEnemyEffect, Data.LifeTimeOnEnemyEffect);
-        hitInfo.GetComponent<Enemy>().StunnedState(_direction, Data.LifeTimeOnEnemyEffect);
+        if (hitInfo.GetComponent<Enemy>() != null)
+            hitInfo.GetComponent<Enemy>().StunnedState(_direction, Data.LifeTimeOnEnemyEffect);
     }
     protected override void PhysicsExplosionEffect(Collider hitInfo, Vector3 directionToEnemy) { }
 }

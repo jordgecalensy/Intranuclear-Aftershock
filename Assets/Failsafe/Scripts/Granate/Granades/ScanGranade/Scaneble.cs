@@ -11,7 +11,7 @@ public class Scaneble : MonoBehaviour
     {
         _renderers = GetComponentsInChildren<Renderer>();
     }
-    public void StasisHit(float duration, Material material)
+    public void ScanHit(float duration, Material material)
     {
         _scanMaterial = material;
         _startedCoroutine ??= StartCoroutine(DurationScan(duration));
