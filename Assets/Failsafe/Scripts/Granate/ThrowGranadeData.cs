@@ -8,6 +8,7 @@ public class ThrowGranadeData : ScriptableObject
     [SerializeField] private float _granadeTimer;
     [SerializeField] private float _startUseDelay;
     [SerializeField] private float _useDelay;
+    [SerializeField] private float _mineTriggerRadius;
 
     public float ThrowForce
     {
@@ -35,6 +36,13 @@ public class ThrowGranadeData : ScriptableObject
         get
         {
             return _useDelay;
+        }
+    }
+    public float MineTriggerRadius
+    {
+        get
+        {
+            return _mineTriggerRadius;
         }
     }
 

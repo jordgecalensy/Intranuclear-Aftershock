@@ -8,21 +8,24 @@ public class GranadeObject : ExplosiveObgect
     protected bool ItsMineState = false;
     protected bool InstaledMine = false;
 
+    protected ThrowGranadeData GranadeData;
+
     public void ActivesionGranade(ThrowGranadeData granadeData, bool itsMineState)
     {
+        GranadeData = granadeData;
         if (itsMineState)
         {
             ItsMineState = itsMineState;
         }
         else
         {
-            StartCoroutine(ExplosionGranadeTimer(granadeData));
+            StartCoroutine(ExplosionGranadeTimer());
             Debug.Log("Tik tak");
         }
     }
-    protected IEnumerator ExplosionGranadeTimer(ThrowGranadeData granadeData)
+    protected IEnumerator ExplosionGranadeTimer()
     {
-        yield return new WaitForSeconds(granadeData.GranadeTimer);
+        yield return new WaitForSeconds(GranadeData.GranadeTimer);
         Explosion();
     }
     protected void OnCollisionEnter(Collision collision)
@@ -33,6 +36,7 @@ public class GranadeObject : ExplosiveObgect
         transform.SetParent(collision.transform);
         gameObject.GetComponent<Rigidbody>().isKinematic = true;
         gameObject.GetComponent<Collider>().enabled = false;
+        MineTrigger.GetComponent<SphereCollider>().radius = GranadeData.MineTriggerRadius;
         MineTrigger.SetActive(true);
     }
 }
