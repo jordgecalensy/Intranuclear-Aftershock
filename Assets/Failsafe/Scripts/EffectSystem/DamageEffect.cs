@@ -64,7 +64,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (_damageHitMaterial == null)
                 Debug.LogWarning("DamageHitEffect: material TakingDamage not found!");
 
-            _damageHitEvent = EventReference.Find("event:/UI/LowHP/LowHealthSFX");
+            //_damageHitEvent = EventReference.Find("event:/UI/LowHP/LowHealthSFX");
         }
 
         // ---------- APPLY ----------
@@ -79,9 +79,9 @@ namespace Failsafe.Scripts.EffectSystem
             var pass = new CustomPassDrawer(_damageHitMaterial);
             _customPassVolume.customPasses.Add(pass);
 
-            _damageHitEmitter = _customPassVolume.gameObject.AddComponent<StudioEventEmitter>();
-            _damageHitEmitter.EventReference = _damageHitEvent;
-            _damageHitEmitter.Play();
+            //_damageHitEmitter = _customPassVolume.gameObject.AddComponent<StudioEventEmitter>();
+            //_damageHitEmitter.EventReference = _damageHitEvent;
+            //_damageHitEmitter.Play();
 
             AddImpulse(_duration);
         }

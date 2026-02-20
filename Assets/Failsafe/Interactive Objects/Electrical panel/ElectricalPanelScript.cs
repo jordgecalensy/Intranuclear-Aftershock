@@ -15,11 +15,13 @@ public class ElectricalPanelScript : Interactable, IEnterable
 
     private void Awake()
     {
-        InsertTrigger.GetOrCreate(_triggerCollider.gameObject, this, _holdPoint);
+   
     }
 
     private void Start()
     {
+        Debug.Log(_triggerCollider.gameObject + " "+ _triggerCollider);
+        InsertTrigger.GetOrCreate(_triggerCollider.gameObject, this, _holdPoint);
         _powerSource?.SetEnable(_isEnable);
     }
     private void OnEnablePowerSource()
