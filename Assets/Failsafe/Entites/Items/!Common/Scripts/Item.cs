@@ -7,18 +7,18 @@ public class Item : Prop
     public ItemData ItemData;
     public List<ActionsGroup> ActionsGroups;
     private Rigidbody _rigidbody;
-    private BoxCollider _collider;
+    private Collider _collider;
     private Transform _handlePoint;
     public Transform HandlePoint => _handlePoint;
 
     private void Awake()
     {
-        if (!GetComponent<BoxCollider>())
+        if (!GetComponentInChildren<Collider>())
         {
-            gameObject.AddComponent<BoxCollider>();
+            Debug.LogError("No colliders on item " + this.name);
         }
         _rigidbody = gameObject.GetComponent<Rigidbody>();
-        _collider = gameObject.GetComponent<BoxCollider>();
+        _collider = gameObject.GetComponentInChildren<Collider>();
         _handlePoint = transform.Find("HandlePoint");
     }
 
