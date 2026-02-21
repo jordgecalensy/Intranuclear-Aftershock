@@ -53,6 +53,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _NoiseTexture:
+        m_Texture: {fileID: 2800000, guid: 9de7d5a3e4481e3448ba87f8921e75c0, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -75,9 +79,9 @@ Material:
     - _AffectNormal: 0
     - _AffectSmoothness: 1
     - _AlphaCutoffEnable: 0
-    - _AlphaDstBlend: 10
+    - _AlphaDstBlend: 1
     - _AlphaSrcBlend: 1
-    - _BlendMode: 4
+    - _BlendMode: 1
     - _ConservativeDepthOffsetEnable: 0
     - _CullMode: 2
     - _CullModeForward: 2
@@ -95,13 +99,16 @@ Material:
     - _DoubleSidedGIMode: 0
     - _DoubleSidedNormalMode: 2
     - _DrawOrder: 0
-    - _DstBlend: 10
+    - _DstBlend: 1
     - _DstBlend2: 10
     - _EnableBlendModePreserveSpecularLighting: 0
     - _EnableFogOnTransparent: 1
     - _ExcludeFromTUAndAA: 0
-    - _FresnelPower: 6
+    - _FresnelPower: 3
     - _Metallic: 0
+    - _NoiseContrast: 0.085
+    - _NoiseScale: 1.11
+    - _NoiseSpeed: 0.492
     - _OpaqueCullMode: 2
     - _PerPixelSorting: 0
     - _RenderQueueType: 4
@@ -133,6 +140,6 @@ Material:
     - _BaseColor: {r: 0.02352953, g: 0, b: 1, a: 1}
     - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
-    - _FresnelColor: {r: 0, g: 6.4, b: 5.1137257, a: 1}
+    - _FresnelColor: {r: 0, g: 0.8, b: 0.6392157, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

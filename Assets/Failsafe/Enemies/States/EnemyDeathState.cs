@@ -3,14 +3,15 @@
 public class EnemyDeathState : BehaviorForcedState
 {
     private EnemyAnimator _enemyAnimator;
-    private EnemyNavMeshActions _enemyNavMeshActions;
+    private EnemyMovement _movement; // <-- Новый класс
     private Animator _animator;
     private AnimationEvent _replaceEvent = new AnimationEvent();
     private readonly int _deathStateHash = Animator.StringToHash("Base Layer.Death");
 
-    public EnemyDeathState(EnemyAnimator enemyAnimator, EnemyNavMeshActions enemyNavMeshActions, Animator animator)
+    // Обновленный конструктор
+    public EnemyDeathState(EnemyAnimator enemyAnimator, EnemyMovement movement, Animator animator)
     {
-        _enemyNavMeshActions = enemyNavMeshActions;
+        _movement = movement;
         _enemyAnimator = enemyAnimator;
         _animator = animator;
     }
@@ -19,7 +20,11 @@ public class EnemyDeathState : BehaviorForcedState
     {
         base.Enter();
         Debug.Log("Enter DeathState");
-        _enemyNavMeshActions.StopMoving();
+        
+        // Останавливаем движение через Мотор
+        _movement.Stop();
+        
+        // Запускаем триггер смерти
         _enemyAnimator.TryDeath();
     }
 
@@ -27,16 +32,22 @@ public class EnemyDeathState : BehaviorForcedState
     {
         AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
 
-        // Use the hashed name for comparison with the current state's full path hash
+        // Ждем, пока проиграется анимация смерти
         if (stateInfo.fullPathHash == _deathStateHash)
         {
-            // Get the animation clip and add the AnimationEvent
-            AnimationClip clip = _animator.GetCurrentAnimatorClipInfo(0)[0].clip;
-
-            _replaceEvent.time = clip.length;
-            _replaceEvent.functionName = "ReplaceWithDummy";
-
-            clip.AddEvent(_replaceEvent);
+            AnimatorClipInfo[] clips = _animator.GetCurrentAnimatorClipInfo(0);
+            if (clips.Length > 0)
+            {
+                AnimationClip clip = clips[0].clip;
+                
+                // Проверяем, чтобы не добавлять событие каждый кадр (оптимизация)
+                if (_replaceEvent.functionName != "ReplaceWithDummy" || _replaceEvent.time != clip.length)
+                {
+                    _replaceEvent.time = clip.length;
+                    _replaceEvent.functionName = "ReplaceWithDummy";
+                    clip.AddEvent(_replaceEvent);
+                }
+            }
         }
     }
 }

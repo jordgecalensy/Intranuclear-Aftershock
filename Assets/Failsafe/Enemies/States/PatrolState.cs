@@ -1,14 +1,11 @@
-﻿using FMOD;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using Debug = UnityEngine.Debug;
+
 public class PatrolState : BehaviorState
 {
-    private readonly Sensor[] _sensors;
     private readonly EnemyMovePatterns _enemyMovePatterns;
-    private EnemyNavMeshActions _enemyNavMeshActions;
+    private readonly EnemyMovement _movement; // <-- Новый класс
     private NavMeshAgent _navMeshAgent;
     private Enemy_ScriptableObject _enemyConfig;
     private Transform _enemyPos;
@@ -19,16 +16,20 @@ public class PatrolState : BehaviorState
 
     private float _waitTimer;
     private bool _isWaiting;
-    public PatrolState(Sensor[] sensors,Transform enemyPos, EnemyMovePatterns enemyMovePatterns, EnemyNavMeshActions enemyNavMeshActions,EnemyGetData enemyGetData, NavMeshAgent navMeshAgent, Enemy_ScriptableObject enemyConfig)
+    private EnemyAudioManager _audio;
+
+    // Конструктор обновлен
+    public PatrolState(Sensor[] sensors, Transform enemyPos, EnemyMovePatterns enemyMovePatterns, 
+                       EnemyMovement movement, EnemyGetData enemyGetData, 
+                       NavMeshAgent navMeshAgent, Enemy_ScriptableObject enemyConfig, EnemyAudioManager audio)
     {
-        _sensors = sensors;
         _enemyMovePatterns = enemyMovePatterns;
-        _enemyNavMeshActions = enemyNavMeshActions;
+        _movement = movement;
         _navMeshAgent = navMeshAgent;
         _enemyConfig = enemyConfig;
         _enemyPos = enemyPos;
         _enemyGetData = enemyGetData;
-
+        _audio = audio;
     }
 
     public override void Enter()
@@ -36,20 +37,18 @@ public class PatrolState : BehaviorState
         base.Enter();
         _navMeshAgent.stoppingDistance = 1f;
         ChoosePatrolStyle();
-
+        _audio.PlayStateVoice(0);
     }
 
     private void ChoosePatrolStyle()
     {
         if (_patrolPoints == null || _patrolPoints.Count == 0)
-        {
             _patrolPoints = _enemyGetData.GetRoomPatrolPoints();
-        }
 
         if (_patrolPoints == null || _patrolPoints.Count == 0)
         {
             _patrolPoint = _enemyMovePatterns.RandomPointAround(_enemyPos.position, _enemyConfig.offsetSearchingPoint);
-            _enemyNavMeshActions.MoveToPoint(_patrolPoint, _enemyConfig.PatrolingSpeed);
+            _movement.MoveTo(_patrolPoint, _enemyConfig.PatrolingSpeed);
         }
         else
         {
@@ -57,9 +56,9 @@ public class PatrolState : BehaviorState
             HandlePatrolling();
         }
     }
+
     public override void Update()
     {
-       
         if (_isWaiting)
         {
             _waitTimer -= Time.deltaTime;
@@ -71,14 +70,14 @@ public class PatrolState : BehaviorState
             return;
         }
 
-        if (_enemyNavMeshActions.IsPointReached())
+        // Проверка дистанции через новый метод
+        if (_movement.IsPointReached(1.5f))
         {
-            _enemyNavMeshActions.StopMoving();
+            _movement.Stop(); 
             _isWaiting = true;
             _waitTimer = _enemyConfig.PatrollingWaitTime;
         }
     }
-    
 
     private void HandlePatrolling()
     {
@@ -92,13 +91,12 @@ public class PatrolState : BehaviorState
             _patrolPoint = _patrolPoints[_currentPatrolPointIndex].position;
         }
 
-        _enemyNavMeshActions.MoveToPoint(_patrolPoint, _enemyConfig.PatrolingSpeed);
+        _movement.MoveTo(_patrolPoint, _enemyConfig.PatrolingSpeed);
     }
     
     public void SetManualPatrolPoints(List<Transform> points, bool restart = true)
     {
         _patrolPoints = points ?? new List<Transform>();
-
         if (restart)
         {
             _currentPatrolPointIndex = -1;

@@ -1,111 +1,162 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections.Generic;
 
 public class DebugManager : MonoBehaviour
 {
+    [Header("Settings")]
     [SerializeField] private bool CursorOn;
-    [SerializeField] private GameObject[] Enemies;
-
-    private Rect windowRect = new Rect(100, 100, 300, 400);
-    private bool showWindow = true;
-    private Vector2 scrollPos;
     [SerializeField] private bool showNavMeshPath = true;
     [SerializeField] private Color pathColor = Color.cyan;
 
+    [Header("Data")]
+    [SerializeField] private GameObject[] Enemies;
+
+    private Rect windowRect = new Rect(100, 100, 350, 500);
+    private bool showWindow = true;
+    private Vector2 scrollPos;
+
     private void Start()
     {
-        Enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        windowRect.x = Screen.width - windowRect.width - 10; // начальная позиция справа
+        RefreshEnemies();
+        windowRect.x = Screen.width - windowRect.width - 10;
         windowRect.y = 10;
     }
 
     private void LateUpdate()
     {
+        // Управление курсором
         Cursor.visible = CursorOn;
         Cursor.lockState = CursorOn ? CursorLockMode.None : CursorLockMode.Locked;
-        
-        
+    }
+
+    // Метод для поиска только уникальных родительских объектов с компонентом Enemy
+    public void RefreshEnemies()
+    {
+        GameObject[] allTagged = GameObject.FindGameObjectsWithTag("Enemy");
+        HashSet<GameObject> uniqueParents = new HashSet<GameObject>();
+
+        foreach (var obj in allTagged)
+        {
+            // Ищем компонент Enemy в объекте или его родителях
+            Enemy e = obj.GetComponentInParent<Enemy>();
+            if (e != null)
+            {
+                uniqueParents.Add(e.gameObject);
+            }
+        }
+
+        Enemies = new GameObject[uniqueParents.Count];
+        uniqueParents.CopyTo(Enemies);
     }
 
     private void OnGUI()
     {
-        if (Enemies == null || Enemies.Length == 0)
-            return;
-
         if (showWindow)
         {
-            windowRect = GUI.Window(0, windowRect, DrawDebugWindow, "Enemy Debug");
+            windowRect = GUI.Window(0, windowRect, DrawDebugWindow, "Enemy Debugger");
         }
         else
         {
-            // Кнопка открытия
             if (GUI.Button(new Rect(Screen.width - 110, 10, 100, 30), "Show Debug"))
             {
                 showWindow = true;
             }
         }
     }
+
+    private void DrawDebugWindow(int windowID)
+    {
+        // Кнопка закрытия
+        if (GUI.Button(new Rect(windowRect.width - 25, 5, 20, 20), "×"))
+        {
+            showWindow = false;
+        }
+
+        GUILayout.BeginVertical();
+        
+        // Общие настройки дебага
+        showNavMeshPath = GUILayout.Toggle(showNavMeshPath, " Отображать пути NavMesh");
+        
+        if (GUILayout.Button("Обновить список врагов"))
+        {
+            RefreshEnemies();
+        }
+
+        GUILayout.Space(5);
+        GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1)); // Разделитель
+        GUILayout.Space(5);
+
+        if (Enemies == null || Enemies.Length == 0)
+        {
+            GUILayout.Label("Враги с тегом 'Enemy' не найдены.");
+        }
+        else
+        {
+            scrollPos = GUILayout.BeginScrollView(scrollPos);
+
+            for (int i = 0; i < Enemies.Length; i++)
+            {
+                GameObject enemyGO = Enemies[i];
+                if (enemyGO == null) continue;
+
+                Enemy enemy = enemyGO.GetComponent<Enemy>();
+                NavMeshAgent nav = enemyGO.GetComponent<NavMeshAgent>();
+
+                if (enemy == null) continue;
+
+                // Секция врага
+                GUI.color = Color.yellow;
+                GUILayout.Label($"[{i}] {enemyGO.name}");
+                GUI.color = Color.white;
+
+                GUILayout.Label($"Состояние: {enemy.currentState?.ToString() ?? "N/A"}");
+                
+                if (enemy.Health != null)
+                    GUILayout.Label($"Здоровье: {enemy.Health.CurrentHealth}");
+
+                if (enemy._awarenessMeter != null)
+                    GUILayout.Label($"Настороженность: {enemy._awarenessMeter.AlertnessValue:F2}");
+
+                GUILayout.Label($"Видит игрока: {(enemy.seePlayer ? "ДА" : "нет")}");
+                GUILayout.Label($"Слышит игрока: {(enemy.hearPlayer ? "ДА" : "нет")}");
+
+                if (nav != null)
+                    GUILayout.Label($"Скорость: {nav.velocity.magnitude:F2} м/с");
+
+                // Вызов вашего метода дебага внутри класса Enemy
+                enemy.DebugEnemy();
+
+                GUILayout.Space(10);
+            }
+
+            GUILayout.EndScrollView();
+        }
+
+        GUILayout.EndVertical();
+
+        // Позволяет перетаскивать окно за заголовок
+        GUI.DragWindow(new Rect(0, 0, windowRect.width, 25));
+    }
+
     private void OnDrawGizmos()
     {
         if (!showNavMeshPath || Enemies == null) return;
 
         Gizmos.color = pathColor;
-
-        foreach (var enemy in Enemies)
+        foreach (var enemyGO in Enemies)
         {
-            if (enemy == null) continue;
+            if (enemyGO == null) continue;
 
-            var agent = enemy.GetComponent<NavMeshAgent>();
-            if (agent == null || agent.path == null || agent.path.corners.Length < 2)
-                continue;
+            NavMeshAgent agent = enemyGO.GetComponent<NavMeshAgent>();
+            if (agent == null || !agent.hasPath) continue;
 
-            var corners = agent.path.corners;
+            Vector3[] corners = agent.path.corners;
             for (int i = 0; i < corners.Length - 1; i++)
             {
                 Gizmos.DrawLine(corners[i], corners[i + 1]);
+                Gizmos.DrawSphere(corners[i], 0.1f);
             }
         }
-    }
-    private void DrawDebugWindow(int windowID)
-    {
-        // Кнопка скрытия окна
-        if (GUI.Button(new Rect(windowRect.width - 25, 5, 20, 20), "−"))
-        {
-            showWindow = false;
-            return;
-        }
-
-        scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Height(windowRect.height - 40));
-
-        for (int i = 0; i < Enemies.Length; i++)
-        {
-            var enemyGO = Enemies[i];
-            if (enemyGO == null) continue;
-
-            Vector3 pos = enemyGO.transform.position;
-            var enemy = enemyGO.GetComponent<Enemy>();
-            var NavMesh = enemyGO.GetComponent<NavMeshAgent>();
-            var awarness = enemy._awarenessMeter.AlertnessValue;
-            float health = enemy.Health.CurrentHealth;
-            string stateName = enemy?.currentState?.ToString() ?? "Unknown";
-            enemy.DebugEnemy();
-            
-            GUILayout.Label($"[{i}] {enemyGO.name}");
-            GUILayout.Label($"Pos: {pos}");
-            showNavMeshPath = GUILayout.Toggle(showNavMeshPath, "Показать путь NavMeshAgent");
-            GUILayout.Label($"Speed: {NavMesh.velocity}");
-            GUILayout.Label($"State: {stateName}");
-            GUILayout.Label($"Степень настороженности: {awarness} ");
-            GUILayout.Label($"Здоровье: {health} ");
-            GUILayout.Label($"Противник видит игрока: {enemy.seePlayer}");
-            GUILayout.Label($"Противник слышит игрока:{enemy.hearPlayer}");
-            GUILayout.Space(10);
-            
-        }
-
-        GUILayout.EndScrollView();
-
-        // Перетаскивание окна
-        GUI.DragWindow(new Rect(0, 0, windowRect.width, 25));
     }
 }
