@@ -1,5 +1,6 @@
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using Failsafe.Items;
+using Failsafe.Player.Model;
 using Failsafe.Player.View;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,7 @@ public class PlayerHandsSystem : ITickable
     private readonly PlayerHandsContainer _playerHandsContainer;
     private readonly InputHandler _inputHandler;
     private readonly PlayerView _playerView;
+    private readonly float _throwPower;
 
     private UsingState _usingState = UsingState.None;
     private Dictionary<ItemType, IActionWithItem> _actionsWithItems;
@@ -25,16 +27,18 @@ public class PlayerHandsSystem : ITickable
     // Пропускать начальную анимацию при повторном применении, скорее всего нужно вынести в параметры предмета или в UseResult
     private bool _skipStartDelay;
 
-    public PlayerHandsSystem(PlayerHandsContainer playerHandsSystem, InputHandler inputHandler, PlayerView playerView)
+    public PlayerHandsSystem(PlayerHandsContainer playerHandsSystem, InputHandler inputHandler, PlayerView playerView, PlayerModelParameters _playerModelParameters)
     {
         _playerHandsContainer = playerHandsSystem;
         _inputHandler = inputHandler;
         _playerView = playerView;
+        _throwPower = _playerModelParameters.ThrowPower;
+
         _actionsWithItems = new()
         {
             [ItemType.Consumable] = new UseOnSelfAction(),
             [ItemType.Gun] = new ShootAction(playerView.PlayerCamera),
-            [ItemType.Grenade] = new ThrowItemAction(playerView.PlayerCamera),
+            [ItemType.Grenade] = new ThrowItemAction(playerView.PlayerCamera, _throwPower),
             [ItemType.GroundItem] = new DropItemAction(playerView.PlayerCamera),
         };
     }

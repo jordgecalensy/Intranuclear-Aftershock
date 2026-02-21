@@ -3,21 +3,19 @@ using UnityEngine;
 
 public class ThrowItemAction : IActionWithItem
 {
-    private float _throwForce = 10;
+    private float _throwForce;
     // Начальная точка справа от головы, пока так потому что нет анимации броска
     private Vector3 _startPosition = new Vector3(0.5f, 0, 0);
     private readonly Transform _cameraTransform;
 
-    public ThrowItemAction(Transform cameraTransform)
+    public ThrowItemAction(Transform cameraTransform, float _throwPower)
     {
         _cameraTransform = cameraTransform;
+        _throwForce = _throwPower;
     }
 
     public ItemUseResult Execute(PlayerHandsContainer playerHandsContainer)
     {
-
-
-
         var direction = _cameraTransform.forward;
         var useResult = playerHandsContainer.ItemInHand.ItemUsable?.Use() ?? ItemUseResult.Consumed;
         var item = playerHandsContainer.DropItemFromHand();
