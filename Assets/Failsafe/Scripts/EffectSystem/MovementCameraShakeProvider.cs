@@ -26,8 +26,8 @@ public class MovementCameraShakeProvider : ITickable
 
         bool sprint = _input.SprintTriggered;
 
-        float intensity = sprint ? 0.30f : 0f;
-        float frequency      = sprint ? 6f    : 0f;
+        float intensity = sprint ? 0.75f : 0f;
+        float frequency      = sprint ? 1.75f    : 0f;
 
         _effects.ApplyEffect(new CameraShakeEffect(_rotation, intensity, 0.1f, frequency));
     }
