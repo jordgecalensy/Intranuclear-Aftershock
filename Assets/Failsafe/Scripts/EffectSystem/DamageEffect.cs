@@ -64,7 +64,6 @@ namespace Failsafe.Scripts.EffectSystem
             if (_damageHitMaterial == null)
                 Debug.LogWarning("DamageHitEffect: material TakingDamage not found!");
 
-            _damageHitEvent = EventReference.Find("event:/UI/LowHP/LowHealthSFX");
         }
 
         // ---------- APPLY ----------

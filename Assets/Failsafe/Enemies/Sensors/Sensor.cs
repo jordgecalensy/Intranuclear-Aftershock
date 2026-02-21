@@ -54,20 +54,18 @@ public abstract class Sensor : MonoBehaviour
 
     protected virtual void Update()
     {
-        _signalStrength = Math.Clamp(SignalInFieldOfView(), 0, 1);
-        if (_signalStrength > 0)
+        // Получаем силу сигнала от конкретной реализации сенсора
+        _signalStrength = Mathf.Clamp(SignalInFieldOfView(), 0f, 1f);
+        Debug.Log(_signalStrength);
+        if (_signalStrength > 0f)
         {
-            if (FocusingProgress < FocusingTime)
-            {
-                FocusingProgress += Time.deltaTime;
-            }
+            // Увеличиваем прогресс, но не выше лимита FocusingTime
+            FocusingProgress = Mathf.Min(FocusingProgress + Time.deltaTime, FocusingTime);
         }
         else
         {
-            if (FocusingProgress >= 0)
-            {
-                FocusingProgress -= Time.deltaTime;
-            }
+            // Уменьшаем прогресс, но не ниже 0
+            FocusingProgress = Mathf.Max(FocusingProgress - Time.deltaTime, 0f);
         }
     }
     public virtual void SetFocusingTime(float value)
