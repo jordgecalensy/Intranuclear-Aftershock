@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class StasisGranadeObject : GranadeObject
+public class StasisGrenadeObject : GrеnadeObject
 {
     [SerializeField] private bool _ifDefaultStasisMode;
     protected override void DamagebleExplosionEffect(Collider hitInfo)

@@ -3,13 +3,13 @@ using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
-public class Granade : IUsable
+public class Grenade : IUsable
 {
-    public ThrowGranadeData Data;
+    public ThrowGrenadeData Data;
     protected Item GranadeItem;
     protected bool ItsMineState = false;
 
-    protected Granade(ThrowGranadeData data)
+    protected Grenade(ThrowGrenadeData data)
     {
         Data = data;
     }
@@ -19,7 +19,7 @@ public class Granade : IUsable
     }
     public ItemUseResult Use()
     {
-        GranadeItem.gameObject.GetComponent<GranadeObject>().ActivesionGranade(Data, ItsMineState);
+        GranadeItem.gameObject.GetComponent<GrеnadeObject>().ActivesionGranade(Data, ItsMineState);
         Debug.Log("Use");
         return new ItemUseResult { ItemStateAfterUse = ItemState.Drop, UsageType = UsageType.HoldToUse };
     }

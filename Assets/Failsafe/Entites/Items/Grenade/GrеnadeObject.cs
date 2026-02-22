@@ -1,16 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class GranadeObject : ExplosiveObgect
+public class GrеnadeObject : ExplosiveObgect
 {
     [SerializeField] protected GameObject MineTrigger;
 
     protected bool ItsMineState = false;
     protected bool InstaledMine = false;
 
-    protected ThrowGranadeData GranadeData;
+    protected ThrowGrenadeData GranadeData;
 
-    public void ActivesionGranade(ThrowGranadeData granadeData, bool itsMineState)
+    public void ActivesionGranade(ThrowGrenadeData granadeData, bool itsMineState)
     {
         GranadeData = granadeData;
         if (itsMineState)
@@ -25,7 +25,7 @@ public class GranadeObject : ExplosiveObgect
     }
     protected IEnumerator ExplosionGranadeTimer()
     {
-        yield return new WaitForSeconds(GranadeData.GranadeTimer);
+        yield return new WaitForSeconds(GranadeData.GrenadeTimer);
         Explosion();
     }
     protected void OnCollisionEnter(Collision collision)

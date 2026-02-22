@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class FireGranadeObject : GranadeObject
+public class FireGrenadeObject : GrеnadeObject
 {
     protected override void SingleExplosionEffect()
     {

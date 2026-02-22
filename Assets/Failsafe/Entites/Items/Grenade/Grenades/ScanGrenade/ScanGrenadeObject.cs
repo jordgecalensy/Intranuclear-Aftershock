@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class ScanGranadeObject : GranadeObject
+public class ScanGrenadeObject : GrеnadeObject
 {
     [SerializeField] private Material _materialScan;
     protected override bool HitsChecking(RaycastHit hit, Collider hitInfo)

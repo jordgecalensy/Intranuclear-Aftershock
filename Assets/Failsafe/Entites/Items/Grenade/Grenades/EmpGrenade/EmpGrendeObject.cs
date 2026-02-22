@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class EmpGrandeObject : GranadeObject
+public class EmpGrendeObject : GrеnadeObject
 {
     private Vector3 _direction = new Vector3(0, 0, 0);
     protected override bool HitsChecking(RaycastHit hit, Collider hitInfo)
@@ -15,7 +15,6 @@ public class EmpGrandeObject : GranadeObject
     protected override void DamagebleExplosionEffect(Collider hitInfo)
     {
         base.DamagebleExplosionEffect(hitInfo);
-        Debug.Log("on enemy effect");
         if(Data.OnEnemyEffect != null)
         {
             var OnEnemyEffect = Instantiate(Data.OnEnemyEffect, hitInfo.transform);
