@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using Failsafe.Player.View;
 using Failsafe.PlayerMovements;
 using Failsafe.PlayerMovements.States;
@@ -134,6 +134,10 @@ namespace Failsafe.Player
                     break;
                 case ItemType.Gun:
                     _animator.SetTrigger(_shootId);
+                    break;
+                case ItemType.Grenade:
+                    break;
+                default:
                     break;
             }
         }
