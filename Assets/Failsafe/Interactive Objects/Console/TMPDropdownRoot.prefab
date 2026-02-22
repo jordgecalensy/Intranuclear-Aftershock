@@ -66,6 +66,7 @@ GameObject:
   - component: {fileID: 7207480024901794477}
   - component: {fileID: 1408581340803264492}
   - component: {fileID: 7162901298594466260}
+  - component: {fileID: 7942421592302532040}
   m_Layer: 11
   m_Name: Header
   m_TagString: Untagged
@@ -232,6 +233,22 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &7942421592302532040
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 960602635592163379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98b9de591a4e77d4cb13be451f877131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _scrollRect: {fileID: 0}
+  _viewport: {fileID: 0}
+  _target: {fileID: 0}
+  _visibilityThreshold: 0.3
 --- !u!1 &1693339379085411334
 GameObject:
   m_ObjectHideFlags: 0
