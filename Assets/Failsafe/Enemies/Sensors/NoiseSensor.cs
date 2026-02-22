@@ -26,15 +26,35 @@ public class NoiseSensor : Sensor
 
     protected override float SignalInFieldOfView()
     {
+        var signals = AudioSignals;
+    
+        // 1. Проверяем, есть ли сигналы в канале вообще
+        if (signals == null || signals.Count == 0)
+        {
+            // Debug.Log("Сигналов шума нет в SignalManager");
+            return 0;
+        }
+
         ISignal maxAudioSignal = null;
         float maxDetectedStrength = 0;
-        for (int i = 0; i < AudioSignals.Count; i++)
+
+        for (int i = 0; i < signals.Count; i++)
         {
-            ISignal signal = AudioSignals[i];
-            if (signal.SignalStrength < _minSoundStrength) continue;
+            ISignal signal = signals[i];
+        
+            // 2. Проверяем базовую силу сигнала
+            if (signal.SignalStrength < _minSoundStrength) {
+                Debug.Log($"Сигнал слишком тихий: {signal.SignalStrength} < {_minSoundStrength}");
+                continue;
+            }
 
             float detectedSoundStrength = CalculateSignalStrength(signal);
-            if (detectedSoundStrength < _minSoundStrength) continue;
+        
+            // 3. Проверяем силу с учетом расстояния
+            if (detectedSoundStrength < _minSoundStrength) {
+                Debug.Log($"Сигнал затух на расстоянии: {detectedSoundStrength}");
+                continue;
+            }
 
             if (detectedSoundStrength > maxDetectedStrength)
             {
@@ -42,10 +62,14 @@ public class NoiseSensor : Sensor
                 maxDetectedStrength = detectedSoundStrength;
             }
         }
-        _detectedSignal = maxAudioSignal;
-        return Math.Clamp(maxDetectedStrength / _maxSoundStrength, 0, 1);
-    }
 
+        _detectedSignal = maxAudioSignal;
+    
+        float finalSignal = Mathf.Clamp(maxDetectedStrength / _maxSoundStrength, 0f, 1f);
+        if (finalSignal > 0) Debug.Log($"Сенсор услышал шум! Сила: {finalSignal}");
+    
+        return finalSignal;
+    }
     public override bool SignalInAttackRay(Vector3 targetPosition)
     {
         return false;

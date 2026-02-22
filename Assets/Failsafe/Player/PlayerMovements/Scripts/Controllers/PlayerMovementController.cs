@@ -21,6 +21,10 @@ namespace Failsafe.PlayerMovements.Controllers
 
         private readonly Dictionary<int, float> _speedModifiers = new Dictionary<int, float>();
 
+        // --- НОВОЕ: Ссылка на сигнал ---
+        private PlayerNoiseSignal _playerNoiseSignal;
+        // ------------------------------
+
         public float CurrentSpeedMultiplier
         {
             get
@@ -28,8 +32,6 @@ namespace Failsafe.PlayerMovements.Controllers
                 float mul = 1f;
                 foreach (var kv in _speedModifiers)
                     mul *= kv.Value;
-                if (Time.frameCount % 60 == 0) // не слишком часто
-                    Debug.Log($"[PMC] Calculate multiplier={mul:0.00}, totalMods={_speedModifiers.Count} | this={GetHashCode()}");
                 return mul;
             }
         }
@@ -39,9 +41,7 @@ namespace Failsafe.PlayerMovements.Controllers
             if (multiplier <= 0f) multiplier = 0.0001f;
             _speedModifiers[id] = multiplier;
 
-            // 👇 временный лог
             string mods = string.Join(", ", _speedModifiers.Select(kv => $"{kv.Key}:{kv.Value:0.00}"));
-            Debug.Log($"[PMC] Added/Updated speed modifier id={id}, mul={multiplier:0.00}, total={_speedModifiers.Count} ({mods}) | this={GetHashCode()}");
         }
 
         public void RemoveSpeedModifier(int id)
@@ -49,10 +49,13 @@ namespace Failsafe.PlayerMovements.Controllers
             if (_speedModifiers.Remove(id))
             {
                 string mods = string.Join(", ", _speedModifiers.Select(kv => $"{kv.Key}:{kv.Value:0.00}"));
-                Debug.Log($"[PMC] Removed modifier id={id}, total={_speedModifiers.Count} ({mods}) | this={GetHashCode()}");
             }
         }
-        // ---- /Новое ----
+
+        public void SetPlayerNoiseSignal(PlayerNoiseSignal signal)
+        {
+            _playerNoiseSignal = signal;
+        }
 
         public bool IsGrounded => _coyoteTimeProgress <= 0;
         public bool IsGroundedFor(float duration) => _groundedAt + duration <= Time.time;
@@ -81,9 +84,17 @@ namespace Failsafe.PlayerMovements.Controllers
             _characterController.Move(motion * Time.deltaTime);
             Velocity = _characterController.velocity;
 
-            // Временный лог — увидим, что множитель и скорость применяются
-            if (Time.frameCount % 30 == 0)
-                Debug.Log($"[PMC] mul={CurrentSpeedMultiplier:0.00} moveIn={_movement} moveOut={_movement * CurrentSpeedMultiplier}");
+            // --- НОВОЕ: Обновление сигнала шума ---
+            if (_playerNoiseSignal != null)
+            {
+                Debug.Log("Нет системы!");
+                // Считаем скорость по горизонтали
+                float horizontalSpeed = new Vector3(Velocity.x, 0, Velocity.z).magnitude;
+                // Если игрок на земле, он шумит пропорционально скорости. Если в полете — 0 (или можно оставить скорость)
+                float noiseStrength = IsGrounded ? horizontalSpeed : 0f;
+                
+                _playerNoiseSignal.UpdateStrength(noiseStrength);
+            }
         }
 
         public void CheckGrounded()

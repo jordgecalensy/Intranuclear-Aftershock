@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8658451218550660077}
   - component: {fileID: 6878957709991662771}
+  - component: {fileID: 2228712997361136760}
   m_Layer: 0
   m_Name: Debug_manager
   m_TagString: Untagged
@@ -44,5 +45,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2779a55250b9c064da92640236d3a8f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CursorOn: 0
+  CursorOn: 1
+  showNavMeshPath: 1
+  pathColor: {r: 0, g: 1, b: 1, a: 1}
   Enemies: []
+--- !u!114 &2228712997361136760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 901341626384932335}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9468c5f457ace64f8d4df6d642b107f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  LoadEvent: 1
+  UnloadEvent: 0
+  Banks:
+  - SFX
+  CollisionTag: 
+  PreloadSamples: 1

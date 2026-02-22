@@ -19,7 +19,9 @@ namespace Failsafe.Player.Scripts.Interaction
         [SerializeField] private float _carryingDistance = 2.5f;
         [SerializeField] private float _carrySpeed = 4f;
         [SerializeField] private Transform _grabPoint;
-        [SerializeField] private LayerMask _mask; //= LayerMask.GetMask("CarryObjects")
+        
+        // ИСПРАВЛЕНИЕ: Убрана инициализация через GetMask здесь
+        [SerializeField] private LayerMask _mask;
 
         [Tooltip("Индекс слоя (0–31), в который временно помещается переносимый объект.")]
         [SerializeField, Range(0, 31)] private int _carryingLayerIndex = 0;
@@ -33,7 +35,7 @@ namespace Failsafe.Player.Scripts.Interaction
         [SerializeField] private float _carryingDistanceShorteningTo = 0.8f;
 
         [Header("Rotation Hold")]
-        [SerializeField] private AlignmentMode _alignMode = AlignmentMode.Camera; // ← смотрит туда же, куда игрок
+        [SerializeField] private AlignmentMode _alignMode = AlignmentMode.Camera; 
         [SerializeField, Tooltip("Скорость выравнивания вращения (P-составляющая).")]
         private float _rotKp = 30f;
         [SerializeField, Tooltip("Демпфирование вращения (D-составляющая).")]
@@ -41,9 +43,9 @@ namespace Failsafe.Player.Scripts.Interaction
 
         public enum AlignmentMode
         {
-            WorldZero,   // к (0,0,0)
-            Camera,      // точь-в-точь как камера (включая крен)
-            CameraNoRoll // направление как у камеры, но без крена (up = Vector3.up)
+            WorldZero,   
+            Camera,      
+            CameraNoRoll 
         }
 
         [Header("Additional Options")]
@@ -52,12 +54,11 @@ namespace Failsafe.Player.Scripts.Interaction
 
         [Header("Debug")]
         [SerializeField] public GameObject CarryingObject;
-        // [SerializeField] public Rigidbody CarryingBody;
         [SerializeField] private Transform _playerCameraTransform;
         [SerializeField, ReadOnly] private float _currentCarryingDistance;
 
         [SerializeField] private Vector3 _draggablePositionOffset;
-        [SerializeField] private float _dragSpeed = 10f; // резерв
+        [SerializeField] private float _dragSpeed = 10f; 
 
         private Quaternion _relativeRotation;
 
@@ -72,37 +73,40 @@ namespace Failsafe.Player.Scripts.Interaction
         
         public bool IsDragging { get; private set; }
 
-        private void start()
+        private void Awake()
         {
             _currentCarryingDistance = _carryingDistance;
+
+            // ИСПРАВЛЕНИЕ: Безопасная инициализация LayerMask в Awake
+            if (_mask == 0)
+            {
+                _mask = LayerMask.GetMask("CarryObjects");
+            }
 
             if (!_playerCameraTransform)
             {
                 Camera playerCamera = transform.root.GetComponentInChildren<Camera>();
-                _playerCameraTransform = playerCamera.transform;
+                if (playerCamera != null)
+                    _playerCameraTransform = playerCamera.transform;
             }
         }
 
         private void Update()
         {
-
             if (_inputHandler.GrabOrDropAction.WasPressedThisFrame())
                 GrabOrDrop();
 
             if (!IsDragging) return;
 
-            // Use-start (edge)
             if (_inputHandler.UseTrigger.IsTriggered)
             {
                 _carryUsable?.OnUseStart();
                 _useHeld = true;
             }
 
-            // Use-hold (every frame)
             if (_useHeld && _inputHandler.UseTrigger.IsPressed)
                 _carryUsable?.UseTick(Time.deltaTime);
 
-            // Use-stop (edge)
             if (_useHeld && !_inputHandler.UseTrigger.IsPressed)
             {
                 _carryUsable?.OnUseStop();
@@ -115,7 +119,6 @@ namespace Failsafe.Player.Scripts.Interaction
                 return;
             }
 
-            // Подготовка броска
             if (_inputHandler.AttackTriggered)
             {
                 _throwForceMultiplier = Mathf.Clamp(_throwForceMultiplier + Time.deltaTime, _throwForceMultiplier, _maxForceMultiplier);
@@ -178,10 +181,8 @@ namespace Failsafe.Player.Scripts.Interaction
             }
             _physicsController.Released += Released;
             _carryUsable?.OnGrabbed(_grabPoint);
-            Debug.Log($"Grabbed carryable: {_carryUsable}");
 
             _useHeld = false;
-
             IsDragging = true;
             _isPreparingToThrow = false;
             _throwForceMultiplier = 0f;
@@ -213,12 +214,11 @@ namespace Failsafe.Player.Scripts.Interaction
         private void DropItem()
         {
             if (_useHeld) { _carryUsable?.OnUseStop(); _useHeld = false; }
-            _physicsController.Release();
+            _physicsController?.Release();
             Released();
             _currentCarryingDistance = _carryingDistance;
         }
 
-      
         private Quaternion GetTargetRotation()
         {
             switch (_alignMode)
@@ -231,11 +231,9 @@ namespace Failsafe.Player.Scripts.Interaction
 
                 case AlignmentMode.CameraNoRoll:
                 default:
-                    // смотрим туда же, что и камера, но без крена (up — мировой)
                     return Quaternion.LookRotation(_playerCameraTransform.forward, Vector3.up);
             }
         }
-
 
         private void ApplyRotation(Quaternion targetRotation)
         {
