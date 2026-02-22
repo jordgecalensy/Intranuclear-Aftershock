@@ -3,6 +3,7 @@ using UnityEngine;
 using System;
 using Tayx.Graphy.Utils.NumString;
 using UnityEngine.UI;
+using System.Collections;
 
 public enum MathematicalVariations {variant_1, variant_2, variant_3}
 
@@ -30,6 +31,7 @@ public class MathematicalMinigameManager : MonoBehaviour
 
     [Header("Timer")]
     [SerializeField] private Image _timerImage;
+    [SerializeField] private TextMeshProUGUI _timerText;
     [SerializeField] private int _time;
     [SerializeField] private int _fimeTime;
 
@@ -39,11 +41,18 @@ public class MathematicalMinigameManager : MonoBehaviour
     [Header("Text Settings")]
     [SerializeField] private TextMeshProUGUI _comparedNumberText;
     [SerializeField] private TextMeshProUGUI _calculationText;
-    [SerializeField] private TextMeshProUGUI[] _passwordCells = new TextMeshProUGUI[6];
+
+    [Header("Password Cells Settings")]
+    [SerializeField] private Image[] _passwordCells = new Image[6];
+    [SerializeField] private Image _lockOn;
+    [SerializeField] private Image _lockOff;
 
     [Header("Window Settings")]
-    [SerializeField] private GameObject _unlockingWindow;
+    [SerializeField] private float _timeBeforeCloseWindow = 1f;
+    [SerializeField] private GameObject _openWindow;
+    [SerializeField] private GameObject _mainWindow;
     [SerializeField] private GameObject _minigameWindow;
+    [SerializeField] private GameObject _failedWindow;
 
     private void OnEnable()
     {
@@ -56,6 +65,7 @@ public class MathematicalMinigameManager : MonoBehaviour
         time -= Time.deltaTime;
         float fill = Mathf.Clamp01(time / _time);
         _timerImage.fillAmount = fill;
+        _timerText.text = Mathf.CeilToInt(time).ToString();
 
         if (time <= 0f)
         {
@@ -131,16 +141,23 @@ public class MathematicalMinigameManager : MonoBehaviour
                         _bCalculation = _resultCalculation + _aCalculation;
                         break;
                 }
-                _calculationText.text = $"{_bCalculation} {operation} {_aCalculation}";
+                _calculationText.text = $"{_bCalculation}{operation}{_aCalculation}";
                 break;
             }
         }
+    }
+
+    private void Lock(bool isLockOn)
+    {
+        _lockOn.enabled = !isLockOn;
+        _lockOff.enabled = isLockOn;
     }
     private void FillingCell()
     {
         if (_cellsCount == _passwordCells.Length) return;
         Debug.Log("Cell filled in " + _cellsCount);
-        _passwordCells[_cellsCount].text = _resultCalculation.ToString();
+        // _passwordCells[_cellsCount].text = _resultCalculation.ToString();
+        _passwordCells[_cellsCount].enabled = true;
         _cellsCount++;
         if (_cellsCount == _passwordCells.Length)
             UnlockConsole();
@@ -148,9 +165,11 @@ public class MathematicalMinigameManager : MonoBehaviour
     private void TimeIsOut()
     {
         _timerRunning = false;
-        Debug.Log("������ ��������!");
-        Debug.Log("����������� �������� ����� �������");
-        CreateNewGame();
+        _timerText.text = "0";
+        Debug.Log("Time is out!");
+        Debug.Log("Game over");
+        StartCoroutine(GameOver(false));
+        // CreateNewGame();
     }
     private void CreateNewGame()
     {
@@ -161,18 +180,35 @@ public class MathematicalMinigameManager : MonoBehaviour
         GeneratingCalculation();
         _timerImage.fillAmount = 1f;
         time = _time;
+        _timerText.text = Mathf.CeilToInt(time).ToString();
+        Lock(true);
         _timerRunning = true;
     }
     private void ClearCells()
     {
-        foreach(TextMeshProUGUI passwordCell in _passwordCells)
-            passwordCell.text = "";
+        foreach(Image passwordCell in _passwordCells)
+            passwordCell.enabled = false;
     }
     private void UnlockConsole()
     {
         Debug.Log("Unlock");
         _timerRunning = false;
-        _unlockingWindow.SetActive(true);
-        _minigameWindow.SetActive(false);
+        Lock(false);
+        StartCoroutine(GameOver(true));
+    }
+
+    IEnumerator GameOver(bool win)
+    {
+        yield return new WaitForSeconds(_timeBeforeCloseWindow);
+        if (win)
+        {
+            _mainWindow.SetActive(true);
+            _minigameWindow.SetActive(false);
+        }
+        else
+        {
+            _failedWindow.SetActive(true);
+            _minigameWindow.SetActive(false);
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using UnityEngine.UI;
 using VContainer;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class PlayerInteraction : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class PlayerInteraction : MonoBehaviour
     private InputHandler _inputHandler;
     
     private ScrollbarInteractable _activeScrollbar; // <-- запоминаем текущий скроллбар
+    private Interactable lastHoveredObject = null;
 
     void Update()
     {
@@ -21,9 +23,19 @@ public class PlayerInteraction : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hitInfo, _distance, _mask))
         {
-            var interactable = hitInfo.collider.GetComponent<Interactable>();
+            Interactable interactable = hitInfo.collider.GetComponent<Interactable>();
             if (interactable != null)
             {
+
+                if (interactable != lastHoveredObject)
+                {
+                    if (lastHoveredObject != null)
+                        lastHoveredObject.OnHoverExit();
+
+                    interactable.OnHover();
+
+                    lastHoveredObject = interactable;
+                }
 
                 if (_inputHandler.GrabOrDropAction.WasPressedThisFrame()) //использовал триггер GrapOrDrop так как не смг создать свой
                 {
@@ -47,6 +59,11 @@ public class PlayerInteraction : MonoBehaviour
             {
                 _activeScrollbar.StopDrag();
                 _activeScrollbar = null;
+            }
+            if (lastHoveredObject != null)
+            {
+                lastHoveredObject.OnHoverExit();
+                lastHoveredObject = null;
             }
         }
     }    
