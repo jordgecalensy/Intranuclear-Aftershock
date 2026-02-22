@@ -7,13 +7,13 @@ public class ExplosiveObjectData : ScriptableObject
     [SerializeField] private int _explosionDamage;
     [SerializeField] private float _explosionRadius;
     [SerializeField] private float _explosionForce;
-    [Header("Explosin post effect")]
+    [Header("Explosion post effect")]
     [SerializeField] private float _durationPostEffect;
     [SerializeField] private GameObject _postEffect;
-    [Header("On Eney Effect")]
+    [Header("On Enemy Effect")]
     [SerializeField] private float _durationOnEnemyEffect;
     [SerializeField] private GameObject _onEnemyEffect;
-    [Header("Explosin VFX effect")]
+    [Header("Explosion VFX effect")]
     [SerializeField] private float _durationVFX;
     [SerializeField] private GameObject _explsiveVFX;//можно сделать автоматически но андрей бяка
 

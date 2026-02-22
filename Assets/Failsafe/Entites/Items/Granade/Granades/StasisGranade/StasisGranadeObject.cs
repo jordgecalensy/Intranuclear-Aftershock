@@ -9,7 +9,6 @@ public class StasisGranadeObject : GranadeObject
     }
     protected override void PhysicsExplosionEffect(Collider hitInfo, Vector3 directionToEnemy)
     {
-        if (hitInfo.GetComponent<Rigidbody>() == null) return;
         Debug.Log($"Rigidbody: {hitInfo.name}");
         if (hitInfo.GetComponentInParent<Stasisable>() != null)
         {
