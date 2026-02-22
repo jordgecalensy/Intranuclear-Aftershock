@@ -48,8 +48,11 @@ public abstract class ExplosiveObgect : MonoBehaviour
     }
     protected virtual void SingleExplosionEffect()
     {
-        var Vfx = Instantiate(Data.ExplosiveVFX, gameObject.transform.position, Quaternion.identity);
-        Destroy(Vfx, Data.LifeTimeVFX); //можно сделать автоматически но андрей бяка
-        //Одиночный эффект после взрыва гранаты
+        if(Data.ExplosiveVFX != null)
+        {
+            var Vfx = Instantiate(Data.ExplosiveVFX, gameObject.transform.position, Quaternion.identity);
+            Destroy(Vfx, Data.DurationVFX);
+            //Одиночный эффект после взрыва гранаты
+        }
     }
 }

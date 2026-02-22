@@ -16,10 +16,13 @@ public class EmpGrandeObject : GranadeObject
     {
         base.DamagebleExplosionEffect(hitInfo);
         Debug.Log("on enemy effect");
-        var OnEnemyEffect = Instantiate(Data.OnEnemyEffect, hitInfo.transform);
-        Destroy(OnEnemyEffect, Data.LifeTimeOnEnemyEffect);
+        if(Data.OnEnemyEffect != null)
+        {
+            var OnEnemyEffect = Instantiate(Data.OnEnemyEffect, hitInfo.transform);
+            Destroy(OnEnemyEffect, Data.DurationOnEnemyEffect);
+        }
         if (hitInfo.GetComponent<Enemy>() != null)
-            hitInfo.GetComponent<Enemy>().StunnedState(_direction, Data.LifeTimeOnEnemyEffect);
+            hitInfo.GetComponent<Enemy>().StunnedState(_direction, Data.DurationOnEnemyEffect);
     }
     protected override void PhysicsExplosionEffect(Collider hitInfo, Vector3 directionToEnemy) { }
 }

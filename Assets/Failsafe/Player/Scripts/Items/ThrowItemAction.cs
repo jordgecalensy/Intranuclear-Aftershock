@@ -20,7 +20,6 @@ public class ThrowItemAction : IActionWithItem
         var useResult = playerHandsContainer.ItemInHand.ItemUsable?.Use() ?? ItemUseResult.Consumed;
         var item = playerHandsContainer.DropItemFromHand();
         item.Use();
-        Debug.Log("sd");
         item.gameObject.transform.position = _cameraTransform.position + _cameraTransform.rotation * _startPosition;
         var itemRb = item.GetComponent<Rigidbody>();
         itemRb.AddForce(direction * _throwForce, ForceMode.Impulse);

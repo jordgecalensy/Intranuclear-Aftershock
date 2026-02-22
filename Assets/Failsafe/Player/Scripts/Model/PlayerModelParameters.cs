@@ -1,4 +1,4 @@
-using Failsafe.Scripts.Modifiebles;
+﻿using Failsafe.Scripts.Modifiebles;
 using System;
 using UnityEngine;
 
@@ -39,5 +39,9 @@ namespace Failsafe.Player.Model
 		/// Сила кручения
 		/// </summary>
 		public ModifiableField<float> ThrowTorquePower = 3f;
-	}
+        /// <summary>
+		/// Сила айтема
+		/// </summary>
+        public ModifiableField<float> ThrowItemPower = 10f;
+    }
 }

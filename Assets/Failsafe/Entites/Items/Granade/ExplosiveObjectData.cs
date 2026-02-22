@@ -3,18 +3,19 @@
 [CreateAssetMenu(fileName = "ExplosiveObjectData", menuName = "ScriptableObjects/ExplosiveObject")]
 public class ExplosiveObjectData : ScriptableObject
 {
+    [Header("Base explosin setting")]
     [SerializeField] private int _explosionDamage;
     [SerializeField] private float _explosionRadius;
     [SerializeField] private float _explosionForce;
-
-    [SerializeField] private float _lifeTimePostEffect;
+    [Header("Explosin post effect")]
+    [SerializeField] private float _durationPostEffect;
     [SerializeField] private GameObject _postEffect;
-
-    [SerializeField] private float _lifeTimeOnEnemyEffect;
+    [Header("On Eney Effect")]
+    [SerializeField] private float _durationOnEnemyEffect;
     [SerializeField] private GameObject _onEnemyEffect;
-
-    [SerializeField] private float _lifeTimeVFX;
-    [SerializeField] private GameObject _explsiveVFX;
+    [Header("Explosin VFX effect")]
+    [SerializeField] private float _durationVFX;
+    [SerializeField] private GameObject _explsiveVFX;//можно сделать автоматически но андрей бяка
 
     public int ExplosionDamage
     {
@@ -37,11 +38,11 @@ public class ExplosiveObjectData : ScriptableObject
             return _explosionForce;
         }
     }
-    public float LifeTimePostEffect
+    public float DurationPostEffect
     {
         get
         {
-            return _lifeTimePostEffect;
+            return _durationPostEffect;
         }
     }
     public GameObject PostEffect
@@ -51,11 +52,11 @@ public class ExplosiveObjectData : ScriptableObject
             return _postEffect;
         }
     }
-    public float LifeTimeOnEnemyEffect
+    public float DurationOnEnemyEffect
     {
         get
         {
-            return _lifeTimeOnEnemyEffect;
+            return _durationOnEnemyEffect;
         }
     }
     public GameObject OnEnemyEffect
@@ -65,11 +66,11 @@ public class ExplosiveObjectData : ScriptableObject
             return _onEnemyEffect;
         }
     }
-    public float LifeTimeVFX
+    public float DurationVFX
     {
         get
         {
-            return _lifeTimeVFX;
+            return _durationVFX;
         }
     }
     public GameObject ExplosiveVFX

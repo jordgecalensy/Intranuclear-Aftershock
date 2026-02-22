@@ -19,7 +19,7 @@ public class PlayerHandsSystem : ITickable
     private readonly PlayerHandsContainer _playerHandsContainer;
     private readonly InputHandler _inputHandler;
     private readonly PlayerView _playerView;
-    private readonly float _throwPower;
+    private readonly float _throwItemPower;
 
     private UsingState _usingState = UsingState.None;
     private Dictionary<ItemType, IActionWithItem> _actionsWithItems;
@@ -32,13 +32,13 @@ public class PlayerHandsSystem : ITickable
         _playerHandsContainer = playerHandsSystem;
         _inputHandler = inputHandler;
         _playerView = playerView;
-        _throwPower = _playerModelParameters.ThrowPower;
+        _throwItemPower = _playerModelParameters.ThrowItemPower;
 
         _actionsWithItems = new()
         {
             [ItemType.Consumable] = new UseOnSelfAction(),
             [ItemType.Gun] = new ShootAction(playerView.PlayerCamera),
-            [ItemType.Grenade] = new ThrowItemAction(playerView.PlayerCamera, _throwPower),
+            [ItemType.Grenade] = new ThrowItemAction(playerView.PlayerCamera, _throwItemPower),
             [ItemType.GroundItem] = new DropItemAction(playerView.PlayerCamera),
         };
     }

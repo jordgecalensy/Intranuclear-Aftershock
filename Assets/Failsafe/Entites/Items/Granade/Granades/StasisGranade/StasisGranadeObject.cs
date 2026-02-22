@@ -13,7 +13,7 @@ public class StasisGranadeObject : GranadeObject
         Debug.Log($"Rigidbody: {hitInfo.name}");
         if (hitInfo.GetComponentInParent<Stasisable>() != null)
         {
-            hitInfo.GetComponentInParent<Stasisable>().StasisHit(Data.LifeTimeOnEnemyEffect, _ifDefaultStasisMode);
+            hitInfo.GetComponentInParent<Stasisable>().StasisHit(Data.DurationOnEnemyEffect, _ifDefaultStasisMode);
         }
     }
 }

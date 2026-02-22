@@ -15,8 +15,8 @@ public class ScanGranadeObject : GranadeObject
     protected override void DamagebleExplosionEffect(Collider hitInfo)
     {
         Scaneble scaneble = hitInfo.gameObject.transform.parent.gameObject.AddComponent<Scaneble>();
-        if (scaneble != null ) 
-            scaneble.ScanHit(Data.LifeTimeOnEnemyEffect, _materialScan);
+        if (scaneble != null || _materialScan != null) 
+            scaneble.ScanHit(Data.DurationOnEnemyEffect, _materialScan);
     }
     protected override void PhysicsExplosionEffect(Collider hitInfo, Vector3 directionToEnemy)
     {

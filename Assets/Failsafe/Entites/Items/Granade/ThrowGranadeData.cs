@@ -3,20 +3,13 @@
 [CreateAssetMenu(fileName = "GranadeData", menuName = "ScriptableObjects/Entities/Items/GranadeData")]
 public class ThrowGranadeData : ScriptableObject
 {
-
-    [SerializeField] private float _throwForce;
+    [Header("Granade Settings")]
     [SerializeField] private float _granadeTimer;
+    [SerializeField] private float _mineTriggerRadius;
+    [Header("Delays")]
     [SerializeField] private float _startUseDelay;
     [SerializeField] private float _useDelay;
-    [SerializeField] private float _mineTriggerRadius;
 
-    public float ThrowForce
-    {
-        get
-        {
-            return _throwForce;
-        }
-    }
     public float GranadeTimer 
     {
         get
