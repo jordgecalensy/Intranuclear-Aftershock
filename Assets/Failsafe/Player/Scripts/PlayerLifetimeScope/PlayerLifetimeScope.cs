@@ -95,11 +95,11 @@ namespace Failsafe.Player
             builder.Register<Adrenaline>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
             builder.Register<Tushkan>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
             builder.Register<Gorilla>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
-            builder.Register<EmpGranade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
-            builder.Register<FragGranade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
-            builder.Register<FireGranade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
-            builder.Register<StasisGranade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
-            builder.Register<ScanGranade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+            builder.Register<EmpGrenade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+            builder.Register<FragGrenade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+            builder.Register<FireGrenade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+            builder.Register<StasisGrenade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+            builder.Register<ScanGrenade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
 
         }
     }
