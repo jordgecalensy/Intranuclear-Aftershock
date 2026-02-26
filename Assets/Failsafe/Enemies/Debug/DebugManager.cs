@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections.Generic;
+using System.Linq; // Нужно для удобной работы со списками
 
 public class DebugManager : MonoBehaviour
 {
@@ -9,8 +10,9 @@ public class DebugManager : MonoBehaviour
     [SerializeField] private bool showNavMeshPath = true;
     [SerializeField] private Color pathColor = Color.cyan;
 
+    // Храним сразу компоненты Enemy, чтобы не искать их каждый кадр
     [Header("Data")]
-    [SerializeField] private GameObject[] Enemies;
+    [SerializeField] private List<Enemy> Enemies = new List<Enemy>();
 
     private Rect windowRect = new Rect(100, 100, 350, 500);
     private bool showWindow = true;
@@ -25,29 +27,35 @@ public class DebugManager : MonoBehaviour
 
     private void LateUpdate()
     {
-        // Управление курсором
-        Cursor.visible = CursorOn;
-        Cursor.lockState = CursorOn ? CursorLockMode.None : CursorLockMode.Locked;
+        // Управление курсором (показываем если окно открыто или если включена галочка)
+        bool showCursor = CursorOn || showWindow;
+        if (Cursor.visible != showCursor)
+        {
+            Cursor.visible = showCursor;
+            Cursor.lockState = showCursor ? CursorLockMode.None : CursorLockMode.Locked;
+        }
     }
 
-    // Метод для поиска только уникальных родительских объектов с компонентом Enemy
     public void RefreshEnemies()
     {
+        Enemies.Clear();
+        
+        // Находим все объекты с тегом Enemy
         GameObject[] allTagged = GameObject.FindGameObjectsWithTag("Enemy");
-        HashSet<GameObject> uniqueParents = new HashSet<GameObject>();
+        
+        // Используем HashSet чтобы избежать дубликатов (если тег висит и на родителе, и на детях)
+        HashSet<Enemy> uniqueEnemies = new HashSet<Enemy>();
 
         foreach (var obj in allTagged)
         {
-            // Ищем компонент Enemy в объекте или его родителях
             Enemy e = obj.GetComponentInParent<Enemy>();
             if (e != null)
             {
-                uniqueParents.Add(e.gameObject);
+                uniqueEnemies.Add(e);
             }
         }
 
-        Enemies = new GameObject[uniqueParents.Count];
-        uniqueParents.CopyTo(Enemies);
+        Enemies = uniqueEnemies.ToList();
     }
 
     private void OnGUI()
@@ -67,7 +75,6 @@ public class DebugManager : MonoBehaviour
 
     private void DrawDebugWindow(int windowID)
     {
-        // Кнопка закрытия
         if (GUI.Button(new Rect(windowRect.width - 25, 5, 20, 20), "×"))
         {
             showWindow = false;
@@ -75,57 +82,59 @@ public class DebugManager : MonoBehaviour
 
         GUILayout.BeginVertical();
         
-        // Общие настройки дебага
         showNavMeshPath = GUILayout.Toggle(showNavMeshPath, " Отображать пути NavMesh");
-        
+        CursorOn = GUILayout.Toggle(CursorOn, " Force Cursor Visible");
+
         if (GUILayout.Button("Обновить список врагов"))
         {
             RefreshEnemies();
         }
 
         GUILayout.Space(5);
-        GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1)); // Разделитель
+        GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
         GUILayout.Space(5);
 
-        if (Enemies == null || Enemies.Length == 0)
+        if (Enemies == null || Enemies.Count == 0)
         {
-            GUILayout.Label("Враги с тегом 'Enemy' не найдены.");
+            GUILayout.Label("Враги не найдены (проверьте тег 'Enemy').");
         }
         else
         {
             scrollPos = GUILayout.BeginScrollView(scrollPos);
 
-            for (int i = 0; i < Enemies.Length; i++)
+            // Обратный цикл безопаснее при удалении, но здесь просто foreach
+            for (int i = 0; i < Enemies.Count; i++)
             {
-                GameObject enemyGO = Enemies[i];
-                if (enemyGO == null) continue;
+                Enemy enemy = Enemies[i];
 
-                Enemy enemy = enemyGO.GetComponent<Enemy>();
-                NavMeshAgent nav = enemyGO.GetComponent<NavMeshAgent>();
+                // Если враг был уничтожен в игре, удаляем из списка
+                if (enemy == null) 
+                {
+                    Enemies.RemoveAt(i);
+                    i--;
+                    continue;
+                }
 
-                if (enemy == null) continue;
+                NavMeshAgent nav = enemy.GetComponent<NavMeshAgent>();
 
-                // Секция врага
+                // --- ОТРИСОВКА ИНФО ---
                 GUI.color = Color.yellow;
-                GUILayout.Label($"[{i}] {enemyGO.name}");
+                GUILayout.Label($"[{i}] {enemy.name}");
                 GUI.color = Color.white;
 
-                GUILayout.Label($"Состояние: {enemy.currentState?.ToString() ?? "N/A"}");
+                // Используем null-conditional оператор (?.) для безопасности
+                GUILayout.Label($"State: {enemy.currentState?.GetType().Name ?? "None"}");
                 
                 if (enemy.Health != null)
-                    GUILayout.Label($"Здоровье: {enemy.Health.CurrentHealth}");
+                    GUILayout.Label($"HP: {enemy.Health.CurrentHealth}/{enemy.Health.MaxHealth}");
 
-                if (enemy._awarenessMeter != null)
-                    GUILayout.Label($"Настороженность: {enemy._awarenessMeter.AlertnessValue:F2}");
-
-                GUILayout.Label($"Видит игрока: {(enemy.seePlayer ? "ДА" : "нет")}");
-                GUILayout.Label($"Слышит игрока: {(enemy.hearPlayer ? "ДА" : "нет")}");
+                // ИСПОЛЬЗУЕМ НОВЫЕ СВОЙСТВА ИЗ ENEMY.CS
+                GUILayout.Label($"Alertness: {enemy.DebugAlertness:F1}%");
+                GUILayout.Label($"See: {(enemy.DebugCanSeePlayer ? "YES" : "no")}");
+                GUILayout.Label($"Hear: {(enemy.DebugCanHearPlayer ? "YES" : "no")}");
 
                 if (nav != null)
-                    GUILayout.Label($"Скорость: {nav.velocity.magnitude:F2} м/с");
-
-                // Вызов вашего метода дебага внутри класса Enemy
-                enemy.DebugEnemy();
+                    GUILayout.Label($"Speed: {nav.velocity.magnitude:F2} / {nav.speed:F1}");
 
                 GUILayout.Space(10);
             }
@@ -134,8 +143,6 @@ public class DebugManager : MonoBehaviour
         }
 
         GUILayout.EndVertical();
-
-        // Позволяет перетаскивать окно за заголовок
         GUI.DragWindow(new Rect(0, 0, windowRect.width, 25));
     }
 
@@ -144,19 +151,24 @@ public class DebugManager : MonoBehaviour
         if (!showNavMeshPath || Enemies == null) return;
 
         Gizmos.color = pathColor;
-        foreach (var enemyGO in Enemies)
+        foreach (var enemy in Enemies)
         {
-            if (enemyGO == null) continue;
+            if (enemy == null) continue;
 
-            NavMeshAgent agent = enemyGO.GetComponent<NavMeshAgent>();
+            NavMeshAgent agent = enemy.GetComponent<NavMeshAgent>();
             if (agent == null || !agent.hasPath) continue;
 
             Vector3[] corners = agent.path.corners;
+            if (corners.Length < 2) continue;
+
             for (int i = 0; i < corners.Length - 1; i++)
             {
                 Gizmos.DrawLine(corners[i], corners[i + 1]);
-                Gizmos.DrawSphere(corners[i], 0.1f);
+                Gizmos.DrawSphere(corners[i + 1], 0.2f); // Рисуем точки поворота
             }
+            
+            // Рисуем линию к цели назначения
+            Gizmos.DrawWireSphere(agent.destination, 0.5f);
         }
     }
 }

@@ -191,7 +191,7 @@ RectTransform:
   m_GameObject: {fileID: 365539892571651858}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 4901500987521408839}
@@ -199,7 +199,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 25, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7163441246343306124
 CanvasRenderer:
@@ -229,7 +229,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 2730948e5bb1731418eab9a64f3460c9, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 70fb113119eac9548b9439e2b1e856f1, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -703,6 +703,7 @@ MonoBehaviour:
   Body: {fileID: 1978488256098929586}
   RightHandItemPlace: {fileID: 1469014364529591790}
   Animator: {fileID: 1638851464341475356}
+  WeaponController: {fileID: 4056219961245468801}
   PlayerGrabPoint: {fileID: 2921022491012135311}
   CharacterController: {fileID: 6491573700965251579}
   FootstepEvent:
@@ -734,6 +735,7 @@ GameObject:
   - component: {fileID: 2797347060271068976}
   - component: {fileID: 465963002688498263}
   - component: {fileID: 7115630479170322024}
+  - component: {fileID: 4056219961245468801}
   m_Layer: 6
   m_Name: Player 1
   m_TagString: Player
@@ -819,6 +821,7 @@ MonoBehaviour:
   _inputActionAsset: {fileID: -944628639613478452, guid: 1f09f2f8cfa351946a2c010bb9946270, type: 3}
   _damageable: {fileID: 1093574752704106868}
   _playerCam: {fileID: 1318708040991210610}
+  _weaponController: {fileID: 4056219961245468801}
 --- !u!114 &600206795383783158
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -874,6 +877,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _lockCursor: 1
+  fpsCamera: {fileID: 0}
+  uiLayerMask:
+    serializedVersion: 2
+    m_Bits: 6
 --- !u!114 &4441600228643237815
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1004,6 +1011,29 @@ MonoBehaviour:
   _mask:
     serializedVersion: 2
     m_Bits: 2048
+--- !u!114 &4056219961245468801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2939128531959195477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bb33bd72d03a5d4aa1dd608d6d2b2c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  firePoint: {fileID: 3835653734994111300}
+  weaponStrategy: {fileID: 0}
+  OnReloadStart:
+    m_PersistentCalls:
+      m_Calls: []
+  OnReloadComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  OnAmmoChanged:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &3296388069423751947
 GameObject:
   m_ObjectHideFlags: 0
