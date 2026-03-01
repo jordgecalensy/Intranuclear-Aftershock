@@ -23,20 +23,24 @@ namespace Failsafe.Scripts.EffectSystem
 
         public VisorEffect(Transform PlayerTransform)
         {
-            _visorMaterial = Resources.Load<Material>("VisorShaderMaterial"); // можно заменить на свой материал визора
+            _visorMaterial = Resources.Load<Material>("VisorShaderMaterial");
             if (_visorMaterial == null)
-                Debug.LogWarning("VisorEffect: не найден материал LowHealthEffect в Resources/");
+                Debug.LogWarning("VisorEffect: не найден материал VisorShaderMaterial в Resources/");
 
             _duration = Mathf.Infinity;
             IsUniqueEffect = true;
             _player = PlayerTransform;
 
-            // FMOD события можно потом внедрить через DI или ScriptableObject
-            _visorOnEvent = FMODUnity.RuntimeManager.PathToEventReference("event:/UI/VISOR/visorON");
-            _visorOffEvent = FMODUnity.RuntimeManager.PathToEventReference("event:/UI/VISOR/visorOFF");
-            _visorLoopEvent = FMODUnity.RuntimeManager.PathToEventReference("event:/UI/VISOR/visorLoop");
+            _visorOnEvent   = CreateEventReference("{516d9d6b-bc84-416d-8333-ef18e1034b80}");
+            _visorOffEvent  = CreateEventReference("{91e9e965-7a03-400a-b440-405b8c60aedb}");
+            _visorLoopEvent = CreateEventReference("{018ffa1e-51d6-46e2-ae6f-fee9983f2ef2}");
         }
 
+        private FMODUnity.EventReference CreateEventReference(string guidString)
+        {
+            var guid = FMODUnity.RuntimeManager.PathToGUID(guidString);
+            return new FMODUnity.EventReference { Guid = guid };
+        }
         public override void ApplyEffect()
         {
 
@@ -63,7 +67,7 @@ namespace Failsafe.Scripts.EffectSystem
             _customPassVolume.customPasses.Add(pass);
 
             // Создаём объект для фонового звука
-            /*_visorLoopEmitter = _visorEffectObject.AddComponent<StudioEventEmitter>();
+            _visorLoopEmitter = _visorEffectObject.AddComponent<StudioEventEmitter>();
             _visorLoopEmitter.EventReference = _visorLoopEvent;
 
             _visorOnEmitter = _visorEffectObject.AddComponent<StudioEventEmitter>();
@@ -75,7 +79,7 @@ namespace Failsafe.Scripts.EffectSystem
             _visorOffEmitter.Stop();
             _visorOnEmitter.Play();
             _visorLoopEmitter.Play();
-*/
+
             Debug.Log("VisorEffect активирован");
         }
 
@@ -94,13 +98,13 @@ namespace Failsafe.Scripts.EffectSystem
 
         public override void ClearEffect()
         {
-            /*if (_visorLoopEmitter != null)
+            if (_visorLoopEmitter != null)
             {
                 _visorLoopEmitter.Stop();
                 _visorOnEmitter.Stop();
                 _visorOffEmitter.Play();
             }
-*/
+
             // выключаем все подсветки
             
             if (_xrayObjects != null)

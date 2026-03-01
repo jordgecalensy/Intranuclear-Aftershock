@@ -23,7 +23,13 @@ namespace Failsafe.Scripts.EffectSystem
             _duration = Mathf.Infinity;
             IsUniqueEffect = true;
 
-            _lowHealthEvent = FMODUnity.RuntimeManager.PathToEventReference("event:/UI/LowHP/LowHealthSFX");
+            _lowHealthEvent = CreateEventReference("{1eb3bc7b-b80b-4f3f-bae0-97127f5d21f1}");
+        }
+
+        private FMODUnity.EventReference CreateEventReference(string guidString)
+        {
+            var guid = FMODUnity.RuntimeManager.PathToGUID(guidString);
+            return new FMODUnity.EventReference { Guid = guid };
         }
 
         public override void ApplyEffect()
@@ -39,19 +45,19 @@ namespace Failsafe.Scripts.EffectSystem
             _customPassVolume.customPasses.Add(pass);
 
             // Создаём объект для фонового звука
-            /*_lowHealthEmitter = _customPassVolume.gameObject.AddComponent<StudioEventEmitter>();
+            _lowHealthEmitter = _customPassVolume.gameObject.AddComponent<StudioEventEmitter>();
             _lowHealthEmitter.EventReference = _lowHealthEvent;
             _lowHealthEmitter.Play();
-*/
+
             Debug.Log("Low Health HDRP effect applied");
         }
 
         public override void ClearEffect()
         {
-     /*       if (_lowHealthEmitter != null)
+            if (_lowHealthEmitter != null)
             {
                 _lowHealthEmitter.Stop();
-            }*/
+            }
             if (_customPassVolume != null)
             {
                 Object.Destroy(_customPassVolume.gameObject);
