@@ -1,7 +1,11 @@
 using UnityEngine;
+using System;
 
 public class ElevatorController : MonoBehaviour
 {
+    public event Action OnMoveStart;
+    public event Action OnMoveStop;
+    public event Action OnPowerOff;
     private bool _canMove = false;
 
     [SerializeField] private bool _isPowered;
@@ -10,6 +14,8 @@ public class ElevatorController : MonoBehaviour
     [SerializeField] private Transform[] _points;
 
     private int _pointIndex;
+
+    private bool _isMoving = false; // ✅ Защита от повторных инвоков старта/стопа
 
     void Start()
     {
@@ -22,9 +28,11 @@ public class ElevatorController : MonoBehaviour
     {
         Debug.Log(_isPowered);
         if (!_isPowered) return;
-        if (Vector3.Distance(transform.position, _points[_pointIndex].position) < 0.01f)
+        if (_isMoving && Vector3.Distance(transform.position, _points[_pointIndex].position) < 0.01f)
         {
             _canMove = false;
+            _isMoving = false;
+             OnMoveStop?.Invoke(); // уведомляем звук, что лифт остановился
         }
 
         if (_canMove)
@@ -40,7 +48,7 @@ public class ElevatorController : MonoBehaviour
 
         Debug.Log("Elevator moving up");
         _pointIndex++;
-        _canMove = true;
+        StartMovement();
     }
     public void OnButtonDownPress()
     {
@@ -50,7 +58,7 @@ public class ElevatorController : MonoBehaviour
 
         Debug.Log("Elevator moving down");
         _pointIndex--;
-        _canMove = true;
+        StartMovement();
     }
     public void CallElevatorButton(int floorNumber)
     {
@@ -60,8 +68,20 @@ public class ElevatorController : MonoBehaviour
 
         Debug.Log("Elevator calling");
         _pointIndex = floorNumber;
+        StartMovement();
+
+    }
+
+    private void StartMovement()
+    {
         _canMove = true;
 
+        //  Старт ОДИН раз
+        if (!_isMoving)
+        {
+            _isMoving = true;
+            OnMoveStart?.Invoke();
+        }
     }
     public void OnPowered()
     {
@@ -72,5 +92,13 @@ public class ElevatorController : MonoBehaviour
     {
         Debug.Log($"{gameObject} power off");
         _isPowered = false;
+
+         // если отключили во время движения — корректно останавливаем и даём стоп
+        if (_isMoving)
+        {
+            _canMove = false;
+            _isMoving = false;
+            OnMoveStop?.Invoke();
+        }
     }
 }
