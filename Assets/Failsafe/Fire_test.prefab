@@ -71,29 +71,29 @@ MonoBehaviour:
   targetMask:
     serializedVersion: 2
     m_Bits: 57335
-  tickInterval: 0.25
+  tickInterval: 0.3
   maxTargetsPerTick: 64
-  initialRadius: 4.5
-  maxRadius: 9
-  radiusGrowPerSec: 0.03
-  intensity: 3
-  intensityGrowPerSec: 0.02
-  mediumThreshold: 7
-  strongThreshold: 12
-  peakIntensity: 15
-  sustainIntensity: 2
+  initialRadius: 1
+  maxRadius: 7
+  radiusGrowPerSec: 1
+  intensity: 1
+  intensityGrowPerSec: 0.25
+  mediumThreshold: 2
+  strongThreshold: 2.5
+  peakIntensity: 100
+  sustainIntensity: 0.5
   burnoutDecayPerSec: 0.01
   extinguishAt: 0
   destroyOnExtinguish: 1
   extinguishFadeTime: 0
-  weakContactDps: 8
-  mediumContactDps: 15
-  strongContactDps: 25
-  dotBaseDuration: 3
-  dotTickInterval: 0.4
-  dotDpsPerIntensity: 6
-  mediumDotIntensity: 10
-  strongDotIntensity: 15
+  weakContactDps: 5
+  mediumContactDps: 10
+  strongContactDps: 15
+  dotBaseDuration: 0.9
+  dotTickInterval: 0.3
+  dotDpsPerIntensity: 2.4
+  mediumDotIntensity: 4
+  strongDotIntensity: 7
   enableSpreading: 0
   firePrefab: {fileID: 619633842068393331}
   spreadEvery: 10
@@ -154,7 +154,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   drawGizmos: 1
-  gizmoColor: {r: 1, g: 0.4, b: 0, a: 0.25}
+  gizmoColor: {r: 1, g: 0.504, b: 0, a: 0.25}
 --- !u!54 &1704927219274032207
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -196,15 +196,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1269116497251491764, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
       propertyPath: ShapeModule.radius.value
-      value: 4
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1269116497251491764, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
       propertyPath: InitialModule.startSize.scalar
-      value: 7
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 1269116497251491764, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
       propertyPath: InitialModule.startSize.minScalar
-      value: 4
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1269116497251491764, guid: c1347b1eeab142d4fbd2686f762a6249, type: 3}
       propertyPath: InitialModule.startLifetime.minScalar
