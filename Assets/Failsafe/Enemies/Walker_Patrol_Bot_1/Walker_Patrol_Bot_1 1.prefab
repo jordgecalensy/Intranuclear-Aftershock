@@ -1042,7 +1042,8 @@ Transform:
   m_LocalPosition: {x: 0.000000002181944, y: 0.0019799187, z: 0.009151735}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 8862956333098967803}
   m_Father: {fileID: 6382771369531776977}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &4316154320964640941
@@ -1787,9 +1788,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   FocusingTime: 1
-  FocusingProgress: 0
+  FocusingProgress: 10
   Distance: 20
-  _viewAngle: 45
+  _viewAngle: 55
   _ignoreLayer:
     serializedVersion: 2
     m_Bits: 1056
@@ -1804,7 +1805,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  _chestIndex: 1
+  _chestIndex: 2
 --- !u!114 &8993564496396878420
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1818,7 +1819,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   FocusingTime: 1
-  FocusingProgress: 0
+  FocusingProgress: 6
   Distance: 10
   _minSoundStrength: 0.1
   _maxSoundStrength: 10
@@ -2241,7 +2242,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8bb33bd72d03a5d4aa1dd608d6d2b2c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  firePoint: {fileID: 9192675006005834965}
+  firePoint: {fileID: 8862956333098967803}
   weaponStrategy: {fileID: 11400000, guid: 0dfc6aa7bc7630b44b7a4d559413cf65, type: 2}
   OnReloadStart:
     m_PersistentCalls:
@@ -2355,7 +2356,7 @@ Transform:
   m_GameObject: {fileID: 5725726205389977903}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.00000011920929, z: -0, w: 1}
-  m_LocalPosition: {x: -2.0260272e-19, y: 0.01581, z: 0.0097}
+  m_LocalPosition: {x: -0, y: 0.01666, z: 0.0147}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2682,6 +2683,37 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.009924835, y: 0.013482181, z: 0.0092786355}
   m_Center: {x: -0.0020545323, y: 0.0052807783, z: -0.00022679102}
+--- !u!1 &8190898951828211339
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8862956333098967803}
+  m_Layer: 10
+  m_Name: Laser_Origin
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8862956333098967803
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8190898951828211339}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.05697796, y: -0.000000118628215, z: -0, w: 0.9983755}
+  m_LocalPosition: {x: 0, y: -0.00037290237, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6027148187367383525}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8559569841675231415
 GameObject:
   m_ObjectHideFlags: 0
