@@ -137,7 +137,7 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Use"",
+                    ""name"": ""Attack"",
                     ""type"": ""Button"",
                     ""id"": ""316f217b-db19-4ab3-992d-f06d0052d966"",
                     ""expectedControlType"": """",
@@ -155,7 +155,7 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Attack"",
+                    ""name"": ""FlashLight"",
                     ""type"": ""Button"",
                     ""id"": ""48909a03-c0cf-4cf1-ab54-206ae42076cf"",
                     ""expectedControlType"": """",
@@ -194,6 +194,15 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""name"": ""AltMode"",
                     ""type"": ""Button"",
                     ""id"": ""fc3e21df-423c-4973-8b35-3a87824dc73e"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ThrowObject"",
+                    ""type"": ""Button"",
+                    ""id"": ""a2ed78fc-b3d0-45f2-88e8-e9a17cade4fb"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -314,11 +323,11 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""90bc8667-6231-48cb-963a-26939f05f9e5"",
-                    ""path"": ""<Keyboard>/f"",
+                    ""path"": ""<Mouse>/leftButton"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Use"",
+                    ""action"": ""Attack"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -336,11 +345,11 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""ffed1a97-259d-48b1-8736-46768ec0a9e5"",
-                    ""path"": ""<Mouse>/leftButton"",
+                    ""path"": ""<Keyboard>/f"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Attack"",
+                    ""action"": ""FlashLight"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -380,11 +389,33 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""ab76920d-ae57-494a-8529-f53b1d795648"",
-                    ""path"": ""<Keyboard>/leftAlt"",
+                    ""path"": ""<Mouse>/middleButton"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""AltMode"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ad4edafb-9e99-4c48-91e3-d064955c171c"",
+                    ""path"": ""<Keyboard>/f1"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""AltMode"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d0d09fef-23f3-4e2c-be92-dbf1af41b168"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ThrowObject"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -400,13 +431,14 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         m_Player_Jump = m_Player.FindAction("Jump", throwIfNotFound: true);
         m_Player_Sprint = m_Player.FindAction("Sprint", throwIfNotFound: true);
         m_Player_Crouch = m_Player.FindAction("Crouch", throwIfNotFound: true);
-        m_Player_Use = m_Player.FindAction("Use", throwIfNotFound: true);
-        m_Player_GrabOrDrop = m_Player.FindAction("GrabOrDrop", throwIfNotFound: true);
         m_Player_Attack = m_Player.FindAction("Attack", throwIfNotFound: true);
+        m_Player_GrabOrDrop = m_Player.FindAction("GrabOrDrop", throwIfNotFound: true);
+        m_Player_FlashLight = m_Player.FindAction("FlashLight", throwIfNotFound: true);
         m_Player_GrabLedge = m_Player.FindAction("GrabLedge", throwIfNotFound: true);
         m_Player_Zoom = m_Player.FindAction("Zoom", throwIfNotFound: true);
         m_Player_Visor = m_Player.FindAction("Visor", throwIfNotFound: true);
         m_Player_AltMode = m_Player.FindAction("AltMode", throwIfNotFound: true);
+        m_Player_ThrowObject = m_Player.FindAction("ThrowObject", throwIfNotFound: true);
     }
 
     ~@PlayerInput()
@@ -492,13 +524,14 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Jump;
     private readonly InputAction m_Player_Sprint;
     private readonly InputAction m_Player_Crouch;
-    private readonly InputAction m_Player_Use;
-    private readonly InputAction m_Player_GrabOrDrop;
     private readonly InputAction m_Player_Attack;
+    private readonly InputAction m_Player_GrabOrDrop;
+    private readonly InputAction m_Player_FlashLight;
     private readonly InputAction m_Player_GrabLedge;
     private readonly InputAction m_Player_Zoom;
     private readonly InputAction m_Player_Visor;
     private readonly InputAction m_Player_AltMode;
+    private readonly InputAction m_Player_ThrowObject;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -531,17 +564,17 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Crouch => m_Wrapper.m_Player_Crouch;
         /// <summary>
-        /// Provides access to the underlying input action "Player/Use".
+        /// Provides access to the underlying input action "Player/Attack".
         /// </summary>
-        public InputAction @Use => m_Wrapper.m_Player_Use;
+        public InputAction @Attack => m_Wrapper.m_Player_Attack;
         /// <summary>
         /// Provides access to the underlying input action "Player/GrabOrDrop".
         /// </summary>
         public InputAction @GrabOrDrop => m_Wrapper.m_Player_GrabOrDrop;
         /// <summary>
-        /// Provides access to the underlying input action "Player/Attack".
+        /// Provides access to the underlying input action "Player/FlashLight".
         /// </summary>
-        public InputAction @Attack => m_Wrapper.m_Player_Attack;
+        public InputAction @FlashLight => m_Wrapper.m_Player_FlashLight;
         /// <summary>
         /// Provides access to the underlying input action "Player/GrabLedge".
         /// </summary>
@@ -558,6 +591,10 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/AltMode".
         /// </summary>
         public InputAction @AltMode => m_Wrapper.m_Player_AltMode;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/ThrowObject".
+        /// </summary>
+        public InputAction @ThrowObject => m_Wrapper.m_Player_ThrowObject;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -599,15 +636,15 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
             @Crouch.started += instance.OnCrouch;
             @Crouch.performed += instance.OnCrouch;
             @Crouch.canceled += instance.OnCrouch;
-            @Use.started += instance.OnUse;
-            @Use.performed += instance.OnUse;
-            @Use.canceled += instance.OnUse;
-            @GrabOrDrop.started += instance.OnGrabOrDrop;
-            @GrabOrDrop.performed += instance.OnGrabOrDrop;
-            @GrabOrDrop.canceled += instance.OnGrabOrDrop;
             @Attack.started += instance.OnAttack;
             @Attack.performed += instance.OnAttack;
             @Attack.canceled += instance.OnAttack;
+            @GrabOrDrop.started += instance.OnGrabOrDrop;
+            @GrabOrDrop.performed += instance.OnGrabOrDrop;
+            @GrabOrDrop.canceled += instance.OnGrabOrDrop;
+            @FlashLight.started += instance.OnFlashLight;
+            @FlashLight.performed += instance.OnFlashLight;
+            @FlashLight.canceled += instance.OnFlashLight;
             @GrabLedge.started += instance.OnGrabLedge;
             @GrabLedge.performed += instance.OnGrabLedge;
             @GrabLedge.canceled += instance.OnGrabLedge;
@@ -620,6 +657,9 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
             @AltMode.started += instance.OnAltMode;
             @AltMode.performed += instance.OnAltMode;
             @AltMode.canceled += instance.OnAltMode;
+            @ThrowObject.started += instance.OnThrowObject;
+            @ThrowObject.performed += instance.OnThrowObject;
+            @ThrowObject.canceled += instance.OnThrowObject;
         }
 
         /// <summary>
@@ -646,15 +686,15 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
             @Crouch.started -= instance.OnCrouch;
             @Crouch.performed -= instance.OnCrouch;
             @Crouch.canceled -= instance.OnCrouch;
-            @Use.started -= instance.OnUse;
-            @Use.performed -= instance.OnUse;
-            @Use.canceled -= instance.OnUse;
-            @GrabOrDrop.started -= instance.OnGrabOrDrop;
-            @GrabOrDrop.performed -= instance.OnGrabOrDrop;
-            @GrabOrDrop.canceled -= instance.OnGrabOrDrop;
             @Attack.started -= instance.OnAttack;
             @Attack.performed -= instance.OnAttack;
             @Attack.canceled -= instance.OnAttack;
+            @GrabOrDrop.started -= instance.OnGrabOrDrop;
+            @GrabOrDrop.performed -= instance.OnGrabOrDrop;
+            @GrabOrDrop.canceled -= instance.OnGrabOrDrop;
+            @FlashLight.started -= instance.OnFlashLight;
+            @FlashLight.performed -= instance.OnFlashLight;
+            @FlashLight.canceled -= instance.OnFlashLight;
             @GrabLedge.started -= instance.OnGrabLedge;
             @GrabLedge.performed -= instance.OnGrabLedge;
             @GrabLedge.canceled -= instance.OnGrabLedge;
@@ -667,6 +707,9 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
             @AltMode.started -= instance.OnAltMode;
             @AltMode.performed -= instance.OnAltMode;
             @AltMode.canceled -= instance.OnAltMode;
+            @ThrowObject.started -= instance.OnThrowObject;
+            @ThrowObject.performed -= instance.OnThrowObject;
+            @ThrowObject.canceled -= instance.OnThrowObject;
         }
 
         /// <summary>
@@ -743,12 +786,12 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnCrouch(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Use" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Attack" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnUse(InputAction.CallbackContext context);
+        void OnAttack(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "GrabOrDrop" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
@@ -757,12 +800,12 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnGrabOrDrop(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Attack" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "FlashLight" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnAttack(InputAction.CallbackContext context);
+        void OnFlashLight(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "GrabLedge" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
@@ -791,5 +834,12 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnAltMode(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ThrowObject" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnThrowObject(InputAction.CallbackContext context);
     }
 }

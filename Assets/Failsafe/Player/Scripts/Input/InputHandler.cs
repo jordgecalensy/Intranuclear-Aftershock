@@ -28,12 +28,13 @@ public class InputHandler
     private const string _sprint = "Sprint";
     private const string _crouch = "Crouch";
     private const string _grabOrDrop = "GrabOrDrop";
-    private const string _attack = "Attack";
+    private const string _attack = "FlashLight";
     private const string _grabLedge = "GrabLedge";
     private const string _zoom = "Zoom";
-    private const string _use = "Use";
+    private const string _use = "Attack";
     private const string _altMode = "AltMode";
     private const string _visor = "Visor"; ///Добавил 
+    private const string _throwObject = "ThrowObject"; ///временно
 
     private InputAction _movementAction;
     private InputAction _rotationAction;
@@ -41,12 +42,13 @@ public class InputHandler
     private InputAction _sprintAction;
     private InputAction _crouchAction;
     public InputAction GrabOrDropAction;
-    private InputAction _attackAction;
+    public InputAction FlashLightAction;
     private InputAction _grabLedgeAction;
     private InputAction _zoomAction;
-    private InputAction _useAction;
+    private InputAction _attackAction;
     private InputAction _altModeAction;
     private InputAction _visorAction; ///Добавил
+    public InputAction ThrowObjectAction; ///временно
 
 
     public List<InputAction> PerformedActions = new List<InputAction>();
@@ -58,10 +60,10 @@ public class InputHandler
     public bool JumpTriggered { get; private set; }
     public bool SprintTriggered { get; private set; }
     public InputTrigger CrouchTrigger { get; private set; } = new InputTrigger();
-    public bool AttackTriggered { get; private set; }
+    public bool FlashLightTriggered { get; private set; }
     public InputTrigger GrabLedgeTrigger { get; private set; } = new InputTrigger();
     public bool ZoomTriggered { get; private set; }
-    public InputTrigger UseTrigger { get; private set; } = new InputTrigger();
+    public InputTrigger AttackTrigger { get; private set; } = new InputTrigger();
     public InputTrigger AltModeTrigger { get; private set; } = new InputTrigger();
     public InputTrigger VisorTrigger { get; private set; } = new InputTrigger();
 
@@ -86,12 +88,13 @@ public class InputHandler
         _sprintAction = mapReference.FindAction(_sprint);
         _crouchAction = mapReference.FindAction(_crouch);
         GrabOrDropAction = mapReference.FindAction(_grabOrDrop);
-        _attackAction = mapReference.FindAction(_attack);
+        FlashLightAction = mapReference.FindAction(_attack);
         _grabLedgeAction = mapReference.FindAction(_grabLedge);
         _zoomAction = mapReference.FindAction(_zoom);
-        _useAction = mapReference.FindAction(_use);
+        _attackAction = mapReference.FindAction(_use);
         _altModeAction = mapReference.FindAction(_altMode);
         _visorAction = mapReference.FindAction(_visor);
+        ThrowObjectAction = mapReference.FindAction(_throwObject);
 
         SubscribeActionValuesToInputEvents();
     }
@@ -134,8 +137,8 @@ public class InputHandler
         _crouchAction.performed += CrouchTrigger.OnInputStart;
         _crouchAction.canceled += CrouchTrigger.OnInputCancel;
 
-        _attackAction.performed += inputInfo => AttackTriggered = true;
-        _attackAction.canceled += inputInfo => AttackTriggered = false;
+        FlashLightAction.performed += inputInfo => FlashLightTriggered = true;
+        FlashLightAction.canceled += inputInfo => FlashLightTriggered = false;
 
         _grabLedgeAction.performed += GrabLedgeTrigger.OnInputStart;
         _grabLedgeAction.canceled += GrabLedgeTrigger.OnInputCancel;
@@ -143,8 +146,8 @@ public class InputHandler
         _zoomAction.performed += inputInfo => ZoomTriggered = true;
         _zoomAction.canceled += inputInfo => ZoomTriggered = false;
 
-        _useAction.performed += UseTrigger.OnInputStart;
-        _useAction.canceled += UseTrigger.OnInputCancel;
+        _attackAction.performed += AttackTrigger.OnInputStart;
+        _attackAction.canceled += AttackTrigger.OnInputCancel;
 
         _altModeAction.performed += AltModeTrigger.OnInputStart;
         _altModeAction.canceled += AltModeTrigger.OnInputCancel;
