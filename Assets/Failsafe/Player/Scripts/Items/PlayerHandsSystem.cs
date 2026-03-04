@@ -45,7 +45,7 @@ public class PlayerHandsSystem : ITickable
 
     public void Tick()
     {
-        if (_inputHandler.UseTrigger.IsTriggered && CanUseItemInHand())
+        if (_inputHandler.AttackTrigger.IsTriggered && CanUseItemInHand())
         {
             UseItemInHand().Forget();
         }
@@ -54,7 +54,7 @@ public class PlayerHandsSystem : ITickable
             _inputHandler.AltModeTrigger.ReleaseTrigger();
             _playerHandsContainer.ItemInHand.ItemUsable.AltMode();
         }
-        if (!_inputHandler.UseTrigger.IsPressed)
+        if (!_inputHandler.AttackTrigger.IsPressed)
         {
             _skipStartDelay = false;
         }
@@ -83,7 +83,7 @@ public class PlayerHandsSystem : ITickable
         if (useResult.UsageType == UsageType.ClickToUse)
         {
             _skipStartDelay = false;
-            _inputHandler.UseTrigger.ReleaseTrigger();
+            _inputHandler.AttackTrigger.ReleaseTrigger();
             _usingState = UsingState.OnDelay;
             await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseDelay));
             _usingState = UsingState.None;

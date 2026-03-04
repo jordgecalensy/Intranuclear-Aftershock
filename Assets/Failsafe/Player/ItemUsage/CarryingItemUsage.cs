@@ -1,4 +1,4 @@
-using Failsafe.Player.Scripts.Interaction;
+﻿using Failsafe.Player.Scripts.Interaction;
 using UnityEngine;
 using VContainer;
 using System.Linq;
@@ -27,7 +27,7 @@ namespace Failsafe.Player.ItemUsage
 
         private void Update()
         {
-            if (!(_inputHandler.UseTrigger.IsTriggered || _inputHandler.ZoomTriggered)) return;
+            if (!(_inputHandler.AttackTrigger.IsTriggered || _inputHandler.ZoomTriggered)) return;
             if (!_physicsInteraction.CarryingObject) return;
 
             if (_physicsInteraction.CarryingObject.TryGetComponent(out Item item))

@@ -1,9 +1,12 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using VContainer;
 
 public class flashlight : MonoBehaviour
 {
+    [Inject] private InputHandler _inputHandler;
+
     public Light light_fonarik; //свет фонарика
     public bool Vkl; //включен или выключен фонарик
     public bool OnChangeColor=true; //можно ли включать светофильтр
@@ -50,7 +53,7 @@ public class flashlight : MonoBehaviour
    
    //включение и выключение фонарика
     public void FlashLightOnOF(){
-         if (Input.GetKeyDown (KeyCode.F) && Vkl == false) // если нажали клавишу F и фонарик выключен
+         if (_inputHandler.FlashLightAction.WasPressedThisFrame() && Vkl == false) // если нажали клавишу F и фонарик выключен
 		{
 			
 			light_fonarik.enabled=true; // включаем свет
@@ -59,7 +62,7 @@ public class flashlight : MonoBehaviour
 		           
 		}
         //выключаем фонарик
-		else if (Input.GetKeyDown (KeyCode.F) && Vkl == true) // если нажали клавишу F и фонарик включен
+		else if (_inputHandler.FlashLightAction.WasPressedThisFrame() && Vkl == true) // если нажали клавишу F и фонарик включен
 		{
 			
 			light_fonarik.enabled=false; //выключаем свет

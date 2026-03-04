@@ -51,7 +51,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Use",
+                    "name": "Attack",
                     "type": "Button",
                     "id": "316f217b-db19-4ab3-992d-f06d0052d966",
                     "expectedControlType": "",
@@ -69,7 +69,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Attack",
+                    "name": "FlashLight",
                     "type": "Button",
                     "id": "48909a03-c0cf-4cf1-ab54-206ae42076cf",
                     "expectedControlType": "",
@@ -108,6 +108,15 @@
                     "name": "AltMode",
                     "type": "Button",
                     "id": "fc3e21df-423c-4973-8b35-3a87824dc73e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ThrowObject",
+                    "type": "Button",
+                    "id": "a2ed78fc-b3d0-45f2-88e8-e9a17cade4fb",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -228,11 +237,11 @@
                 {
                     "name": "",
                     "id": "90bc8667-6231-48cb-963a-26939f05f9e5",
-                    "path": "<Keyboard>/f",
+                    "path": "<Mouse>/leftButton",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Use",
+                    "action": "Attack",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -250,11 +259,11 @@
                 {
                     "name": "",
                     "id": "ffed1a97-259d-48b1-8736-46768ec0a9e5",
-                    "path": "<Mouse>/leftButton",
+                    "path": "<Keyboard>/f",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Attack",
+                    "action": "FlashLight",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -294,11 +303,33 @@
                 {
                     "name": "",
                     "id": "ab76920d-ae57-494a-8529-f53b1d795648",
-                    "path": "<Keyboard>/leftAlt",
+                    "path": "<Mouse>/middleButton",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
                     "action": "AltMode",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ad4edafb-9e99-4c48-91e3-d064955c171c",
+                    "path": "<Keyboard>/f1",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "AltMode",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d0d09fef-23f3-4e2c-be92-dbf1af41b168",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ThrowObject",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
