@@ -1042,7 +1042,8 @@ Transform:
   m_LocalPosition: {x: 0.000000002181944, y: 0.0019799187, z: 0.009151735}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 8862956333098967803}
   m_Father: {fileID: 6382771369531776977}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &4316154320964640941
@@ -1690,6 +1691,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1511383286313260163}
+  - component: {fileID: 5062245809307219714}
   - component: {fileID: 3749471888417903072}
   - component: {fileID: 202986098991734307}
   - component: {fileID: 8993564496396878420}
@@ -1705,6 +1707,8 @@ GameObject:
   - component: {fileID: 4388551472208041899}
   - component: {fileID: 4948907210411337118}
   - component: {fileID: 131522579115976752}
+  - component: {fileID: 2446686950866916016}
+  - component: {fileID: 5838910960630038932}
   m_Layer: 10
   m_Name: Walker_Patrol_Bot_1 1
   m_TagString: Enemy
@@ -1738,6 +1742,20 @@ Transform:
   - {fileID: 1605119131048351053}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5062245809307219714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5441590585779604949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3fbfc18721ff154a8b25fc7b76ff3f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _animator: {fileID: 549660405066039400}
+  _idleAnimationCount: 3
 --- !u!114 &3749471888417903072
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1750,19 +1768,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ede54a7a9b7d0094486eac8cf22d2184, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DebugMode: 0
   useRootMotion: 1
-  _laserSpawnPoint: {fileID: 2787837512202065222}
-  _manualPoints: []
-  _corpseModel: {fileID: 2521625710871764778, guid: 64bc8ea45d5c24b47b98b27a11ed7dd5, type: 3}
-  seePlayer: 1
-  hearPlayer: 1
+  _enemyAnimator: {fileID: 5062245809307219714}
+  _weaponController: {fileID: 5838910960630038932}
   _enemyConfig: {fileID: 11400000, guid: 724be6a3266871249b346fdf1bb26a46, type: 2}
-  jumpTrigger: Jump
-  landTrigger: Land
-  baseArcHeight: 1.2
-  speedXZ: 4
-  speedY: 3
+  _animator: {fileID: 549660405066039400}
+  _navMeshAgent: {fileID: 1444448667796523294}
+  _rb: {fileID: 0}
 --- !u!114 &202986098991734307
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1776,9 +1788,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   FocusingTime: 1
-  FocusingProgress: 0
+  FocusingProgress: 10
   Distance: 20
-  _viewAngle: 45
+  _viewAngle: 55
   _ignoreLayer:
     serializedVersion: 2
     m_Bits: 1056
@@ -1793,7 +1805,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  _chestIndex: 1
+  _chestIndex: 2
 --- !u!114 &8993564496396878420
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1807,7 +1819,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   FocusingTime: 1
-  FocusingProgress: 0
+  FocusingProgress: 6
   Distance: 10
   _minSoundStrength: 0.1
   _maxSoundStrength: 10
@@ -2197,6 +2209,74 @@ MonoBehaviour:
         Data4: -459179925
       Path: event:/SFX/ENEMIES/WALKER/Walker_Idle_Foley
   _runThreshold: 3.5
+--- !u!65 &2446686950866916016
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5441590585779604949}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1.5807877}
+  m_Center: {x: 0, y: 1.95, z: 0.059604645}
+--- !u!114 &5838910960630038932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5441590585779604949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bb33bd72d03a5d4aa1dd608d6d2b2c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  firePoint: {fileID: 8862956333098967803}
+  weaponStrategy: {fileID: 11400000, guid: 0dfc6aa7bc7630b44b7a4d559413cf65, type: 2}
+  OnReloadStart:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5062245809307219714}
+        m_TargetAssemblyTypeName: EnemyAnimator, Assembly-CSharp
+        m_MethodName: StartReloading
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  OnReloadComplete:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5062245809307219714}
+        m_TargetAssemblyTypeName: EnemyAnimator, Assembly-CSharp
+        m_MethodName: StopReloading
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  OnAmmoChanged:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &5568232610338988830
 GameObject:
   m_ObjectHideFlags: 0
@@ -2276,7 +2356,7 @@ Transform:
   m_GameObject: {fileID: 5725726205389977903}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.00000011920929, z: -0, w: 1}
-  m_LocalPosition: {x: -2.0260272e-19, y: 0.013881352, z: 0.01863971}
+  m_LocalPosition: {x: -0, y: 0.01666, z: 0.0147}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2603,6 +2683,37 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.009924835, y: 0.013482181, z: 0.0092786355}
   m_Center: {x: -0.0020545323, y: 0.0052807783, z: -0.00022679102}
+--- !u!1 &8190898951828211339
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8862956333098967803}
+  m_Layer: 10
+  m_Name: Laser_Origin
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8862956333098967803
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8190898951828211339}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.05697796, y: -0.000000118628215, z: -0, w: 0.9983755}
+  m_LocalPosition: {x: 0, y: -0.00037290237, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6027148187367383525}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8559569841675231415
 GameObject:
   m_ObjectHideFlags: 0

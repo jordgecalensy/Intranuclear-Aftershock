@@ -1,47 +1,67 @@
-using Failsafe.Scripts.Damage;
-using Failsafe.Scripts.Damage.Implementation;
 using UnityEngine;
+using Failsafe.Scripts.Damage.Implementation; // Ваш namespace для урона
 
 public class LaserProjectile : MonoBehaviour
 {
-    public float speed = 20f;
-    public float lifetime = 5f;
-    public int damage = 10;
+    // Эти поля больше НЕ публичные и НЕ Serialized. 
+    // Их нельзя настроить в инспекторе префаба, только через код.
+    private float _speed;
+    private float _damage;
+    private float _maxLifetime;
+    private LayerMask _hitMask;
+    
+    private Vector3 _startPosition;
 
-    private Vector3 _direction;
-
-    public void Initialize(Vector3 direction)
+    // --- ГЛАВНЫЙ МЕТОД ---
+    // Вызывается сразу после спавна
+    public void Initialize(float speed, float damage, float range, LayerMask mask)
     {
-        _direction = direction.normalized;
-        // Поворачиваем снаряд в сторону движения
-        if (_direction != Vector3.zero)
-        {
-            transform.rotation = Quaternion.LookRotation(_direction);
-        }
-        Destroy(gameObject, lifetime);
+        _speed = speed;
+        _damage = damage;
+        _hitMask = mask;
+        
+        // Вычисляем время жизни: Время = Расстояние / Скорость
+        // Если скорость 20, а дальность 100 -> пуля живет 5 секунд
+        _maxLifetime = range / speed;
+        
+        _startPosition = transform.position;
+        
+        // Уничтожить через время (страховка)
+        Destroy(gameObject, _maxLifetime);
     }
 
-    void Update()
+    private void Update()
     {
-        transform.position += _direction * speed * Time.deltaTime;
+        // 1. Движение вперед
+        transform.Translate(Vector3.forward * _speed * Time.deltaTime);
+
+        // 2. Проверка дистанции (опционально, если Destroy(time) недостаточно точно)
+        if (Vector3.Distance(_startPosition, transform.position) >= _speed * _maxLifetime)
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        // Игнорируем столкновения с самим врагом или другими снарядами
-        if (other.GetComponent<Enemy>() != null || other.GetComponent<LaserProjectile>() != null)
+        // Проверяем слой (входит ли слой объекта в нашу маску)
+        if ((_hitMask.value & (1 << other.gameObject.layer)) > 0)
         {
-            return; // Не делаем ничего и не уничтожаем снаряд
-        }
+            // Наносим урон
+            var damageable = other.GetComponentInChildren<DamageableComponent>(); // Или ваш интерфейс IHealth
+            if (damageable != null)
+            {
+                // Передаем урон, который получили из конфига
+                damageable.TakeDamage(new FlatDamage(_damage));
+            }
 
-        // Пытаемся нанести урон, если у объекта есть компонент DamageableComponent
-        var damageable = other.GetComponent<DamageableComponent>();
-        if (damageable != null)
-        {            
-            damageable.TakeDamage(new FlatDamage(damage));
+            // Эффект попадания (можно добавить позже)
+            Destroy(gameObject);
         }
-
-        // Уничтожаем снаряд при столкновении с любым другим объектом (игроком, стеной и т.д.)
-        Destroy(gameObject);
+        else 
+        {
+            // Если попали в стену (Default), тоже уничтожаем
+            if (!other.isTrigger) Destroy(gameObject);
+        }
     }
 }

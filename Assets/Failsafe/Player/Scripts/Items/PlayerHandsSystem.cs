@@ -37,7 +37,7 @@ public class PlayerHandsSystem : ITickable
         _actionsWithItems = new()
         {
             [ItemType.Consumable] = new UseOnSelfAction(),
-            [ItemType.Gun] = new ShootAction(playerView.PlayerCamera),
+            [ItemType.Gun] = new ShootAction(playerView.WeaponController,playerView.PlayerCamera),
             [ItemType.Grenade] = new ThrowItemAction(playerView.PlayerCamera, _throwItemPower),
             [ItemType.GroundItem] = new DropItemAction(playerView.PlayerCamera),
         };
@@ -57,6 +57,17 @@ public class PlayerHandsSystem : ITickable
         if (!_inputHandler.AttackTrigger.IsPressed)
         {
             _skipStartDelay = false;
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            if (_playerHandsContainer.State == PlayerHandsContainer.HandState.ItemInHand)
+            {
+                // Если в руках пушка - перезаряжаем
+                if (_playerHandsContainer.ItemInHand.ItemUsable is GunUsable gun)
+                {
+                    gun.Reload();
+                }
+            }
         }
     }
 

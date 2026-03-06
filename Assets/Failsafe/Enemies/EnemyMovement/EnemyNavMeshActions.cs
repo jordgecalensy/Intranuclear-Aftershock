@@ -55,4 +55,17 @@ public class EnemyNavMeshActions
         }
         return false;
     }
+    
+    public void SetStoppingDistance(float distance)
+    {
+        if (_navMeshAgent != null)
+        {
+            _navMeshAgent.stoppingDistance = distance;
+        }
+    }
+
+    public float GetStoppingDistance()
+    {
+        return _navMeshAgent != null ? _navMeshAgent.stoppingDistance : 0f;
+    }
 }
