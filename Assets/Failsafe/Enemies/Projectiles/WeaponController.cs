@@ -22,7 +22,6 @@ public class WeaponController : MonoBehaviour
     
     // Хранилище временных объектов (чтобы не гадить в ScriptableObject)
     private Dictionary<string, object> _runtimeObjects = new Dictionary<string, object>();
-
     public bool IsReloading => _isReloading;
     public int CurrentAmmo => _currentAmmo;
 
@@ -40,31 +39,34 @@ public class WeaponController : MonoBehaviour
         UpdateAmmoUI();
     }
 
-    public void TryShoot(Vector3 targetPoint)
+    public void TryShoot(Vector3 target)
     {
-        if (_isReloading || weaponStrategy == null) return;
+        if (_isReloading) return;
 
-        // Если патроны кончились — перезарядка
-        if (_currentAmmo <= 0 && !weaponStrategy.ammoConfig.infiniteAmmo)
+        // --- ЗАЩИТА ОТ СПАМА ---
+        // Если текущее время меньше времени следующего выстрела - игнорируем нажатие
+        if (Time.time < _nextFireTime) return; 
+
+        // Проверяем патроны (или бесконечность)
+        if (_currentAmmo > 0 || weaponStrategy.ammoConfig.infiniteAmmo)
         {
-            StartReload();
-            weaponStrategy.StopFiring(this);
-            return;
-        }
-
-        // Скорострельность
-        if (Time.time < _nextFireTime && weaponStrategy.stats.fireRate > 0) return;
-
-        // Выстрел через стратегию
-        if (weaponStrategy.Fire(this, targetPoint))
-        {
-            // Тратим патроны (если это не лазер с continuous damage)
-            if (weaponStrategy.stats.fireRate > 0 && !weaponStrategy.ammoConfig.infiniteAmmo)
+            // Пытаемся выстрелить через стратегию
+            if (weaponStrategy.Fire(this, target))
             {
-                _currentAmmo--;
+                // Устанавливаем таймер для следующего выстрела (1 секунда из твоего конфига)
                 _nextFireTime = Time.time + weaponStrategy.stats.fireRate;
-                UpdateAmmoUI();
+            
+                // Тратим патрон, если они не бесконечные
+                if (!weaponStrategy.ammoConfig.infiniteAmmo)
+                {
+                    _currentAmmo--;
+                    OnAmmoChanged?.Invoke(_currentAmmo, weaponStrategy.ammoConfig.maxAmmo);
+                }
             }
+        }
+        else
+        {
+            StartReload(); // Патроны кончились - перезаряжаем
         }
     }
 

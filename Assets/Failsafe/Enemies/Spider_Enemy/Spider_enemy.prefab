@@ -2917,6 +2917,9 @@ GameObject:
   - component: {fileID: -7871199719983303284}
   - component: {fileID: 7047619466536219919}
   - component: {fileID: 7136885806845675312}
+  - component: {fileID: 5176617632159129221}
+  - component: {fileID: 4730527524063655447}
+  - component: {fileID: 4575456193108574774}
   m_Layer: 10
   m_Name: Spider_enemy
   m_TagString: Enemy
@@ -2955,26 +2958,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ede54a7a9b7d0094486eac8cf22d2184, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DebugMode: 0
   useRootMotion: 0
-  _laserBeamPrefab: {fileID: 0}
-  _laserProjectilePrefab: {fileID: 7565026735645175051, guid: c4671ae25e7580a488fa97f95ef79f9a, type: 3}
-  _laserSpawnPoint: {fileID: 4286593434616653242}
-  _manualPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  _corpseModel: {fileID: 2778337503928594830, guid: c6de8d6a74b75574ea0b1f9b82844de6, type: 3}
-  seePlayer: 0
-  hearPlayer: 0
+  _enemyAnimator: {fileID: 0}
+  _weaponController: {fileID: 0}
   _enemyConfig: {fileID: 11400000, guid: a303d65cb366b804ba8e463667521fb7, type: 2}
-  jumpTrigger: Jump
-  landTrigger: Land
-  baseArcHeight: 2.01
-  speedXZ: 4
-  speedY: 3
-  minDuration: 0.35
-  endSnapTolerance: 0.25
-  scaleArcByUpDelta: 1
+  _animator: {fileID: 0}
+  _navMeshAgent: {fileID: 0}
+  _rb: {fileID: 0}
 --- !u!195 &6046658015832705299
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -3058,7 +3048,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   FocusingTime: 1
   FocusingProgress: 0
-  Distance: 0
+  Distance: 10
   _viewAngle: 45
   _ignoreLayer:
     serializedVersion: 2
@@ -3089,7 +3079,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   FocusingTime: 1
   FocusingProgress: 0
-  Distance: 0
+  Distance: 10
   _minSoundStrength: 1
   _maxSoundStrength: 10
 --- !u!54 &6471814586124107657
@@ -3161,6 +3151,140 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _config: {fileID: 11400000, guid: 22e18573ab2349a42a26a9865501c2a8, type: 2}
+--- !u!114 &5176617632159129221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4733533746732414522}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce3f99b8b2e5ece4ba22e4841ca69696, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _movement:
+    Step:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+    Servo:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+    Land:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+  _combat:
+    LaserAccumulate:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+    LaserLoop:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+    LaserImpact:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+    Overheat:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+    Reboot:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+  _voice:
+    StateVoice:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+    Damage:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+    Death:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+  _idle:
+    Scanner:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+    Foley:
+      Guid:
+        Data1: 0
+        Data2: 0
+        Data3: 0
+        Data4: 0
+      Path: 
+  _runThreshold: 3.5
+--- !u!114 &4730527524063655447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4733533746732414522}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69530086952b6bf42ac00bdee204cdb7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &4575456193108574774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4733533746732414522}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3fbfc18721ff154a8b25fc7b76ff3f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _animator: {fileID: 5772716896228934580}
+  _idleAnimationCount: 3
 --- !u!1 &4792443671628594734
 GameObject:
   m_ObjectHideFlags: 0
