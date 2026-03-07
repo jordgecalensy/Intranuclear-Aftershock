@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Failsafe.PlayerMovements.States
 {
     /// <summary>
-    /// Стояние на месте (без движения)
+    /// Режим, при котором камера занимает весь экран и игрок может свободно вращать её, не влияя на положение персонажа.
     /// </summary>
     public class FullScreenState : BehaviorState
     {

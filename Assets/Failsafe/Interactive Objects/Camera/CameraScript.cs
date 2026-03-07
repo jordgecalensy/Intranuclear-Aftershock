@@ -18,9 +18,15 @@ public class CameraScript : MonoBehaviour
         defaultFOV = _camera.fieldOfView;
     }
 
-    public void SetCameraActive(bool isActive)
+    public void SetCameraActive(RenderTexture renderTexture)
     {
-        _camera.gameObject.SetActive(isActive);
+        _camera.gameObject.SetActive(true);
+        _camera.targetTexture = renderTexture;
+    }
+
+    public void SetCameraInactive()
+    {
+        _camera.gameObject.SetActive(false);
     }
 
     public void RotateCamera(float horizontalInput, float verticalInput)

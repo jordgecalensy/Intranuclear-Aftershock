@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerScreenModalScript : MonoBehaviour
 {
@@ -8,22 +9,22 @@ public class PlayerScreenModalScript : MonoBehaviour
 
     [SerializeField] private TextMeshProUGUI _cameraIndexText;
     [SerializeField] private GameObject _screenPlate;
-    private CameraScript[] cameraScript;
-    private int currentCameraIndex = 0;
+    [SerializeField] private RawImage _cameraDisplay;
+    private CameraManager _cameraManager;
     private bool _isFullScreen = false;
     public bool IsFullScreen => _isFullScreen;
 
     private void Start()
     {
         _screenPlate.SetActive(false);
+        IsCameraFullScreen = false;
     }
 
-    public void InFullScreen(CameraScript[] camera, int currentCameraIndex)
+    public void InFullScreen(CameraManager cameraManager)
     {
-        cameraScript = camera;
-        this.currentCameraIndex = currentCameraIndex;
-        cameraScript[currentCameraIndex].SetCameraActive(true);
-        _cameraIndexText.text = $"CAM{currentCameraIndex + 1}";
+        _cameraManager = cameraManager;
+        _cameraDisplay.texture = _cameraManager.RenderTexture;
+        _cameraIndexText.text = $"CAM{_cameraManager.CurrentCameraIndex + 1}";
         _screenPlate.SetActive(true);
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
@@ -34,10 +35,6 @@ public class PlayerScreenModalScript : MonoBehaviour
     public void ExitFullScreen()
     {
         IsCameraFullScreen = false;
-        if (cameraScript != null)
-        {
-            cameraScript[currentCameraIndex].SetCameraActive(false);
-        }
         _screenPlate.SetActive(false);
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
@@ -46,47 +43,35 @@ public class PlayerScreenModalScript : MonoBehaviour
 
     public void RotateCameraHorizontal(float horizontalInput)
     {
-        if (cameraScript != null)
+        if (_cameraManager.cameraScriptArray != null)
         {
-            cameraScript[currentCameraIndex].RotateCamera(horizontalInput, 0f);
+            _cameraManager.cameraScriptArray[_cameraManager.CurrentCameraIndex].RotateCamera(horizontalInput, 0f);
         }
     }
 
     public void RotateCameraVertical(float verticalInput)
     {
-        if (cameraScript != null)
+        if (_cameraManager.cameraScriptArray != null)
         {
-            cameraScript[currentCameraIndex].RotateCamera(0f, verticalInput);
+            _cameraManager.cameraScriptArray[_cameraManager.CurrentCameraIndex].RotateCamera(0f, verticalInput);
         }
     }
 
     public void NextCamera()
     {
-        if (cameraScript != null)
-        {
-            cameraScript[currentCameraIndex].SetCameraActive(false);
-            currentCameraIndex = (currentCameraIndex + 1) % cameraScript.Length;
-            cameraScript[currentCameraIndex].SetCameraActive(true);
-            _cameraIndexText.text = $"CAM{currentCameraIndex + 1}";
-        }
+        _cameraManager.NextCamera();
     }
 
     public void PreviousCamera()
     {
-        if (cameraScript != null)
-        {
-            cameraScript[currentCameraIndex].SetCameraActive(false);
-            currentCameraIndex = (currentCameraIndex - 1 + cameraScript.Length) % cameraScript.Length;
-            cameraScript[currentCameraIndex].SetCameraActive(true);
-            _cameraIndexText.text = $"CAM{currentCameraIndex + 1}";
-        }
+        _cameraManager.PreviousCamera();
     }
 
     public void ZoomCamera()
     {
-        if (cameraScript != null)
+        if (_cameraManager.cameraScriptArray != null)
         {
-            cameraScript[currentCameraIndex].zoomCamera();
+            _cameraManager.cameraScriptArray[_cameraManager.CurrentCameraIndex].zoomCamera();
         }
     }
 }

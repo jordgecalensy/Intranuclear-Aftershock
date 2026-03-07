@@ -194,6 +194,8 @@ MonoBehaviour:
   horizontalLeftRotationLimit: 90
   horizontalRightRotationLimit: -90
   zoom: 30
+  screenWidth: 378
+  screenHeight: 320
 --- !u!1 &6458480411682072465
 GameObject:
   m_ObjectHideFlags: 0
@@ -270,7 +272,7 @@ Camera:
     m_Bits: 4294967295
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 8400000, guid: 0c1e7e094d7904a0aba9318ab3e20a56, type: 2}
-  m_TargetDisplay: 0
+  m_TargetDisplay: 1
   m_TargetEye: 3
   m_HDR: 0
   m_AllowMSAA: 0
@@ -294,7 +296,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6458480411682072465}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23c1ce4fb46143f46bc5cb5224c934f6, type: 3}
   m_Name: 
