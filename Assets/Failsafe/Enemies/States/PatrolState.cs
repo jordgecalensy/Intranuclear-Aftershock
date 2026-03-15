@@ -1,106 +1,154 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using Failsafe.Enemies.Sensors;
 
 public class PatrolState : BehaviorState
 {
-    private readonly EnemyMovePatterns _enemyMovePatterns;
-    private readonly EnemyMovement _movement; // <-- Новый класс
-    private NavMeshAgent _navMeshAgent;
-    private Enemy_ScriptableObject _enemyConfig;
-    private Transform _enemyPos;
-    private EnemyGetData _enemyGetData;
-    private List<Transform> _patrolPoints = new();
-    private int _currentPatrolPointIndex = -1;
-    private Vector3 _patrolPoint;
+    private Sensor[] _sensors;
+    private Transform _enemyTransform;
+    private EnemyMovePatterns _movePatterns;
+    private EnemyMovement _movement;
+    private EnemyGetData _getData;
+    private NavMeshAgent _agent;
+    private Enemy_ScriptableObject _config;
 
-    private float _waitTimer;
-    private bool _isWaiting;
-    private EnemyAudioManager _audio;
+    private Transform[] _manualPatrolPoints;
+    private EnemyLinkTraverser _linkTraverser;
 
-    // Конструктор обновлен
-    public PatrolState(Sensor[] sensors, Transform enemyPos, EnemyMovePatterns enemyMovePatterns, 
-                       EnemyMovement movement, EnemyGetData enemyGetData, 
-                       NavMeshAgent navMeshAgent, Enemy_ScriptableObject enemyConfig, EnemyAudioManager audio)
+    private int _currentManualIndex = 0;
+    private float _waitTimer = 0f;
+    private bool _isWaiting = false;
+    
+    private Vector3 _lastPosition;
+    private float _stuckTimer = 0f;
+
+    public PatrolState(
+        Sensor[] sensors, Transform transform, EnemyMovePatterns movePatterns, 
+        EnemyMovement movement, EnemyGetData getData, NavMeshAgent agent, 
+        Enemy_ScriptableObject config,
+        Transform[] manualPatrolPoints = null, EnemyLinkTraverser linkTraverser = null)
     {
-        _enemyMovePatterns = enemyMovePatterns;
+        _sensors = sensors;
+        _enemyTransform = transform;
+        _movePatterns = movePatterns;
         _movement = movement;
-        _navMeshAgent = navMeshAgent;
-        _enemyConfig = enemyConfig;
-        _enemyPos = enemyPos;
-        _enemyGetData = enemyGetData;
-        _audio = audio;
+        _getData = getData;
+        _agent = agent;
+        _config = config;
+        
+        _manualPatrolPoints = manualPatrolPoints;
+        _linkTraverser = linkTraverser;
     }
 
     public override void Enter()
     {
-        base.Enter();
-        _navMeshAgent.stoppingDistance = 1f;
-        ChoosePatrolStyle();
-        _audio.PlayStateVoice(0);
-    }
+        _stuckTimer = 0f;
+        _isWaiting = false;
+        _lastPosition = _enemyTransform.position;
 
-    private void ChoosePatrolStyle()
-    {
-        if (_patrolPoints == null || _patrolPoints.Count == 0)
-            _patrolPoints = _enemyGetData.GetRoomPatrolPoints();
-
-        if (_patrolPoints == null || _patrolPoints.Count == 0)
-        {
-            _patrolPoint = _enemyMovePatterns.RandomPointAround(_enemyPos.position, _enemyConfig.offsetSearchingPoint);
-            _movement.MoveTo(_patrolPoint, _enemyConfig.PatrolingSpeed);
-        }
-        else
-        {
-            _currentPatrolPointIndex = -1;
-            HandlePatrolling();
-        }
+        MoveToNextPoint();
     }
 
     public override void Update()
     {
+        // 1. Защита от прыжков (отключаем логику, пока паук на линке)
+        if (_linkTraverser != null && _linkTraverser.IsTraversing)
+        {
+            _lastPosition = _enemyTransform.position; 
+            return; 
+        }
+
+        // 2. Основная логика
         if (_isWaiting)
         {
-            _waitTimer -= Time.deltaTime;
-            if (_waitTimer <= 0f)
-            {
-                _isWaiting = false;
-                HandlePatrolling();
-            }
-            return;
-        }
-
-        // Проверка дистанции через новый метод
-        if (_movement.IsPointReached(1.5f))
-        {
-            _movement.Stop(); 
-            _isWaiting = true;
-            _waitTimer = _enemyConfig.PatrollingWaitTime;
-        }
-    }
-
-    private void HandlePatrolling()
-    {
-        if (_patrolPoints == null || _patrolPoints.Count == 0)
-        {
-            _patrolPoint = _enemyMovePatterns.RandomPointAround(_enemyPos.position, _enemyConfig.offsetSearchingPoint);
+            HandleWaiting();
         }
         else
         {
-            _currentPatrolPointIndex = (_currentPatrolPointIndex + 1) % _patrolPoints.Count;
-            _patrolPoint = _patrolPoints[_currentPatrolPointIndex].position;
+            CheckDestinationReached();
+            CheckForStuck();
         }
 
-        _movement.MoveTo(_patrolPoint, _enemyConfig.PatrolingSpeed);
+        _lastPosition = _enemyTransform.position;
     }
-    
-    public void SetManualPatrolPoints(List<Transform> points, bool restart = true)
+
+    public override void Exit()
     {
-        _patrolPoints = points ?? new List<Transform>();
-        if (restart)
+        _movement.Stop();
+    }
+
+    private void MoveToNextPoint()
+    {
+        Vector3 targetPosition = _enemyTransform.position;
+
+        // ПРИОРИТЕТ 1: Ручные точки из инспектора
+        if (HasManualPoints())
         {
-            _currentPatrolPointIndex = -1;
-            HandlePatrolling();
+            targetPosition = _manualPatrolPoints[_currentManualIndex].position;
+            _currentManualIndex = (_currentManualIndex + 1) % _manualPatrolPoints.Length;
         }
+        else
+        {
+            // ПРИОРИТЕТ 2: Точки текущей комнаты
+            List<Transform> roomPoints = _getData.GetRoomPatrolPoints();
+            if (roomPoints != null && roomPoints.Count > 0)
+            {
+                // Берем случайную точку из комнаты
+                int randomIndex = Random.Range(0, roomPoints.Count);
+                targetPosition = roomPoints[randomIndex].position;
+            }
+            // ПРИОРИТЕТ 3: Свободное блуждание, если точек комнаты нет
+            else
+            {
+                // Блуждаем в радиусе 10 метров
+                targetPosition = _movePatterns.RandomPointAround(_enemyTransform.position, 10f);
+            }
+        }
+
+        _movement.MoveTo(targetPosition, _config.PatrolingSpeed);
+    }
+
+    private void CheckDestinationReached()
+    {
+        if (_movement.IsPointReached(_agent.stoppingDistance + 0.1f))
+        {
+            _isWaiting = true;
+            _waitTimer = 2f; // Время ожидания на точке
+            _movement.Stop();
+        }
+    }
+
+    private void HandleWaiting()
+    {
+        _waitTimer -= Time.deltaTime;
+        
+        if (_waitTimer <= 0f)
+        {
+            _isWaiting = false;
+            MoveToNextPoint();
+        }
+    }
+
+    private void CheckForStuck()
+    {
+        if (Vector3.Distance(_enemyTransform.position, _lastPosition) < 0.01f)
+        {
+            _stuckTimer += Time.deltaTime;
+            if (_stuckTimer > 2f)
+            {
+                MoveToNextPoint();
+                _stuckTimer = 0f;
+            }
+        }
+        else
+        {
+            _stuckTimer = 0f; 
+        }
+    }
+
+    private bool HasManualPoints()
+    {
+        return _manualPatrolPoints != null && _manualPatrolPoints.Length > 0;
     }
 }

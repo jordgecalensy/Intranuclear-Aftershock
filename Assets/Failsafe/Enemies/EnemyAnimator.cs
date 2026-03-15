@@ -130,4 +130,6 @@ public class EnemyAnimator : MonoBehaviour
     public void TryStun() => _animator.SetTrigger("Stun");
     public void IsInStun(bool state) => _animator.SetBool("isInStun", state);
     public void TryDeath() => _animator.SetTrigger("Die");
+    public void Jump() => _animator.SetTrigger("Jump");
+    public void Land() => _animator.SetTrigger("Land");
 }

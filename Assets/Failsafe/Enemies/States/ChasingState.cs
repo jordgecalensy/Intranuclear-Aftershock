@@ -10,7 +10,7 @@ public class ChasingState : BehaviorState
     private Enemy_ScriptableObject _enemyConfig;
     private EnemyAnimator _enemyAnimator;
     private EnemyMemory _enemyMemory;
-    private EnemyAudioManager _audio;
+    private EnemyAudioManagerBase _audio;
     
     // Переменные состояния
     private float _distanceToPlayer;
@@ -23,7 +23,7 @@ public class ChasingState : BehaviorState
     // Конструктор
     public ChasingState(Sensor[] sensors, Transform currentTransform, EnemyNavMeshActions navActions, 
                         EnemyMemory enemyMemory, Enemy_ScriptableObject enemyConfig, 
-                        EnemyAnimator enemyAnimator, EnemyAudioManager audio)
+                        EnemyAnimator enemyAnimator, EnemyAudioManagerBase audio)
     {
         _sensors = sensors;
         _transform = currentTransform;

@@ -160,7 +160,7 @@ public class OffMeshLinkAutoBuilder : MonoBehaviour
         navLink.costModifier = costModifier;
         navLink.area = linkAreaIndex;
         navLink.agentTypeID = agentTypeID;
-        navLink.bidirectional = false; // Линки для подъема всегда однонаправленные
+        navLink.bidirectional = true; // Линки для подъема всегда однонаправленные
         
         _createdLinks.Add(navLink);
 #if UNITY_EDITOR

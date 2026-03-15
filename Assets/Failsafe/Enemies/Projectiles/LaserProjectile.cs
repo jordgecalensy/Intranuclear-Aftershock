@@ -1,30 +1,38 @@
 using UnityEngine;
-using Failsafe.Scripts.Damage.Implementation; // Ваш namespace для урона
+using Failsafe.Scripts.Damage.Implementation;
+using FMODUnity;
+using FMOD.Studio;
 
 public class LaserProjectile : MonoBehaviour
 {
-    // Эти поля больше НЕ публичные и НЕ Serialized. 
-    // Их нельзя настроить в инспекторе префаба, только через код.
+    [Header("Аудио Снаряда")]
+    [Tooltip("Зацикленный звук пролета снаряда")]
+    [SerializeField] private EventReference _flybySound;
+    [Tooltip("Звук попадания/взрыва")]
+    [SerializeField] private EventReference _impactSound;
+
+    // Внутренние параметры логики
     private float _speed;
     private float _damage;
     private float _maxLifetime;
     private LayerMask _hitMask;
-    
     private Vector3 _startPosition;
 
+    // FMOD Instance для зацикленного звука полета
+    private EventInstance _flybyInstance;
+
     // --- ГЛАВНЫЙ МЕТОД ---
-    // Вызывается сразу после спавна
     public void Initialize(float speed, float damage, float range, LayerMask mask)
     {
         _speed = speed;
         _damage = damage;
         _hitMask = mask;
         
-        // Вычисляем время жизни: Время = Расстояние / Скорость
-        // Если скорость 20, а дальность 100 -> пуля живет 5 секунд
         _maxLifetime = range / speed;
-        
         _startPosition = transform.position;
+
+        // Запускаем звук полета сразу при спавне
+        StartFlybySound();
         
         // Уничтожить через время (страховка)
         Destroy(gameObject, _maxLifetime);
@@ -32,10 +40,8 @@ public class LaserProjectile : MonoBehaviour
 
     private void Update()
     {
-        // 1. Движение вперед
         transform.Translate(Vector3.forward * _speed * Time.deltaTime);
 
-        // 2. Проверка дистанции (опционально, если Destroy(time) недостаточно точно)
         if (Vector3.Distance(_startPosition, transform.position) >= _speed * _maxLifetime)
         {
             Destroy(gameObject);
@@ -44,24 +50,65 @@ public class LaserProjectile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // Проверяем слой (входит ли слой объекта в нашу маску)
+        // Проверяем маску
         if ((_hitMask.value & (1 << other.gameObject.layer)) > 0)
         {
-            // Наносим урон
-            var damageable = other.GetComponentInChildren<DamageableComponent>(); // Или ваш интерфейс IHealth
+            var damageable = other.GetComponentInChildren<DamageableComponent>(); 
             if (damageable != null)
             {
-                // Передаем урон, который получили из конфига
                 damageable.TakeDamage(new FlatDamage(_damage));
             }
 
-            // Эффект попадания (можно добавить позже)
+            // Играем звук попадания прямо в точке столкновения
+            PlayImpactSound();
             Destroy(gameObject);
         }
         else 
         {
-            // Если попали в стену (Default), тоже уничтожаем
-            if (!other.isTrigger) Destroy(gameObject);
+            // Попали в стену
+            if (!other.isTrigger) 
+            {
+                PlayImpactSound(); // Об стену тоже должен быть звук!
+                Destroy(gameObject);
+            }
+        }
+    }
+
+    // ==========================================
+    // АУДИО ЛОГИКА
+    // ==========================================
+
+    private void StartFlybySound()
+    {
+        if (_flybySound.IsNull) return;
+
+        _flybyInstance = RuntimeManager.CreateInstance(_flybySound);
+        
+        // Привязываем звук к трансформу снаряда, чтобы он "летел" вместе с ним
+        // Если на префабе снаряда есть Rigidbody, лучше передать и его 3-м аргументом
+        RuntimeManager.AttachInstanceToGameObject(_flybyInstance, transform); 
+        
+        _flybyInstance.start();
+    }
+
+    private void PlayImpactSound()
+    {
+        if (!_impactSound.IsNull)
+        {
+            // Проигрываем разовый звук в текущих координатах снаряда
+            RuntimeManager.PlayOneShot(_impactSound, transform.position);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // ВАЖНО: Очищаем зацикленный звук при уничтожении снаряда,
+        // иначе он будет гудеть вечно, как призрак!
+        if (_flybyInstance.isValid())
+        {
+            _flybyInstance.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
+            _flybyInstance.release();
+            _flybyInstance.clearHandle();
         }
     }
 }
