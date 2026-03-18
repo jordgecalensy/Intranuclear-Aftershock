@@ -1,13 +1,11 @@
 using Failsafe.Scripts.Damage;
 using Failsafe.Scripts.Damage.Implementation;
 using UnityEngine;
-using UnityEngine.AI;
 
 public class AttackState : BehaviorState
 {
-    private enum Phase { Delay, Attack, Reload }
+    private enum Phase { Delay, Attack, Cooldown } 
     
-    // Ссылки на компоненты
     private Sensor[] _sensors;
     private Transform _transform;
     private Transform _target;
@@ -15,19 +13,13 @@ public class AttackState : BehaviorState
     private Enemy_ScriptableObject _enemyConfig;
     private EnemyMovement _movement;
     private EnemyAnimator _enemyAnimator;
-    
-    // Новая главная ссылка
     private WeaponController _weaponController; 
 
-    // Переменные состояния
-    private DamageableComponent _targetDamageable;
-    private bool _hasLOSThisFrame;
-    private bool _targetPointLocked;
     private Phase _phase = Phase.Delay;
     private float _phaseTimer = 0f;
     private float _distanceToPlayer;
+    private bool _wasReloading;
 
-    // Конструктор (Обратите внимание: я убрал laserOrigin и префабы, они теперь в WeaponController)
     public AttackState(Sensor[] sensors, Transform currentTransform, EnemyMovement movement,
         EnemyAnimator enemyAnimator, Enemy_ScriptableObject enemyConfig)
     {
@@ -46,73 +38,91 @@ public class AttackState : BehaviorState
     public override void Enter()
     {
         base.Enter();
-        _movement.Stop(); // Останавливаем движение при атаке
+        _movement.Stop();
         
-        // Получаем компонент оружия (он должен висеть на том же объекте)
-        _weaponController = _transform.GetComponent<WeaponController>();
         if (_weaponController == null)
-        {
-            Debug.LogError($"На враге {_transform.name} нет компонента WeaponController! Атака невозможна.");
-        }
-
+            _weaponController = _transform.GetComponent<WeaponController>();
+        
         ResetTargetLock();
         _phase = Phase.Delay;
         _phaseTimer = 0f;
-        _enemyAnimator.ClearCombat();
+        
+        // Защита при входе, если пушка уже в процессе перезарядки
+        if (_weaponController != null && _weaponController.IsReloading)
+        {
+            _wasReloading = true;
+            _enemyAnimator.SetAttacking(false); 
+        }
+        else
+        {
+            _wasReloading = false;
+            _enemyAnimator.StartAttacking(); 
+        }
     }
 
     public override void Update()
     {
-        _phaseTimer += Time.deltaTime;
-        _hasLOSThisFrame = false;
-
+        // 1. ПЕРВЫМ ДЕЛОМ ВСЕГДА обновляем зрение, чтобы машина состояний не сломалась!
         UpdateTargetFromSensors();
 
-        // --- ЛОГИКА ПЕРЕЗАРЯДКИ ---
-        // Если контроллер сам перезаряжается (кончились патроны), мы просто смотрим на врага
-        if (_weaponController != null && _weaponController.IsReloading)
+        // 2. Узнаем, идет ли сейчас перезарядка
+        bool isReloading = _weaponController != null && _weaponController.IsReloading;
+
+        // 3. Логика во время перезарядки (стоим, крутим анимацию и смотрим)
+        if (isReloading)
         {
-            if (_targetPoint != null) _movement.LookAt(_targetPoint.position);
-            _enemyAnimator.SetReloading(true); // Синхронизируем анимацию, если нужно
-            return;
+            if (!_wasReloading) 
+            {
+                _enemyAnimator.StartReloading();
+                _wasReloading = true;
+            }
+            
+            // Если видим игрока, провожаем его взглядом, пока заряжаем пушку
+            if (_targetPoint != null) 
+                _movement.LookAt(_targetPoint.position);
+            
+            // Выходим отсюда, не прерывая перезарядку
+            return; 
         }
 
-        // Если цель потеряна или далеко — выходим
+        // 4. Успешно перезарядились - возвращаемся в боевую стойку
+        if (_wasReloading)
+        {
+            _enemyAnimator.StartAttacking();
+            _wasReloading = false;
+        }
+
+        // 5. Проверка потери цели (срабатывает только если мы НЕ перезаряжаемся)
         if (_targetPoint == null || _distanceToPlayer > _enemyConfig.AttackRangeMax)
         {
             CancelCombatToDelay();
             return;
         }
 
-        // Поворачиваемся всем телом к цели
+        // 6. Обычная фаза боя
+        _phaseTimer += Time.deltaTime;
         _movement.LookAt(_targetPoint.position);
 
         switch (_phase)
         {
             case Phase.Delay:
-                _enemyAnimator.ClearCombat();
                 if (_phaseTimer >= _enemyConfig.AttackDelay) EnterAttackPhase();
                 break;
 
             case Phase.Attack:
-                _enemyAnimator.SetAttacking(true);
-                
-                // ГЛАВНОЕ ИЗМЕНЕНИЕ: Просто просим контроллер выстрелить
-                // Он сам разберется: лазер это или пуля, и сам повернет AimPivot вертикально
                 if (_weaponController != null)
                 {
-                    _weaponController.TryShoot(_targetPoint.position);
+                    if (_weaponController.TryShoot(_targetPoint.position))
+                    {
+                        // Дергаем курок только для НЕ-лазерного оружия
+                        if (!_weaponController.weaponStrategy.isContinuousFire)
+                            _enemyAnimator.PlayAttackTrigger();
+                    }
                 }
-
-                if (_phaseTimer >= _enemyConfig.AttackDuration) EnterReloadPhase();
+                if (_phaseTimer >= _enemyConfig.AttackDuration) EnterCooldownPhase();
                 break;
 
-            case Phase.Reload:
-                _enemyAnimator.SetReloading(true);
-                
-                // В этой фазе мы прекращаем огонь
-                if (_weaponController != null) _weaponController.StopShooting();
-
+            case Phase.Cooldown:
                 if (_phaseTimer >= _enemyConfig.AttackCooldown) EnterDelayPhase();
                 break;
         }
@@ -121,46 +131,41 @@ public class AttackState : BehaviorState
     public override void Exit()
     {
         base.Exit();
-        // Гарантированно выключаем стрельбу (лазер) при выходе из стейта
         if (_weaponController != null) _weaponController.StopShooting();
         
-        _enemyAnimator.ClearCombat();
+        _enemyAnimator.ClearCombat(); 
         ResetTargetLock();
-        _target = null;
     }
 
     private void EnterAttackPhase()
     {
         _phase = Phase.Attack;
         _phaseTimer = 0f;
-        _enemyAnimator.SetAttacking(true);
     }
 
-    private void EnterReloadPhase()
+    private void EnterCooldownPhase()
     {
-        _phase = Phase.Reload;
+        _phase = Phase.Cooldown;
         _phaseTimer = 0f;
-        _enemyAnimator.SetReloading(true);
+        
         if (_weaponController != null) _weaponController.StopShooting();
-        ResetTargetLock();
+        _enemyAnimator.StopAttacking(); 
     }
 
     private void EnterDelayPhase()
     {
         _phase = Phase.Delay;
         _phaseTimer = 0f;
-        _enemyAnimator.ClearCombat();
-        ResetTargetLock();
+        _enemyAnimator.StartAttacking(); 
     }
 
     private void CancelCombatToDelay()
     {
         if (_weaponController != null) _weaponController.StopShooting();
-        _enemyAnimator.ClearCombat();
-
+        
+        _enemyAnimator.ClearCombat(); 
         _phase = Phase.Delay;
         _phaseTimer = 0f;
-
         ResetTargetLock();
     }
 
@@ -169,48 +174,21 @@ public class AttackState : BehaviorState
         VisualSensor visual = null;
         for (int i = 0; i < _sensors.Length; i++)
         {
-            if (_sensors[i] is VisualSensor v && v.IsActivated())
-            {
-                visual = v;
-                break;
-            }
+            if (_sensors[i] is VisualSensor v && v.IsActivated()) { visual = v; break; }
         }
 
-        if (visual == null)
-        {
-            ResetTargetLock();
-            _distanceToPlayer = float.PositiveInfinity;
-            return;
-        }
+        if (visual == null) { ResetTargetLock(); _distanceToPlayer = float.PositiveInfinity; return; }
 
         _target = visual.Target;
+        _targetPoint = visual.GetBestVisiblePointWithChestOverride();
 
-        if (!_targetPointLocked)
-        {
-            _targetPoint = visual.GetBestVisiblePointWithChestOverride();
-            _targetPointLocked = _targetPoint != null;
-
-            _targetDamageable = _target != null
-                ? _target.GetComponentInChildren<DamageableComponent>()
-                : null;
-        }
-
-        if (_targetPoint == null)
-        {
-            _distanceToPlayer = float.PositiveInfinity;
-            return;
-        }
-
+        if (_targetPoint == null) { _distanceToPlayer = float.PositiveInfinity; return; }
+        
         _distanceToPlayer = Vector3.Distance(_transform.position, _targetPoint.position);
-
-        if (visual.SignalInAttackRay(_targetPoint.position))
-            _hasLOSThisFrame = true;
     }
 
     private void ResetTargetLock()
     {
-        _targetPointLocked = false;
-        _targetPoint = null;
-        _targetDamageable = null;
+        _targetPoint = null; 
     }
 }

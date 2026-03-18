@@ -117,7 +117,7 @@ public class Enemy : MonoBehaviour
         
         var disabledState = new DisabledState(_animator, _enemyMovement);
         var stunnedState = new StunnedState(_enemyAnimator, _enemyMovement, transform);
-        var deathState = new EnemyDeathState(_enemyAnimator, _enemyMovement, _animator);
+        var deathState = new EnemyDeathState(_enemyAnimator, _enemyMovement, _animator, _enemyConfig);
 
         // Переходы
         defaultState.AddTransition(alertState, _awarenessMeter.IsChasing);

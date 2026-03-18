@@ -6,6 +6,10 @@ public abstract class WeaponStrategy : ScriptableObject
     public WeaponStats stats;
     public AmmoConfig ammoConfig;
     
+    [Header("Animation")]
+    [Tooltip("Если true, оружие не будет дергать триггер атаки каждый выстрел (подходит для лазеров и огнеметов)")]
+    public bool isContinuousFire = false;
+    
     [Header("Visuals")]
     public GameObject modelPrefab; // Модель оружия в руках (опционально)
 

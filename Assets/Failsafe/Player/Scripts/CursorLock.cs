@@ -1,75 +1,92 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
-using UnityEngine.SceneManagement;
 
 public class CursorLock : MonoBehaviour
 {
+    [Header("Settings")]
     [SerializeField] private bool _lockCursor = true;
-
-    [SerializeField] private Camera fpsCamera;        // перетащи свою FPS-камеру
-    [SerializeField] private LayerMask uiLayerMask = 14;
-
-    private EventSystem eventSystem;
-    private GameObject lastHoveredObject = null;
-
+    
+    private EventSystem _eventSystem;
+    private GameObject _lastHoveredObject = null;
 
     private void Start()
     {
+        // Настройка состояния курсора при старте
         if (_lockCursor)
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
-        eventSystem = EventSystem.current;
-        if (fpsCamera == null) fpsCamera = Camera.main;
+
+        // Первичный поиск EventSystem
+        _eventSystem = EventSystem.current;
     }
 
     private void Update()
     {
-        print("Hover test");
-        // Симулируем указатель точно в центре экрана (кроссхейр)
-        PointerEventData pointerData = new PointerEventData(eventSystem)
+        // 1. Проверяем наличие EventSystem (если вдруг его не было на старте)
+        if (_eventSystem == null)
+        {
+            _eventSystem = EventSystem.current;
+            if (_eventSystem == null) return; 
+        }
+
+        // 2. Создаем данные виртуального указателя в центре экрана
+        PointerEventData pointerData = new PointerEventData(_eventSystem)
         {
             position = new Vector2(Screen.width / 2f, Screen.height / 2f)
         };
 
+        // 3. Выполняем Raycast по элементам интерфейса
         List<RaycastResult> results = new List<RaycastResult>();
-        eventSystem.RaycastAll(pointerData, results);
+        _eventSystem.RaycastAll(pointerData, results);
 
-        // Берём первый попавшийся UI-элемент
-        Debug.Log("Hovering check: " + results.Count + " hits");
-        GameObject currentHovered = null;
-        if (results.Count > 0)
-        {
-            currentHovered = results[1].gameObject;
-            Debug.Log("Hovering over: " + currentHovered.name);
-        }
+        // 4. Определяем объект под "прицелом" (самый верхний — индекс 0)
+        GameObject currentHovered = (results.Count > 0) ? results[0].gameObject : null;
 
-        // === HOVER ЛОГИКА ===
-        if (currentHovered != lastHoveredObject)
+        // 5. Обрабатываем наведение (Hover) и нажатия (Click)
+        HandleHover(currentHovered, pointerData);
+        HandleClick(currentHovered, pointerData);
+    }
+
+    private void HandleHover(GameObject current, PointerEventData data)
+    {
+        // Если объект под прицелом изменился
+        if (current != _lastHoveredObject)
         {
-            // Выходим из предыдущей кнопки
-            if (lastHoveredObject != null)
+            // Уводим "курсор" со старого объекта
+            if (_lastHoveredObject != null)
             {
-                ExecuteEvents.Execute(lastHoveredObject, pointerData, ExecuteEvents.pointerExitHandler);
+                ExecuteEvents.Execute(_lastHoveredObject, data, ExecuteEvents.pointerExitHandler);
             }
 
-            // Входим в новую кнопку
-            if (currentHovered != null)
+            // Наводим "курсор" на новый объект
+            if (current != null)
             {
-                ExecuteEvents.Execute(currentHovered, pointerData, ExecuteEvents.pointerEnterHandler);
+                ExecuteEvents.Execute(current, data, ExecuteEvents.pointerEnterHandler);
             }
 
-            lastHoveredObject = currentHovered;
-        }
-
-        // === КЛИК (левая кнопка мыши) ===
-        if (Input.GetMouseButtonDown(0) && currentHovered != null)
-        {
-            ExecuteEvents.Execute(currentHovered, pointerData, ExecuteEvents.pointerClickHandler);
-            // или ExecuteEvents.Execute(currentHovered, pointerData, ExecuteEvents.pointerDownHandler);
+            _lastHoveredObject = current;
         }
     }
 
+    private void HandleClick(GameObject current, PointerEventData data)
+    {
+        if (current == null) return;
+
+        // Нажали левую кнопку мыши
+        if (Input.GetMouseButtonDown(0))
+        {
+            ExecuteEvents.Execute(current, data, ExecuteEvents.pointerDownHandler);
+        }
+        
+        // Отпустили левую кнопку мыши
+        if (Input.GetMouseButtonUp(0))
+        {
+            ExecuteEvents.Execute(current, data, ExecuteEvents.pointerUpHandler);
+            // Выполняем само действие клика
+            ExecuteEvents.Execute(current, data, ExecuteEvents.pointerClickHandler);
+        }
+    }
 }
