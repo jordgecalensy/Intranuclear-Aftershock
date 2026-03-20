@@ -9,22 +9,37 @@ public class CameraManager : MonoBehaviour
     [SerializeField] private RawImage cameraDisplay;
     [SerializeField] private int screenWidth = 378;
     [SerializeField] private int screenHeight = 320;
+    [SerializeField] private Camera cameraConsole;
+    public Camera CameraConsole => cameraConsole;
     private RenderTexture renderTexture;
     public RenderTexture RenderTexture => renderTexture;
     private int currentCameraIndex = 0;
     public int CurrentCameraIndex => currentCameraIndex;
     public CameraScript[] cameraScriptArray => cameraScript;
-    private PlayerScreenModalScript playerScreenModalScript;
+    private PlayerScreenScript playerScreenModalScript;
 
     private void Start()
     {
-        playerScreenModalScript = FindAnyObjectByType<PlayerScreenModalScript>();
+        playerScreenModalScript = FindAnyObjectByType<PlayerScreenScript>();
         renderTexture = new RenderTexture(screenWidth, screenHeight, 16);
         cameraDisplay.texture = renderTexture;
         if (cameraScript.Length > 0)
         {
             cameraScript[currentCameraIndex].SetCameraActive(renderTexture);
             UpdateCameraIndexText();
+        }
+        cameraConsole.enabled = false;
+    }
+
+    public void SetFullScreenCamera(bool on)
+    {
+        if (on)
+        {
+            cameraConsole.enabled = true;
+        }
+        else
+        {
+            cameraConsole.enabled = false;
         }
     }
 
@@ -44,11 +59,18 @@ public class CameraManager : MonoBehaviour
         UpdateCameraIndexText();
     }
 
-    public void FullScreenCamera()
+    public void ToggleScreenCamera()
     {
         if (playerScreenModalScript != null)
         {
-            playerScreenModalScript.InFullScreen(this);
+            if (PlayerScreenScript.IsCameraFullScreen)
+            {
+                playerScreenModalScript.ExitFullScreen();
+            }
+             else
+             {
+                playerScreenModalScript.InFullScreen(this);
+             }
         }
     }
 

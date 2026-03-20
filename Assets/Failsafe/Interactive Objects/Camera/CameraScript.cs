@@ -9,9 +9,8 @@ public class CameraScript : MonoBehaviour
     [SerializeField] private float verticalDownRotationLimit = -45f;
     [SerializeField] private float horizontalLeftRotationLimit = 90f;
     [SerializeField] private float horizontalRightRotationLimit = -90f;
-    [SerializeField] private float zoom = 10f;
+    [SerializeField] private int zoom = 50;
     private float defaultFOV;
-    private bool isZoomed = false;
 
     private void Start()
     {
@@ -54,19 +53,17 @@ public class CameraScript : MonoBehaviour
         return angle;
     }
 
-    public void zoomCamera()
+    public void zoomCamera(bool zoomIn)
     {
         if (!_camera.gameObject.activeInHierarchy) return;
 
-        if (isZoomed)
+        if (zoomIn)
         {
-            _camera.fieldOfView = defaultFOV;
-            isZoomed = false;
+            _camera.fieldOfView = Mathf.Lerp(_camera.fieldOfView, zoom, Time.deltaTime * 5f);
         }
         else
         {
-            _camera.fieldOfView = zoom;
-            isZoomed = true;
+            _camera.fieldOfView = Mathf.Lerp(_camera.fieldOfView, defaultFOV, Time.deltaTime * 5f);
         }
     }
 }
