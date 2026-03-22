@@ -38,7 +38,6 @@ namespace Failsafe.PlayerMovements
         private PlayerLedgeController _ledgeController;
         private PlayerNoiseController _noiseController;
         private StepController _stepController;
-        private PlayerFullScreenController _playerFullScreenController;
         private bool _isLowHpEffectActive = false;
         private bool _isVisorEffectActive = false;
         private MovementCameraShakeProvider _movementShakeProvider;
@@ -48,7 +47,6 @@ namespace Failsafe.PlayerMovements
         public BehaviorStateMachine StateMachine => _behaviorStateMachine;
         public PlayerMovementController PlayerMovementController => _movementController;
         public PlayerRotationController PlayerRotationController => _playerRotationController;
-        public PlayerFullScreenController PlayerFullScreenController => _playerFullScreenController;
 
         [Inject] private readonly PlayerMovementController _movementController; // readonly и инжектим
 
@@ -84,7 +82,6 @@ namespace Failsafe.PlayerMovements
             _ledgeController = new PlayerLedgeController(_playerView.PlayerTransform, _playerView.PlayerCamera, _playerView.PlayerGrabPoint, _movementParametrs);
             _noiseController = new PlayerNoiseController(_playerView.PlayerTransform, _noiseParametrs, _signalManager);
             _stepController = new StepController(_playerView.CharacterController, _movementParametrs, _playerView.FootstepEvent);
-            _playerFullScreenController = new PlayerFullScreenController(_playerView.PlayerCamera);
             _prevHealth = _health.CurrentHealth;
             _movementShakeProvider =
                 new MovementCameraShakeProvider(_inputHandler, _effectManager, _playerRotationController);
@@ -141,7 +138,7 @@ namespace Failsafe.PlayerMovements
             Func<bool> jumpStatePrecondition = () => _inputHandler.JumpTriggered && !_stamina.IsEmpty && _movementController.IsGroundedFor(0.1f);
 
             standingState.AddTransition(walkState, () => !_inputHandler.MovementInput.Equals(Vector2.zero));
-            standingState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen, _playerFullScreenController.Enter);
+            standingState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             standingState.AddTransition(crouchIdleState, () => _inputHandler.CrouchTrigger.IsTriggered, _inputHandler.CrouchTrigger.ReleaseTrigger);
             standingState.AddTransition(climbingOverState, () => _inputHandler.JumpTriggered && _ledgeController.CanClimbOverLedge());
             standingState.AddTransition(climbingOnState, () => _inputHandler.JumpTriggered && _ledgeController.CanClimbOnLedge());
@@ -154,10 +151,10 @@ namespace Failsafe.PlayerMovements
             walkState.AddTransition(crouchState, () => _inputHandler.CrouchTrigger.IsTriggered, _inputHandler.CrouchTrigger.ReleaseTrigger);
             walkState.AddTransition(fallState, () => _movementController.IsFalling);
             walkState.AddTransition(standingState, () => _inputHandler.MovementInput.Equals(Vector2.zero));
-            walkState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen, _playerFullScreenController.Enter);
+            walkState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
 
             runState.AddTransition(walkState, () => !runStatePrecondition());
-            runState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen, _playerFullScreenController.Enter);
+            runState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             runState.AddTransition(climbingOverState, () => _inputHandler.JumpTriggered && _ledgeController.CanClimbOverLedge());
             runState.AddTransition(climbingOnState, () => _inputHandler.JumpTriggered && _ledgeController.CanClimbOnLedge());
             runState.AddTransition(jumpState, () => jumpStatePrecondition());
@@ -170,18 +167,18 @@ namespace Failsafe.PlayerMovements
 
             crouchState.AddTransition(runState, () => runStatePrecondition() && _playerBodyController.CanStand());
             crouchState.AddTransition(walkState, () => _inputHandler.CrouchTrigger.IsTriggered && _playerBodyController.CanStand(), _inputHandler.CrouchTrigger.ReleaseTrigger);
-            crouchState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen, _playerFullScreenController.Enter);
+            crouchState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             crouchState.AddTransition(fallState, () => _movementController.IsFalling);
             crouchState.AddTransition(crouchIdleState, () => _inputHandler.MovementInput.Equals(Vector2.zero));
             crouchState.AddTransition(jumpState, () => jumpStatePrecondition());
 
             crouchIdleState.AddTransition(crouchState, () => !_inputHandler.MovementInput.Equals(Vector2.zero));
-            crouchIdleState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen, _playerFullScreenController.Enter);
+            crouchIdleState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             crouchIdleState.AddTransition(standingState, () => _inputHandler.CrouchTrigger.IsTriggered && _playerBodyController.CanStand(), _inputHandler.CrouchTrigger.ReleaseTrigger);
             crouchIdleState.AddTransition(jumpState, () => jumpStatePrecondition());
 
-            blockState.AddTransition(walkState, () => !PlayerScreenScript.IsCameraFullScreen, _playerFullScreenController.Exit);
-            blockState.AddTransition(walkState, () => _inputHandler.UseTrigger.IsTriggered, _playerFullScreenController.Exit);
+            blockState.AddTransition(walkState, () => !PlayerScreenScript.IsCameraFullScreen);
+            blockState.AddTransition(walkState, () => _inputHandler.UseTrigger.IsTriggered);
 
             jumpState.AddTransition(runState, () => runStatePrecondition() && jumpState.CanGround() && _movementController.IsGrounded);
             jumpState.AddTransition(walkState, () => jumpState.CanGround() && _movementController.IsGrounded);

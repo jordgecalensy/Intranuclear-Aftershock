@@ -3,11 +3,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 
+/// <summary>
+/// Скрипт для управления экраном игрока при просмотре консоли.
+/// </summary>
 public class PlayerScreenScript : MonoBehaviour
 {
-    // [SerializeField] private TextMeshProUGUI _cameraIndexText;
-    // [SerializeField] private GameObject _screenPlate;
-    // [SerializeField] private RawImage _cameraDisplay;
     public static bool IsCameraFullScreen { get; private set; }
     [SerializeField] private Camera PlayerCamera;
     private CameraManager _cameraManager;
@@ -19,7 +19,7 @@ public class PlayerScreenScript : MonoBehaviour
 
     private void Update()
     {
-        // use = _inputHandler.GrabLedgeTrigger.IsPressed;
+        use = _inputHandler.UseTrigger.IsPressed;
         zoom = _inputHandler.ZoomTriggered;
         movement = _inputHandler.MovementInput;
 
@@ -40,18 +40,15 @@ public class PlayerScreenScript : MonoBehaviour
             }
         }
 
-        // if (use && IsCameraFullScreen)
-        // {
-        //     ExitFullScreen();
-        // }
+        if (use && IsCameraFullScreen)
+        {
+            ExitFullScreen();
+        }
     }
 
     public void InFullScreen(CameraManager cameraManager)
     {
         _cameraManager = cameraManager;
-        // _cameraDisplay.texture = _cameraManager.RenderTexture;
-        // _cameraIndexText.text = $"CAM{_cameraManager.CurrentCameraIndex + 1}";
-        // _screenPlate.SetActive(true);
         cameraManager.SetFullScreenCamera(true);
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
@@ -60,7 +57,6 @@ public class PlayerScreenScript : MonoBehaviour
 
     public void ExitFullScreen()
     {
-        // _screenPlate.SetActive(false);
         if (_cameraManager != null)
         {
             _cameraManager.SetFullScreenCamera(false);
@@ -69,20 +65,6 @@ public class PlayerScreenScript : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         IsCameraFullScreen = false;
     }
-
-    // public bool IsEnterFullScreen(out Camera camera)
-    // {
-    //     if (IsCameraFullScreen)
-    //     {
-    //         camera = ConsoleCamera;
-    //         return true;
-    //     }
-    //     else
-    //     {
-    //         camera = null;
-    //         return false;
-    //     }
-    // }
 
     public void RotateCameraHorizontal(float horizontalInput)
     {

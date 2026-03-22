@@ -2,6 +2,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Управление камерами для консоли наблюдения. Позволяет переключаться между камерами, отображать их на экране и открывать их на весь экран.
+/// </summary>
 public class CameraManager : MonoBehaviour
 {
     [SerializeField] private CameraScript[] cameraScript;
@@ -28,7 +31,7 @@ public class CameraManager : MonoBehaviour
             cameraScript[currentCameraIndex].SetCameraActive(renderTexture);
             UpdateCameraIndexText();
         }
-        cameraConsole.enabled = false;
+        SetFullScreenCamera(false);
     }
 
     public void SetFullScreenCamera(bool on)
@@ -36,10 +39,12 @@ public class CameraManager : MonoBehaviour
         if (on)
         {
             cameraConsole.enabled = true;
+            cameraConsole.gameObject.SetActive(true);
         }
         else
         {
             cameraConsole.enabled = false;
+            cameraConsole.gameObject.SetActive(false);
         }
     }
 
@@ -67,10 +72,26 @@ public class CameraManager : MonoBehaviour
             {
                 playerScreenModalScript.ExitFullScreen();
             }
-             else
-             {
+            else
+            {
                 playerScreenModalScript.InFullScreen(this);
-             }
+            }
+        }
+    }
+
+    public void ExitScreenCamera()
+    {
+        if (playerScreenModalScript != null && PlayerScreenScript.IsCameraFullScreen)
+        {
+            playerScreenModalScript.ExitFullScreen();
+        }
+    }
+
+    public void EnterScreenCamera()
+    {
+        if (playerScreenModalScript != null && !PlayerScreenScript.IsCameraFullScreen)
+        {
+            playerScreenModalScript.InFullScreen(this);
         }
     }
 
