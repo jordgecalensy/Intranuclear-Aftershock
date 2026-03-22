@@ -56,7 +56,6 @@ public abstract class Sensor : MonoBehaviour
     {
         // Получаем силу сигнала от конкретной реализации сенсора
         _signalStrength = Mathf.Clamp(SignalInFieldOfView(), 0f, 1f);
-        Debug.Log(_signalStrength);
         if (_signalStrength > 0f)
         {
             // Увеличиваем прогресс, но не выше лимита FocusingTime

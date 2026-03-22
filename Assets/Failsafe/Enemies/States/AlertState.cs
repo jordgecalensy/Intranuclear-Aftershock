@@ -10,9 +10,9 @@ public class AlertState : BehaviorState
     private float _duration;
     private Vector3 _targetPosition;
     private bool _hasTarget;
-    private EnemyAudioManager _audio;
+    private EnemyAudioManagerBase _audio;
 
-    public AlertState(EnemyMovement movement, EnemyAnimator enemyAnimator, Sensor[] sensors, EnemyAudioManager audio, float duration = 1.5f)
+    public AlertState(EnemyMovement movement, EnemyAnimator enemyAnimator, Sensor[] sensors, EnemyAudioManagerBase audio, float duration = 1.5f)
     {
         _movement = movement;
         _enemyAnimator = enemyAnimator;

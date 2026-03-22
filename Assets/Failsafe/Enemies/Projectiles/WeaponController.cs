@@ -6,23 +6,20 @@ using UnityEngine.Events;
 public class WeaponController : MonoBehaviour
 {
     [Header("Setup")]
-    public Transform firePoint;            // Откуда вылетает
-    public WeaponStrategy weaponStrategy;  // Сюда перетаскиваем файл стратегии
+    public Transform firePoint;
+    public WeaponStrategy weaponStrategy;
 
     [Header("Events")]
-    public UnityEvent OnReloadStart;       // Подпиши сюда анимацию перезарядки
+    public UnityEvent OnReloadStart;
     public UnityEvent OnReloadComplete;
-    public UnityEvent<int, int> OnAmmoChanged; // Для UI
+    public UnityEvent<int, int> OnAmmoChanged;
 
-    // Состояние
     private int _currentAmmo;
     private bool _isReloading;
     private float _nextFireTime;
     private Coroutine _reloadCoroutine;
     
-    // Хранилище временных объектов (чтобы не гадить в ScriptableObject)
     private Dictionary<string, object> _runtimeObjects = new Dictionary<string, object>();
-
     public bool IsReloading => _isReloading;
     public int CurrentAmmo => _currentAmmo;
 
@@ -40,32 +37,33 @@ public class WeaponController : MonoBehaviour
         UpdateAmmoUI();
     }
 
-    public void TryShoot(Vector3 targetPoint)
+    public bool TryShoot(Vector3 target)
     {
-        if (_isReloading || weaponStrategy == null) return;
+        if (_isReloading) return false;
 
-        // Если патроны кончились — перезарядка
-        if (_currentAmmo <= 0 && !weaponStrategy.ammoConfig.infiniteAmmo)
+        // 1. Проверка обоймы: если пусто — идем на перезарядку
+        if (_currentAmmo <= 0)
         {
             StartReload();
-            weaponStrategy.StopFiring(this);
-            return;
+            return false;
         }
 
-        // Скорострельность
-        if (Time.time < _nextFireTime && weaponStrategy.stats.fireRate > 0) return;
+        // 2. Проверка скорострельности
+        if (Time.time < _nextFireTime) return false; 
 
-        // Выстрел через стратегию
-        if (weaponStrategy.Fire(this, targetPoint))
+        // 3. Выстрел
+        if (weaponStrategy.Fire(this, target))
         {
-            // Тратим патроны (если это не лазер с continuous damage)
-            if (weaponStrategy.stats.fireRate > 0 && !weaponStrategy.ammoConfig.infiniteAmmo)
-            {
-                _currentAmmo--;
-                _nextFireTime = Time.time + weaponStrategy.stats.fireRate;
-                UpdateAmmoUI();
-            }
+            _nextFireTime = Time.time + weaponStrategy.stats.fireRate;
+            
+            // Тратим патрон/заряд батареи ВСЕГДА
+            _currentAmmo--;
+            OnAmmoChanged?.Invoke(_currentAmmo, weaponStrategy.ammoConfig.maxAmmo);
+            
+            return true;
         }
+
+        return false; 
     }
 
     public void StopShooting() => weaponStrategy?.StopFiring(this);
@@ -73,22 +71,23 @@ public class WeaponController : MonoBehaviour
     public void StartReload()
     {
         if (!_isReloading && _currentAmmo < weaponStrategy.ammoConfig.maxAmmo)
+        {
             _reloadCoroutine = StartCoroutine(ReloadRoutine());
+        }
     }
 
     private IEnumerator ReloadRoutine()
     {
         _isReloading = true;
-        weaponStrategy.StopFiring(this); // Убираем лазер
-        
-        OnReloadStart?.Invoke(); // Включаем анимацию
+        weaponStrategy.StopFiring(this);
+        OnReloadStart?.Invoke();
         
         yield return new WaitForSeconds(weaponStrategy.ammoConfig.reloadTime);
 
         _currentAmmo = weaponStrategy.ammoConfig.maxAmmo;
         _isReloading = false;
         
-        OnReloadComplete?.Invoke(); // Выключаем анимацию
+        OnReloadComplete?.Invoke();
         UpdateAmmoUI();
     }
 
@@ -98,7 +97,6 @@ public class WeaponController : MonoBehaviour
             OnAmmoChanged?.Invoke(_currentAmmo, weaponStrategy.ammoConfig.maxAmmo);
     }
 
-    // Утилиты для хранения данных сессии
     public T GetRuntimeObject<T>(string key) where T : class
     {
         if (_runtimeObjects.TryGetValue(key, out object val)) return val as T;

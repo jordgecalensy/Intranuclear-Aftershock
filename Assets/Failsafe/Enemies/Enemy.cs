@@ -23,11 +23,13 @@ public class Enemy : MonoBehaviour
     private AwarenessMeter _awarenessMeter;
     private EnemyMovePatterns _enemyMovePatterns;
     private EnemyMemory _enemyMemory;
-    private EnemyAudioManager _audioManager;
+    private EnemyAudioManagerBase _audioManager;
     private IHealth _health;
     private EnemyNavMeshActions _enemyNavMeshActions;
-    
-
+    private EnemyLinkTraverser _linkTraverser;
+    [Header("Настройки патрулирования")]
+    [Tooltip("Если заданы ручные точки, враг будет ходить по ним. Если пусто - использует точки комнаты.")]
+    [SerializeField] private Transform[] _manualPatrolPoints;
     // Свойства
     public BehaviorState currentState;
     public IHealth Health => _health;
@@ -44,10 +46,10 @@ public class Enemy : MonoBehaviour
         if (!_navMeshAgent) _navMeshAgent = GetComponent<NavMeshAgent>();
         if (!_rb) _rb = GetComponent<Rigidbody>();
         if (!_weaponController) _weaponController = GetComponent<WeaponController>();
-        if (!_enemyAnimator) _enemyAnimator = GetComponent<EnemyAnimator>(); // Находим наш новый компонент
-        
+        if (!_enemyAnimator) _enemyAnimator = GetComponent<EnemyAnimator>(); 
+        _linkTraverser = GetComponent<EnemyLinkTraverser>();
         _sensors = GetComponents<Sensor>();
-        _audioManager = GetComponent<EnemyAudioManager>();
+        _audioManager = GetComponent<EnemyAudioManagerBase>();
 
         // 1. Инициализируем МОТОР
         _enemyMovement = new EnemyMovement(transform, _navMeshAgent, _rb, this, useRootMotion);
@@ -72,6 +74,11 @@ public class Enemy : MonoBehaviour
         
         _awarenessMeter.Initialize();
         _awarenessMeter.ApplyCalmSensorParams();
+        
+        if (_linkTraverser != null)
+        {
+            _linkTraverser.Initialize(_navMeshAgent, _enemyAnimator);
+        }
     }
 
     private void Start()
@@ -92,14 +99,15 @@ public class Enemy : MonoBehaviour
         
         var patrolState = new PatrolState(
             _sensors, transform, _enemyMovePatterns, _enemyMovement, 
-            _enemyGetData, _navMeshAgent, _enemyConfig, _audioManager
+            _enemyGetData, _navMeshAgent, _enemyConfig,
+            _manualPatrolPoints 
         );
         
         var attackState = new AttackState(_sensors, transform, _enemyMovement, _enemyAnimator, _enemyConfig);
         
         var searchingState = new SearchingState(
             _sensors, transform, _enemyMovePatterns, _enemyMovement, 
-            _enemyMemory, _navMeshAgent, _enemyConfig, _audioManager
+            _enemyMemory, _navMeshAgent, _enemyConfig
         );
         
         var checkState = new CheckState(
@@ -109,7 +117,7 @@ public class Enemy : MonoBehaviour
         
         var disabledState = new DisabledState(_animator, _enemyMovement);
         var stunnedState = new StunnedState(_enemyAnimator, _enemyMovement, transform);
-        var deathState = new EnemyDeathState(_enemyAnimator, _enemyMovement, _animator);
+        var deathState = new EnemyDeathState(_enemyAnimator, _enemyMovement, _animator, _enemyConfig);
 
         // Переходы
         defaultState.AddTransition(alertState, _awarenessMeter.IsChasing);
@@ -143,6 +151,18 @@ public class Enemy : MonoBehaviour
         
         _awarenessMeter.Update();
         currentState = _stateMachine.CurrentState;
+        
+        if (_linkTraverser != null)
+        {
+            _linkTraverser.CheckAndTraverseLink();
+        }
+
+// Заблокируй мотор, если мы в прыжке
+        if (_linkTraverser == null || !_linkTraverser.IsTraversing)
+        {
+            _stateMachine.Update();
+            _enemyMovement.HandleRotationAndMovement();
+        }
     }
 
     void OnAnimatorMove()

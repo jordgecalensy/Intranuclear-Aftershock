@@ -76,6 +76,9 @@ public class Enemy_ScriptableObject : ScriptableObject
     public float AttackDuration = 5f; // Длительность атаки
     public float AttackDelay = 1f; // задержка перед атакой
     public float AttackCooldown = 4f; // Скорость атаки врага
+    
+    [Header("Death Settings")]
+    public GameObject DummyPrefab; // Префаб для замены врага после смерти
 
 
 }

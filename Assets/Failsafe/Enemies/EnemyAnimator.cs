@@ -5,7 +5,6 @@ public class EnemyAnimator : MonoBehaviour
     [Header("Dependencies")]
     [SerializeField] private Animator _animator;
     
-    // EnemyMovement остается обычным классом, поэтому получаем его через Init
     private EnemyMovement _movement;
     
     // Хеши параметров
@@ -16,6 +15,7 @@ public class EnemyAnimator : MonoBehaviour
     private static readonly int IdleIndexHash = Animator.StringToHash("IdleIndex");
     private static readonly int PlayIdleHash = Animator.StringToHash("PlayIdle");
     private static readonly int AlertHash = Animator.StringToHash("Alert");
+    private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
 
     // Сглаживание
     private float _currentTurnAngle;
@@ -31,13 +31,11 @@ public class EnemyAnimator : MonoBehaviour
         if (_animator == null) _animator = GetComponent<Animator>();
     }
 
-    // Инициализация зависимости от мотора (вызывается из Enemy.cs)
     public void Initialize(EnemyMovement movement)
     {
         _movement = movement;
     }
 
-    // Вызывается каждый кадр из Enemy.cs, чтобы синхронизировать порядок выполнения
     public void ManualUpdate()
     {
         if (_movement == null) return;
@@ -54,7 +52,6 @@ public class EnemyAnimator : MonoBehaviour
 
     private void UpdateLocomotion()
     {
-        // Логика движения без изменений
         Vector3 targetDir = _movement.DesiredVelocity;
         float rawAngle = 0f;
         
@@ -94,40 +91,56 @@ public class EnemyAnimator : MonoBehaviour
         _isIdlePlaying = true; 
     }
    
-    // --- API для Unity Events (Inspector) ---
-    // Эти методы мы будем вызывать из WeaponController через Inspector
+    // --- БОЕВАЯ ЛОГИКА ---
 
-    public void StartReloading() => SetCombatState(false, true);
-    public void StopReloading() => SetCombatState(false, false);
+    public void PlayAttackTrigger() 
+    {
+        _animator.SetTrigger(AttackTriggerHash);
+    }
+    
+    public void StartReloading() => SetCombatState(true, true); 
+    public void StopReloading() => SetCombatState(true, false); 
     public void StartAttacking() => SetCombatState(true, false);
     public void StopAttacking() => SetCombatState(false, false);
 
-    // Внутренняя логика
     private void SetCombatState(bool attacking, bool reloading)
     {
-        if (attacking) reloading = false;
         _animator.SetBool(IsAttackingHash, attacking);
-        _animator.SetBool(IsReloadingHash, reloading);
+        
+        _animator.SetBool(IsReloadingHash, reloading); 
     }
     
-    public void ClearCombat() => SetCombatState(false, false);
+    public void ClearCombat() => _animator.SetBool(IsAttackingHash, false);
     
     public bool IsInAction()
     {
         var state = _animator.GetCurrentAnimatorStateInfo(0);
-        return state.IsTag("Attack") || state.IsTag("Reload");
+        
+        // Проверяем, есть ли на текущей анимации тег Attack или Reload
+        bool hasTag = state.IsTag("Attack") || state.IsTag("Reload");
+        
+        // Проверяем, стоит ли уже галочка стрельбы (даже если анимация еще переходит)
+        bool isAttackingParam = _animator.GetBool(IsAttackingHash);
+
+        // Если хоть что-то из этого true — мы в бою, Idle играть нельзя!
+        return hasTag || isAttackingParam;
     }
-
-    public void SetAttacking(bool v) => SetCombatState(v, false);
-    public void SetReloading(bool v) => SetCombatState(false, v);
-
-    // Триггеры
+    public void SetAttacking(bool v) => _animator.SetBool(IsAttackingHash, v);
+    public void SetReloading(bool v) => _animator.SetBool(IsReloadingHash, v);
+    
     public void TryAlert() 
     {
         _animator.ResetTrigger(PlayIdleHash); 
         _animator.SetTrigger(AlertHash);
     }
+
     public void TryStun() => _animator.SetTrigger("Stun");
+    
     public void IsInStun(bool state) => _animator.SetBool("isInStun", state);
+    
     public void TryDeath() => _animator.SetTrigger("Die");
+    
+    public void Jump() => _animator.SetTrigger("Jump");
+    
+    public void Land() => _animator.SetTrigger("Land");
 }

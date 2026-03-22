@@ -19,13 +19,13 @@ public class CheckState : BehaviorState
     
     private Enemy_ScriptableObject _config;
     private Transform _transform;
-    private EnemyAudioManager _audio;
+    private EnemyAudioManagerBase _audio;
     
     public bool CheckEnd() => _checkTimer >= _config.CheckDuration;
 
     // Конструктор обновлен
     public CheckState(Sensor[] sensors, Transform transform, EnemyMovePatterns enemyMovePatterns, 
-                      EnemyMovement movement, Enemy_ScriptableObject config, EnemyAudioManager audio)
+                      EnemyMovement movement, Enemy_ScriptableObject config, EnemyAudioManagerBase audio)
     {
         _sensors = sensors;
         _transform = transform;
