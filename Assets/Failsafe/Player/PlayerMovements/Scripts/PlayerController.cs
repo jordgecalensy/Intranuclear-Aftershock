@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -132,11 +132,13 @@ namespace Failsafe.PlayerMovements
             var ledgeJumpState = new LedgeJumpState(_inputHandler, _playerView.CharacterController, _movementParametrs, _playerView.PlayerCamera);
             var crouchIdleState = new CrouchIdle(_playerBodyController, _movementController, _movementParametrs, _noiseController, _stepController, _playerRotationController);
             var recoverState = new RecoverFromJumpState(_playerView.Animator, _movementController, _movementParametrs, _effectManager);
+            var blockState = new BlockState(_movementController);
 
             Func<bool> runStatePrecondition = () => _inputHandler.MoveForward && _inputHandler.SprintTriggered && !_stamina.IsEmpty;
             Func<bool> jumpStatePrecondition = () => _inputHandler.JumpTriggered && !_stamina.IsEmpty && _movementController.IsGroundedFor(0.1f);
 
             standingState.AddTransition(walkState, () => !_inputHandler.MovementInput.Equals(Vector2.zero));
+            standingState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             standingState.AddTransition(crouchIdleState, () => _inputHandler.CrouchTrigger.IsTriggered, _inputHandler.CrouchTrigger.ReleaseTrigger);
             standingState.AddTransition(climbingOverState, () => _inputHandler.JumpTriggered && _ledgeController.CanClimbOverLedge());
             standingState.AddTransition(climbingOnState, () => _inputHandler.JumpTriggered && _ledgeController.CanClimbOnLedge());
@@ -149,8 +151,10 @@ namespace Failsafe.PlayerMovements
             walkState.AddTransition(crouchState, () => _inputHandler.CrouchTrigger.IsTriggered, _inputHandler.CrouchTrigger.ReleaseTrigger);
             walkState.AddTransition(fallState, () => _movementController.IsFalling);
             walkState.AddTransition(standingState, () => _inputHandler.MovementInput.Equals(Vector2.zero));
+            walkState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
 
             runState.AddTransition(walkState, () => !runStatePrecondition());
+            runState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             runState.AddTransition(climbingOverState, () => _inputHandler.JumpTriggered && _ledgeController.CanClimbOverLedge());
             runState.AddTransition(climbingOnState, () => _inputHandler.JumpTriggered && _ledgeController.CanClimbOnLedge());
             runState.AddTransition(jumpState, () => jumpStatePrecondition());
@@ -163,13 +167,18 @@ namespace Failsafe.PlayerMovements
 
             crouchState.AddTransition(runState, () => runStatePrecondition() && _playerBodyController.CanStand());
             crouchState.AddTransition(walkState, () => _inputHandler.CrouchTrigger.IsTriggered && _playerBodyController.CanStand(), _inputHandler.CrouchTrigger.ReleaseTrigger);
+            crouchState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             crouchState.AddTransition(fallState, () => _movementController.IsFalling);
             crouchState.AddTransition(crouchIdleState, () => _inputHandler.MovementInput.Equals(Vector2.zero));
             crouchState.AddTransition(jumpState, () => jumpStatePrecondition());
 
             crouchIdleState.AddTransition(crouchState, () => !_inputHandler.MovementInput.Equals(Vector2.zero));
+            crouchIdleState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             crouchIdleState.AddTransition(standingState, () => _inputHandler.CrouchTrigger.IsTriggered && _playerBodyController.CanStand(), _inputHandler.CrouchTrigger.ReleaseTrigger);
             crouchIdleState.AddTransition(jumpState, () => jumpStatePrecondition());
+
+            blockState.AddTransition(walkState, () => !PlayerScreenScript.IsCameraFullScreen);
+            // blockState.AddTransition(walkState, () => _inputHandler.UseTrigger.IsTriggered);
 
             jumpState.AddTransition(runState, () => runStatePrecondition() && jumpState.CanGround() && _movementController.IsGrounded);
             jumpState.AddTransition(walkState, () => jumpState.CanGround() && _movementController.IsGrounded);
@@ -201,9 +210,12 @@ namespace Failsafe.PlayerMovements
 
         public void Tick()
         {
-            _movementShakeProvider.Tick();
-            _ledgeController.HandleFindingLedge();
-            _playerRotationController.HandlePlayerRotation();
+            if (!PlayerScreenScript.IsCameraFullScreen)
+            {
+                _movementShakeProvider.Tick();
+                _ledgeController.HandleFindingLedge();
+                _playerRotationController.HandlePlayerRotation();
+            }
             _behaviorStateMachine.Update();
             _stepController.Update();
             if (_health.IsDead)
