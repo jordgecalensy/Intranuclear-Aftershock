@@ -169,59 +169,8 @@ public class EnemyMovement
         Quaternion targetRot = Quaternion.LookRotation(dir);
         _transform.rotation = Quaternion.RotateTowards(_transform.rotation, targetRot, RotationSpeed * Time.deltaTime);
     }
+    
 
-    // --- Логика Прыжка (перенесена из Enemy.cs) ---
-
-    public void Jump(Vector3 start, Vector3 end, float speedXZ, float speedY, float baseArc, Animator animator, string jumpTrig, string landTrig)
-    {
-        if (!IsBusy) _coroutineRunner.StartCoroutine(JumpRoutine(start, end, speedXZ, speedY, baseArc, animator, jumpTrig, landTrig));
-    }
-
-    private IEnumerator JumpRoutine(Vector3 start, Vector3 end, float speedXZ, float speedY, float baseArc, Animator animator, string jumpTrig, string landTrig)
-    {
-        IsBusy = true;
-        _agent.enabled = false;
-        _rb.isKinematic = true;
-
-        if (animator) animator.SetTrigger(jumpTrig);
-
-        // Поворот к цели
-        Vector3 dir = end - start; 
-        dir.y = 0f;
-        if (dir.sqrMagnitude > 0.001f) _transform.rotation = Quaternion.LookRotation(dir);
-
-        // Расчет времени
-        float dxz = Vector3.Distance(new Vector3(start.x, 0, start.z), new Vector3(end.x, 0, end.z));
-        float dy = end.y - start.y;
-        float duration = Mathf.Max(0.35f, Mathf.Max(dxz / speedXZ, Mathf.Abs(dy) / speedY));
-
-        float t = 0f;
-        while (t < 1f)
-        {
-            t += Time.deltaTime / duration;
-            Vector3 pos = Vector3.Lerp(start, end, t);
-            
-            // Парабола
-            pos.y += 4f * baseArc * t * (1f - t); 
-            // Коррекция для прыжка вверх
-            if (dy > 0) pos.y += dy * 0.35f * t;
-
-            _rb.MovePosition(pos);
-            yield return null;
-        }
-
-        _rb.MovePosition(end);
-        if (animator) animator.SetTrigger(landTrig);
-
-        // Возврат агента
-        _agent.enabled = true;
-        _agent.Warp(end); 
-        if (_agent.isOnOffMeshLink) _agent.CompleteOffMeshLink();
-        
-        // Восстановление настроек
-        _agent.updateRotation = false; 
-        if (_useRootMotion) _agent.updatePosition = false;
-
-        IsBusy = false;
-    }
+   
+    
 }

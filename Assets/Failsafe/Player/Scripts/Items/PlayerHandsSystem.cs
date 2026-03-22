@@ -37,7 +37,7 @@ public class PlayerHandsSystem : ITickable
         _actionsWithItems = new()
         {
             [ItemType.Consumable] = new UseOnSelfAction(),
-            [ItemType.Gun] = new ShootAction(playerView.PlayerCamera),
+            [ItemType.Gun] = new ShootAction(playerView.WeaponController,playerView.PlayerCamera),
             [ItemType.Grenade] = new ThrowItemAction(playerView.PlayerCamera, _throwItemPower),
             [ItemType.GroundItem] = new DropItemAction(playerView.PlayerCamera),
         };
@@ -45,7 +45,7 @@ public class PlayerHandsSystem : ITickable
 
     public void Tick()
     {
-        if (_inputHandler.UseTrigger.IsTriggered && CanUseItemInHand())
+        if (_inputHandler.AttackTrigger.IsTriggered && CanUseItemInHand())
         {
             UseItemInHand().Forget();
         }
@@ -54,9 +54,20 @@ public class PlayerHandsSystem : ITickable
             _inputHandler.AltModeTrigger.ReleaseTrigger();
             _playerHandsContainer.ItemInHand.ItemUsable.AltMode();
         }
-        if (!_inputHandler.UseTrigger.IsPressed)
+        if (!_inputHandler.AttackTrigger.IsPressed)
         {
             _skipStartDelay = false;
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            if (_playerHandsContainer.State == PlayerHandsContainer.HandState.ItemInHand)
+            {
+                // Если в руках пушка - перезаряжаем
+                if (_playerHandsContainer.ItemInHand.ItemUsable is GunUsable gun)
+                {
+                    gun.Reload();
+                }
+            }
         }
     }
 
@@ -83,7 +94,7 @@ public class PlayerHandsSystem : ITickable
         if (useResult.UsageType == UsageType.ClickToUse)
         {
             _skipStartDelay = false;
-            _inputHandler.UseTrigger.ReleaseTrigger();
+            _inputHandler.AttackTrigger.ReleaseTrigger();
             _usingState = UsingState.OnDelay;
             await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseDelay));
             _usingState = UsingState.None;

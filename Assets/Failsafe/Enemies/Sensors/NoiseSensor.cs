@@ -44,7 +44,6 @@ public class NoiseSensor : Sensor
         
             // 2. Проверяем базовую силу сигнала
             if (signal.SignalStrength < _minSoundStrength) {
-                Debug.Log($"Сигнал слишком тихий: {signal.SignalStrength} < {_minSoundStrength}");
                 continue;
             }
 
@@ -52,7 +51,6 @@ public class NoiseSensor : Sensor
         
             // 3. Проверяем силу с учетом расстояния
             if (detectedSoundStrength < _minSoundStrength) {
-                Debug.Log($"Сигнал затух на расстоянии: {detectedSoundStrength}");
                 continue;
             }
 
@@ -66,7 +64,6 @@ public class NoiseSensor : Sensor
         _detectedSignal = maxAudioSignal;
     
         float finalSignal = Mathf.Clamp(maxDetectedStrength / _maxSoundStrength, 0f, 1f);
-        if (finalSignal > 0) Debug.Log($"Сенсор услышал шум! Сила: {finalSignal}");
     
         return finalSignal;
     }

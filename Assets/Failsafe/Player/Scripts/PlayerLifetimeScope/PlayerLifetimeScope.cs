@@ -31,6 +31,10 @@ namespace Failsafe.Player
         [SerializeField] private InputActionAsset _inputActionAsset;
         [SerializeField] private DamageableComponent _damageable;
         [SerializeField] private Camera _playerCam;
+        
+        // --- НОВОЕ: Ссылка на WeaponController ---
+        [Header("Combat")]
+        [SerializeField] private WeaponController _weaponController;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -40,6 +44,17 @@ namespace Failsafe.Player
             builder.RegisterComponent(_playerView);
             builder.RegisterComponent(_damageable);
             builder.RegisterComponent(_inputActionAsset);
+
+            // --- НОВОЕ: Регистрируем WeaponController ---
+            if (_weaponController == null) _weaponController = _playerView.GetComponent<WeaponController>();
+            if (_weaponController != null)
+            {
+                builder.RegisterComponent(_weaponController);
+            }
+            else
+            {
+                Debug.LogError("[PlayerLifetimeScope] WeaponController не назначен и не найден на PlayerView!");
+            }
 
             var cc = _playerView != null ? _playerView.CharacterController : null;
             if (cc == null) Debug.LogError("[PlayerLifetimeScope] PlayerView.CharacterController не задан");
@@ -65,20 +80,13 @@ namespace Failsafe.Player
             builder.RegisterComponentInHierarchy<PlayerCrosshairRaycaster>();
             builder.RegisterEntryPoint<PlayerUIPresenter>();
             
-            // Регистрируем контроллер перемещения
             builder.Register<PlayerMovementController>(Lifetime.Scoped);
 
-            // Регистрируем менеджер эффектов
             builder.RegisterEntryPoint<EffectManager>(Lifetime.Scoped)
                    .As<IEffectManager>()
                    .AsSelf();
 
-            // --- ИСПРАВЛЕНИЕ: Регистрация сигнала ---
-            // 1. Создаем сам сигнал
             builder.Register<PlayerNoiseSignal>(Lifetime.Scoped).WithParameter(transform);
-
-            // 2. Регистрируем специальный коннектор как EntryPoint (он запустится на Start)
-            // Это гарантирует, что SignalManager уже успеет проснуться
             builder.RegisterEntryPoint<PlayerSignalConnector>(Lifetime.Scoped);
 
             RegisterItems(builder);
@@ -90,8 +98,14 @@ namespace Failsafe.Player
             {
                 builder.RegisterInstance(itemData).As(itemData.GetType());
             }
+
+            // --- НОВОЕ: Регистрируем универсальный обработчик оружия ---
+            // Он автоматически получит WeaponController и Camera через конструктор
+            builder.Register<GunUsable>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+
+            // Остальные предметы
             builder.Register<Stimpack>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
-            builder.Register<StasisGun>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
+            builder.Register<StasisGun>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf(); // Если это старая реализация, можно убрать
             builder.Register<Adrenaline>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
             builder.Register<Tushkan>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
             builder.Register<Gorilla>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
@@ -100,13 +114,9 @@ namespace Failsafe.Player
             builder.Register<FireGrenade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
             builder.Register<StasisGrenade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
             builder.Register<ScanGrenade>(Lifetime.Scoped).AsImplementedInterfaces().AsSelf();
-
         }
     }
 
-    /// <summary>
-    /// Вспомогательный класс для безопасного связывания сигнала при старте игры
-    /// </summary>
     public class PlayerSignalConnector : IStartable
     {
         private readonly PlayerNoiseSignal _noiseSignal;
@@ -120,14 +130,11 @@ namespace Failsafe.Player
 
         public void Start()
         {
-            // 1. Связываем контроллер движения с сигналом
             _movementController.SetPlayerNoiseSignal(_noiseSignal);
 
-            // 2. Безопасно добавляем сигнал в глобальный менеджер
             if (SignalManager.Instance != null)
             {
                 SignalManager.Instance.PlayerNoiseChanel.AddConstant(_noiseSignal);
-                // Debug.Log("[PlayerSignalConnector] Шум игрока успешно подключен к SignalManager.");
             }
             else
             {

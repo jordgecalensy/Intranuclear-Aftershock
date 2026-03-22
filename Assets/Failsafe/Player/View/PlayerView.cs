@@ -42,6 +42,7 @@ namespace Failsafe.Player.View
         public Transform RightHandItemPlace;
 
         public Animator Animator;
+        public WeaponController WeaponController;
 
         /// <summary>
         /// Точка захвата

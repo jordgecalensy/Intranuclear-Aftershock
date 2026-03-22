@@ -1,15 +1,13 @@
 using UnityEngine;
 
-/// <summary>
-/// VIEW: Отвечает ТОЛЬКО за параметры аниматора.
-/// Получает данные от EnemyMovement.
-/// </summary>
-public class EnemyAnimator
+public class EnemyAnimator : MonoBehaviour
 {
-    private readonly Animator _animator;
-    private readonly EnemyMovement _movement;
-
-    // Хеши
+    [Header("Dependencies")]
+    [SerializeField] private Animator _animator;
+    
+    private EnemyMovement _movement;
+    
+    // Хеши параметров
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int TurnAngleHash = Animator.StringToHash("TurnAngle");
     private static readonly int IsAttackingHash = Animator.StringToHash("IsAttacking");
@@ -17,23 +15,31 @@ public class EnemyAnimator
     private static readonly int IdleIndexHash = Animator.StringToHash("IdleIndex");
     private static readonly int PlayIdleHash = Animator.StringToHash("PlayIdle");
     private static readonly int AlertHash = Animator.StringToHash("Alert");
+    private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
+
     // Сглаживание
     private float _currentTurnAngle;
     private float _turnVelocity;
     private const float TurnSmoothTime = 0.1f;
 
     // Idle
-    private readonly int _idleAnimationCount = 3;
+    [SerializeField] private int _idleAnimationCount = 3;
     private bool _isIdlePlaying;
 
-    public EnemyAnimator(Animator animator, EnemyMovement movement)
+    private void Awake()
     {
-        _animator = animator;
+        if (_animator == null) _animator = GetComponent<Animator>();
+    }
+
+    public void Initialize(EnemyMovement movement)
+    {
         _movement = movement;
     }
 
-    public void UpdateAnimator()
+    public void ManualUpdate()
     {
+        if (_movement == null) return;
+
         if (IsInAction())
         {
             _isIdlePlaying = false;
@@ -46,42 +52,31 @@ public class EnemyAnimator
 
     private void UpdateLocomotion()
     {
-        // 1. Угол: Вычисляем визуальный наклон тела
-        // Берем вектор желаемой скорости от Мотора
         Vector3 targetDir = _movement.DesiredVelocity;
         float rawAngle = 0f;
         
         if (targetDir.sqrMagnitude > 0.1f)
         {
-            rawAngle = Vector3.SignedAngle(_animator.transform.forward, targetDir, Vector3.up);
+            rawAngle = Vector3.SignedAngle(transform.forward, targetDir, Vector3.up);
         }
 
         _currentTurnAngle = Mathf.SmoothDampAngle(_currentTurnAngle, rawAngle, ref _turnVelocity, TurnSmoothTime);
         _animator.SetFloat(TurnAngleHash, Mathf.Clamp(_currentTurnAngle, -90f, 90f));
 
-        // 2. Скорость: 
-        // Если Мотор говорит "Я кручусь на месте", мы ставим Speed=1, чтобы BlendTree играл Turn Animation
         if (_movement.IsRotatingInPlace)
-        {
             _animator.SetFloat(SpeedHash, 1f); 
-        }
         else
-        {
             _animator.SetFloat(SpeedHash, _movement.CurrentSpeed);
-        }
     }
 
     public void OnAnimatorMove()
     {
-        // Передаем дельту перемещения в Мотор
-        _movement.ApplyRootMotion(_animator.deltaPosition);
+        if (_movement != null)
+            _movement.ApplyRootMotion(_animator.deltaPosition);
     }
-
-    // --- Idle и Боевка ---
 
     public void HandleIdleAnimations()
     {
-        // Условия для Idle: Скорость ~0, не крутимся, не прыгаем
         if (_movement.CurrentSpeed < 0.1f && !_movement.IsRotatingInPlace && !_movement.IsBusy && !_isIdlePlaying)
         {
             PlayRandomIdle();
@@ -95,30 +90,57 @@ public class EnemyAnimator
         _animator.SetTrigger(PlayIdleHash);
         _isIdlePlaying = true; 
     }
-    
-    public void SetCombatState(bool attacking, bool reloading)
+   
+    // --- БОЕВАЯ ЛОГИКА ---
+
+    public void PlayAttackTrigger() 
     {
-        if (attacking) reloading = false;
-        _animator.SetBool(IsAttackingHash, attacking);
-        _animator.SetBool(IsReloadingHash, reloading);
+        _animator.SetTrigger(AttackTriggerHash);
     }
-    public void SetAttacking(bool v) => SetCombatState(v, false);
-    public void SetReloading(bool v) => SetCombatState(false, v);
-    public void ClearCombat() => SetCombatState(false, false);
+    
+    public void StartReloading() => SetCombatState(true, true); 
+    public void StopReloading() => SetCombatState(true, false); 
+    public void StartAttacking() => SetCombatState(true, false);
+    public void StopAttacking() => SetCombatState(false, false);
+
+    private void SetCombatState(bool attacking, bool reloading)
+    {
+        _animator.SetBool(IsAttackingHash, attacking);
+        
+        _animator.SetBool(IsReloadingHash, reloading); 
+    }
+    
+    public void ClearCombat() => _animator.SetBool(IsAttackingHash, false);
     
     public bool IsInAction()
     {
         var state = _animator.GetCurrentAnimatorStateInfo(0);
-        return state.IsTag("Attack") || state.IsTag("Reload");
+        
+        // Проверяем, есть ли на текущей анимации тег Attack или Reload
+        bool hasTag = state.IsTag("Attack") || state.IsTag("Reload");
+        
+        // Проверяем, стоит ли уже галочка стрельбы (даже если анимация еще переходит)
+        bool isAttackingParam = _animator.GetBool(IsAttackingHash);
+
+        // Если хоть что-то из этого true — мы в бою, Idle играть нельзя!
+        return hasTag || isAttackingParam;
     }
-    public void TryAlert()
+    public void SetAttacking(bool v) => _animator.SetBool(IsAttackingHash, v);
+    public void SetReloading(bool v) => _animator.SetBool(IsReloadingHash, v);
+    
+    public void TryAlert() 
     {
-        // Сбрасываем другие триггеры, чтобы не было накладок (опционально)
         _animator.ResetTrigger(PlayIdleHash); 
         _animator.SetTrigger(AlertHash);
     }
-    // Триггеры
+
     public void TryStun() => _animator.SetTrigger("Stun");
+    
     public void IsInStun(bool state) => _animator.SetBool("isInStun", state);
+    
     public void TryDeath() => _animator.SetTrigger("Die");
+    
+    public void Jump() => _animator.SetTrigger("Jump");
+    
+    public void Land() => _animator.SetTrigger("Land");
 }

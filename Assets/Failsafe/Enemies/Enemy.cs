@@ -1,90 +1,72 @@
-using Cysharp.Threading.Tasks.Triggers;
-using DMDungeonGenerator;
-using Failsafe.Enemies.Sensors;
-using Failsafe.Scripts.Health;
-using System.Collections;
-using System.Collections.Generic;
-using Tayx.Graphy.Utils.NumString;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.UIElements;
-using UnityEngine.VFX;
+using Failsafe.Enemies.Sensors;
+using Failsafe.Scripts.Health;
 using VContainer;
-using Vector3 = UnityEngine.Vector3;
+using System.Collections.Generic;
 
 public class Enemy : MonoBehaviour
 {
-    [SerializeField] private bool DebugMode = false;
     [SerializeField] private bool useRootMotion = true;
     
-    // --- Компоненты ---
+    [SerializeField] private EnemyAnimator _enemyAnimator; // Теперь это Component!
+    [SerializeField] private WeaponController _weaponController;
+    [SerializeField] private Enemy_ScriptableObject _enemyConfig;
+    [SerializeField] private Animator _animator;
+    [SerializeField] private NavMeshAgent _navMeshAgent;
+    [SerializeField] private Rigidbody _rb;
+    
     private Sensor[] _sensors;
     private BehaviorStateMachine _stateMachine;
-    private Animator _animator;
-    private NavMeshAgent _navMeshAgent;
-    private Rigidbody _rb;
-    private IHealth _health;
-
-    // --- Новая Архитектура (Motor-View) ---
-    private EnemyAnimator _enemyAnimator;
-    private EnemyMovement _enemyMovement; // Замена EnemyNavMeshActions
-
-    // --- Данные ---
+    private EnemyMovement _enemyMovement;
     private EnemyGetData _enemyGetData;
-    private LaserBeamController _activeLaser;
-    [SerializeField] private Transform _laserSpawnPoint;
-    [SerializeField] private List<Transform> _manualPoints;
-    [SerializeField] private GameObject _corpseModel;
-    
-    public BehaviorState currentState;
-    public AwarenessMeter _awarenessMeter;
-    public bool seePlayer;
-    public bool hearPlayer;
-    
-    [SerializeField] private Enemy_ScriptableObject _enemyConfig;
-    public Enemy_ScriptableObject EnemyConfig => _enemyConfig;
-    
+    private AwarenessMeter _awarenessMeter;
     private EnemyMovePatterns _enemyMovePatterns;
     private EnemyMemory _enemyMemory;
-    private EnemyAudioManager _audioManager;
-    [Header("Anim triggers (имена)")]
-    [SerializeField] private string jumpTrigger = "Jump";
-    [SerializeField] private string landTrigger = "Land";
-
-    [Header("Arc & Timing")]
-    [SerializeField] private float baseArcHeight = 1.2f;
-    [SerializeField] private float speedXZ = 4.0f;
-    [SerializeField] private float speedY  = 3.0f;
-    // (Остальные параметры прыжка используются внутри EnemyMovement)
-
+    private EnemyAudioManagerBase _audioManager;
+    private IHealth _health;
+    private EnemyNavMeshActions _enemyNavMeshActions;
+    private EnemyLinkTraverser _linkTraverser;
+    [Header("Настройки патрулирования")]
+    [Tooltip("Если заданы ручные точки, враг будет ходить по ним. Если пусто - использует точки комнаты.")]
+    [SerializeField] private Transform[] _manualPatrolPoints;
+    // Свойства
+    public BehaviorState currentState;
     public IHealth Health => _health;
-    
-    // Публичный доступ к мотору (для других скриптов, если нужно)
     public EnemyMovement Movement => _enemyMovement;
+    public Enemy_ScriptableObject EnemyConfig => _enemyConfig;
 
     [Inject]
-    public void Construct(IHealth health)
-    {
-        _health = health;
-    }
+    public void Construct(IHealth health) => _health = health;
 
     private void Awake()
     {
-        // 1. Кэшируем компоненты
-        _animator = GetComponent<Animator>();
+        // Автоматический поиск компонентов, если не заданы в Inspector
+        if (!_animator) _animator = GetComponent<Animator>();
+        if (!_navMeshAgent) _navMeshAgent = GetComponent<NavMeshAgent>();
+        if (!_rb) _rb = GetComponent<Rigidbody>();
+        if (!_weaponController) _weaponController = GetComponent<WeaponController>();
+        if (!_enemyAnimator) _enemyAnimator = GetComponent<EnemyAnimator>(); 
+        _linkTraverser = GetComponent<EnemyLinkTraverser>();
         _sensors = GetComponents<Sensor>();
-        _navMeshAgent = GetComponent<NavMeshAgent>();
-        _rb = GetComponent<Rigidbody>();
-        
-        // 2. Инициализируем МОТОР (EnemyMovement)
-        // Передаем 'this' как MonoBehaviour для запуска корутин прыжка
+        _audioManager = GetComponent<EnemyAudioManagerBase>();
+
+        // 1. Инициализируем МОТОР
         _enemyMovement = new EnemyMovement(transform, _navMeshAgent, _rb, this, useRootMotion);
+        _enemyNavMeshActions = new EnemyNavMeshActions(_navMeshAgent, transform);
 
-        // 3. Инициализируем ВИЗУАЛ (EnemyAnimator)
-        // Он зависит от Мотора
-        _enemyAnimator = new EnemyAnimator(_animator, _enemyMovement);
+        // 2. Инициализируем ВИЗУАЛ (Просто передаем зависимость)
+        // Больше никаких new EnemyAnimator(...)
+        if (_enemyAnimator != null)
+        {
+            _enemyAnimator.Initialize(_enemyMovement);
+        }
+        else
+        {
+            Debug.LogError("EnemyAnimator component missing!");
+        }
 
-        // 4. Вспомогательные классы
+        // 3. Остальные системы
         _enemyGetData = new EnemyGetData(transform);
         _awarenessMeter = new AwarenessMeter(_sensors, _enemyConfig);
         _enemyMovePatterns = new EnemyMovePatterns(_navMeshAgent);
@@ -93,41 +75,39 @@ public class Enemy : MonoBehaviour
         _awarenessMeter.Initialize();
         _awarenessMeter.ApplyCalmSensorParams();
         
-        _audioManager = GetComponent<EnemyAudioManager>();
-            if (_audioManager == null) 
-                Debug.LogError("EnemyAudioManager component missing on Enemy!");
-          
+        if (_linkTraverser != null)
+        {
+            _linkTraverser.Initialize(_navMeshAgent, _enemyAnimator);
+        }
     }
 
     private void Start()
     {
-        // 5. Инициализация СОСТОЯНИЙ
-        // Везде передаем _enemyMovement вместо _enemyNavMeshActions
-
+        // Инициализация стейтов (код тот же, просто передаем ссылку на компонент _enemyAnimator)
         var defaultState = new DefaultState(_sensors, transform, _enemyMovement);
-        
-        // AlertState (Промежуточное состояние обнаружения)
-        // Длительность 1.5 сек (или вынесите в конфиг)
         var alertState = new AlertState(_enemyMovement, _enemyAnimator, _sensors, _audioManager, 1.5f);
         
         var chasingState = new ChasingState(
-            _sensors, transform, _enemyMovement, _enemyMemory, 
-            _navMeshAgent, _enemyConfig, _enemyAnimator, _audioManager
+            _sensors, 
+            transform, 
+            _enemyNavMeshActions,
+            _enemyMemory, 
+            _enemyConfig, 
+            _enemyAnimator, 
+            _audioManager
         );
         
         var patrolState = new PatrolState(
             _sensors, transform, _enemyMovePatterns, _enemyMovement, 
-            _enemyGetData, _navMeshAgent, _enemyConfig, _audioManager
+            _enemyGetData, _navMeshAgent, _enemyConfig,
+            _manualPatrolPoints 
         );
         
-        var attackState = new AttackState(
-            _sensors, transform, _enemyMovement, _enemyAnimator, 
-            _laserSpawnPoint, _enemyConfig, _audioManager
-        );
+        var attackState = new AttackState(_sensors, transform, _enemyMovement, _enemyAnimator, _enemyConfig);
         
         var searchingState = new SearchingState(
             _sensors, transform, _enemyMovePatterns, _enemyMovement, 
-            _enemyMemory, _navMeshAgent, _enemyConfig, _audioManager
+            _enemyMemory, _navMeshAgent, _enemyConfig
         );
         
         var checkState = new CheckState(
@@ -137,41 +117,25 @@ public class Enemy : MonoBehaviour
         
         var disabledState = new DisabledState(_animator, _enemyMovement);
         var stunnedState = new StunnedState(_enemyAnimator, _enemyMovement, transform);
-        var deathState = new EnemyDeathState(_enemyAnimator, _enemyMovement, _animator);
+        var deathState = new EnemyDeathState(_enemyAnimator, _enemyMovement, _animator, _enemyConfig);
 
-        // --- НАСТРОЙКА ПЕРЕХОДОВ ---
-
-        // 1. Реакция на обнаружение (через Alert)
+        // Переходы
         defaultState.AddTransition(alertState, _awarenessMeter.IsChasing);
         patrolState.AddTransition(alertState, _awarenessMeter.IsChasing);
         checkState.AddTransition(alertState, _awarenessMeter.IsChasing);
-        
-        // 2. Переход к Погоне после анимации Alert
         alertState.AddTransition(chasingState, alertState.IsAnimationFinished);
-        
-        // 3. Остальные переходы
         patrolState.AddTransition(checkState, _awarenessMeter.IsAlerted);
         defaultState.AddTransition(patrolState, defaultState.IsPatroling);
-        
         chasingState.AddTransition(searchingState, _awarenessMeter.IsPlayerLost);
         chasingState.AddTransition(attackState, chasingState.PlayerInAttackRange);
-        
         attackState.AddTransition(chasingState, attackState.PlayerOutOfAttackRange);
-        
         searchingState.AddTransition(patrolState, searchingState.SearchingEnd);
-        searchingState.AddTransition(alertState, _awarenessMeter.IsChasing); // Если нашли игрока во время поиска -> снова Alert или сразу Chasing
+        searchingState.AddTransition(alertState, _awarenessMeter.IsChasing);
 
         var forcedStates = new List<BehaviorForcedState> {disabledState, stunnedState, deathState};
         _stateMachine = new BehaviorStateMachine(defaultState, forcedStates);
 
-        if(_manualPoints.Count > 0)
-        {
-            patrolState.SetManualPatrolPoints(_manualPoints);
-        }
-        else
-        {
-           _enemyGetData.RoomCheck();
-        }
+        if (_enemyGetData != null) _enemyGetData.RoomCheck();
 
         _health.OnDeath += DeathState;
         _health.OnHealthChanged += (damage) => _audioManager.PlayDamageVoice();
@@ -179,42 +143,36 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
-        // 1. Логика (Brain) - принимает решения
         _stateMachine.Update();
-        
-        // 2. Физика (Motor) - выполняет движение и вращение (Stop-Turn-Go)
         _enemyMovement.HandleRotationAndMovement();
         
-        // 3. Визуал (View) - обновляет BlendTree и параметры аниматора
-        _enemyAnimator.UpdateAnimator();
+        // Теперь обновляем компонент
+        _enemyAnimator.ManualUpdate();
         
-        // 4. Утилиты
         _awarenessMeter.Update();
-        LinkTester();
-        
         currentState = _stateMachine.CurrentState;
         
-        // Логика Idle
-        if (currentState.GetType() != typeof(DefaultState))
+        if (_linkTraverser != null)
         {
-            // Метод IsActive/IsOff нужно добавить в EnemyAnimator если он используется
-            // или просто вызывать обработку Idle
-             _enemyAnimator.HandleIdleAnimations();
+            _linkTraverser.CheckAndTraverseLink();
+        }
+
+// Заблокируй мотор, если мы в прыжке
+        if (_linkTraverser == null || !_linkTraverser.IsTraversing)
+        {
+            _stateMachine.Update();
+            _enemyMovement.HandleRotationAndMovement();
         }
     }
 
-    public void DisableState(float? duration = null)
+    void OnAnimatorMove()
     {
-        _stateMachine.ForseChangeState<DisabledState>(duration);
-        
+        _enemyAnimator.OnAnimatorMove();
     }
 
-    public void DeathState()
-    {
-        _stateMachine.ForseChangeState<EnemyDeathState>();
-
-    }
-
+    // Остальные методы (Jump, LinkTester, DisabledState и т.д.) без изменений
+    public void DeathState() => _stateMachine.ForseChangeState<EnemyDeathState>();
+    public void DisableState(float? duration = null) => _stateMachine.ForseChangeState<DisabledState>(duration);
     public void StunnedState(Vector3 direction, float? duration = null)
     {
         if (!(_stateMachine.CurrentState is StunnedState))
@@ -223,57 +181,31 @@ public class Enemy : MonoBehaviour
             _stateMachine.ForseChangeState<StunnedState>(duration);
         }
     }
-
-    void OnAnimatorMove()
-    {
-        // Передаем root motion из анимации в мотор
-        _enemyAnimator.OnAnimatorMove();
-    }
-
-    /// <summary>
-    /// Прыжок теперь делегируется в EnemyMovement
-    /// </summary>
-    public void Jump(Vector3 start, Vector3 end)
-    {
-        _enemyMovement.Jump(start, end, speedXZ, speedY, baseArcHeight, _animator, jumpTrigger, landTrigger);
-    }
-
-    private void LinkTester()
-    {
-        _navMeshAgent.autoTraverseOffMeshLink = false; 
-        
-        // Не прыгаем, если уже заняты (прыжком или другим действием)
-        if (_enemyMovement.IsBusy) return;
-
-        if (_navMeshAgent.hasPath && _navMeshAgent.nextOffMeshLinkData.valid)
-        {
-            var next = _navMeshAgent.nextOffMeshLinkData;
-            Jump(next.startPos, next.endPos);
-        }
-
-        if (_navMeshAgent.isOnOffMeshLink)
-        {
-            var cur = _navMeshAgent.currentOffMeshLinkData;
-            if (cur.valid)
-                Jump(cur.startPos, cur.endPos);
-        }
-    }
+    public float DebugAlertness => _awarenessMeter != null ? _awarenessMeter.AlertnessValue : 0f;
     
-    // Debug методы
-    public void DebugEnemy()
+    public bool DebugCanSeePlayer
     {
-        foreach (var sensor in _sensors)
+        get
         {
-            if (sensor is VisualSensor visual)
-                seePlayer = visual.IsActivated();
-            if (sensor is NoiseSensor noise)
-                hearPlayer = noise.IsActivated();
+            if (_sensors == null) return false;
+            foreach (var s in _sensors)
+            {
+                if (s is VisualSensor v && v.IsActivated()) return true;
+            }
+            return false;
         }
     }
 
-    public void ReplaceWithDummy()
+    public bool DebugCanHearPlayer
     {
-        Instantiate(_corpseModel, transform.position, transform.rotation);
-        Destroy(this.gameObject);
+        get
+        {
+            if (_sensors == null) return false;
+            foreach (var s in _sensors)
+            {
+                if (s is NoiseSensor n && n.IsActivated()) return true;
+            }
+            return false;
+        }
     }
 }

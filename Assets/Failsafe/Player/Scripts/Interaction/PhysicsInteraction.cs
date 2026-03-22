@@ -1,4 +1,4 @@
-using Failsafe.Player.Model;
+﻿using Failsafe.Player.Model;
 using Failsafe.PlayerMovements;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -98,16 +98,16 @@ namespace Failsafe.Player.Scripts.Interaction
 
             if (!IsDragging) return;
 
-            if (_inputHandler.UseTrigger.IsTriggered)
+            if (_inputHandler.AttackTrigger.IsTriggered)
             {
                 _carryUsable?.OnUseStart();
                 _useHeld = true;
             }
 
-            if (_useHeld && _inputHandler.UseTrigger.IsPressed)
+            if (_useHeld && _inputHandler.AttackTrigger.IsPressed)
                 _carryUsable?.UseTick(Time.deltaTime);
 
-            if (_useHeld && !_inputHandler.UseTrigger.IsPressed)
+            if (_useHeld && !_inputHandler.AttackTrigger.IsPressed)
             {
                 _carryUsable?.OnUseStop();
                 _useHeld = false;
@@ -118,8 +118,7 @@ namespace Failsafe.Player.Scripts.Interaction
                 DropItem();
                 return;
             }
-
-            if (_inputHandler.AttackTriggered)
+            if (_inputHandler.ThrowObjectAction.IsPressed())
             {
                 _throwForceMultiplier = Mathf.Clamp(_throwForceMultiplier + Time.deltaTime, _throwForceMultiplier, _maxForceMultiplier);
                 _isPreparingToThrow = true;

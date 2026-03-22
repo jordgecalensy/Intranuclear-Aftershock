@@ -14,7 +14,6 @@ public class ItemInHand
     public IUsable ItemUsable;
 }
 
-
 /// <summary>
 /// Руки персонажа как контейнер предмета
 /// </summary>
@@ -32,14 +31,9 @@ public class PlayerHandsContainer
     private IEnumerable<IUsable> _items;
     private Transform _rightHandItemPlace;
 
-    // Задержка после применения предмета, чтобы не спамить использование предметов
-    // Примерно должен соответсвовать времени анимаций, но не обязательно
-    // Если у разных предметов должны быть разные кулдауны, то вынести это в ItemData
     private float _itemUseDelay = 0f;
     public float ItemUseDelay => _itemUseDelay;
-    // Время использования одного предмета. По сути время анимации использования
-    // Нужно чтобы Эффект предмета/визуал/звук сработал в определенный момент анимации, а не сразу при нажатии кнопки
-    // Сейчас задается один на всех, нужно будет вынести в предмет и настраивать для каждого свой
+    
     private float _itemUseStartDelay = 0f;
     public float ItemUseStartDelay => _itemUseStartDelay;
 
@@ -52,8 +46,6 @@ public class PlayerHandsContainer
     /// <summary>
     /// Поместить предмет в руку
     /// </summary>
-    /// <param name="itemObject">Предмет</param>
-    /// <returns>true если предмет удалось взять в руку, иначе false</returns>
     public bool TryTakeItemInHand(Item itemObject)
     {
         if (_handState == HandState.ItemInHand)
@@ -61,27 +53,55 @@ public class PlayerHandsContainer
             Debug.Log("TryTakeItemInHand. Не получилось взять предмет. Руки заняты");
             return false;
         }
-        // Сейчас скрипт предмета подбирается по названию предмета. 
-        // Желательно сделать явный маппинг, например через общий enum в префабе и скрипте или через dictionary
-        var usableItem = _items.FirstOrDefault(x => itemObject.name.StartsWith(x.GetType().Name));
+
+        IUsable usableItem = null;
+
+        // --- НОВАЯ ЛОГИКА: Поиск обработчика ---
+        // 1. Если это Огнестрел (Gun), используем универсальный GunUsable
+        if (itemObject.ItemData.Type == ItemType.Gun)
+        {
+            usableItem = _items.FirstOrDefault(x => x is GunUsable);
+        }
+        else
+        {
+            // 2. Для остальных предметов (аптечки, гранаты) ищем по совпадению имени класса
+            // (Legacy подход для существующих предметов)
+            usableItem = _items.FirstOrDefault(x => itemObject.name.StartsWith(x.GetType().Name));
+        }
+
         if (usableItem == null)
         {
-            Debug.Log("TryTakeItemInHand. Не найден скрипт для предмета " + itemObject.name);
+            Debug.LogError($"TryTakeItemInHand. Не найден IUsable скрипт для предмета {itemObject.name} (Тип: {itemObject.ItemData.Type})");
+            return false;
         }
+
+        // Логика размещения в руке
         Transform handlePoint = itemObject.HandlePoint;
         itemObject.ToInventoryState();
         itemObject.transform.SetParent(_rightHandItemPlace, false);
-        itemObject.transform.localPosition = handlePoint.localPosition*-1;
+        
+        // Коррекция позиции
+        if (handlePoint != null)
+            itemObject.transform.localPosition = handlePoint.localPosition * -1;
+        else
+            itemObject.transform.localPosition = Vector3.zero;
+
+        // Инициализация предмета (ParseItem вытащит стратегию из GunStrategyHolder)
         usableItem.ParseItem(itemObject);
+
         var itemInHand = new ItemInHand
         {
             ItemObject = itemObject,
             ItemUsable = usableItem
         };
+
         _itemInHand = itemInHand;
         _handState = HandState.ItemInHand;
+        
+        // Получаем тайминги
         _itemInHand.ItemUsable.GetItemUseDelays(out _itemUseStartDelay, out _itemUseDelay);
-        Debug.Log("Предмет взят в руку");
+        
+        Debug.Log($"Предмет {itemObject.name} взят в руку");
         OnItemTaken?.Invoke(_itemInHand.ItemObject.ItemData.Type);
         return true;
     }
@@ -89,7 +109,6 @@ public class PlayerHandsContainer
     /// <summary>
     /// Выбросить предмет из рук
     /// </summary>
-    /// <returns></returns>
     public Item DropItemFromHand()
     {
         if (_handState == HandState.EmptyHands)

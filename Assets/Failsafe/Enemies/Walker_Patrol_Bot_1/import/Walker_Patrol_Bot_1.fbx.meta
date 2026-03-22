@@ -119,14 +119,14 @@ ModelImporter:
       curves: []
       events:
       - time: 0
-        functionName: ReloadEvent
+        functionName: WalkerOverheat
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
       - time: 0.42838928
-        functionName: ReloadEvent
+        functionName: WalkerReboot
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
@@ -162,7 +162,7 @@ ModelImporter:
       curves: []
       events:
       - time: 0.085705295
-        functionName: ShootStartEvent
+        functionName: WalkerLaserAccumulate
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
@@ -444,35 +444,35 @@ ModelImporter:
       curves: []
       events:
       - time: 0.14812939
-        functionName: PlayServoMove
+        functionName: WalkerServo
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
       - time: 0.3525708
-        functionName: StepEvent
+        functionName: WalkerStep
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
       - time: 0.6026536
-        functionName: StepEvent
+        functionName: WalkerStep
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
       - time: 0.8126043
-        functionName: PlayServoMove
+        functionName: WalkerServo
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
       - time: 0.99745435
-        functionName: StepEvent
+        functionName: WalkerStep
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
