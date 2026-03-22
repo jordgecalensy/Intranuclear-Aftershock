@@ -178,7 +178,7 @@ namespace Failsafe.PlayerMovements
             crouchIdleState.AddTransition(jumpState, () => jumpStatePrecondition());
 
             blockState.AddTransition(walkState, () => !PlayerScreenScript.IsCameraFullScreen);
-            blockState.AddTransition(walkState, () => _inputHandler.UseTrigger.IsTriggered);
+            // blockState.AddTransition(walkState, () => _inputHandler.UseTrigger.IsTriggered);
 
             jumpState.AddTransition(runState, () => runStatePrecondition() && jumpState.CanGround() && _movementController.IsGrounded);
             jumpState.AddTransition(walkState, () => jumpState.CanGround() && _movementController.IsGrounded);

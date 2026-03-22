@@ -19,7 +19,7 @@ public class PlayerScreenScript : MonoBehaviour
 
     private void Update()
     {
-        use = _inputHandler.UseTrigger.IsPressed;
+        // use = _inputHandler.UseTrigger.IsPressed;
         zoom = _inputHandler.ZoomTriggered;
         movement = _inputHandler.MovementInput;
 
@@ -40,10 +40,10 @@ public class PlayerScreenScript : MonoBehaviour
             }
         }
 
-        if (use && IsCameraFullScreen)
-        {
-            ExitFullScreen();
-        }
+        // if (use && IsCameraFullScreen)
+        // {
+        //     ExitFullScreen();
+        // }
     }
 
     public void InFullScreen(CameraManager cameraManager)
