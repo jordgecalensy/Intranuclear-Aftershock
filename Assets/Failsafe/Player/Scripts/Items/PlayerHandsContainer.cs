@@ -132,4 +132,23 @@ public class PlayerHandsContainer
         _itemInHand = null;
         _handState = HandState.EmptyHands;
     }
+
+    public void PlaceItem(Transform place)
+    {
+        if (_handState == HandState.EmptyHands)
+        {
+            return;
+        }
+        Debug.LogWarning("ItemPlace");
+        var item = _itemInHand.ItemObject;
+        Vector3 position = place.position;
+        position.y += 0.2f;
+        Quaternion rotation = place.rotation;
+        item.transform.SetPositionAndRotation(position, rotation);
+        item.transform.Rotate(0,0,-90);
+        item.ToWorldState();
+        _rightHandItemPlace.DetachChildren();
+        _itemInHand = null;
+        _handState = HandState.EmptyHands;
+    }
 }

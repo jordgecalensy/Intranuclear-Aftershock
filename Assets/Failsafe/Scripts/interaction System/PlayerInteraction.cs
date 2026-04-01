@@ -2,6 +2,7 @@
 using VContainer;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Assets.Failsafe.Scripts.interaction_System;
 
 public class PlayerInteraction : MonoBehaviour
 {
@@ -11,7 +12,10 @@ public class PlayerInteraction : MonoBehaviour
 
     [Inject]
     private InputHandler _inputHandler;
-    
+    [Inject]
+    private PlayerHandsContainer _handsContainer;
+
+    private ItemPlaceArea _itemArea;
     private ScrollbarInteractable _activeScrollbar; // <-- запоминаем текущий скроллбар
     private Interactable lastHoveredObject = null;
 
@@ -39,6 +43,16 @@ public class PlayerInteraction : MonoBehaviour
 
                 if (_inputHandler.GrabOrDropAction.WasPressedThisFrame()) //использовал триггер GrapOrDrop так как не смг создать свой
                 {
+                    if (interactable is ItemPlaceArea)
+                    {
+                        _itemArea = interactable as ItemPlaceArea;
+                        Transform itemPlace = _itemArea.TryGetItemPlace(_handsContainer.ItemInHand.ItemObject);
+                        if (itemPlace != null)
+                        {
+                            Debug.LogWarning("AreaEmpty");
+                            _handsContainer.PlaceItem(itemPlace);
+                        }
+                    }
                     interactable.BaseInteract();
                     _activeScrollbar = interactable as ScrollbarInteractable;
                 }
