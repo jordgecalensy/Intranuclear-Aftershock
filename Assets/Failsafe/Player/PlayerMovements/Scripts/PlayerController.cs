@@ -41,7 +41,6 @@ namespace Failsafe.PlayerMovements
         private bool _isLowHpEffectActive = false;
         private bool _isVisorEffectActive = false;
         private MovementCameraShakeProvider _movementShakeProvider;
-        private DamageCameraShakeProvider _damageShakeProvider;
         private float _prevHealth;
 
         public BehaviorStateMachine StateMachine => _behaviorStateMachine;
@@ -86,11 +85,8 @@ namespace Failsafe.PlayerMovements
             _movementShakeProvider =
                 new MovementCameraShakeProvider(_inputHandler, _effectManager, _playerRotationController);
 
-            _damageShakeProvider =
-                new DamageCameraShakeProvider(_effectManager, _playerRotationController);
             _health.OnHealthChanged += HandleHealthChanged;
-
-            
+            EarthquakeTrigger.OnEarthquakeStarted += HandleEarthquake;     
 
 
             InitializeStateMachine();
@@ -99,13 +95,114 @@ namespace Failsafe.PlayerMovements
 
         private void HandleHealthChanged(float newValue)
         {
+            float intensity = 0;
+            float duration = 0;
+            float frequency = 0;
+
             float damage = _prevHealth - newValue;
 
-            if (damage > 0)
-                _damageShakeProvider.ApplyDamage(damage);
-                _effectManager.ApplyEffect(new DamageHitEffect(0.25f));
+            if (damage <= 0f)
+            {
+                _prevHealth = newValue;
+                return;
+            }
+
+            switch (damage)
+            {
+                case >= 30f:
+                    intensity = 3.5f; duration = 0.6f; frequency = 8f;
+                    break;
+
+                case >= 15f:
+                    intensity = 1.1f; duration = 0.4f; frequency = 18f;
+                    break;
+
+                case >= 1f:
+                    intensity = 0.45f; duration = 0.25f; frequency = 20f;
+                    break;
+
+                default:
+                    // Любой периодический мелкий урон тоже должен заметно проигрывать shake.
+                    intensity = 0.3f; duration = 0.2f; frequency = 20f;
+                    break;
+            }
+
+            _effectManager.ApplyEffect(new CameraShakeEffect(_playerRotationController, intensity, duration, frequency));
+            _effectManager.ApplyEffect(new DamageHitEffect(0.25f));
 
             _prevHealth = newValue;
+        }
+
+        private void HandleEarthquake(float strength, float duration)
+        {
+            float intensity = 0;
+            float shakeDuration = 0;
+            float frequency = 0;
+            // Время, за которое тряска камеры плавно выйдет на полную силу.
+            float shakeFadeInDuration = 0;
+            // Время, за которое тряска камеры плавно затухнет к концу эффекта.
+            float shakeFadeOutDuration = 0;
+
+            float slowMultiplier = 1f;
+            float slowDuration = 0;
+            // Время, за которое замедление плавно включится.
+            float slowFadeInDuration = 0;
+            // Время, за которое замедление плавно отключится.
+            float slowFadeOutDuration = 0;
+
+            if (strength > 0)
+                switch (strength)
+                {
+                    case >= 3:
+                        intensity = 4.0f; shakeDuration = 3.5f; frequency = 6f;
+                        slowMultiplier = 0.45f; slowDuration = 3f;
+                        break;
+
+                    case >= 2:
+                        intensity = 2.5f; shakeDuration = 3f; frequency = 8f;
+                        slowMultiplier = 0.60f; slowDuration = 2.5f;
+                        break;
+
+                    case >= 1:
+                        intensity = 1.2f; shakeDuration = 5f; frequency = 10f;
+                        slowMultiplier = 0.75f; slowDuration = 5f;
+                        break;
+
+                    default:
+                        intensity = 0.6f; shakeDuration = 0.5f; frequency = 12f;
+                        slowMultiplier = 0.90f; slowDuration = 1.5f;
+                        break;
+                }
+
+            // Если в событии передали duration больше пресета, используем его как минимальную длительность эффекта.
+            shakeDuration = Mathf.Max(shakeDuration, duration);
+            slowDuration = Mathf.Max(slowDuration, duration);
+
+            // Подбираем короткий fade-in, чтобы эффект быстро набирался, но не включался резко.
+            shakeFadeInDuration = Mathf.Min(0.45f, shakeDuration * 0.2f);
+            // Затухание делаем длиннее, чтобы землетрясение сходило мягко.
+            shakeFadeOutDuration = Mathf.Min(1.2f, shakeDuration * 0.35f);
+            // Замедление включается чуть плавнее, чем камера, чтобы ощущалось естественнее.
+            slowFadeInDuration = Mathf.Min(0.6f, slowDuration * 0.2f);
+            // И так же плавно отпускает игрока в конце.
+            slowFadeOutDuration = Mathf.Min(1.4f, slowDuration * 0.35f);
+
+            _effectManager.ApplyEffect(
+                new CameraShakeEffect(
+                    _playerRotationController,
+                    intensity,
+                    shakeDuration,
+                    frequency,
+                    shakeFadeInDuration,
+                    shakeFadeOutDuration));
+
+            _effectManager.ApplyEffect(
+                new EarthquakeMovementSlowEffect(
+                    _movementController,
+                    slowMultiplier,
+                    slowDuration,
+                    slowFadeInDuration,
+                    slowFadeOutDuration));
         }
 
 

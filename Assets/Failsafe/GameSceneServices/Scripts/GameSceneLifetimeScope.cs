@@ -21,9 +21,9 @@ namespace Failsafe.GameSceneServices
 
             //TODO: Пока это монобэх, нужно интегрировать врагов с VContainer
             builder.RegisterComponentInHierarchy<SignalManager>();
-
             builder.RegisterEntryPoint<EnemySpawnSystem>().AsSelf();
             builder.RegisterEntryPoint<EffectManager>().As<IEffectManager>();
+            builder.RegisterEntryPoint<EarthquakeEnvironmentController>().AsSelf();
             
         }
     }
