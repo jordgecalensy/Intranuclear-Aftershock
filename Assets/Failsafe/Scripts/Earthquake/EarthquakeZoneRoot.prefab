@@ -46,8 +46,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _triggerKey: 109
-  _strength: 2
-  _duration: 3
+  _strength: 0.1
+  _duration: 45
   _earthquakeZone: {fileID: 2970617494074396705}
   _autoTriggerOnZoneEnter: 1
   _triggeringTag: Player
@@ -72,8 +72,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 2.2264922, y: 1, z: 2.0588484}
+  m_Center: {x: -0.054650236, y: 0, z: -0.09779783}
 --- !u!1 &7944065921070868848
 GameObject:
   m_ObjectHideFlags: 0
@@ -142,8 +142,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 2.0691426, y: 1.5636019, z: 3.6678836}
+  m_Center: {x: -0.099627756, y: 0.28180137, z: 0.55042833}
 --- !u!114 &8292225915297086802
 MonoBehaviour:
   m_ObjectHideFlags: 0
