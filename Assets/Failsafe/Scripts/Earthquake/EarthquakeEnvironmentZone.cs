@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using FMODUnity;
 using UnityEngine;
 
@@ -89,7 +89,7 @@ public class EarthquakeEnvironmentZone : MonoBehaviour
         if (collider.attachedRigidbody != null && collider.attachedRigidbody.gameObject.layer == targetLayer)
             return true;
 
-        return collider.transform.root.gameObject.layer == targetLayer;
+        return collider.transform.gameObject.layer == targetLayer;
     }
 
     private static GameObject GetDestructibleObject(Collider collider)
@@ -97,7 +97,7 @@ public class EarthquakeEnvironmentZone : MonoBehaviour
         if (collider.attachedRigidbody != null)
             return collider.attachedRigidbody.gameObject;
 
-        return collider.transform.root.gameObject;
+        return collider.transform.gameObject;
     }
 
     public void CleanupNulls()
