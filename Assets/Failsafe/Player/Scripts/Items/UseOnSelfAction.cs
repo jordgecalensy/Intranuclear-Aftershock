@@ -1,4 +1,4 @@
-using Failsafe.Items;
+﻿using Failsafe.Items;
 
 public class UseOnSelfAction : IActionWithItem
 {

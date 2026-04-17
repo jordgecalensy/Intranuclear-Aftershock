@@ -34,6 +34,7 @@ namespace Failsafe.Player
         private int _deadId = Animator.StringToHash("Dead");
         private int _pickUpId = Animator.StringToHash("PickUp");
         private int _shootId = Animator.StringToHash("Shoot");
+        private int _throwItemId = Animator.StringToHash("ThrowItem");
 
         // --- НОВОЕ: настройки синхронизации скорости анимации ---
         private const bool  AnimFollowMoveMultiplier = true; // включить/выключить привязку
@@ -136,6 +137,7 @@ namespace Failsafe.Player
                     _animator.SetTrigger(_shootId);
                     break;
                 case ItemType.Grenade:
+                    _animator.SetTrigger(_throwItemId);
                     break;
                 default:
                     break;
