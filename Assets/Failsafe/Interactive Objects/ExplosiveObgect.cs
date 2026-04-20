@@ -56,7 +56,8 @@ public abstract class ExplosiveObgect : MonoBehaviour
         if(Data.ExplosiveVFX != null)
         {
             var Vfx = Instantiate(Data.ExplosiveVFX, gameObject.transform.position, Quaternion.identity);
-            Destroy(Vfx, Data.DurationVFX);
+            Destroy(Vfx, Data.DurationVFX); 
+            SoundUtils3D.Play(gameObject, Data.ExplsiveSFXEvent);
             //Одиночный эффект после взрыва гранаты
         }
     }

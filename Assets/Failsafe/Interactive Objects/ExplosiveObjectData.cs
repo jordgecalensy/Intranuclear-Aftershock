@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using FMODUnity;
+using UnityEngine;
 
 [CreateAssetMenu(fileName = "ExplosiveObjectData", menuName = "ScriptableObjects/ExplosiveObject")]
 public class ExplosiveObjectData : ScriptableObject
@@ -16,6 +17,8 @@ public class ExplosiveObjectData : ScriptableObject
     [Header("Explosion VFX effect")]
     [SerializeField] private float _durationVFX;
     [SerializeField] private GameObject _explsiveVFX;//можно сделать автоматически но андрей бяка
+
+    [SerializeField] private EventReference _explsiveSFXEvent;
 
     public int ExplosionDamage
     {
@@ -78,6 +81,13 @@ public class ExplosiveObjectData : ScriptableObject
         get
         {
             return _explsiveVFX;
+        }
+    }
+    public EventReference ExplsiveSFXEvent
+    {
+        get
+        {
+            return _explsiveSFXEvent;
         }
     }
 }
