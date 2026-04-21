@@ -19,7 +19,7 @@ public class Grenade : IUsable
     }
     public ItemUseResult Use()
     {
-        GranadeItem.gameObject.GetComponent<GrеnadeObject>().ActivesionGranade(Data, ItsMineState);
+        GranadeItem.gameObject.GetComponent<BaseGrеnadeObject>().ActivesionGranade(Data, ItsMineState);
         Debug.Log("Use");
         return new ItemUseResult { ItemStateAfterUse = ItemState.Drop, UsageType = UsageType.HoldToUse };
     }

@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public abstract class ExplosiveObgect : MonoBehaviour
+public abstract class ExplosiveObject : MonoBehaviour
 {
     [SerializeField] protected ExplosiveObjectData Data;
     protected List<GameObject> DamagedObjects = new List<GameObject>();
@@ -29,13 +29,25 @@ public abstract class ExplosiveObgect : MonoBehaviour
     }
     protected virtual bool HitsChecking(RaycastHit hit, Collider hitInfo)
     {
-        if (hitInfo.name != hit.collider.name)
+        if (!Data.IgnoreCollision)
         {
-            if (hitInfo.tag == "Player" || hitInfo.tag == "Enemy")
-                Debug.Log($"{hitInfo.gameObject.name} за препядствием {hit.collider.name}");
-            return true;
+            if (hitInfo.name != hit.collider.name)
+            {
+                if (hitInfo.tag == "Player" || hitInfo.tag == "Enemy")
+                    Debug.Log($"{hitInfo.gameObject.name} за препядствием {hit.collider.name}");
+                return true;
+            }
+            return false;
         }
-        return false;
+        else
+        {
+            if (hitInfo.tag != "Enemy")
+            {
+                return true;
+            }
+            Debug.Log($"{hitInfo.gameObject.name}");
+            return false; 
+        }
     }
     protected virtual void DamagebleExplosionEffect(Collider hitInfo)
     {
@@ -53,12 +65,23 @@ public abstract class ExplosiveObgect : MonoBehaviour
     }
     protected virtual void SingleExplosionEffect()
     {
-        if(Data.ExplosiveVFX != null)
+        if (Data.PostEffects != null)
         {
-            var Vfx = Instantiate(Data.ExplosiveVFX, gameObject.transform.position, Quaternion.identity);
-            Destroy(Vfx, Data.DurationVFX); 
-            SoundUtils3D.Play(gameObject, Data.ExplsiveSFXEvent);
-            //Одиночный эффект после взрыва гранаты
+            foreach (var postEffect in Data.PostEffects)
+            {
+                var fire = Instantiate(postEffect.Effect, gameObject.transform.position, Quaternion.identity);
+                Destroy(fire, postEffect.Duration);
+            }
         }
+        if (Data.ExplosiveVfx != null)
+        {
+            foreach (var vfx in Data.ExplosiveVfx)
+            {
+                var Vfx = Instantiate(vfx.Effect, gameObject.transform.position, Quaternion.identity);
+                Destroy(Vfx, vfx.Duration);
+                // визуалный эффект после взрыва гранаты
+            }
+        }
+        SoundUtils3D.Play(gameObject, Data.ExplsiveSFXEvent);
     }
 }

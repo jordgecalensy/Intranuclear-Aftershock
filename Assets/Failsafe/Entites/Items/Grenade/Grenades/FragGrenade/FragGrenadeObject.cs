@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class FragGrenadeObject : GrеnadeObject
+public class FragGrenadeObject : BaseGrеnadeObject
 {
 
 }

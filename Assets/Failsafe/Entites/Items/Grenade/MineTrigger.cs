@@ -2,7 +2,7 @@
 
 public class MineTrigger : MonoBehaviour
 {
-    [SerializeField] private GrеnadeObject _granade;
+    [SerializeField] private BaseGrеnadeObject _granade;
 
     private bool _itsTriggerActivated = false;
     private void OnTriggerStay(Collider other)

@@ -1,21 +1,12 @@
 ﻿using UnityEngine;
 
-public class EmpGrendeObject : GrеnadeObject
+public class EmpGrendeObject : BaseGrеnadeObject
 {
     private Vector3 _direction = new Vector3(0, 0, 0);
-    protected override bool HitsChecking(RaycastHit hit, Collider hitInfo)
-    {
-        if (hitInfo.tag != "Enemy")
-        {
-            return true;
-        }
-        Debug.Log($"{hitInfo.gameObject.name}");
-        return false;
-    }
     protected override void DamagebleExplosionEffect(Collider hitInfo)
     {
         base.DamagebleExplosionEffect(hitInfo);
-        if(Data.OnEnemyEffect != null)
+        if (Data.OnEnemyEffect != null)
         {
             var OnEnemyEffect = Instantiate(Data.OnEnemyEffect, hitInfo.transform);
             Destroy(OnEnemyEffect, Data.DurationOnEnemyEffect);

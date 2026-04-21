@@ -1,11 +1,6 @@
 ﻿using UnityEngine;
 
-public class FireGrenadeObject : GrеnadeObject
+public class FireGrenadeObject : BaseGrеnadeObject
 {
-    protected override void SingleExplosionEffect()
-    {
-        var fire = Instantiate(Data.PostEffect, gameObject.transform.position, Quaternion.identity);
-        Destroy(fire, Data.DurationPostEffect);
-        base.SingleExplosionEffect();
-    }
+
 }

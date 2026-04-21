@@ -12,12 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 067b966643ac41345b3429550156a140, type: 3}
   m_Name: FireGrenadeData
   m_EditorClassIdentifier: 
+  _ignoreCollision: 0
   _explosionDamage: 20
   _explosionRadius: 8
   _explosionForce: 4
-  _durationPostEffect: 12
-  _postEffect: {fileID: 3659837796846025382, guid: e1ba04339260bcb428a97ac99626bbae, type: 3}
+  _postEffect:
+  - Duration: 12
+    Effect: {fileID: 3659837796846025382, guid: e1ba04339260bcb428a97ac99626bbae, type: 3}
   _durationOnEnemyEffect: 0
   _onEnemyEffect: {fileID: 0}
-  _durationVFX: 1
-  _explsiveVFX: {fileID: 7090640766692989202, guid: 837c6d57ffab7ce4bb7c9ebbb20ed1e1, type: 3}
+  _vfx:
+  - Duration: 1
+    Effect: {fileID: 7090640766692989202, guid: 837c6d57ffab7ce4bb7c9ebbb20ed1e1, type: 3}
+  _explsiveSFXEvent:
+    Guid:
+      Data1: 0
+      Data2: 0
+      Data3: 0
+      Data4: 0
+    Path: 
