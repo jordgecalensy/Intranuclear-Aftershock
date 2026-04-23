@@ -163,5 +163,10 @@ namespace Failsafe.PlayerMovements
         [Header("Fly-by noise (в полёте)")]
         public float FlybyNoiseHeight = 4.0f;        // с этой падённой высоты один раз создаём «сферу звука»
         public float FlybyNoiseRadius = 8.0f;        // радиус сферы звука    
+
+        [Header("Slant")]
+        public float SlantAngle = 12f;
+        public float SlantSmoothTime = 0.12f;
+        public float SlantExitThreshold = 0.5f;
     }
 }

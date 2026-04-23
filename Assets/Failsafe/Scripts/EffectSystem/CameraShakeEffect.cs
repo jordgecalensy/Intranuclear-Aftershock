@@ -152,7 +152,7 @@ namespace Failsafe.Scripts.EffectSystem
                 Quaternion.Euler(
                     _rotation.HeadLocalRotation.x + x,
                     _rotation.HeadLocalRotation.y + y,
-                    0f);
+                    _rotation.HeadLocalRotation.z);
         }
 
         private void AddImpulse(

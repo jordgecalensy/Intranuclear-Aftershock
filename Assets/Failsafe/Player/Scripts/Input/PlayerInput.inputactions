@@ -121,6 +121,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "SlantLeft",
+                    "type": "Button",
+                    "id": "287b8a66-ede8-4722-887d-5a490c90cf12",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SlantRight",
+                    "type": "Button",
+                    "id": "10e5c4b8-b145-451f-9bed-4409f6e14d6c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -330,6 +348,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "ThrowObject",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ca9dbceb-d63f-4a7a-b07b-813112f9cebb",
+                    "path": "<Keyboard>/z",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SlantLeft",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4e88fa08-b89c-4252-a9d3-09c261deee9a",
+                    "path": "<Keyboard>/x",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SlantRight",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
