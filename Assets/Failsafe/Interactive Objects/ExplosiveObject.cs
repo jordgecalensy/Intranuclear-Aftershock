@@ -82,6 +82,7 @@ public abstract class ExplosiveObject : MonoBehaviour
                 // визуалный эффект после взрыва гранаты
             }
         }
-        SoundUtils3D.Play(gameObject, Data.ExplsiveSFXEvent);
+        if (Data.ExplsiveSFXEvent.Guid != System.Guid.Empty)
+            SoundUtils3D.Play(gameObject, Data.ExplsiveSFXEvent);
     }
 }
