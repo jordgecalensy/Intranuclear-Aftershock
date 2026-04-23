@@ -32,6 +32,9 @@
 		<relationship name="timeline">
 			<destination>{995455fe-dc05-431a-8f19-e6df08012c69}</destination>
 		</relationship>
+		<relationship name="banks">
+			<destination>{d282757b-4fd9-47f2-82b6-d097924adcc7}</destination>
+		</relationship>
 	</object>
 	<object class="EventMixer" id="{5fc937c7-8c28-4a6a-a5a0-b31ae6d24f4c}">
 		<relationship name="masterBus">
@@ -262,7 +265,6 @@
 		<property name="name">
 			<value>SourcePos</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-2</value>
 		</property>
@@ -271,7 +273,6 @@
 		<property name="name">
 			<value>OverallGain</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-1</value>
 		</property>
@@ -600,7 +601,6 @@
 		<property name="name">
 			<value>SimOutputs</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>0</value>
 		</property>
@@ -617,7 +617,6 @@
 		<property name="name">
 			<value>DistRange</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-6</value>
 		</property>
