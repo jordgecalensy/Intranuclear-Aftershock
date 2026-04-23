@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using FMODUnity;
 
 [CreateAssetMenu(fileName = "GranadeData", menuName = "ScriptableObjects/Entities/Items/GranadeData")]
 public class ThrowGrenadeData : ScriptableObject
@@ -9,6 +10,9 @@ public class ThrowGrenadeData : ScriptableObject
     [Header("Delays")]
     [SerializeField] private float _startUseDelay;
     [SerializeField] private float _useDelay;
+    [Header("SFX")]
+    [SerializeField] private EventReference _switchGrenade;
+    [SerializeField] private EventReference _throwGrenade;
 
     public float GrenadeTimer 
     {
@@ -36,6 +40,20 @@ public class ThrowGrenadeData : ScriptableObject
         get
         {
             return _mineTriggerRadius;
+        }
+    }
+    public EventReference SwitchGrendeSfx
+    {
+        get
+        {
+            return _switchGrenade;
+        }
+    }
+    public EventReference ThrowGrendeSfx
+    {
+        get
+        {
+            return _throwGrenade;
         }
     }
 
