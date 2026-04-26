@@ -207,6 +207,24 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Slant Left"",
+                    ""type"": ""Button"",
+                    ""id"": ""287b8a66-ede8-4722-887d-5a490c90cf12"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Slant Right"",
+                    ""type"": ""Button"",
+                    ""id"": ""10e5c4b8-b145-451f-9bed-4409f6e14d6c"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -418,6 +436,28 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""action"": ""ThrowObject"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ca9dbceb-d63f-4a7a-b07b-813112f9cebb"",
+                    ""path"": ""<Keyboard>/z"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Slant Left"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4e88fa08-b89c-4252-a9d3-09c261deee9a"",
+                    ""path"": ""<Keyboard>/x"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Slant Right"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -439,6 +479,8 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         m_Player_Visor = m_Player.FindAction("Visor", throwIfNotFound: true);
         m_Player_AltMode = m_Player.FindAction("AltMode", throwIfNotFound: true);
         m_Player_ThrowObject = m_Player.FindAction("ThrowObject", throwIfNotFound: true);
+        m_Player_SlantLeft = m_Player.FindAction("Slant Left", throwIfNotFound: true);
+        m_Player_SlantRight = m_Player.FindAction("Slant Right", throwIfNotFound: true);
     }
 
     ~@PlayerInput()
@@ -532,6 +574,8 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Visor;
     private readonly InputAction m_Player_AltMode;
     private readonly InputAction m_Player_ThrowObject;
+    private readonly InputAction m_Player_SlantLeft;
+    private readonly InputAction m_Player_SlantRight;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -595,6 +639,14 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/ThrowObject".
         /// </summary>
         public InputAction @ThrowObject => m_Wrapper.m_Player_ThrowObject;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/SlantLeft".
+        /// </summary>
+        public InputAction @SlantLeft => m_Wrapper.m_Player_SlantLeft;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/SlantRight".
+        /// </summary>
+        public InputAction @SlantRight => m_Wrapper.m_Player_SlantRight;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -660,6 +712,12 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
             @ThrowObject.started += instance.OnThrowObject;
             @ThrowObject.performed += instance.OnThrowObject;
             @ThrowObject.canceled += instance.OnThrowObject;
+            @SlantLeft.started += instance.OnSlantLeft;
+            @SlantLeft.performed += instance.OnSlantLeft;
+            @SlantLeft.canceled += instance.OnSlantLeft;
+            @SlantRight.started += instance.OnSlantRight;
+            @SlantRight.performed += instance.OnSlantRight;
+            @SlantRight.canceled += instance.OnSlantRight;
         }
 
         /// <summary>
@@ -710,6 +768,12 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
             @ThrowObject.started -= instance.OnThrowObject;
             @ThrowObject.performed -= instance.OnThrowObject;
             @ThrowObject.canceled -= instance.OnThrowObject;
+            @SlantLeft.started -= instance.OnSlantLeft;
+            @SlantLeft.performed -= instance.OnSlantLeft;
+            @SlantLeft.canceled -= instance.OnSlantLeft;
+            @SlantRight.started -= instance.OnSlantRight;
+            @SlantRight.performed -= instance.OnSlantRight;
+            @SlantRight.canceled -= instance.OnSlantRight;
         }
 
         /// <summary>
@@ -841,5 +905,19 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnThrowObject(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Slant Left" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSlantLeft(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Slant Right" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSlantRight(InputAction.CallbackContext context);
     }
 }
