@@ -133,13 +133,12 @@ public class PlayerHandsContainer
         _handState = HandState.EmptyHands;
     }
 
-    public void PlaceItem(Transform place)
+    public Item PlaceItem(Transform place)
     {
         if (_handState == HandState.EmptyHands)
         {
-            return;
+            return null;
         }
-        Debug.LogWarning("ItemPlace");
         var item = _itemInHand.ItemObject;
         Vector3 position = place.position;
         position.y += 0.2f;
@@ -150,5 +149,6 @@ public class PlayerHandsContainer
         _rightHandItemPlace.DetachChildren();
         _itemInHand = null;
         _handState = HandState.EmptyHands;
+        return item;
     }
 }

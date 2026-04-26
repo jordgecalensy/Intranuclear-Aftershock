@@ -1,34 +1,21 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ChargeStation : MonoBehaviour, IEnterable
 {
-    [SerializeField] Transform _posForPistolGO;
-    [SerializeField] int _containedEnergyAmount = 2000;
     private bool _chargingOngoing;
     private bool _isEmpty = true;
     [SerializeField] private Animation _lidAnimation;
+    [SerializeField] private Image _noItem;
+    [SerializeField] private Image _itemPlaced;
+    [SerializeField] private Image _chargeBar;
+    [SerializeField] private Image[] _bars;
     public event Action<bool> UpdateIsEmpty;
 
     public void OnButtonPress()
     {
-        /*EnergyContainerOLD connectedEnergyContainer = other.GetComponent<EnergyContainerOLD>();
-        //other.transform.position = _posForPistolGO.position;
-        //other.GetComponent<Rigidbody>().isKinematic = true;
-        if (connectedEnergyContainer != null)
-        {
-            int energyAmountOfConnectedObj = connectedEnergyContainer.GetAmountForMax();
-            if (_containedEnergyAmount >= energyAmountOfConnectedObj && !connectedEnergyContainer.IsFull())
-            {
-                connectedEnergyContainer.Reload(energyAmountOfConnectedObj);
-                _containedEnergyAmount -= energyAmountOfConnectedObj;
-                if (_containedEnergyAmount == 0)
-                    Destroy(this.gameObject);
-            }
-
-        }*/
-
         if(!_chargingOngoing)
             StartCoroutine(Charging());
     }
@@ -37,22 +24,49 @@ public class ChargeStation : MonoBehaviour, IEnterable
     {
         _chargingOngoing = true;
         _lidAnimation.Play("LidClose");
-        Debug.Log("Foo");
+        _noItem.enabled = false;
+        _itemPlaced.enabled = false;
+        _chargeBar.enabled = true;
+        foreach (Image bar in _bars)
+        {
+            bar.enabled = true;
+        }
 
         yield return new WaitForSeconds(2);
 
         _lidAnimation.Play("LidOpen");
         _chargingOngoing = false;
+        _noItem.enabled = false;
+        _itemPlaced.enabled = true;
+        _chargeBar.enabled = false;
+        foreach (Image bar in _bars)
+        {
+            bar.enabled = false;
+        }
         Debug.Log("FooEnd");
     }
     public void OnEntered()
     {
-        Debug.LogWarning("NOTEMPTY");
         _isEmpty = false;
+
+        _noItem.enabled = false;
+        _itemPlaced.enabled = true;
+        _chargeBar.enabled = false;
+        foreach (Image bar in _bars)
+        {
+            bar.enabled = false;
+        }   
     }
 
     public void OnExited()
     {
+        _noItem.enabled = true;
+        _itemPlaced.enabled = false;
+        _chargeBar.enabled = false;
+        foreach (Image bar in _bars)
+        {
+            bar.enabled = false;
+        }
         _isEmpty = true;
     }
 

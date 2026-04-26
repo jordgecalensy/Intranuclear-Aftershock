@@ -6,6 +6,8 @@ namespace Assets.Failsafe.Scripts.interaction_System
     public class ItemPlaceArea : Interactable
     {
         private IEnterable _station;
+        private Item _itemInside = null;
+        public bool IsEmpty => _station.IsEmpty();
 
         private void Awake()
         {
@@ -14,18 +16,32 @@ namespace Assets.Failsafe.Scripts.interaction_System
         protected override void Interact()
         {
             base.Interact();
-            if (_station.IsEmpty())
-                _station.OnEntered();
-            else
-                _station.OnExited();
         }
 
         public Transform TryGetItemPlace(Item item)
         {
-            if (_station.IsEmpty() && _station.IsRightType(item))
+            if (_station.IsRightType(item))
+            {
                 return this.transform;
+            }
             else
                 return null;
+        }
+
+        public void PutItemInside(Item item)
+        {
+            _itemInside = item;
+            _station.OnEntered();
+        }
+
+        public Item TakeItem()
+        {
+            if (_station.IsEmpty())
+                return null;
+            Item return_item = _itemInside;
+            _itemInside = null;
+            _station.OnExited();
+            return return_item;
         }
     }
 }

@@ -43,18 +43,30 @@ public class PlayerInteraction : MonoBehaviour
 
                 if (_inputHandler.GrabOrDropAction.WasPressedThisFrame()) //использовал триггер GrapOrDrop так как не смг создать свой
                 {
+
+                    interactable.BaseInteract();
+                    _activeScrollbar = interactable as ScrollbarInteractable;
+
                     if (interactable is ItemPlaceArea)
                     {
                         _itemArea = interactable as ItemPlaceArea;
-                        Transform itemPlace = _itemArea.TryGetItemPlace(_handsContainer.ItemInHand.ItemObject);
-                        if (itemPlace != null)
+                        if (_itemArea.IsEmpty)
                         {
-                            Debug.LogWarning("AreaEmpty");
-                            _handsContainer.PlaceItem(itemPlace);
+                            if (_handsContainer.State == PlayerHandsContainer.HandState.ItemInHand)
+                            {
+                                Transform itemPlace = _itemArea.TryGetItemPlace(_handsContainer.ItemInHand.ItemObject);
+                                if (itemPlace != null)
+                                {
+                                    _itemArea.PutItemInside(_handsContainer.PlaceItem(itemPlace));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogWarning("Take item here");
+                            _handsContainer.TryTakeItemInHand(_itemArea.TakeItem());
                         }
                     }
-                    interactable.BaseInteract();
-                    _activeScrollbar = interactable as ScrollbarInteractable;
                 }
 
                 if (_activeScrollbar != null && _inputHandler.GrabOrDropAction.IsPressed())
