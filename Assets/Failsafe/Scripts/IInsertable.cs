@@ -15,4 +15,7 @@ public interface IEnterable
     void OnEntered();
     // вызывать при выходе из держателя
     void OnExited();
+
+    // вызывать для проверки заполненности держателя
+    bool IsEmpty();
 }

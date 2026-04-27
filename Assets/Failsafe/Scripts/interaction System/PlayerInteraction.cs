@@ -2,6 +2,7 @@
 using VContainer;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Assets.Failsafe.Scripts.interaction_System;
 
 public class PlayerInteraction : MonoBehaviour
 {
@@ -11,7 +12,10 @@ public class PlayerInteraction : MonoBehaviour
 
     [Inject]
     private InputHandler _inputHandler;
-    
+    [Inject]
+    private PlayerHandsContainer _handsContainer;
+
+    private ItemPlaceArea _itemArea;
     private ScrollbarInteractable _activeScrollbar; // <-- запоминаем текущий скроллбар
     private Interactable lastHoveredObject = null;
 
@@ -39,8 +43,30 @@ public class PlayerInteraction : MonoBehaviour
 
                 if (_inputHandler.GrabOrDropAction.WasPressedThisFrame()) //использовал триггер GrapOrDrop так как не смг создать свой
                 {
+
                     interactable.BaseInteract();
                     _activeScrollbar = interactable as ScrollbarInteractable;
+
+                    if (interactable is ItemPlaceArea)
+                    {
+                        _itemArea = interactable as ItemPlaceArea;
+                        if (_itemArea.IsEmpty)
+                        {
+                            if (_handsContainer.State == PlayerHandsContainer.HandState.ItemInHand)
+                            {
+                                Transform itemPlace = _itemArea.TryGetItemPlace(_handsContainer.ItemInHand.ItemObject);
+                                if (itemPlace != null)
+                                {
+                                    _itemArea.PutItemInside(_handsContainer.PlaceItem(itemPlace));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogWarning("Take item here");
+                            _handsContainer.TryTakeItemInHand(_itemArea.TakeItem());
+                        }
+                    }
                 }
 
                 if (_activeScrollbar != null && _inputHandler.GrabOrDropAction.IsPressed())
