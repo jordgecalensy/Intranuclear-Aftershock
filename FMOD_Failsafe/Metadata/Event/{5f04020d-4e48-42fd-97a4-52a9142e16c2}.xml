@@ -213,6 +213,9 @@
 	<object class="MixerBusPanner" id="{c835fdf9-c0fd-444a-9e93-f57bcaba109d}" />
 	<object class="MixerBusFader" id="{a4b5c150-e2bc-4c45-b576-291217544f35}" />
 	<object class="PluginEffect" id="{1679b7f1-ee9c-4acc-a4e4-ea4d719d6329}">
+		<property name="wetDryEnabled">
+			<value>true</value>
+		</property>
 		<relationship name="plugin">
 			<destination>{baae5064-fae6-41d9-b89e-5fd18a9c2cd1}</destination>
 		</relationship>
@@ -393,7 +396,7 @@
 			<value>DAType</value>
 		</property>
 		<property name="value">
-			<value>1</value>
+			<value>2</value>
 		</property>
 		<property name="minimumValue">
 			<value>0</value>
@@ -407,7 +410,7 @@
 			<value>DAMinDist</value>
 		</property>
 		<property name="value">
-			<value>1</value>
+			<value>0</value>
 		</property>
 		<property name="curve">
 			<value>{(0.000000,0.000000)(1.000000,10000.000000)}</value>
@@ -418,7 +421,7 @@
 			<value>DAMaxDist</value>
 		</property>
 		<property name="value">
-			<value>950</value>
+			<value>250</value>
 		</property>
 		<property name="curve">
 			<value>{(0.000000,0.000000)(1.000000,10000.000000)}</value>
@@ -473,7 +476,7 @@
 			<value>DipoleWeight</value>
 		</property>
 		<property name="value">
-			<value>0.444999993</value>
+			<value>1</value>
 		</property>
 		<property name="curve">
 			<value>{(0.000000,0.000000)(1.000000,1.000000)}</value>
