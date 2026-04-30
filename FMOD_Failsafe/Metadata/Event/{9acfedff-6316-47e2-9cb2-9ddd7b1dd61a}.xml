@@ -174,6 +174,7 @@
 			<destination>{059ec6cb-7e6b-466c-9caf-21e720b3efbf}</destination>
 			<destination>{5c3dc243-5ca8-431c-b095-b8f5934a78ac}</destination>
 			<destination>{efb31a2c-b750-4560-9b74-006ff53c2039}</destination>
+			<destination>{d01713a7-69d8-49ff-a2e6-6357f8c0fa51}</destination>
 		</relationship>
 	</object>
 	<object class="DataPluginParameter" id="{88659baf-022a-4c0d-a24c-1b466ff032e8}">
@@ -562,6 +563,14 @@
 		</property>
 		<property name="maximumValue">
 			<value>2</value>
+		</property>
+	</object>
+	<object class="BoolPluginParameter" id="{d01713a7-69d8-49ff-a2e6-6357f8c0fa51}">
+		<property name="name">
+			<value>PathNormEQ</value>
+		</property>
+		<property name="value">
+			<value>false</value>
 		</property>
 	</object>
 </objects>

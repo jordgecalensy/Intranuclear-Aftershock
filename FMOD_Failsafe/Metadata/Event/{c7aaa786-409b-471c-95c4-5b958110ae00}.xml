@@ -183,13 +183,13 @@
 			<destination>{1f225895-3cc6-4b94-b78c-68a6accc2179}</destination>
 			<destination>{93ef919d-54f7-46c5-9df3-0a7ea241d525}</destination>
 			<destination>{a246c6e5-5e5d-4a6e-8aa0-2f573db7db75}</destination>
+			<destination>{11488a9e-f58d-4745-a029-c4c1196391ca}</destination>
 		</relationship>
 	</object>
 	<object class="DataPluginParameter" id="{3decb7b0-585e-4b86-a470-87ea280ec5b4}">
 		<property name="name">
 			<value>SourcePos</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-2</value>
 		</property>
@@ -198,7 +198,6 @@
 		<property name="name">
 			<value>OverallGain</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-1</value>
 		</property>
@@ -527,7 +526,6 @@
 		<property name="name">
 			<value>SimOutputs</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>0</value>
 		</property>
@@ -544,7 +542,6 @@
 		<property name="name">
 			<value>DistRange</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-6</value>
 		</property>
@@ -575,6 +572,14 @@
 		</property>
 		<property name="maximumValue">
 			<value>2</value>
+		</property>
+	</object>
+	<object class="BoolPluginParameter" id="{11488a9e-f58d-4745-a029-c4c1196391ca}">
+		<property name="name">
+			<value>PathNormEQ</value>
+		</property>
+		<property name="value">
+			<value>false</value>
 		</property>
 	</object>
 </objects>

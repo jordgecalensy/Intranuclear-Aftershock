@@ -276,6 +276,7 @@
 			<destination>{a2462e68-da74-4467-b67c-4a9611b795ad}</destination>
 			<destination>{36a4f053-bdc6-4220-a57e-99b066a87261}</destination>
 			<destination>{0e7e39da-f7f5-492b-ae70-ed3fdf4be548}</destination>
+			<destination>{5364040c-6190-4069-bf78-15daff638966}</destination>
 		</relationship>
 	</object>
 	<object class="RandomizerModulator" id="{30e212ec-5d6b-46e1-b453-82643df1ecfb}">
@@ -290,7 +291,6 @@
 		<property name="name">
 			<value>SourcePos</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-2</value>
 		</property>
@@ -299,7 +299,6 @@
 		<property name="name">
 			<value>OverallGain</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-1</value>
 		</property>
@@ -628,7 +627,6 @@
 		<property name="name">
 			<value>SimOutputs</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>0</value>
 		</property>
@@ -645,7 +643,6 @@
 		<property name="name">
 			<value>DistRange</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-6</value>
 		</property>
@@ -676,6 +673,14 @@
 		</property>
 		<property name="maximumValue">
 			<value>2</value>
+		</property>
+	</object>
+	<object class="BoolPluginParameter" id="{5364040c-6190-4069-bf78-15daff638966}">
+		<property name="name">
+			<value>PathNormEQ</value>
+		</property>
+		<property name="value">
+			<value>false</value>
 		</property>
 	</object>
 </objects>
