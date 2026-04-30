@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <objects serializationModel="Studio.02.03.00">
 	<object class="MixerMaster" id="{38249ee9-d82a-4b40-a423-c507973bef92}">
+		<property name="overridingInputFormat">
+			<value>1</value>
+		</property>
 		<property name="name">
 			<value>Master Bus</value>
 		</property>
@@ -21,7 +24,7 @@
 	</object>
 	<object class="MixerBusPanner" id="{8b92f601-d6ba-47af-a15d-03bbda36a90c}">
 		<property name="overridingOutputFormat">
-			<value>2</value>
+			<value>1</value>
 		</property>
 	</object>
 	<object class="MixerBusFader" id="{8cf25afa-32c1-4bdb-ac7e-86efdc778cda}" />

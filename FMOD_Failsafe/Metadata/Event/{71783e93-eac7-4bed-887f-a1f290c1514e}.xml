@@ -58,7 +58,7 @@
 	</object>
 	<object class="EventAutomatableProperties" id="{42be4cb8-3799-4536-b813-84c9b14ad87b}">
 		<property name="minimumDistance">
-			<value>1.70000005</value>
+			<value>6</value>
 		</property>
 		<property name="maximumDistance">
 			<value>50</value>
@@ -147,6 +147,7 @@
 	<object class="MixerBusEffectChain" id="{091ddb2e-985b-4f66-ad0e-970c5d814055}">
 		<relationship name="effects">
 			<destination>{b4ce56ac-dfd1-4c6f-b97b-b03f5b0cf9a4}</destination>
+			<destination>{005172ed-f64f-420c-a596-a4b067f9c2f1}</destination>
 			<destination>{ee8ff13e-990c-43d7-8c0c-f62768ddcbb0}</destination>
 		</relationship>
 	</object>
@@ -181,8 +182,25 @@
 	</object>
 	<object class="MixerBusPanner" id="{c94c9830-a4d6-4fbb-9002-14965fa11f31}" />
 	<object class="PluginEffect" id="{b4ce56ac-dfd1-4c6f-b97b-b03f5b0cf9a4}">
+		<property name="wetDryEnabled">
+			<value>true</value>
+		</property>
+		<property name="wetMix">
+			<value>0</value>
+		</property>
 		<relationship name="plugin">
 			<destination>{d1891d64-9def-44b6-9bdf-af8bc24af8b8}</destination>
+		</relationship>
+	</object>
+	<object class="MixerSend" id="{005172ed-f64f-420c-a596-a4b067f9c2f1}">
+		<property name="level">
+			<value>-10</value>
+		</property>
+		<property name="inputFormat">
+			<value>1</value>
+		</property>
+		<relationship name="mixerReturn">
+			<destination>{1ccd57bc-be86-4901-ab7a-dca14dc1b761}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusFader" id="{ee8ff13e-990c-43d7-8c0c-f62768ddcbb0}" />
@@ -253,7 +271,6 @@
 		<property name="name">
 			<value>SourcePos</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-2</value>
 		</property>
@@ -262,7 +279,6 @@
 		<property name="name">
 			<value>OverallGain</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-1</value>
 		</property>
@@ -314,7 +330,7 @@
 			<value>ApplyOccl</value>
 		</property>
 		<property name="value">
-			<value>1</value>
+			<value>0</value>
 		</property>
 		<property name="minimumValue">
 			<value>0</value>
@@ -397,7 +413,7 @@
 			<value>DAMinDist</value>
 		</property>
 		<property name="value">
-			<value>1</value>
+			<value>300</value>
 		</property>
 		<property name="curve">
 			<value>{(0.000000,0.000000)(1.000000,10000.000000)}</value>
@@ -408,7 +424,7 @@
 			<value>DAMaxDist</value>
 		</property>
 		<property name="value">
-			<value>100</value>
+			<value>2350</value>
 		</property>
 		<property name="curve">
 			<value>{(0.000000,0.000000)(1.000000,10000.000000)}</value>
@@ -591,7 +607,6 @@
 		<property name="name">
 			<value>SimOutputs</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>0</value>
 		</property>
@@ -608,7 +623,6 @@
 		<property name="name">
 			<value>DistRange</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-6</value>
 		</property>
