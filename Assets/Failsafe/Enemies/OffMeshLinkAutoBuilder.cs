@@ -27,6 +27,12 @@ public class OffMeshLinkAutoBuilder : MonoBehaviour
 
     [Tooltip("Насколько близко могут быть конечные точки разных линков.")]
     [SerializeField] private float linkProximity = 1.0f;
+    [Tooltip("Смещение точки входа на линк (снизу). Помогает попасть в NavMesh на неровной геометрии.")]
+    [SerializeField] private Vector3 startPointOffset = new Vector3(0f, 0.05f, 0f);
+    [Tooltip("Смещение точки выхода на линк (сверху). Помогает избежать попадания в край уступа.")]
+    [SerializeField] private Vector3 endPointOffset = new Vector3(0f, 0.05f, 0f);
+    [Tooltip("Вертикальный сдвиг точки, откуда пускается raycast вниз.")]
+    [SerializeField] private float topRaycastVerticalOffset = 0.25f;
 
     [Header("Параметры NavMeshLink")] [SerializeField]
     private float linkWidth = 0.8f;
@@ -36,6 +42,12 @@ public class OffMeshLinkAutoBuilder : MonoBehaviour
     [SerializeField] private int agentTypeID = 0;
     [SerializeField] private int area = 0; // 0 = Walkable
     [SerializeField] private float costModifier = 1.0f;
+    [Tooltip("Базовый радиус поиска NavMesh вокруг точки.")]
+    [SerializeField] private float navMeshSampleRadius = 1.0f;
+    [Tooltip("Дополнительный радиус fallback-поиска NavMesh (если базовый не нашелся).")]
+    [SerializeField] private float navMeshFallbackRadius = 2.0f;
+    [Tooltip("Количество угловых проб вокруг точки для fallback-поиска.")]
+    [SerializeField] private int navMeshFallbackRays = 8;
 
     [Header("Отладка")] [Tooltip("Включить отображение гизмо для созданных линков.")]
     [SerializeField] private bool visualizeProcess = true;
@@ -97,9 +109,10 @@ public class OffMeshLinkAutoBuilder : MonoBehaviour
             // Равномерно распределяем точки вдоль края. Если линк один, он будет в центре.
             float t = (linkCount <= 1) ? 0.5f : (float)i / (linkCount - 1);
             Vector3 topPoint = Vector3.Lerp(edge.Point1, edge.Point2, t);
+            Vector3 rayOrigin = topPoint + Vector3.up * topRaycastVerticalOffset;
 
             // Стреляем лучом из точки на краю вниз, чтобы найти пол
-            if (Physics.Raycast(topPoint, Vector3.down, out RaycastHit floorHit, maxClimbHeight, floorMask))
+            if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit floorHit, maxClimbHeight + topRaycastVerticalOffset, floorMask))
             {
                 float climbHeight = Vector3.Distance(topPoint, floorHit.point);
                 if (climbHeight < minClimbHeight)
@@ -115,8 +128,10 @@ public class OffMeshLinkAutoBuilder : MonoBehaviour
 #endif
 
                 // Проверяем наличие NavMesh в обеих точках
-                bool topOk = NavMesh.SamplePosition(topPoint, out NavMeshHit topNavHit, 2.0f, NavMesh.AllAreas);
-                bool bottomOk = NavMesh.SamplePosition(floorHit.point, out NavMeshHit bottomNavHit, 2.0f, NavMesh.AllAreas);
+                Vector3 startCandidate = floorHit.point + startPointOffset;
+                Vector3 endCandidate = topPoint + endPointOffset;
+                bool topOk = TrySampleNavMeshWithFallback(endCandidate, out NavMeshHit topNavHit);
+                bool bottomOk = TrySampleNavMeshWithFallback(startCandidate, out NavMeshHit bottomNavHit);
 
 #if UNITY_EDITOR
                 if (enableDeepDebug)
@@ -166,6 +181,25 @@ public class OffMeshLinkAutoBuilder : MonoBehaviour
 #if UNITY_EDITOR
         if (visualizeProcess) _debug_createdLinkPoints.Add(new System.Tuple<Vector3, Vector3>(start, end));
 #endif
+    }
+
+    private bool TrySampleNavMeshWithFallback(Vector3 point, out NavMeshHit hit)
+    {
+        if (NavMesh.SamplePosition(point, out hit, navMeshSampleRadius, NavMesh.AllAreas))
+            return true;
+
+        int rays = Mathf.Max(4, navMeshFallbackRays);
+        float step = 360f / rays;
+        for (int i = 0; i < rays; i++)
+        {
+            float angle = step * i * Mathf.Deg2Rad;
+            Vector3 ringOffset = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * navMeshFallbackRadius;
+            Vector3 probe = point + ringOffset;
+            if (NavMesh.SamplePosition(probe, out hit, navMeshFallbackRadius, NavMesh.AllAreas))
+                return true;
+        }
+
+        return false;
     }
 
     [ContextMenu("Clear Generated Links")]

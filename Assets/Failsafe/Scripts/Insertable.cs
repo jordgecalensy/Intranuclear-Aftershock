@@ -48,7 +48,7 @@ public class Insertable : MonoBehaviour
 
     private void TryInsert()
     {
-        if (_inInsertTrigger && !IsGrabbed && !IsInserted)
+        if (_inInsertTrigger && !IsGrabbed && !IsInserted && _charger.IsEmpty())
         {
             _physicsController.Attach(_holderTransform, 2f);
             _charger.OnEntered();

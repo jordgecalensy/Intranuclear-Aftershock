@@ -35,6 +35,8 @@ public class InputHandler
     private const string _altMode = "AltMode";
     private const string _visor = "Visor"; ///Добавил 
     private const string _throwObject = "ThrowObject"; ///временно
+    private const string _slantRight = "SlantRight"; ///временно
+    private const string _slantLeft = "SlantLeft"; ///временно
 
     private InputAction _movementAction;
     private InputAction _rotationAction;
@@ -49,6 +51,8 @@ public class InputHandler
     private InputAction _altModeAction;
     private InputAction _visorAction; ///Добавил
     public InputAction ThrowObjectAction; ///временно
+    private InputAction _slantRightAction;
+    private InputAction _slantLeftAction;
 
 
     public List<InputAction> PerformedActions = new List<InputAction>();
@@ -66,6 +70,8 @@ public class InputHandler
     public InputTrigger AttackTrigger { get; private set; } = new InputTrigger();
     public InputTrigger AltModeTrigger { get; private set; } = new InputTrigger();
     public InputTrigger VisorTrigger { get; private set; } = new InputTrigger();
+    public bool SlantRightTrigger { get; private set; } 
+    public bool SlantLeftTrigger { get; private set; }
 
 
     /// <summary>
@@ -95,6 +101,8 @@ public class InputHandler
         _altModeAction = mapReference.FindAction(_altMode);
         _visorAction = mapReference.FindAction(_visor);
         ThrowObjectAction = mapReference.FindAction(_throwObject);
+        _slantRightAction = mapReference.FindAction(_slantRight);
+        _slantLeftAction = mapReference.FindAction(_slantLeft);
 
         SubscribeActionValuesToInputEvents();
     }
@@ -154,6 +162,12 @@ public class InputHandler
 
         _visorAction.performed += VisorTrigger.OnInputStart;
         _visorAction.canceled += VisorTrigger.OnInputCancel;
+
+        _slantRightAction.performed += inputInfo => SlantRightTrigger = true;
+        _slantRightAction.canceled += inputInfo => SlantRightTrigger = false;
+
+        _slantLeftAction.performed += inputInfo => SlantLeftTrigger = true;
+        _slantLeftAction.canceled += inputInfo => SlantLeftTrigger = false;
 
     }
 

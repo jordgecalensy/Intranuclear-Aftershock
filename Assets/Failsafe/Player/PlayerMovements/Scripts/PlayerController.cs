@@ -220,6 +220,7 @@ namespace Failsafe.PlayerMovements
             var runState = new SprintState(_inputHandler, _movementController, _movementParametrs, _noiseController, _stepController, _playerStaminaController);
             var slideState = new SlideState(_inputHandler, _movementController, _movementParametrs, _playerBodyController, _playerRotationController);
             var crouchState = new CrouchState(_inputHandler, _movementController, _movementParametrs, _playerBodyController, _noiseController, _stepController);
+            var slantState = new SlantState(_inputHandler, _movementController, _movementParametrs, _playerBodyController, _playerRotationController, _noiseController, _stepController, _playerView.CharacterController);
             var jumpState = new JumpState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _playerStaminaController);
             var fallState = new FallState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _noiseController, _effectManager, _health);
             var grabLedgeState = new GrabLedgeState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _playerRotationController, _ledgeController);
@@ -233,8 +234,10 @@ namespace Failsafe.PlayerMovements
 
             Func<bool> runStatePrecondition = () => _inputHandler.MoveForward && _inputHandler.SprintTriggered && !_stamina.IsEmpty;
             Func<bool> jumpStatePrecondition = () => _inputHandler.JumpTriggered && !_stamina.IsEmpty && _movementController.IsGroundedFor(0.1f);
+            Func<bool> slantStatePrecondition = () => _inputHandler.SlantLeftTrigger || _inputHandler.SlantRightTrigger;
 
             standingState.AddTransition(walkState, () => !_inputHandler.MovementInput.Equals(Vector2.zero));
+            standingState.AddTransition(slantState, () => slantStatePrecondition());
             standingState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             standingState.AddTransition(crouchIdleState, () => _inputHandler.CrouchTrigger.IsTriggered, _inputHandler.CrouchTrigger.ReleaseTrigger);
             standingState.AddTransition(climbingOverState, () => _inputHandler.JumpTriggered && _ledgeController.CanClimbOverLedge());
@@ -246,6 +249,7 @@ namespace Failsafe.PlayerMovements
             walkState.AddTransition(climbingOnState, () => _inputHandler.JumpTriggered && _ledgeController.CanClimbOnLedge());
             walkState.AddTransition(jumpState, () => jumpStatePrecondition());
             walkState.AddTransition(crouchState, () => _inputHandler.CrouchTrigger.IsTriggered, _inputHandler.CrouchTrigger.ReleaseTrigger);
+            walkState.AddTransition(slantState, () => slantStatePrecondition());
             walkState.AddTransition(fallState, () => _movementController.IsFalling);
             walkState.AddTransition(standingState, () => _inputHandler.MovementInput.Equals(Vector2.zero));
             walkState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
@@ -264,12 +268,26 @@ namespace Failsafe.PlayerMovements
 
             crouchState.AddTransition(runState, () => runStatePrecondition() && _playerBodyController.CanStand());
             crouchState.AddTransition(walkState, () => _inputHandler.CrouchTrigger.IsTriggered && _playerBodyController.CanStand(), _inputHandler.CrouchTrigger.ReleaseTrigger);
+            crouchState.AddTransition(slantState, () => slantStatePrecondition());
             crouchState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             crouchState.AddTransition(fallState, () => _movementController.IsFalling);
             crouchState.AddTransition(crouchIdleState, () => _inputHandler.MovementInput.Equals(Vector2.zero));
             crouchState.AddTransition(jumpState, () => jumpStatePrecondition());
 
+            slantState.AddTransition(runState, () => slantState.IsWalkSlant && runStatePrecondition());
+            slantState.AddTransition(climbingOverState, () => slantState.IsWalkSlant && _inputHandler.JumpTriggered && _ledgeController.CanClimbOverLedge());
+            slantState.AddTransition(climbingOnState, () => slantState.IsWalkSlant && _inputHandler.JumpTriggered && _ledgeController.CanClimbOnLedge());
+            slantState.AddTransition(jumpState, () => jumpStatePrecondition());
+            slantState.AddTransition(crouchState, () => _inputHandler.CrouchTrigger.IsTriggered, _inputHandler.CrouchTrigger.ReleaseTrigger);
+            slantState.AddTransition(fallState, () => _movementController.IsFalling);
+            slantState.AddTransition(crouchIdleState, () => slantState.IsCrouchedSlant && _inputHandler.MovementInput.Equals(Vector2.zero) && !slantStatePrecondition() && slantState.CanExitSlant());
+            slantState.AddTransition(standingState, () => slantState.IsWalkSlant && _inputHandler.MovementInput.Equals(Vector2.zero) && !slantStatePrecondition() && slantState.CanExitSlant());
+            slantState.AddTransition(crouchState, () => slantState.IsCrouchedSlant && !slantStatePrecondition() && slantState.CanExitSlant());
+            slantState.AddTransition(walkState, () => slantState.IsWalkSlant && !slantStatePrecondition() && slantState.CanExitSlant());
+            slantState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
+
             crouchIdleState.AddTransition(crouchState, () => !_inputHandler.MovementInput.Equals(Vector2.zero));
+            crouchIdleState.AddTransition(slantState, () => slantStatePrecondition());
             crouchIdleState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             crouchIdleState.AddTransition(standingState, () => _inputHandler.CrouchTrigger.IsTriggered && _playerBodyController.CanStand(), _inputHandler.CrouchTrigger.ReleaseTrigger);
             crouchIdleState.AddTransition(jumpState, () => jumpStatePrecondition());
