@@ -441,6 +441,7 @@
 			<destination>{a3a17dec-a319-42fd-977c-721d0b0d782e}</destination>
 			<destination>{61812850-1abb-4fdd-8672-93fee628e95f}</destination>
 			<destination>{0d7c0ac2-0ba1-4c41-a2b3-aee91ad31b36}</destination>
+			<destination>{018f06ec-de11-48f5-8333-47fcbc950299}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{c407a64d-b392-4c84-bef8-335b9ae58938}" />
@@ -622,6 +623,11 @@
 		<relationship name="automators">
 			<destination>{5f672d1b-b4b5-4a19-9f50-46e3d05d6b49}</destination>
 			<destination>{63266a9f-a22b-4616-97a1-2e27a9cc67eb}</destination>
+		</relationship>
+	</object>
+	<object class="PluginEffect" id="{018f06ec-de11-48f5-8333-47fcbc950299}">
+		<relationship name="plugin">
+			<destination>{19ca1464-7ffe-4682-ad7f-3941945bd461}</destination>
 		</relationship>
 	</object>
 	<object class="Plugin" id="{a5e2f79d-674c-417d-8ec6-4c9de7970c91}">
@@ -827,11 +833,19 @@
 			<destination>{7ca50da3-a176-42f4-9139-1a06405918b7}</destination>
 		</relationship>
 	</object>
+	<object class="Plugin" id="{19ca1464-7ffe-4682-ad7f-3941945bd461}">
+		<property name="identifier">
+			<value>Steam Audio Mixer Return</value>
+		</property>
+		<relationship name="pluginParameters">
+			<destination>{ff331e63-8ef3-4494-a945-e2c27eba3a51}</destination>
+			<destination>{aee2eeb4-9d8b-4bd3-b01f-285695b57b6d}</destination>
+		</relationship>
+	</object>
 	<object class="DataPluginParameter" id="{b8fa786c-0531-4564-a39a-a05fa3a309bf}">
 		<property name="name">
 			<value>SourcePos</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-2</value>
 		</property>
@@ -840,7 +854,6 @@
 		<property name="name">
 			<value>OverallGain</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-1</value>
 		</property>
@@ -1169,7 +1182,6 @@
 		<property name="name">
 			<value>SimOutputs</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>0</value>
 		</property>
@@ -1186,7 +1198,6 @@
 		<property name="name">
 			<value>DistRange</value>
 		</property>
-		<property name="value" />
 		<property name="dataType">
 			<value>-6</value>
 		</property>
@@ -1337,6 +1348,28 @@
 			<destination>{441e4cf0-0025-4734-95b4-4fd7f05d7259}</destination>
 			<destination>{358fd9a6-d3d2-4031-a7bb-aafb2f58d57b}</destination>
 		</relationship>
+	</object>
+	<object class="BoolPluginParameter" id="{ff331e63-8ef3-4494-a945-e2c27eba3a51}">
+		<property name="name">
+			<value>Binaural</value>
+		</property>
+		<property name="value">
+			<value>false</value>
+		</property>
+	</object>
+	<object class="IntPluginParameter" id="{aee2eeb4-9d8b-4bd3-b01f-285695b57b6d}">
+		<property name="name">
+			<value>OutputFormat</value>
+		</property>
+		<property name="value">
+			<value>0</value>
+		</property>
+		<property name="minimumValue">
+			<value>0</value>
+		</property>
+		<property name="maximumValue">
+			<value>2</value>
+		</property>
 	</object>
 	<object class="AutomationPoint" id="{c2b8a1a5-3777-4430-8434-6eb557f6b43d}">
 		<property name="position">
