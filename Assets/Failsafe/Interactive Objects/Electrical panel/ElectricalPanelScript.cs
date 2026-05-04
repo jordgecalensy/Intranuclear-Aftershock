@@ -8,7 +8,7 @@ public class ElectricalPanelScript : Interactable, IEnterable
     [SerializeField]private bool _isEnable = false;
     [SerializeField] private UIController _uiController;
     [SerializeField] private Animation _switchAnimation;
-    private bool isBattaryInsert = false;
+    private bool _isBatteryInsert = false;
     [Header("InsertTrigger")]
     [SerializeField] private Collider _triggerCollider;
     [SerializeField] private Transform _holdPoint;
@@ -42,7 +42,7 @@ public class ElectricalPanelScript : Interactable, IEnterable
 
     protected override void Interact()
     {
-        if (!isBattaryInsert) return;
+        if (!_isBatteryInsert) return;
         if (_isEnable)
             OnDisablePowerSource();
         else
@@ -51,13 +51,13 @@ public class ElectricalPanelScript : Interactable, IEnterable
 
     public void OnEntered()
     {
-        isBattaryInsert = true;
+        _isBatteryInsert = true;
         _uiController.BattaryOn();
     }
 
     public void OnExited()
     {
-        isBattaryInsert = false;
+        _isBatteryInsert = false;
         if (_isEnable) OnDisablePowerSource();
         _uiController.BattaryOff();
     }
@@ -65,5 +65,10 @@ public class ElectricalPanelScript : Interactable, IEnterable
     public bool IsRightType(Component candidate)
     {
         return candidate.GetComponent<ElectroBattary>() != null;
+    }
+
+    public bool IsEmpty()
+    {
+        return !_isBatteryInsert;
     }
 }

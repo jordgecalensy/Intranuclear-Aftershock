@@ -157,7 +157,7 @@ namespace Failsafe.Player.Scripts.Interaction
                 _mask
             );
 
-            if (!hitInfo.rigidbody)
+            if (!hitInfo.rigidbody || hitInfo.collider.gameObject.layer != LayerMask.NameToLayer("CarryObjects"))
                 return;
 
             if (hitInfo.transform.TryGetComponent<Item>(out var itemObject))
