@@ -12,6 +12,10 @@ namespace Failsafe.PlayerMovements.Controllers
         private readonly InputHandler _inputHandler;
         private float _cameraVerticalRotation = 0f;
         private float _cameraHorizontalRotation = 0f;
+        private float _cameraRollRotation = 0f;
+        private float _targetRollRotation = 0f;
+        private float _rollVelocity = 0f;
+        private float _rollSmoothTime = 0.12f;
         private float _mouseSensitivity = 10f;
         private bool _syncBodyRotationWithHead = true;
 
@@ -20,7 +24,7 @@ namespace Failsafe.PlayerMovements.Controllers
         public Transform HeadTransform => _headTransform; 
 
         public Vector3 HeadDirection => _headTransform.forward;
-        public Vector3 HeadLocalRotation => new Vector3(-_cameraVerticalRotation, _cameraHorizontalRotation, 0);
+        public Vector3 HeadLocalRotation => new Vector3(-_cameraVerticalRotation, _cameraHorizontalRotation, _cameraRollRotation);
 
         public PlayerRotationController(Transform playerTransform, Transform headTransform, InputHandler inputHandler)
         {
@@ -46,17 +50,25 @@ namespace Failsafe.PlayerMovements.Controllers
             var rotation = _inputHandler.RotationInput * _mouseSensitivity * Time.deltaTime;
             _cameraVerticalRotation += rotation.y;
             _cameraVerticalRotation = Mathf.Clamp(_cameraVerticalRotation, _verticalMinAngle, _certicalMaxAngle);
+            _cameraRollRotation = Mathf.SmoothDampAngle(_cameraRollRotation, _targetRollRotation, ref _rollVelocity, _rollSmoothTime);
+
             if (_syncBodyRotationWithHead)
             {
-                _headTransform.transform.localRotation = Quaternion.Euler(-_cameraVerticalRotation, _cameraHorizontalRotation, 0);
+                _headTransform.transform.localRotation = Quaternion.Euler(-_cameraVerticalRotation, _cameraHorizontalRotation, _cameraRollRotation);
                 _playerTransform.Rotate(Vector3.up * rotation.x);
             }
             else
             {
                 _cameraHorizontalRotation += rotation.x;
                 _cameraHorizontalRotation = Mathf.Clamp(_cameraHorizontalRotation, -120f, 120f);
-                _headTransform.transform.localRotation = Quaternion.Euler(-_cameraVerticalRotation, _cameraHorizontalRotation, 0);
+                _headTransform.transform.localRotation = Quaternion.Euler(-_cameraVerticalRotation, _cameraHorizontalRotation, _cameraRollRotation);
             }
+        }
+
+        public void SetHeadRoll(float rollAngle, float smoothTime = 0.12f)
+        {
+            _targetRollRotation = rollAngle;
+            _rollSmoothTime = Mathf.Max(0.01f, smoothTime);
         }
 
         /// <summary>
@@ -83,7 +95,7 @@ namespace Failsafe.PlayerMovements.Controllers
             var targetRotation = Quaternion.LookRotation(yAlignedNormal, _playerTransform.up);
             _playerTransform.rotation = targetRotation;
             _cameraHorizontalRotation = 0;
-            _headTransform.localRotation = Quaternion.Euler(-_cameraVerticalRotation, _cameraHorizontalRotation, 0);
+            _headTransform.localRotation = Quaternion.Euler(-_cameraVerticalRotation, _cameraHorizontalRotation, _cameraRollRotation);
         }
 
         /// <summary>
@@ -92,7 +104,7 @@ namespace Failsafe.PlayerMovements.Controllers
         public void RotateHeadToBody()
         {
             _cameraHorizontalRotation = 0;
-            _headTransform.localRotation = Quaternion.Euler(-_cameraVerticalRotation, _cameraHorizontalRotation, 0);
+            _headTransform.localRotation = Quaternion.Euler(-_cameraVerticalRotation, _cameraHorizontalRotation, _cameraRollRotation);
         }
     }
 }
