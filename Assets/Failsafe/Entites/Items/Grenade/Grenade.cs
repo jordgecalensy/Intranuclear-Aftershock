@@ -28,7 +28,10 @@ public class Grenade : IUsable
     public void AltMode()
     {
         ItsMineState = !ItsMineState;
-        SoundUtils3D.Play(GranadeItem.gameObject, Data.SwitchGrendeSfx);
+        if (ItsMineState)
+            SoundUtils3D.Play(GranadeItem.gameObject, Data.MineStateOnSfx);
+        else
+            SoundUtils3D.Play(GranadeItem.gameObject, Data.MineStateOffSfx);
         Debug.Log("ItsMineState " + ItsMineState);
     }
     public void GetItemUseDelays(out float startUseDelay, out float useDelay)

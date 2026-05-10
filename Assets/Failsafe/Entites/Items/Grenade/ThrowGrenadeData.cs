@@ -11,8 +11,12 @@ public class ThrowGrenadeData : ScriptableObject
     [SerializeField] private float _startUseDelay;
     [SerializeField] private float _useDelay;
     [Header("SFX")]
-    [SerializeField] private EventReference _switchGrenade;
     [SerializeField] private EventReference _throwGrenade;
+    [SerializeField] private EventReference _mineStateOn;
+    [SerializeField] private EventReference _mineStateOff;
+    [SerializeField] private EventReference _mineIndication;
+    [SerializeField] private EventReference _minePinPull;
+
 
     public float GrenadeTimer 
     {
@@ -42,18 +46,39 @@ public class ThrowGrenadeData : ScriptableObject
             return _mineTriggerRadius;
         }
     }
-    public EventReference SwitchGrendeSfx
-    {
-        get
-        {
-            return _switchGrenade;
-        }
-    }
     public EventReference ThrowGrendeSfx
     {
         get
         {
             return _throwGrenade;
+        }
+    }
+    public EventReference MineStateOnSfx
+    {
+        get
+        {
+            return _mineStateOn;
+        }
+    }
+    public EventReference MineStateOffSfx
+    {
+        get
+        {
+            return _mineStateOff;
+        }
+    }
+    public EventReference MineIndication
+    {
+        get
+        {
+            return _mineIndication;
+        }
+    }
+    public EventReference MinePinPull
+    {
+        get
+        {
+            return _minePinPull;
         }
     }
 

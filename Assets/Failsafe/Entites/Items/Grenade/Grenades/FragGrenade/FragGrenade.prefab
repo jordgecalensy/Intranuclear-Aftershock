@@ -211,7 +211,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_Name
-      value: FragGranade
+      value: FragGrenade
       objectReference: {fileID: 0}
     - target: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_Layer
@@ -233,6 +233,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8990862821746897222}
+    - targetCorrespondingSourceObject: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8469264593254470223}
   m_SourcePrefab: {fileID: 100100000, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
 --- !u!1 &753155509121289196 stripped
 GameObject:
@@ -274,6 +277,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Data: {fileID: 11400000, guid: 04455ba4af8e44248b8a8f7c042cc5ca, type: 2}
   MineTrigger: {fileID: 8228379515365030338}
+--- !u!114 &8469264593254470223
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 753155509121289196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fe64710a01a5f844aea52d61528acb1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _magnitude: 0.1
+  _dropObject:
+    Guid:
+      Data1: 795015628
+      Data2: 1202623915
+      Data3: -1331866185
+      Data4: -1910434605
+    Path: event:/SFX/Weapon/Grenades/Foley/Grenade_Drop
+  _rollingObject:
+    Guid:
+      Data1: 1408005712
+      Data2: 1090949969
+      Data3: 1098212508
+      Data4: -1641750692
+    Path: event:/SFX/Weapon/Grenades/Foley/Grenade_Rolling_Short
 --- !u!4 &7668137200580081048 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}

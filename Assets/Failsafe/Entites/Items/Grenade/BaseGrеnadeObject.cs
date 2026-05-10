@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using FMODUnity;
 
 public class BaseGrеnadeObject : ExplosiveObject
 {
@@ -8,11 +9,11 @@ public class BaseGrеnadeObject : ExplosiveObject
     protected bool ItsMineState = false;
     protected bool InstaledMine = false;
 
-    protected ThrowGrenadeData GranadeData;
+    protected ThrowGrenadeData GrenadeData;
 
     public void ActivesionGranade(ThrowGrenadeData granadeData, bool itsMineState)
     {
-        GranadeData = granadeData;
+        GrenadeData = granadeData;
         if (itsMineState)
         {
             ItsMineState = itsMineState;
@@ -25,7 +26,7 @@ public class BaseGrеnadeObject : ExplosiveObject
     }
     protected IEnumerator ExplosionGranadeTimer()
     {
-        yield return new WaitForSeconds(GranadeData.GrenadeTimer);
+        yield return new WaitForSeconds(GrenadeData.GrenadeTimer);
         Explosion();
     }
     protected void OnCollisionEnter(Collision collision)
@@ -36,7 +37,9 @@ public class BaseGrеnadeObject : ExplosiveObject
         transform.SetParent(collision.transform);
         gameObject.GetComponent<Rigidbody>().isKinematic = true;
         gameObject.GetComponent<Collider>().enabled = false;
-        MineTrigger.GetComponent<SphereCollider>().radius = GranadeData.MineTriggerRadius;
+        MineTrigger.GetComponent<SphereCollider>().radius = GrenadeData.MineTriggerRadius;
+        SoundUtils3D.Play(gameObject, GrenadeData.MinePinPull);
         MineTrigger.SetActive(true);
+        MineTrigger.GetComponent<MineTrigger>().ActivateMineIndicationSfx(GrenadeData.MineIndication);
     }
 }
