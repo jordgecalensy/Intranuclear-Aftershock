@@ -1,21 +1,40 @@
-﻿using UnityEngine;
+﻿using FMODUnity;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
 
+[Serializable]
+public struct PostEffect
+{
+    public float Duration;
+    public GameObject Effect;
+}
+[Serializable]
+public struct ExplosiveVFX
+{
+    public float Duration;
+    public GameObject Effect;
+}
+//    protected Dictionary<Direction, PowerNode> Neighbors;
+//    [SerializeField] protected List<DirectionNodePair> NeighborsSerialized = new List<DirectionNodePair>();
 [CreateAssetMenu(fileName = "ExplosiveObjectData", menuName = "ScriptableObjects/ExplosiveObject")]
 public class ExplosiveObjectData : ScriptableObject
 {
+    [Header("Ignore Collision")]
+    [SerializeField] private bool _ignoreCollision;
     [Header("Base explosin setting")]
     [SerializeField] private int _explosionDamage;
     [SerializeField] private float _explosionRadius;
     [SerializeField] private float _explosionForce;
     [Header("Explosion post effect")]
-    [SerializeField] private float _durationPostEffect;
-    [SerializeField] private GameObject _postEffect;
+    [SerializeField] private List<PostEffect> _postEffect;
     [Header("On Enemy Effect")]
     [SerializeField] private float _durationOnEnemyEffect;
     [SerializeField] private GameObject _onEnemyEffect;
     [Header("Explosion VFX effect")]
-    [SerializeField] private float _durationVFX;
-    [SerializeField] private GameObject _explsiveVFX;//можно сделать автоматически но андрей бяка
+    [SerializeField] private List<ExplosiveVFX> _explosiveVFX;
+    [Header("Explosion SFX effect")]
+    [SerializeField] private EventReference _explsiveSFXEvent;
 
     public int ExplosionDamage
     {
@@ -38,14 +57,7 @@ public class ExplosiveObjectData : ScriptableObject
             return _explosionForce;
         }
     }
-    public float DurationPostEffect
-    {
-        get
-        {
-            return _durationPostEffect;
-        }
-    }
-    public GameObject PostEffect
+    public List<PostEffect> PostEffects
     {
         get
         {
@@ -66,18 +78,25 @@ public class ExplosiveObjectData : ScriptableObject
             return _onEnemyEffect;
         }
     }
-    public float DurationVFX
+    public List<ExplosiveVFX> ExplosiveVfx
     {
         get
         {
-            return _durationVFX;
+            return _explosiveVFX;
         }
     }
-    public GameObject ExplosiveVFX
+    public EventReference ExplsiveSFXEvent
     {
         get
         {
-            return _explsiveVFX;
+            return _explsiveSFXEvent;
+        }
+    }
+    public bool IgnoreCollision
+    {
+        get
+        {
+            return _ignoreCollision;
         }
     }
 }

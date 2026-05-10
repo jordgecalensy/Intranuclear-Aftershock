@@ -12,12 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 067b966643ac41345b3429550156a140, type: 3}
   m_Name: FragGrenadeData
   m_EditorClassIdentifier: 
+  _ignoreCollision: 0
   _explosionDamage: 75
   _explosionRadius: 7.5
   _explosionForce: 40
-  _durationPostEffect: 0
-  _postEffect: {fileID: 0}
+  _postEffect: []
   _durationOnEnemyEffect: 0
   _onEnemyEffect: {fileID: 0}
-  _durationVFX: 1
-  _explsiveVFX: {fileID: 7090640766692989202, guid: 837c6d57ffab7ce4bb7c9ebbb20ed1e1, type: 3}
+  _explosiveVFX:
+  - Duration: 1
+    Effect: {fileID: 7090640766692989202, guid: 837c6d57ffab7ce4bb7c9ebbb20ed1e1, type: 3}
+  _explsiveSFXEvent:
+    Guid:
+      Data1: -1302563328
+      Data2: 1172429650
+      Data3: 1509329028
+      Data4: 1728637886
+    Path: event:/SFX/Weapon/Grenades/Grenade_Frag_Explosion

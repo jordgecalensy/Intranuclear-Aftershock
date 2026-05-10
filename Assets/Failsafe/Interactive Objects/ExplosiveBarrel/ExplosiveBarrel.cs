@@ -3,7 +3,7 @@ using Failsafe.Scripts.Damage.Implementation;
 using UnityEngine;
 
 [RequireComponent(typeof(DamageableComponent))]
-public class ExplosiveBarrel : ExplosiveObgect
+public class ExplosiveBarrel : ExplosiveObject
 {
     private bool _isExplosive = false;
     private void Start()
