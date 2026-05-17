@@ -21,7 +21,7 @@ public class Grenade : IUsable
     {
         GranadeItem.gameObject.GetComponent<GrеnadeObject>().ActivesionGranade(Data, ItsMineState);
         Debug.Log("Use");
-        return new ItemUseResult { ItemStateAfterUse = ItemState.Consume, UsageType = UsageType.HoldToUse };
+        return new ItemUseResult { ItemStateAfterUse = ItemState.Drop, UsageType = UsageType.HoldToUse };
     }
     public void AltMode()
     {
