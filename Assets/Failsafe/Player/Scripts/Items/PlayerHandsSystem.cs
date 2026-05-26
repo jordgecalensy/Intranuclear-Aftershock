@@ -53,6 +53,8 @@ public class PlayerHandsSystem : ITickable
         {
             _inputHandler.AltModeTrigger.ReleaseTrigger();
             _playerHandsContainer.ItemInHand.ItemUsable.AltMode();
+            if (_playerHandsContainer.ItemInHand.ItemObject.GetComponent<Item>().ItemData.Type == ItemType.Grenade)
+                _playerView.Animator.SetTrigger("SwithGrenadeId");// временно
         }
         if (!_inputHandler.AttackTrigger.IsPressed)
         {

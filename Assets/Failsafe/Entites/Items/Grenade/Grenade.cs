@@ -2,6 +2,7 @@
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
+using FMODUnity;
 
 public class Grenade : IUsable
 {
@@ -19,13 +20,18 @@ public class Grenade : IUsable
     }
     public ItemUseResult Use()
     {
-        GranadeItem.gameObject.GetComponent<GrеnadeObject>().ActivesionGranade(Data, ItsMineState);
+        GranadeItem.gameObject.GetComponent<BaseGrеnadeObject>().ActivesionGranade(Data, ItsMineState);
         Debug.Log("Use");
+        SoundUtils3D.Play(GranadeItem.gameObject, Data.ThrowGrendeSfx);
         return new ItemUseResult { ItemStateAfterUse = ItemState.Drop, UsageType = UsageType.HoldToUse };
     }
     public void AltMode()
     {
         ItsMineState = !ItsMineState;
+        if (ItsMineState)
+            SoundUtils3D.Play(GranadeItem.gameObject, Data.MineStateOnSfx);
+        else
+            SoundUtils3D.Play(GranadeItem.gameObject, Data.MineStateOffSfx);
         Debug.Log("ItsMineState " + ItsMineState);
     }
     public void GetItemUseDelays(out float startUseDelay, out float useDelay)

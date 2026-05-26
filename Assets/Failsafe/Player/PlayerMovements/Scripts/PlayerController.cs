@@ -41,7 +41,6 @@ namespace Failsafe.PlayerMovements
         private bool _isLowHpEffectActive = false;
         private bool _isVisorEffectActive = false;
         private MovementCameraShakeProvider _movementShakeProvider;
-        private DamageCameraShakeProvider _damageShakeProvider;
         private float _prevHealth;
 
         public BehaviorStateMachine StateMachine => _behaviorStateMachine;
@@ -86,11 +85,8 @@ namespace Failsafe.PlayerMovements
             _movementShakeProvider =
                 new MovementCameraShakeProvider(_inputHandler, _effectManager, _playerRotationController);
 
-            _damageShakeProvider =
-                new DamageCameraShakeProvider(_effectManager, _playerRotationController);
             _health.OnHealthChanged += HandleHealthChanged;
-
-            
+            EarthquakeTrigger.OnEarthquakeStarted += HandleEarthquake;     
 
 
             InitializeStateMachine();
@@ -99,13 +95,114 @@ namespace Failsafe.PlayerMovements
 
         private void HandleHealthChanged(float newValue)
         {
+            float intensity = 0;
+            float duration = 0;
+            float frequency = 0;
+
             float damage = _prevHealth - newValue;
 
-            if (damage > 0)
-                _damageShakeProvider.ApplyDamage(damage);
-                _effectManager.ApplyEffect(new DamageHitEffect(0.25f));
+            if (damage <= 0f)
+            {
+                _prevHealth = newValue;
+                return;
+            }
+
+            switch (damage)
+            {
+                case >= 30f:
+                    intensity = 3.5f; duration = 0.6f; frequency = 8f;
+                    break;
+
+                case >= 15f:
+                    intensity = 1.1f; duration = 0.4f; frequency = 18f;
+                    break;
+
+                case >= 1f:
+                    intensity = 0.45f; duration = 0.25f; frequency = 20f;
+                    break;
+
+                default:
+                    // Любой периодический мелкий урон тоже должен заметно проигрывать shake.
+                    intensity = 0.3f; duration = 0.2f; frequency = 20f;
+                    break;
+            }
+
+            _effectManager.ApplyEffect(new CameraShakeEffect(_playerRotationController, intensity, duration, frequency));
+            _effectManager.ApplyEffect(new DamageHitEffect(0.25f));
 
             _prevHealth = newValue;
+        }
+
+        private void HandleEarthquake(float strength, float duration)
+        {
+            float intensity = 0;
+            float shakeDuration = 0;
+            float frequency = 0;
+            // Время, за которое тряска камеры плавно выйдет на полную силу.
+            float shakeFadeInDuration = 0;
+            // Время, за которое тряска камеры плавно затухнет к концу эффекта.
+            float shakeFadeOutDuration = 0;
+
+            float slowMultiplier = 1f;
+            float slowDuration = 0;
+            // Время, за которое замедление плавно включится.
+            float slowFadeInDuration = 0;
+            // Время, за которое замедление плавно отключится.
+            float slowFadeOutDuration = 0;
+
+            if (strength > 0)
+                switch (strength)
+                {
+                    case >= 3:
+                        intensity = 4.0f; shakeDuration = 3.5f; frequency = 6f;
+                        slowMultiplier = 0.45f; slowDuration = 3f;
+                        break;
+
+                    case >= 2:
+                        intensity = 2.5f; shakeDuration = 3f; frequency = 8f;
+                        slowMultiplier = 0.60f; slowDuration = 2.5f;
+                        break;
+
+                    case >= 1:
+                        intensity = 1.2f; shakeDuration = 5f; frequency = 10f;
+                        slowMultiplier = 0.75f; slowDuration = 5f;
+                        break;
+
+                    default:
+                        intensity = 0.6f; shakeDuration = 0.5f; frequency = 12f;
+                        slowMultiplier = 0.90f; slowDuration = 1.5f;
+                        break;
+                }
+
+            // Если в событии передали duration больше пресета, используем его как минимальную длительность эффекта.
+            shakeDuration = Mathf.Max(shakeDuration, duration);
+            slowDuration = Mathf.Max(slowDuration, duration);
+
+            // Подбираем короткий fade-in, чтобы эффект быстро набирался, но не включался резко.
+            shakeFadeInDuration = Mathf.Min(0.45f, shakeDuration * 0.2f);
+            // Затухание делаем длиннее, чтобы землетрясение сходило мягко.
+            shakeFadeOutDuration = Mathf.Min(1.2f, shakeDuration * 0.35f);
+            // Замедление включается чуть плавнее, чем камера, чтобы ощущалось естественнее.
+            slowFadeInDuration = Mathf.Min(0.6f, slowDuration * 0.2f);
+            // И так же плавно отпускает игрока в конце.
+            slowFadeOutDuration = Mathf.Min(1.4f, slowDuration * 0.35f);
+
+            _effectManager.ApplyEffect(
+                new CameraShakeEffect(
+                    _playerRotationController,
+                    intensity,
+                    shakeDuration,
+                    frequency,
+                    shakeFadeInDuration,
+                    shakeFadeOutDuration));
+
+            _effectManager.ApplyEffect(
+                new EarthquakeMovementSlowEffect(
+                    _movementController,
+                    slowMultiplier,
+                    slowDuration,
+                    slowFadeInDuration,
+                    slowFadeOutDuration));
         }
 
 
@@ -123,6 +220,7 @@ namespace Failsafe.PlayerMovements
             var runState = new SprintState(_inputHandler, _movementController, _movementParametrs, _noiseController, _stepController, _playerStaminaController);
             var slideState = new SlideState(_inputHandler, _movementController, _movementParametrs, _playerBodyController, _playerRotationController);
             var crouchState = new CrouchState(_inputHandler, _movementController, _movementParametrs, _playerBodyController, _noiseController, _stepController);
+            var slantState = new SlantState(_inputHandler, _movementController, _movementParametrs, _playerBodyController, _playerRotationController, _noiseController, _stepController, _playerView.CharacterController);
             var jumpState = new JumpState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _playerStaminaController);
             var fallState = new FallState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _noiseController, _effectManager, _health);
             var grabLedgeState = new GrabLedgeState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _playerRotationController, _ledgeController);
@@ -136,8 +234,10 @@ namespace Failsafe.PlayerMovements
 
             Func<bool> runStatePrecondition = () => _inputHandler.MoveForward && _inputHandler.SprintTriggered && !_stamina.IsEmpty;
             Func<bool> jumpStatePrecondition = () => _inputHandler.JumpTriggered && !_stamina.IsEmpty && _movementController.IsGroundedFor(0.1f);
+            Func<bool> slantStatePrecondition = () => _inputHandler.SlantLeftTrigger || _inputHandler.SlantRightTrigger;
 
             standingState.AddTransition(walkState, () => !_inputHandler.MovementInput.Equals(Vector2.zero));
+            standingState.AddTransition(slantState, () => slantStatePrecondition());
             standingState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             standingState.AddTransition(crouchIdleState, () => _inputHandler.CrouchTrigger.IsTriggered, _inputHandler.CrouchTrigger.ReleaseTrigger);
             standingState.AddTransition(climbingOverState, () => _inputHandler.JumpTriggered && _ledgeController.CanClimbOverLedge());
@@ -149,6 +249,7 @@ namespace Failsafe.PlayerMovements
             walkState.AddTransition(climbingOnState, () => _inputHandler.JumpTriggered && _ledgeController.CanClimbOnLedge());
             walkState.AddTransition(jumpState, () => jumpStatePrecondition());
             walkState.AddTransition(crouchState, () => _inputHandler.CrouchTrigger.IsTriggered, _inputHandler.CrouchTrigger.ReleaseTrigger);
+            walkState.AddTransition(slantState, () => slantStatePrecondition());
             walkState.AddTransition(fallState, () => _movementController.IsFalling);
             walkState.AddTransition(standingState, () => _inputHandler.MovementInput.Equals(Vector2.zero));
             walkState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
@@ -167,12 +268,26 @@ namespace Failsafe.PlayerMovements
 
             crouchState.AddTransition(runState, () => runStatePrecondition() && _playerBodyController.CanStand());
             crouchState.AddTransition(walkState, () => _inputHandler.CrouchTrigger.IsTriggered && _playerBodyController.CanStand(), _inputHandler.CrouchTrigger.ReleaseTrigger);
+            crouchState.AddTransition(slantState, () => slantStatePrecondition());
             crouchState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             crouchState.AddTransition(fallState, () => _movementController.IsFalling);
             crouchState.AddTransition(crouchIdleState, () => _inputHandler.MovementInput.Equals(Vector2.zero));
             crouchState.AddTransition(jumpState, () => jumpStatePrecondition());
 
+            slantState.AddTransition(runState, () => slantState.IsWalkSlant && runStatePrecondition());
+            slantState.AddTransition(climbingOverState, () => slantState.IsWalkSlant && _inputHandler.JumpTriggered && _ledgeController.CanClimbOverLedge());
+            slantState.AddTransition(climbingOnState, () => slantState.IsWalkSlant && _inputHandler.JumpTriggered && _ledgeController.CanClimbOnLedge());
+            slantState.AddTransition(jumpState, () => jumpStatePrecondition());
+            slantState.AddTransition(crouchState, () => _inputHandler.CrouchTrigger.IsTriggered, _inputHandler.CrouchTrigger.ReleaseTrigger);
+            slantState.AddTransition(fallState, () => _movementController.IsFalling);
+            slantState.AddTransition(crouchIdleState, () => slantState.IsCrouchedSlant && _inputHandler.MovementInput.Equals(Vector2.zero) && !slantStatePrecondition() && slantState.CanExitSlant());
+            slantState.AddTransition(standingState, () => slantState.IsWalkSlant && _inputHandler.MovementInput.Equals(Vector2.zero) && !slantStatePrecondition() && slantState.CanExitSlant());
+            slantState.AddTransition(crouchState, () => slantState.IsCrouchedSlant && !slantStatePrecondition() && slantState.CanExitSlant());
+            slantState.AddTransition(walkState, () => slantState.IsWalkSlant && !slantStatePrecondition() && slantState.CanExitSlant());
+            slantState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
+
             crouchIdleState.AddTransition(crouchState, () => !_inputHandler.MovementInput.Equals(Vector2.zero));
+            crouchIdleState.AddTransition(slantState, () => slantStatePrecondition());
             crouchIdleState.AddTransition(blockState, () => PlayerScreenScript.IsCameraFullScreen);
             crouchIdleState.AddTransition(standingState, () => _inputHandler.CrouchTrigger.IsTriggered && _playerBodyController.CanStand(), _inputHandler.CrouchTrigger.ReleaseTrigger);
             crouchIdleState.AddTransition(jumpState, () => jumpStatePrecondition());
