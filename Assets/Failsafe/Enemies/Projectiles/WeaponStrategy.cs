@@ -1,3 +1,4 @@
+using Failsafe.Scripts.EffectSystem;
 using UnityEngine;
 
 public abstract class WeaponStrategy : ScriptableObject
@@ -5,20 +6,25 @@ public abstract class WeaponStrategy : ScriptableObject
     [Header("Settings")]
     public WeaponStats stats;
     public AmmoConfig ammoConfig;
-    
+
+    [Header("Effects")]
+    [Tooltip("Пакет эффектов, который будет применяться при попадании.")]
+    public EffectBundle impactEffects;
+
     [Header("Animation")]
-    [Tooltip("Если true, оружие не будет дергать триггер атаки каждый выстрел (подходит для лазеров и огнеметов)")]
+    [Tooltip("Если true, оружие не будет дергать триггер атаки каждый выстрел. Подходит для лазеров и огнеметов.")]
     public bool isContinuousFire = false;
-    
+
     [Header("Visuals")]
-    public GameObject modelPrefab; // Модель оружия в руках (опционально)
+    public GameObject modelPrefab;
 
-    // Инициализация (спавн VFX, пулов)
-    public virtual void Initialize(WeaponController controller) { }
+    public virtual void Initialize(WeaponController controller)
+    {
+    }
 
-    // Логика выстрела. Возвращает true, если выстрел успешен
     public abstract bool Fire(WeaponController controller, Vector3 targetPoint);
 
-    // Остановка (важно для лазера)
-    public virtual void StopFiring(WeaponController controller) { }
+    public virtual void StopFiring(WeaponController controller)
+    {
+    }
 }

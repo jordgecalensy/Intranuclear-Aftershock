@@ -12,8 +12,8 @@ namespace Failsafe.PlayerMovements.States
         private readonly PlayerMovementParameters _p;
         private readonly IEffectManager _effects;
 
-        private readonly int _landingRecoverId = Animator.StringToHash("LandingRecover"); // bool
-        private readonly int _recoveringId     = Animator.StringToHash("Recovering");     // опционально
+        private readonly int _landingRecoverId = Animator.StringToHash("LandingRecover");
+        private readonly int _recoveringId = Animator.StringToHash("Recovering");
 
         private float _timer;
         private bool _slowApplied;
@@ -43,8 +43,7 @@ namespace Failsafe.PlayerMovements.States
             if (_animator != null)
             {
                 _animator.SetBool(_landingRecoverId, true);
-                if (_recoveringId != 0)
-                    _animator.SetBool(_recoveringId, true);
+                _animator.SetBool(_recoveringId, true);
             }
         }
 
@@ -58,11 +57,13 @@ namespace Failsafe.PlayerMovements.States
             if (!_slowApplied && _timer >= _p.LandingRecoverDuration)
             {
                 _slowApplied = true;
-                var slow = new SlowMovementEffect(
+
+                var slow = new SpeedMultiplierEffect(
                     _pmc,
                     _p.MainSlowDuration,
                     _p.MainSlowMultiplier,
-                    unique: true);
+                    SpeedStackPolicy.Strongest);
+
                 _effects.ApplyEffect(slow);
             }
         }
@@ -72,8 +73,7 @@ namespace Failsafe.PlayerMovements.States
             if (_animator != null)
             {
                 _animator.SetBool(_landingRecoverId, false);
-                if (_recoveringId != 0)
-                    _animator.SetBool(_recoveringId, false);
+                _animator.SetBool(_recoveringId, false);
             }
         }
     }

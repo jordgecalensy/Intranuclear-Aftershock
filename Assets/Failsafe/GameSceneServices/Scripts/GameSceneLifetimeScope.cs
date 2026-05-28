@@ -7,24 +7,31 @@ using VContainer.Unity;
 namespace Failsafe.GameSceneServices
 {
     /// <summary>
-    /// Регистрация сервисов и компонентов игровой сцены, общих для объектов на сцене или не привязаных к конкретному объекту
-    /// <para/>Дочерний скоуп к <see cref="Failsafe.Scripts.DependencyInjection.RootLifetimeScope"/>
+    /// Регистрация сервисов и компонентов игровой сцены, общих для объектов на сцене или не привязанных к конкретному объекту.
+    /// Дочерний скоуп к Failsafe.Scripts.DependencyInjection.RootLifetimeScope.
     /// </summary>
     public class GameSceneLifetimeScope : LifetimeScope
     {
         [SerializeField]
         private EnemySpawnSystemBuilder _enemySpawnSystemBuilder;
+
         protected override void Configure(IContainerBuilder builder)
         {
             builder.RegisterComponent(_enemySpawnSystemBuilder);
-            //TODO: зарегистрировать системы игровой сцены : SignalManager, SpawnSystem ...
 
-            //TODO: Пока это монобэх, нужно интегрировать врагов с VContainer
             builder.RegisterComponentInHierarchy<SignalManager>();
+
             builder.RegisterEntryPoint<EnemySpawnSystem>().AsSelf();
-            builder.RegisterEntryPoint<EffectManager>().As<IEffectManager>();
+
+            builder.RegisterEntryPoint<EffectManager>()
+                .As<IEffectManager>()
+                .AsSelf();
+
+            builder.RegisterEntryPoint<EffectApplicationService>(Lifetime.Scoped)
+                .As<IEffectApplicationService>()
+                .AsSelf();
+
             builder.RegisterEntryPoint<EarthquakeEnvironmentController>().AsSelf();
-            
         }
     }
 }

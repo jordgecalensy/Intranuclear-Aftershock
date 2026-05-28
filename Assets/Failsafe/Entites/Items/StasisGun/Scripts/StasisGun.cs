@@ -1,3 +1,4 @@
+using Failsafe.Scripts.EffectSystem;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -6,13 +7,15 @@ namespace Failsafe.Items
 {
     public class StasisGun : IUsable, ITickable
     {
-        private StasisGunData _data;
-        private Item _stasisGunItem;
-        EnergyContainer _energyContainer;
-        private bool _isDefaultMode = true;
-        float _fireRateTimer = 0;
+        private readonly StasisGunData _data;
+        private readonly EnergyContainer _energyContainer;
 
-        [Inject] Camera _playerCam;
+        private Item _stasisGunItem;
+        private bool _isDefaultMode = true;
+        private float _fireRateTimer;
+
+        [Inject] private Camera _playerCam;
+        [Inject] private IEffectApplicationService _effects;
 
         public StasisGun(StasisGunData data)
         {
@@ -22,17 +25,19 @@ namespace Failsafe.Items
 
         public void Tick()
         {
-            if (_fireRateTimer > 0)
-            {
+            if (_fireRateTimer > 0f)
                 _fireRateTimer -= Time.deltaTime;
-            }
         }
-
 
         public ItemUseResult Use()
         {
             Shoot(Raycast());
-            return new ItemUseResult { ItemStateAfterUse = ItemState.Hold, UsageType = UsageType.ClickToUse };
+
+            return new ItemUseResult
+            {
+                ItemStateAfterUse = ItemState.Hold,
+                UsageType = UsageType.ClickToUse
+            };
         }
 
         public void AltMode()
@@ -46,39 +51,50 @@ namespace Failsafe.Items
         {
             _stasisGunItem = item;
         }
+
         public void Shoot(RaycastHit hit)
         {
-            if (_fireRateTimer <= 0 && !_energyContainer.IsEmpty())
+            if (_fireRateTimer > 0f)
+                return;
+
+            if (_energyContainer.IsEmpty())
             {
-                _fireRateTimer = _data.FireRate;
-                _energyContainer.UseChargeAmount();
-                SoundUtils3D.Play(_stasisGunItem.gameObject, _data.GunshotSFX);
-                if (hit.collider != null)
-                {
-                    if (hit.collider.GetComponentInParent<Stasisable>() != null)
-                    {
-                        hit.collider.GetComponentInParent<Stasisable>().StasisHit(_data.StasisDuration, _isDefaultMode);
-                    }
-                }
+                SoundUtils3D.Play(_stasisGunItem.gameObject, _data.EmptyShotSFX);
+                return;
             }
-            else if (_energyContainer.IsEmpty()) SoundUtils3D.Play(_stasisGunItem.gameObject, _data.EmptyShotSFX);
+
+            _fireRateTimer = _data.FireRate;
+            _energyContainer.UseChargeAmount();
+
+            SoundUtils3D.Play(_stasisGunItem.gameObject, _data.GunshotSFX);
+
+            if (hit.collider == null)
+                return;
+
+            EffectBundle bundle = _isDefaultMode
+                ? _data.DefaultModeEffects
+                : _data.AlternativeModeEffects;
+
+            var context = new EffectContext(
+                _stasisGunItem.gameObject,
+                hit.collider,
+                hit.point,
+                hit.normal,
+                (hit.point - _playerCam.transform.position).normalized);
+
+            _effects?.Apply(bundle, context);
         }
 
-        RaycastHit Raycast()
+        private RaycastHit Raycast()
         {
             Ray ray = _playerCam.ScreenPointToRay(Input.mousePosition);
-            //маска чтобы рейкаст точно игнорировал игрока
             LayerMask mask = ~(1 << 5);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, 100, mask))
-            {
-                Debug.Log("Object ahead: " + hit.collider.name);
-            }
-            else
-            {
 
+            if (Physics.Raycast(ray, out RaycastHit hit, 100f, mask))
+                Debug.Log("Object ahead: " + hit.collider.name);
+            else
                 Debug.Log("No Object!");
-            }
+
             return hit;
         }
 
@@ -88,5 +104,4 @@ namespace Failsafe.Items
             useDelay = _data.UseDelay;
         }
     }
-
 }
