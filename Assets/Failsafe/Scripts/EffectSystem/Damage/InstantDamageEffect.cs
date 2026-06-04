@@ -4,10 +4,12 @@ namespace Failsafe.Scripts.EffectSystem.Effects
 {
     public sealed class InstantDamageEffect : Effect
     {
-        private readonly IDamageable _target;
-        private readonly IDamage _damage;
+        private readonly DamageTarget _target;
+        private readonly DamageInfo _damage;
 
-        public InstantDamageEffect(IDamageable target, IDamage damage)
+        public InstantDamageEffect(
+            DamageTarget target,
+            DamageInfo damage)
         {
             _target = target;
             _damage = damage;
@@ -18,7 +20,7 @@ namespace Failsafe.Scripts.EffectSystem.Effects
 
         public override void ApplyEffect()
         {
-            _target?.TakeDamage(_damage);
+            _target.TakeDamage(_damage);
         }
 
         public override void ClearEffect()

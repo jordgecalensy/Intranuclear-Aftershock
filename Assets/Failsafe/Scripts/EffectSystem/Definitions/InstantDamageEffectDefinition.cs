@@ -14,12 +14,12 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
 
         public override bool CanApply(EffectContext context)
         {
-            return context.TryGet<IDamageable>(out _);
+            return DamageTargetResolver.TryResolve(context, out _);
         }
 
         public override Effect CreateEffect(EffectContext context)
         {
-            if (!context.TryGet<IDamageable>(out var damageable))
+            if (!DamageTargetResolver.TryResolve(context, out DamageTarget target))
                 return null;
 
             float finalAmount = _scaleByContextPower
@@ -35,7 +35,7 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
                 context.Direction,
                 context.Power);
 
-            return new InstantDamageEffect(damageable, damage);
+            return new InstantDamageEffect(target, damage);
         }
     }
 }

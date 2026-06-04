@@ -17,7 +17,10 @@ namespace Failsafe.Scripts.Damage
         Instant,
         Contact,
         DotTick,
-        Explosion
+        Explosion,
+        Fall,
+        Obstacle,
+        PhysicsImpact
     }
 
     public readonly struct DamageInfo : IDamage

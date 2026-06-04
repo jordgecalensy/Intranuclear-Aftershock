@@ -55,12 +55,9 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
             if (context.HitCollider == null)
                 return false;
 
-            LifetimeScope scope = context.HitCollider.GetComponentInParent<LifetimeScope>();
+            LifetimeScope scope = FindClosestScope(context.HitCollider);
 
-            if (scope == null)
-                return false;
-
-            if (scope.Container == null)
+            if (scope == null || scope.Container == null)
                 return false;
 
             try
@@ -72,6 +69,24 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
             {
                 return false;
             }
+        }
+
+        private static LifetimeScope FindClosestScope(Collider collider)
+        {
+            LifetimeScope scope = collider.GetComponentInParent<LifetimeScope>();
+
+            if (scope != null)
+                return scope;
+
+            if (collider.attachedRigidbody != null)
+            {
+                scope = collider.attachedRigidbody.GetComponentInParent<LifetimeScope>();
+
+                if (scope != null)
+                    return scope;
+            }
+
+            return collider.transform.root.GetComponentInChildren<LifetimeScope>();
         }
     }
 }

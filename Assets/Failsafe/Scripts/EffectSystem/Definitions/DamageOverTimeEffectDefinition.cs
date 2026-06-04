@@ -15,16 +15,16 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
 
         public override bool CanApply(EffectContext context)
         {
-            return context.TryGet<IDamageable>(out _);
+            return DamageTargetResolver.TryResolve(context, out _);
         }
 
         public override Effect CreateEffect(EffectContext context)
         {
-            if (!context.TryGet<IDamageable>(out var damageable))
+            if (!DamageTargetResolver.TryResolve(context, out DamageTarget target))
                 return null;
 
             return new DamageOverTimeEffect(
-                damageable,
+                target,
                 _damageType,
                 _duration,
                 _damagePerTick,

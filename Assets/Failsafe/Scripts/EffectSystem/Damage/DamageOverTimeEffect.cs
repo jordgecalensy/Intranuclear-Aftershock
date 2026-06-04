@@ -5,7 +5,7 @@ namespace Failsafe.Scripts.EffectSystem.Effects
 {
     public sealed class DamageOverTimeEffect : Effect, IReapplicableEffect
     {
-        private readonly IDamageable _target;
+        private readonly DamageTarget _target;
         private readonly DamageType _damageType;
         private readonly GameObject _source;
         private readonly bool _scaleByPower;
@@ -16,7 +16,7 @@ namespace Failsafe.Scripts.EffectSystem.Effects
         private float _timer;
 
         public DamageOverTimeEffect(
-            IDamageable target,
+            DamageTarget target,
             DamageType damageType,
             float duration,
             float damagePerTick,
@@ -56,7 +56,7 @@ namespace Failsafe.Scripts.EffectSystem.Effects
                 ? _damagePerTick * _power
                 : _damagePerTick;
 
-            _target?.TakeDamage(new DamageInfo(
+            _target.TakeDamage(new DamageInfo(
                 amount,
                 _damageType,
                 DamageApplicationKind.DotTick,
