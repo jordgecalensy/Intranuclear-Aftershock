@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
-using Failsafe.Scripts.Damage;
+using Failsafe.Scripts.EffectSystem;
 using UnityEngine;
+using VContainer;
+using VContainer.Unity;
 
 [RequireComponent(typeof(Rigidbody))]
 public class DamageObstacle : MonoBehaviour
@@ -23,7 +25,7 @@ public class DamageObstacle : MonoBehaviour
     [SerializeField] private float waitAtWaypoint = 0f;
     [SerializeField] private List<Transform> waypoints;
 
-    [Header("Настройки урона")]
+    [Header("Настройки применения эффектов")]
     [SerializeField] private bool canDealDamage = true;
     [SerializeField] private bool damagePlayers = true;
     [SerializeField] private bool damageEnemies = false;
@@ -31,10 +33,14 @@ public class DamageObstacle : MonoBehaviour
     [SerializeField] private LayerMask enemyLayers = 0;
     [SerializeField] private string playerTag = "Player";
     [SerializeField] private string enemyTag = "Enemy";
+
+    [Tooltip("Bundle, который применяется к цели при контакте. Для обычного урона добавь InstantDamageEffectDefinition.")]
+    [SerializeField] private EffectBundle contactEffects;
+
+    [Tooltip("Передаётся в EffectContext.Power. Для урона через Power настрой InstantDamageEffectDefinition: Amount = 1, Scale By Context Power = true.")]
     [SerializeField] private float damageAmount = 10f;
+
     [SerializeField] private float damageInterval = 1f;
-    [SerializeField] private DamageType damageType = DamageType.Physical;
-    [SerializeField] private DamageApplicationKind damageApplicationKind = DamageApplicationKind.Obstacle;
 
     [Header("Триггер & Физика")]
     [SerializeField] private Collider damageTrigger;
@@ -60,11 +66,19 @@ public class DamageObstacle : MonoBehaviour
 
     private readonly Dictionary<Transform, int> _overlapCount = new();
     private readonly Dictionary<Transform, float> _timers = new();
-    private readonly Dictionary<Transform, DamageTarget> _targets = new();
+    private readonly Dictionary<Transform, Collider> _targetColliders = new();
     private static readonly List<Transform> _tmp = new();
 
     private readonly Dictionary<Transform, int> _stickOverlap = new();
     private readonly Dictionary<Transform, Transform> _oldParents = new();
+
+    private IEffectApplicationService _effects;
+
+    [Inject]
+    public void Construct(IEffectApplicationService effects)
+    {
+        _effects = effects;
+    }
 
     private void Awake()
     {
@@ -76,6 +90,7 @@ public class DamageObstacle : MonoBehaviour
     private void Start()
     {
         _cycleTimer = activeTime;
+        ResolveEffectsIfNeeded();
 
         if (useCycle && visualModel == null)
         {
@@ -88,10 +103,11 @@ public class DamageObstacle : MonoBehaviour
 
     private void Update()
     {
-        if (_frozen)
-            return;
+        ResolveEffectsIfNeeded();
 
-        HandleCycle(Time.deltaTime);
+        if (!_frozen)
+            HandleCycle(Time.deltaTime);
+
         TickDamage(Time.deltaTime);
     }
 
@@ -214,13 +230,19 @@ public class DamageObstacle : MonoBehaviour
         {
             _timers.Clear();
             _overlapCount.Clear();
-            _targets.Clear();
+            _targetColliders.Clear();
         }
     }
 
     private void TickDamage(float deltaTime)
     {
         if (!canDealDamage)
+            return;
+
+        if (contactEffects == null)
+            return;
+
+        if (_effects == null)
             return;
 
         if (_frozen && freezeAlsoDamage)
@@ -243,16 +265,15 @@ public class DamageObstacle : MonoBehaviour
         {
             if (targetTransform == null)
             {
-                _timers.Remove(targetTransform);
-                _overlapCount.Remove(targetTransform);
-                _targets.Remove(targetTransform);
+                RemoveTarget(targetTransform);
                 continue;
             }
 
-            if (!_targets.TryGetValue(targetTransform, out DamageTarget target))
+            Collider targetCollider = GetValidTargetCollider(targetTransform);
+
+            if (targetCollider == null)
             {
-                _timers.Remove(targetTransform);
-                _overlapCount.Remove(targetTransform);
+                RemoveTarget(targetTransform);
                 continue;
             }
 
@@ -260,23 +281,37 @@ public class DamageObstacle : MonoBehaviour
 
             if (timer <= 0f)
             {
-                Vector3 point = targetTransform.position;
-                Vector3 direction = (targetTransform.position - transform.position).normalized;
-
-                target.TakeDamage(new DamageInfo(
-                    damageAmount,
-                    damageType,
-                    damageApplicationKind,
-                    gameObject,
-                    point,
-                    direction,
-                    damageAmount));
-
+                ApplyContactEffects(targetTransform, targetCollider);
                 timer = interval;
             }
 
             _timers[targetTransform] = timer;
         }
+    }
+
+    private void ApplyContactEffects(Transform targetTransform, Collider targetCollider)
+    {
+        Vector3 direction = targetTransform.position - transform.position;
+
+        if (direction.sqrMagnitude < 0.0001f)
+            direction = targetCollider.bounds.center - transform.position;
+
+        if (direction.sqrMagnitude < 0.0001f)
+            direction = transform.forward;
+
+        direction.Normalize();
+
+        Vector3 point = targetCollider.ClosestPoint(transform.position);
+
+        var context = new EffectContext(
+            gameObject,
+            targetCollider,
+            point,
+            Vector3.up,
+            direction,
+            damageAmount);
+
+        _effects.Apply(contactEffects, context);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -287,6 +322,9 @@ public class DamageObstacle : MonoBehaviour
         if (!canDealDamage || (useCycle && !_isCycleActive))
             return;
 
+        if (other == null)
+            return;
+
         Transform targetTransform = GetRootTransform(other);
 
         if (targetTransform == null)
@@ -295,15 +333,12 @@ public class DamageObstacle : MonoBehaviour
         if (!IsAllowedTarget(targetTransform.gameObject))
             return;
 
-        if (!DamageTargetResolver.TryResolve(other, out DamageTarget target))
-            return;
-
         if (_overlapCount.TryGetValue(targetTransform, out int count))
             _overlapCount[targetTransform] = count + 1;
         else
             _overlapCount[targetTransform] = 1;
 
-        _targets[targetTransform] = target;
+        _targetColliders[targetTransform] = other;
 
         if (!_timers.ContainsKey(targetTransform))
             _timers[targetTransform] = 0f;
@@ -329,14 +364,57 @@ public class DamageObstacle : MonoBehaviour
 
         if (count <= 0)
         {
-            _overlapCount.Remove(targetTransform);
-            _timers.Remove(targetTransform);
-            _targets.Remove(targetTransform);
+            RemoveTarget(targetTransform);
         }
         else
         {
             _overlapCount[targetTransform] = count;
+
+            if (_targetColliders.TryGetValue(targetTransform, out Collider storedCollider) && storedCollider == other)
+                _targetColliders[targetTransform] = FindFirstEnabledCollider(targetTransform);
         }
+    }
+
+    private void RemoveTarget(Transform targetTransform)
+    {
+        _overlapCount.Remove(targetTransform);
+        _timers.Remove(targetTransform);
+        _targetColliders.Remove(targetTransform);
+    }
+
+    private Collider GetValidTargetCollider(Transform targetTransform)
+    {
+        if (targetTransform == null)
+            return null;
+
+        if (_targetColliders.TryGetValue(targetTransform, out Collider collider))
+        {
+            if (collider != null && collider.enabled && collider.gameObject.activeInHierarchy)
+                return collider;
+        }
+
+        collider = FindFirstEnabledCollider(targetTransform);
+
+        if (collider != null)
+            _targetColliders[targetTransform] = collider;
+
+        return collider;
+    }
+
+    private Collider FindFirstEnabledCollider(Transform targetTransform)
+    {
+        if (targetTransform == null)
+            return null;
+
+        Collider[] colliders = targetTransform.GetComponentsInChildren<Collider>(true);
+
+        foreach (Collider collider in colliders)
+        {
+            if (collider != null && collider.enabled && collider.gameObject.activeInHierarchy)
+                return collider;
+        }
+
+        return null;
     }
 
     private bool IsAllowedTarget(GameObject target)
@@ -505,6 +583,29 @@ public class DamageObstacle : MonoBehaviour
 
             if (_rb.useGravity)
                 _rb.useGravity = false;
+        }
+    }
+
+    private void ResolveEffectsIfNeeded()
+    {
+        if (_effects != null)
+            return;
+
+        LifetimeScope scope = GetComponentInParent<LifetimeScope>();
+
+        if (scope == null)
+            scope = LifetimeScope.Find<LifetimeScope>(gameObject.scene);
+
+        if (scope == null || scope.Container == null)
+            return;
+
+        try
+        {
+            _effects = scope.Container.Resolve<IEffectApplicationService>();
+        }
+        catch
+        {
+            _effects = null;
         }
     }
 
