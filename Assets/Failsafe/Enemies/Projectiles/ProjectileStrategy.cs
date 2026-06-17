@@ -19,16 +19,22 @@ public class ProjectileStrategy : WeaponStrategy
             return false;
         }
 
-        Vector3 startPos = controller.firePoint.position;
-        Vector3 direction = targetPoint - startPos;
+        if (stats == null)
+        {
+            Debug.LogError($"[{nameof(ProjectileStrategy)}] WeaponStats is not assigned.", this);
+            return false;
+        }
+
+        Vector3 startPosition = controller.firePoint.position;
+        Vector3 direction = targetPoint - startPosition;
 
         if (direction.sqrMagnitude <= 0.0001f)
             direction = controller.firePoint.forward;
 
         Quaternion rotation = Quaternion.LookRotation(direction.normalized);
-        GameObject projectileGO = Instantiate(projectilePrefab, startPos, rotation);
+        GameObject projectileObject = Instantiate(projectilePrefab, startPosition, rotation);
 
-        var projectile = projectileGO.GetComponent<Projectile>();
+        Projectile projectile = projectileObject.GetComponent<Projectile>();
 
         if (projectile == null)
         {
@@ -36,7 +42,7 @@ public class ProjectileStrategy : WeaponStrategy
                 $"[{nameof(ProjectileStrategy)}] Projectile prefab must contain Projectile component.",
                 projectilePrefab);
 
-            Destroy(projectileGO);
+            Destroy(projectileObject);
             return false;
         }
 
@@ -44,6 +50,7 @@ public class ProjectileStrategy : WeaponStrategy
             stats.projectileSpeed,
             stats.range,
             stats.hitMask,
+            stats.damage,
             controller.gameObject,
             impactEffects,
             controller.Effects);

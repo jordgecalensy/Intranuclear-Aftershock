@@ -70,7 +70,9 @@ public class WeaponController : MonoBehaviour
             return false;
         }
 
-        if (_currentAmmo <= 0)
+        bool infiniteAmmo = weaponStrategy.ammoConfig.infiniteAmmo;
+
+        if (!infiniteAmmo && _currentAmmo <= 0)
         {
             StartReload();
             return false;
@@ -84,8 +86,11 @@ public class WeaponController : MonoBehaviour
 
         _nextFireTime = Time.time + weaponStrategy.stats.fireRate;
 
-        _currentAmmo--;
-        OnAmmoChanged?.Invoke(_currentAmmo, weaponStrategy.ammoConfig.maxAmmo);
+        if (!infiniteAmmo)
+        {
+            _currentAmmo--;
+            OnAmmoChanged?.Invoke(_currentAmmo, weaponStrategy.ammoConfig.maxAmmo);
+        }
 
         return true;
     }
@@ -98,6 +103,9 @@ public class WeaponController : MonoBehaviour
     public void StartReload()
     {
         if (weaponStrategy == null || weaponStrategy.ammoConfig == null)
+            return;
+
+        if (weaponStrategy.ammoConfig.infiniteAmmo)
             return;
 
         if (!_isReloading && _currentAmmo < weaponStrategy.ammoConfig.maxAmmo)

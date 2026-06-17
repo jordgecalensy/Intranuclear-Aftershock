@@ -19,6 +19,12 @@ namespace Failsafe.Enemies.Projectiles
             if (controller.firePoint == null)
                 return false;
 
+            if (stats == null)
+            {
+                Debug.LogError($"[{nameof(LaserBeamStrategy)}] WeaponStats is not assigned.", this);
+                return false;
+            }
+
             LaserBeamController beam = controller.GetRuntimeObject<LaserBeamController>(ActiveBeamKey);
             Transform targetHelper = controller.GetRuntimeObject<Transform>(BeamTargetKey);
 
@@ -30,12 +36,12 @@ namespace Failsafe.Enemies.Projectiles
                     return false;
                 }
 
-                var go = Instantiate(
+                GameObject beamObject = Instantiate(
                     laserVfxPrefab,
                     controller.firePoint.position,
                     Quaternion.identity);
 
-                beam = go.GetComponent<LaserBeamController>();
+                beam = beamObject.GetComponent<LaserBeamController>();
 
                 if (beam == null)
                 {
@@ -43,12 +49,12 @@ namespace Failsafe.Enemies.Projectiles
                         $"[{nameof(LaserBeamStrategy)}] Laser VFX prefab must contain LaserBeamController.",
                         laserVfxPrefab);
 
-                    Destroy(go);
+                    Destroy(beamObject);
                     return false;
                 }
 
-                var helperObj = new GameObject("LaserTargetHelper");
-                targetHelper = helperObj.transform;
+                GameObject helperObject = new GameObject("LaserTargetHelper");
+                targetHelper = helperObject.transform;
 
                 beam.Initialize(controller.firePoint, targetHelper);
 
@@ -82,6 +88,7 @@ namespace Failsafe.Enemies.Projectiles
 
         private void TryApplyEffects(WeaponController controller, Vector3 targetPoint)
         {
+            float tickInterval = Mathf.Max(0.01f, _effectTickInterval);
             float nextTick = controller.GetRuntimeValue<float>(NextEffectTickKey);
 
             if (Time.time < nextTick)
@@ -89,7 +96,7 @@ namespace Failsafe.Enemies.Projectiles
 
             controller.SetRuntimeObject(
                 NextEffectTickKey,
-                Time.time + Mathf.Max(0.01f, _effectTickInterval));
+                Time.time + tickInterval);
 
             Vector3 origin = controller.firePoint.position;
             Vector3 direction = targetPoint - origin;
@@ -111,12 +118,15 @@ namespace Failsafe.Enemies.Projectiles
                 return;
             }
 
+            float power = Mathf.Max(0f, stats.damage) * tickInterval;
+
             var context = new EffectContext(
                 controller.gameObject,
                 hit.collider,
                 hit.point,
                 hit.normal,
-                direction);
+                direction,
+                power);
 
             controller.Effects?.Apply(impactEffects, context);
         }

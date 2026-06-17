@@ -17,6 +17,7 @@ public class Projectile : MonoBehaviour
     private float _maxLifetime;
     private LayerMask _hitMask;
     private Vector3 _startPosition;
+    private float _power = 1f;
 
     private GameObject _source;
     private EffectBundle _impactEffects;
@@ -28,12 +29,14 @@ public class Projectile : MonoBehaviour
         float speed,
         float range,
         LayerMask mask,
+        float power,
         GameObject source,
         EffectBundle impactEffects,
         IEffectApplicationService effects)
     {
         _speed = Mathf.Max(0.01f, speed);
         _hitMask = mask;
+        _power = Mathf.Max(0f, power);
         _source = source;
         _impactEffects = impactEffects;
         _effects = effects;
@@ -71,7 +74,8 @@ public class Projectile : MonoBehaviour
                 other,
                 transform.position,
                 -transform.forward,
-                transform.forward);
+                transform.forward,
+                _power);
 
             _effects?.Apply(_impactEffects, context);
         }
