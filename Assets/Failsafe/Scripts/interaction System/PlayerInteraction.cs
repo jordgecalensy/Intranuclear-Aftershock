@@ -61,6 +61,20 @@ public class PlayerInteraction : MonoBehaviour
                             _handsContainer.TryTakeItemInHand(_itemArea.TakeItem());
                         }
                     }
+                    else if (interactable is CarryObjectPlaceArea carryObjectPlaceArea)
+                    {
+                        if (carryObjectPlaceArea.IsEmpty)
+                        {
+                            if (_handsContainer.State == PlayerHandsContainer.HandState.ItemInHand)
+                            {
+                                Transform itemPlace = carryObjectPlaceArea.TryGetItemPlace(_handsContainer.ItemInHand.ItemObject);
+                                if (itemPlace != null)
+                                {
+                                    carryObjectPlaceArea.PutItemInside(_handsContainer.PlaceItem(itemPlace));
+                                }
+                            }
+                        }
+                    }
                 }
 
                 if (_activeScrollbar != null && _inputHandler.GrabOrDropAction.IsPressed())
