@@ -108,9 +108,11 @@ namespace Failsafe.Player
             builder.RegisterComponentInHierarchy<PlayerCrosshairRaycaster>();
 
             builder.RegisterEntryPoint<PlayerUIPresenter>();
+            
+            builder.RegisterComponentInHierarchy<PlayerControlBlocker>();
 
             builder.Register<PlayerMovementController>(Lifetime.Scoped);
-
+            
             builder.RegisterEntryPoint<EffectManager>(Lifetime.Scoped)
                 .As<IEffectManager>()
                 .AsSelf();
@@ -119,7 +121,7 @@ namespace Failsafe.Player
                 .WithParameter(transform);
 
             builder.RegisterEntryPoint<PlayerSignalConnector>(Lifetime.Scoped);
-
+            
             RegisterItems(builder);
         }
 

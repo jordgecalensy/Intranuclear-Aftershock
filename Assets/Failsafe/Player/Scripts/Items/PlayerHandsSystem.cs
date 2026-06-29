@@ -1,102 +1,135 @@
 ﻿using Cysharp.Threading.Tasks;
 using Failsafe.Items;
-using Failsafe.Player.Model;
-using Failsafe.Player.View;
+using Failsafe.PlayerMovements;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using VContainer.Unity;
 
 /// <summary>
-/// Использование предметов в руках
+/// Использование предметов в руках.
 /// </summary>
 public class PlayerHandsSystem : ITickable
 {
     public enum UsingState { None, Start, Using, OnDelay }
+
     public event Action<ItemType> OnItemStartUsing;
+
     public UsingState ItemUsingState => _usingState;
 
     private readonly PlayerHandsContainer _playerHandsContainer;
     private readonly InputHandler _inputHandler;
-    private readonly PlayerView _playerView;
-    private readonly float _throwItemPower;
+    private readonly PlayerControlBlocker _controlBlocker;
 
     private UsingState _usingState = UsingState.None;
-    private Dictionary<ItemType, IActionWithItem> _actionsWithItems;
 
-    // Пропускать начальную анимацию при повторном применении, скорее всего нужно вынести в параметры предмета или в UseResult
+    /// <summary>
+    /// Пропускать начальную анимацию при повторном применении.
+    /// </summary>
     private bool _skipStartDelay;
 
-    public PlayerHandsSystem(PlayerHandsContainer playerHandsSystem, InputHandler inputHandler, PlayerView playerView, PlayerModelParameters _playerModelParameters)
+    public PlayerHandsSystem(
+        PlayerHandsContainer playerHandsContainer,
+        InputHandler inputHandler,
+        PlayerControlBlocker controlBlocker)
     {
-        _playerHandsContainer = playerHandsSystem;
+        _playerHandsContainer = playerHandsContainer;
         _inputHandler = inputHandler;
-        _playerView = playerView;
-        _throwItemPower = _playerModelParameters.ThrowItemPower;
-
-        _actionsWithItems = new()
-        {
-            [ItemType.Consumable] = new UseOnSelfAction(),
-            [ItemType.Gun] = new ShootAction(playerView.WeaponController,playerView.PlayerCamera),
-            [ItemType.Grenade] = new ThrowItemAction(playerView.PlayerCamera, _throwItemPower),
-            [ItemType.GroundItem] = new DropItemAction(playerView.PlayerCamera),
-        };
+        _controlBlocker = controlBlocker;
     }
 
     public void Tick()
     {
         if (_inputHandler.AttackTrigger.IsTriggered && CanUseItemInHand())
-        {
             UseItemInHand().Forget();
-        }
+
         if (_inputHandler.AltModeTrigger.IsTriggered)
         {
             _inputHandler.AltModeTrigger.ReleaseTrigger();
-            _playerHandsContainer.ItemInHand.ItemUsable.AltMode();
+
+            if (CanAltUseItemInHand())
+                _playerHandsContainer.ItemInHand.ItemUsable.AltMode();
         }
+
         if (!_inputHandler.AttackTrigger.IsPressed)
-        {
             _skipStartDelay = false;
-        }
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            if (_playerHandsContainer.State == PlayerHandsContainer.HandState.ItemInHand)
-            {
-                // Если в руках пушка - перезаряжаем
-                if (_playerHandsContainer.ItemInHand.ItemUsable is GunUsable gun)
-                {
-                    gun.Reload();
-                }
-            }
-        }
     }
 
     private bool CanUseItemInHand()
     {
-        Debug.Log(_playerHandsContainer.State == PlayerHandsContainer.HandState.EmptyHands ? "Нет предмета в руке"
-         : _usingState != UsingState.None ? "Нельзя использовать предмет - " + _usingState
-         : "Можно использовать предмет");
-        return _playerHandsContainer.State == PlayerHandsContainer.HandState.ItemInHand && _usingState == UsingState.None;
+        if (_playerHandsContainer.State == PlayerHandsContainer.HandState.EmptyHands)
+            return false;
+
+        if (_usingState != UsingState.None)
+            return false;
+
+        if (_controlBlocker != null)
+        {
+            if (_controlBlocker.IsBlocked(PlayerControlBlock.ItemUse))
+                return false;
+
+            if (_controlBlocker.IsBlocked(PlayerControlBlock.Shooting))
+                return false;
+        }
+
+        return true;
+    }
+
+    private bool CanAltUseItemInHand()
+    {
+        if (_playerHandsContainer.State == PlayerHandsContainer.HandState.EmptyHands)
+            return false;
+
+        if (_controlBlocker != null)
+        {
+            if (_controlBlocker.IsBlocked(PlayerControlBlock.ItemUse))
+                return false;
+
+            if (_controlBlocker.IsBlocked(PlayerControlBlock.Shooting))
+                return false;
+        }
+
+        return true;
     }
 
     private async UniTask<ItemUseResult> UseItemInHand()
     {
+        ItemInHand itemInHand = _playerHandsContainer.ItemInHand;
+
+        if (itemInHand == null || itemInHand.ItemObject == null || itemInHand.ItemUsable == null)
+        {
+            _usingState = UsingState.None;
+            return new ItemUseResult
+            {
+                UsageType = UsageType.ClickToUse,
+                ItemStateAfterUse = ItemState.Hold
+            };
+        }
+
         if (!_skipStartDelay)
         {
-            OnItemStartUsing?.Invoke(_playerHandsContainer.ItemInHand.ItemObject.ItemData.Type);
+            OnItemStartUsing?.Invoke(itemInHand.ItemObject.ItemData.Type);
+
             _usingState = UsingState.Start;
+
             await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseStartDelay));
         }
+
         _usingState = UsingState.Using;
 
-        var useResult = _actionsWithItems[_playerHandsContainer.ItemInHand.ItemObject.ItemData.Type].Execute(_playerHandsContainer);
+        ItemUseResult useResult = itemInHand.ItemUsable.Use();
+
+        HandleItemStateAfterUse(useResult);
 
         if (useResult.UsageType == UsageType.ClickToUse)
         {
             _skipStartDelay = false;
+
             _inputHandler.AttackTrigger.ReleaseTrigger();
+
             _usingState = UsingState.OnDelay;
+
             await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseDelay));
+
             _usingState = UsingState.None;
         }
         else if (useResult.UsageType == UsageType.HoldToUse)
@@ -104,19 +137,40 @@ public class PlayerHandsSystem : ITickable
             _skipStartDelay = true;
             _usingState = UsingState.None;
         }
+
         return useResult;
+    }
+
+    private void HandleItemStateAfterUse(ItemUseResult useResult)
+    {
+        switch (useResult.ItemStateAfterUse)
+        {
+            case ItemState.Hold:
+                return;
+
+            case ItemState.Drop:
+                _playerHandsContainer.DropItemFromHand();
+                return;
+
+            case ItemState.Consume:
+                Item item = _playerHandsContainer.ItemInHand?.ItemObject;
+
+                _playerHandsContainer.SetItemNull();
+
+                if (item != null)
+                    UnityEngine.Object.Destroy(item.gameObject);
+
+                return;
+        }
     }
 }
 
 /// <summary>
-/// Действие с предметом
+/// Действие с предметом.
+/// Legacy. Оставлено, чтобы старые action-классы не развалились.
+/// Новая логика должна идти через IUsable.Use().
 /// </summary>
 public interface IActionWithItem
 {
-    /// <summary>
-    /// Выполнить действие с предметом в руках
-    /// </summary>
-    /// <param name="playerHandsContainer"></param>
-    /// <returns></returns>
     ItemUseResult Execute(PlayerHandsContainer playerHandsContainer);
 }

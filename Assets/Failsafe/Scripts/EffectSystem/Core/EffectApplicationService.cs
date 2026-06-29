@@ -16,6 +16,13 @@ namespace Failsafe.Scripts.EffectSystem
         private readonly Dictionary<EffectKey, Effect> _uniqueEffects = new();
         private readonly Dictionary<Effect, EffectKey> _effectKeys = new();
 
+        private readonly IStatusReactionService _statusReactionService;
+
+        public EffectApplicationService(IStatusReactionService statusReactionService)
+        {
+            _statusReactionService = statusReactionService;
+        }
+
         public void Apply(EffectBundle bundle, EffectContext context)
         {
             if (bundle == null || bundle.Effects == null)
@@ -25,6 +32,21 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (definition == null)
                     continue;
+
+                if (_statusReactionService != null &&
+                    _statusReactionService.TryHandleBeforeApply(
+                        definition,
+                        context,
+                        this))
+                {
+                    if (definition is IStopEffectBundleOnStatusReaction stopReaction &&
+                        stopReaction.StopEffectBundleOnStatusReaction)
+                    {
+                        break;
+                    }
+
+                    continue;
+                }
 
                 if (!definition.CanApply(context))
                     continue;
@@ -49,7 +71,7 @@ namespace Failsafe.Scripts.EffectSystem
                 return;
             }
 
-            var target = context.TargetObject;
+            GameObject target = StatusEffectStateResolver.ResolveTargetObject(context);
 
             if (target == null)
                 return;
@@ -67,9 +89,17 @@ namespace Failsafe.Scripts.EffectSystem
             }
 
             effect.Start();
-            _effects.Add(effect);
-            _uniqueEffects.Add(key, effect);
-            _effectKeys.Add(effect, key);
+
+            if (effect.ElapsedAt > Time.time)
+            {
+                _effects.Add(effect);
+                _uniqueEffects.Add(key, effect);
+                _effectKeys.Add(effect, key);
+            }
+            else
+            {
+                effect.Dispose();
+            }
         }
 
         private void StartAndStore(Effect effect)

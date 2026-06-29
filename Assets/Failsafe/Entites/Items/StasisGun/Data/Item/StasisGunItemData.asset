@@ -13,4 +13,36 @@ MonoBehaviour:
   m_Name: StasisGunItemData
   m_EditorClassIdentifier: 
   Description: 
-  Type: 1
+  Type: 2
+  StartUseDelay: 0
+  UseDelay: 0.2
+  UsesEnergy: 1
+  EnergyAmountMax: 5
+  EnergyCostPerUse: 1
+  UseRange: 100
+  UseMask:
+    serializedVersion: 2
+    m_Bits: 1892343
+  DefaultModeEffects: {fileID: 11400000, guid: 1d6c42b1a2a55d24f8c33eb91acbaf8b, type: 2}
+  AlternativeModeEffects: {fileID: 0}
+  UseSFX:
+    Guid:
+      Data1: -1697649153
+      Data2: 1206018838
+      Data3: -576867684
+      Data4: 450239867
+    Path: event:/SFX/ITEMS/STASIS_GUN/StasisGunShot
+  EmptyUseSFX:
+    Guid:
+      Data1: -494961614
+      Data2: 1275446621
+      Data3: -573613418
+      Data4: -1667646152
+    Path: event:/SFX/ITEMS/STASIS_GUN/StasisGunEmpty
+  ModeSwitchSFX:
+    Guid:
+      Data1: -10345152
+      Data2: 1103297710
+      Data3: 258700458
+      Data4: 94387872
+    Path: event:/SFX/ITEMS/STASIS_GUN/StasisGunModeToggle

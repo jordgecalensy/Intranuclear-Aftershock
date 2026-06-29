@@ -14,6 +14,8 @@ namespace Failsafe.GameSceneServices
     {
         [SerializeField]
         private EnemySpawnSystemBuilder _enemySpawnSystemBuilder;
+        [SerializeField]
+        private StatusReactionProfile _statusReactionProfile;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -27,10 +29,16 @@ namespace Failsafe.GameSceneServices
                 .As<IEffectManager>()
                 .AsSelf();
 
+            builder.RegisterInstance(_statusReactionProfile);
+
+            builder.Register<StatusReactionService>(Lifetime.Scoped)
+                .As<IStatusReactionService>()
+                .AsSelf();
+
             builder.RegisterEntryPoint<EffectApplicationService>(Lifetime.Scoped)
                 .As<IEffectApplicationService>()
                 .AsSelf();
-
+            
             builder.RegisterEntryPoint<EarthquakeEnvironmentController>().AsSelf();
         }
     }

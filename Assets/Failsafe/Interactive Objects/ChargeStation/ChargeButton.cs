@@ -3,9 +3,15 @@
 public class ChargeButton : Interactable
 {
     [SerializeField] private ChargeStation _station;
-    protected override void Interact()
+
+    protected override void Interact(PlayerInteractionContext context)
     {
-        base.Interact();
-        _station.OnButtonPress();
+        if (_station == null)
+        {
+            Debug.LogError("[ChargeButton] ChargeStation не назначена.", this);
+            return;
+        }
+
+        _station.OnButtonPress(context);
     }
 }

@@ -10,6 +10,7 @@ namespace Failsafe.PlayerMovements.Controllers
 
         private readonly CharacterController _characterController;
         private readonly PlayerMovementParameters _playerMovementParameters;
+        private readonly PlayerControlBlocker _controlBlocker;
 
         private Vector3 _movement;
         private Vector3 _gravity;
@@ -35,6 +36,10 @@ namespace Failsafe.PlayerMovements.Controllers
             }
         }
 
+        public bool IsMovementBlocked =>
+            _controlBlocker != null &&
+            _controlBlocker.IsBlocked(PlayerControlBlock.Movement);
+
         public bool IsGrounded => _coyoteTimeProgress <= 0f;
 
         public bool IsGroundedFor(float duration)
@@ -46,10 +51,12 @@ namespace Failsafe.PlayerMovements.Controllers
 
         public PlayerMovementController(
             CharacterController characterController,
-            PlayerMovementParameters playerMovementParameters)
+            PlayerMovementParameters playerMovementParameters,
+            PlayerControlBlocker controlBlocker)
         {
             _characterController = characterController;
             _playerMovementParameters = playerMovementParameters;
+            _controlBlocker = controlBlocker;
         }
 
         public void SetSpeedModifier(int modifierId, float multiplier)
@@ -80,11 +87,23 @@ namespace Failsafe.PlayerMovements.Controllers
 
         public void Move(Vector3 motion)
         {
+            if (IsMovementBlocked)
+            {
+                _movement = Vector3.zero;
+                return;
+            }
+
             _movement = motion;
         }
 
         public void SetGravity(Vector3 gravity)
         {
+            if (IsMovementBlocked)
+            {
+                _gravity = Vector3.zero;
+                return;
+            }
+
             _gravity = gravity;
         }
 
@@ -95,6 +114,16 @@ namespace Failsafe.PlayerMovements.Controllers
 
         public void HandleMovement()
         {
+            if (IsMovementBlocked)
+            {
+                _movement = Vector3.zero;
+                _gravity = Vector3.zero;
+                Velocity = Vector3.zero;
+
+                UpdateNoiseSignal();
+                return;
+            }
+
             Vector3 motion = (_movement * CurrentSpeedMultiplier) + _gravity;
 
             _characterController.Move(motion * Time.deltaTime);
