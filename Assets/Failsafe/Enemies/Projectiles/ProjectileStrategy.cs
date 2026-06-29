@@ -3,30 +3,57 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Combat/Strategies/Projectile")]
 public class ProjectileStrategy : WeaponStrategy
 {
-    public GameObject projectilePrefab; 
+    public GameObject projectilePrefab;
 
     public override bool Fire(WeaponController controller, Vector3 targetPoint)
     {
-        // 1. Точка спавна
-        var startPos = controller.firePoint.position;
-        
-        // 2. Поворот к цели
-        var rotation = Quaternion.LookRotation(targetPoint - startPos);
-
-        // 3. Создаем пулю
-        var projectileGO = Instantiate(projectilePrefab, startPos, rotation);
-        
-        // 4. Настраиваем пулю данными из STATS
-        var projectile = projectileGO.GetComponent<LaserProjectile>();
-        if (projectile != null)
+        if (projectilePrefab == null)
         {
-            projectile.Initialize(
-                stats.projectileSpeed, 
-                stats.damage, 
-                stats.range, 
-                stats.hitMask
-            );
+            Debug.LogError($"[{nameof(ProjectileStrategy)}] Projectile prefab is not assigned.", this);
+            return false;
         }
+
+        if (controller.firePoint == null)
+        {
+            Debug.LogError($"[{nameof(ProjectileStrategy)}] FirePoint is not assigned.", controller);
+            return false;
+        }
+
+        if (stats == null)
+        {
+            Debug.LogError($"[{nameof(ProjectileStrategy)}] WeaponStats is not assigned.", this);
+            return false;
+        }
+
+        Vector3 startPosition = controller.firePoint.position;
+        Vector3 direction = targetPoint - startPosition;
+
+        if (direction.sqrMagnitude <= 0.0001f)
+            direction = controller.firePoint.forward;
+
+        Quaternion rotation = Quaternion.LookRotation(direction.normalized);
+        GameObject projectileObject = Instantiate(projectilePrefab, startPosition, rotation);
+
+        Projectile projectile = projectileObject.GetComponent<Projectile>();
+
+        if (projectile == null)
+        {
+            Debug.LogError(
+                $"[{nameof(ProjectileStrategy)}] Projectile prefab must contain Projectile component.",
+                projectilePrefab);
+
+            Destroy(projectileObject);
+            return false;
+        }
+
+        projectile.Initialize(
+            stats.projectileSpeed,
+            stats.range,
+            stats.hitMask,
+            stats.damage,
+            controller.gameObject,
+            impactEffects,
+            controller.Effects);
 
         return true;
     }

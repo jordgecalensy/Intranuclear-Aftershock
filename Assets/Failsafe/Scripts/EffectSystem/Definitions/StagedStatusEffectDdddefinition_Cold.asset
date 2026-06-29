@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18fa2a351218d1042945914b3e1ab8b8, type: 3}
+  m_Name: StagedStatusEffectDdddefinition_Cold
+  m_EditorClassIdentifier: 
+  _statusType: 20
+  _duration: 5
+  _buildUpPerApplication: 1
+  _maxBuildUp: 3
+  _clampBuildUpToMax: 1
+  _stages:
+  - _stage: 1
+    _minBuildUp: 1
+  - _stage: 2
+    _minBuildUp: 2
+  - _stage: 3
+    _minBuildUp: 3
+  _autoAddStatusState: 1
+  _removeStatusesOnApply: 
+  _immunityStatusesOnEnd: 
+  _immunityDurationOnEnd: 0
