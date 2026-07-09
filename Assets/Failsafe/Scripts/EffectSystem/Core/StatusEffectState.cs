@@ -5,8 +5,14 @@ namespace Failsafe.Scripts.EffectSystem
 {
     public class StatusEffectState : MonoBehaviour
     {
+        [Header("Resistance")]
+        [Tooltip("Постоянные иммунитеты/резисты этой цели. Можно оставить пустым.")]
+        [SerializeField] private StatusResistanceProfile _resistanceProfile;
+
         private readonly Dictionary<StatusEffectType, IRegisteredStatusEffect> _activeStatuses = new();
         private readonly Dictionary<StatusEffectType, float> _immunityUntil = new();
+
+        public StatusResistanceProfile ResistanceProfile => _resistanceProfile;
 
         public bool HasStatus(StatusEffectType statusType)
         {
@@ -68,8 +74,26 @@ namespace Failsafe.Scripts.EffectSystem
             if (statusType == StatusEffectType.None)
                 return false;
 
+            return IsTemporarilyImmune(statusType) ||
+                   IsPermanentlyImmune(statusType);
+        }
+
+        public bool IsTemporarilyImmune(StatusEffectType statusType)
+        {
+            if (statusType == StatusEffectType.None)
+                return false;
+
             return _immunityUntil.TryGetValue(statusType, out float until) &&
                    until > Time.time;
+        }
+
+        public bool IsPermanentlyImmune(StatusEffectType statusType)
+        {
+            if (statusType == StatusEffectType.None)
+                return false;
+
+            return _resistanceProfile != null &&
+                   _resistanceProfile.IsImmune(statusType);
         }
 
         public bool CanReceive(StatusEffectType statusType)
@@ -146,7 +170,7 @@ namespace Failsafe.Scripts.EffectSystem
             else
                 _immunityUntil.Add(statusType, until);
 
-            Debug.Log($"[StatusEffectState] {name}: immunity {statusType} for {duration:0.00}s", this);
+            Debug.Log($"[StatusEffectState] {name}: temporary immunity {statusType} for {duration:0.00}s", this);
         }
 
         public void AddTemporaryImmunity(IEnumerable<StatusEffectType> statuses, float duration)
@@ -156,6 +180,11 @@ namespace Failsafe.Scripts.EffectSystem
 
             foreach (StatusEffectType status in statuses)
                 AddTemporaryImmunity(status, duration);
+        }
+
+        public void SetResistanceProfile(StatusResistanceProfile resistanceProfile)
+        {
+            _resistanceProfile = resistanceProfile;
         }
     }
 }
