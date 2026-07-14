@@ -9,8 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 908acbdff339ac342b358b32e91caf5d, type: 3}
-  m_Name: Test
+  m_Script: {fileID: 11500000, guid: 233a32057ce8cc040b1a9a61e3ac8a62, type: 3}
+  m_Name: DamageResistanceProfile
   m_EditorClassIdentifier: 
-  _effects:
-  - {fileID: 11400000, guid: 77dc90775fe74594b9e0c223db346c2a, type: 2}
+  _entries:
+  - _damageType: 1
+    _multiplier: 5
