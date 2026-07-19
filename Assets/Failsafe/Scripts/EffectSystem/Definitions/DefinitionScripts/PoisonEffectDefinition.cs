@@ -1,6 +1,6 @@
 using System;
 using Failsafe.Player.Model;
-using Failsafe.Scripts.Damage.Implementation;
+using Failsafe.Scripts.Damage;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -66,8 +66,19 @@ namespace Failsafe.Scripts.EffectSystem
                 return false;
             }
 
-            if (state == null || !state.CanReceive(StatusEffectType.Poison))
+            if (state == null ||
+                !state.CanReceive(StatusEffectType.Poison) ||
+                StatusResistanceUtility.ApplyDurationMultiplier(
+                    state,
+                    StatusEffectType.Poison,
+                    _duration) <= 0f ||
+                StatusResistanceUtility.ApplyBuildUpMultiplier(
+                    state,
+                    StatusEffectType.Poison,
+                    _buildUpPerApplication) <= 0f)
+            {
                 return false;
+            }
 
             if (!_requirePlayerStamina)
                 return true;
@@ -93,14 +104,28 @@ namespace Failsafe.Scripts.EffectSystem
             if (_requirePlayerStamina && stamina == null)
                 return null;
 
-            DamageableComponent damageable = ResolveDamageable(context);
+            DamageTargetResolver.TryResolve(context, out DamageTarget damageTarget);
+
+            float duration = StatusResistanceUtility.ApplyDurationMultiplier(
+                state,
+                StatusEffectType.Poison,
+                _duration);
+
+            float buildUpPerApplication = StatusResistanceUtility.ApplyBuildUpMultiplier(
+                state,
+                StatusEffectType.Poison,
+                _buildUpPerApplication);
 
             return new PoisonEffect(
                 state,
                 stamina,
-                damageable,
-                _duration,
-                _buildUpPerApplication,
+                damageTarget,
+                context.Source,
+                context.Point,
+                context.Direction,
+                context.Power,
+                duration,
+                buildUpPerApplication,
                 _maxBuildUp,
                 _clampBuildUpToMax,
                 _stages,
@@ -115,7 +140,14 @@ namespace Failsafe.Scripts.EffectSystem
                 ? state.GetStatusBuildUpValue(StatusEffectType.Poison)
                 : 0f;
 
-            float predictedBuildUp = currentBuildUp + Mathf.Max(0f, _buildUpPerApplication);
+            float buildUpPerApplication = state != null
+                ? StatusResistanceUtility.ApplyBuildUpMultiplier(
+                    state,
+                    StatusEffectType.Poison,
+                    _buildUpPerApplication)
+                : Mathf.Max(0f, _buildUpPerApplication);
+
+            float predictedBuildUp = currentBuildUp + Mathf.Max(0f, buildUpPerApplication);
 
             if (_clampBuildUpToMax)
                 predictedBuildUp = Mathf.Min(predictedBuildUp, Mathf.Max(0f, _maxBuildUp));
@@ -235,46 +267,6 @@ namespace Failsafe.Scripts.EffectSystem
             return target.GetComponent<LifetimeScope>() ??
                    target.GetComponentInParent<LifetimeScope>() ??
                    target.GetComponentInChildren<LifetimeScope>(true);
-        }
-
-        private static DamageableComponent ResolveDamageable(EffectContext context)
-        {
-            GameObject target = StatusEffectStateResolver.ResolveTargetObject(context);
-
-            if (target != null)
-            {
-                DamageableComponent damageable =
-                    target.GetComponent<DamageableComponent>() ??
-                    target.GetComponentInParent<DamageableComponent>() ??
-                    target.GetComponentInChildren<DamageableComponent>(true);
-
-                if (damageable != null)
-                    return damageable;
-            }
-
-            if (context.HitCollider != null)
-            {
-                DamageableComponent damageable =
-                    context.HitCollider.GetComponentInParent<DamageableComponent>();
-
-                if (damageable != null)
-                    return damageable;
-
-                if (context.HitCollider.attachedRigidbody != null)
-                {
-                    Rigidbody rb = context.HitCollider.attachedRigidbody;
-
-                    damageable =
-                        rb.GetComponent<DamageableComponent>() ??
-                        rb.GetComponentInParent<DamageableComponent>() ??
-                        rb.GetComponentInChildren<DamageableComponent>(true);
-
-                    if (damageable != null)
-                        return damageable;
-                }
-            }
-
-            return null;
         }
     }
 }

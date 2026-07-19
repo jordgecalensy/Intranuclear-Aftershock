@@ -97,8 +97,6 @@ public class Item : Prop
         _energyAmountCurrent -= cost;
         _energyAmountCurrent = Mathf.Clamp(_energyAmountCurrent, 0, Mathf.Max(0, ItemData.EnergyAmountMax));
 
-        Debug.Log($"[Item] {name} energy = {_energyAmountCurrent}/{ItemData.EnergyAmountMax}", this);
-
         return true;
     }
 
@@ -110,7 +108,6 @@ public class Item : Prop
         _energyAmountCurrent += Mathf.Max(0, amount);
         _energyAmountCurrent = Mathf.Clamp(_energyAmountCurrent, 0, Mathf.Max(0, ItemData.EnergyAmountMax));
 
-        Debug.Log($"[Item] {name} energy reloaded = {_energyAmountCurrent}/{ItemData.EnergyAmountMax}", this);
     }
 
     public void FillEnergy()
@@ -120,7 +117,6 @@ public class Item : Prop
 
         _energyAmountCurrent = Mathf.Max(0, ItemData.EnergyAmountMax);
 
-        Debug.Log($"[Item] {name} energy filled = {_energyAmountCurrent}/{ItemData.EnergyAmountMax}", this);
     }
 
     public int GetEnergyAmountForMax()

@@ -42,7 +42,11 @@ namespace Failsafe.Scripts.EffectSystem
                        _autoAddStatusState,
                        out StatusEffectState state) &&
                    state != null &&
-                   state.CanReceive(_statusType);
+                   state.CanReceive(_statusType) &&
+                   StatusResistanceUtility.ApplyDurationMultiplier(
+                       state,
+                       _statusType,
+                       _duration) > 0f;
         }
 
         public override Effect CreateEffect(EffectContext context)
@@ -58,10 +62,15 @@ namespace Failsafe.Scripts.EffectSystem
             if (state == null)
                 return null;
 
+            float duration = StatusResistanceUtility.ApplyDurationMultiplier(
+                state,
+                _statusType,
+                _duration);
+
             return new TimedStatusEffect(
                 state,
                 _statusType,
-                _duration,
+                duration,
                 _removeStatusesOnApply,
                 _immunityStatusesOnEnd,
                 _immunityDurationOnEnd);

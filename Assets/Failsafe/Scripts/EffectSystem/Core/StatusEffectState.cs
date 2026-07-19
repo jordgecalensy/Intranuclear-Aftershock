@@ -5,8 +5,17 @@ namespace Failsafe.Scripts.EffectSystem
 {
     public class StatusEffectState : MonoBehaviour
     {
+        [Header("Resistance")]
+        [Tooltip("Постоянные иммунитеты/резисты этой цели. Можно оставить пустым.")]
+        [SerializeField] private StatusResistanceProfile _resistanceProfile;
+
+        [Header("Runtime Resistance Modifiers")]
+        [SerializeField] private List<RuntimeStatusResistanceModifier> _runtimeResistanceModifiers = new();
+
         private readonly Dictionary<StatusEffectType, IRegisteredStatusEffect> _activeStatuses = new();
         private readonly Dictionary<StatusEffectType, float> _immunityUntil = new();
+
+        public StatusResistanceProfile ResistanceProfile => _resistanceProfile;
 
         public bool HasStatus(StatusEffectType statusType)
         {
@@ -68,8 +77,26 @@ namespace Failsafe.Scripts.EffectSystem
             if (statusType == StatusEffectType.None)
                 return false;
 
+            return IsTemporarilyImmune(statusType) ||
+                   IsPermanentlyImmune(statusType);
+        }
+
+        public bool IsTemporarilyImmune(StatusEffectType statusType)
+        {
+            if (statusType == StatusEffectType.None)
+                return false;
+
             return _immunityUntil.TryGetValue(statusType, out float until) &&
                    until > Time.time;
+        }
+
+        public bool IsPermanentlyImmune(StatusEffectType statusType)
+        {
+            if (statusType == StatusEffectType.None)
+                return false;
+
+            return _resistanceProfile != null &&
+                   _resistanceProfile.IsImmune(statusType);
         }
 
         public bool CanReceive(StatusEffectType statusType)
@@ -78,6 +105,170 @@ namespace Failsafe.Scripts.EffectSystem
                 return false;
 
             return !IsImmune(statusType);
+        }
+
+        public float GetStatusDurationMultiplier(StatusEffectType statusType)
+        {
+            if (statusType == StatusEffectType.None)
+                return 1f;
+
+            if (IsImmune(statusType))
+                return 0f;
+
+            float result = 1f;
+
+            if (_resistanceProfile != null)
+                result *= _resistanceProfile.GetDurationMultiplier(statusType);
+
+            result *= GetRuntimeDurationMultiplier(statusType);
+
+            return Mathf.Max(0f, result);
+        }
+
+        public float GetStatusBuildUpMultiplier(StatusEffectType statusType)
+        {
+            if (statusType == StatusEffectType.None)
+                return 1f;
+
+            if (IsImmune(statusType))
+                return 0f;
+
+            float result = 1f;
+
+            if (_resistanceProfile != null)
+                result *= _resistanceProfile.GetBuildUpMultiplier(statusType);
+
+            result *= GetRuntimeBuildUpMultiplier(statusType);
+
+            return Mathf.Max(0f, result);
+        }
+
+        public float GetRuntimeDurationMultiplier(StatusEffectType statusType)
+        {
+            float result = 1f;
+
+            for (int i = 0; i < _runtimeResistanceModifiers.Count; i++)
+            {
+                RuntimeStatusResistanceModifier modifier = _runtimeResistanceModifiers[i];
+
+                if (modifier == null)
+                    continue;
+
+                if (modifier.StatusType != statusType)
+                    continue;
+
+                result *= modifier.DurationMultiplier;
+            }
+
+            return result;
+        }
+
+        public float GetRuntimeBuildUpMultiplier(StatusEffectType statusType)
+        {
+            float result = 1f;
+
+            for (int i = 0; i < _runtimeResistanceModifiers.Count; i++)
+            {
+                RuntimeStatusResistanceModifier modifier = _runtimeResistanceModifiers[i];
+
+                if (modifier == null)
+                    continue;
+
+                if (modifier.StatusType != statusType)
+                    continue;
+
+                result *= modifier.BuildUpMultiplier;
+            }
+
+            return result;
+        }
+
+        public void AddRuntimeResistanceModifier(
+            string sourceId,
+            StatusEffectType statusType,
+            float durationMultiplier,
+            float buildUpMultiplier)
+        {
+            if (string.IsNullOrWhiteSpace(sourceId))
+            {
+                Debug.LogWarning($"[StatusEffectState] {name}: sourceId is empty. Runtime status modifier was not added.", this);
+                return;
+            }
+
+            if (statusType == StatusEffectType.None)
+                return;
+
+            durationMultiplier = Mathf.Max(0f, durationMultiplier);
+            buildUpMultiplier = Mathf.Max(0f, buildUpMultiplier);
+
+            for (int i = 0; i < _runtimeResistanceModifiers.Count; i++)
+            {
+                RuntimeStatusResistanceModifier modifier = _runtimeResistanceModifiers[i];
+
+                if (modifier == null)
+                    continue;
+
+                if (modifier.SourceId != sourceId)
+                    continue;
+
+                if (modifier.StatusType != statusType)
+                    continue;
+
+                modifier.Set(durationMultiplier, buildUpMultiplier);
+                return;
+            }
+
+            _runtimeResistanceModifiers.Add(
+                new RuntimeStatusResistanceModifier(
+                    sourceId,
+                    statusType,
+                    durationMultiplier,
+                    buildUpMultiplier));
+        }
+
+        public void RemoveRuntimeResistanceModifier(string sourceId)
+        {
+            if (string.IsNullOrWhiteSpace(sourceId))
+                return;
+
+            for (int i = _runtimeResistanceModifiers.Count - 1; i >= 0; i--)
+            {
+                RuntimeStatusResistanceModifier modifier = _runtimeResistanceModifiers[i];
+
+                if (modifier == null)
+                {
+                    _runtimeResistanceModifiers.RemoveAt(i);
+                    continue;
+                }
+
+                if (modifier.SourceId == sourceId)
+                    _runtimeResistanceModifiers.RemoveAt(i);
+            }
+        }
+
+        public void RemoveRuntimeResistanceModifier(
+            string sourceId,
+            StatusEffectType statusType)
+        {
+            if (string.IsNullOrWhiteSpace(sourceId))
+                return;
+
+            for (int i = _runtimeResistanceModifiers.Count - 1; i >= 0; i--)
+            {
+                RuntimeStatusResistanceModifier modifier = _runtimeResistanceModifiers[i];
+
+                if (modifier == null)
+                {
+                    _runtimeResistanceModifiers.RemoveAt(i);
+                    continue;
+                }
+
+                if (modifier.SourceId == sourceId &&
+                    modifier.StatusType == statusType)
+                {
+                    _runtimeResistanceModifiers.RemoveAt(i);
+                }
+            }
         }
 
         public void RegisterStatus(StatusEffectType statusType, IRegisteredStatusEffect effect)
@@ -146,7 +337,7 @@ namespace Failsafe.Scripts.EffectSystem
             else
                 _immunityUntil.Add(statusType, until);
 
-            Debug.Log($"[StatusEffectState] {name}: immunity {statusType} for {duration:0.00}s", this);
+            Debug.Log($"[StatusEffectState] {name}: temporary immunity {statusType} for {duration:0.00}s", this);
         }
 
         public void AddTemporaryImmunity(IEnumerable<StatusEffectType> statuses, float duration)
@@ -156,6 +347,11 @@ namespace Failsafe.Scripts.EffectSystem
 
             foreach (StatusEffectType status in statuses)
                 AddTemporaryImmunity(status, duration);
+        }
+
+        public void SetResistanceProfile(StatusResistanceProfile resistanceProfile)
+        {
+            _resistanceProfile = resistanceProfile;
         }
     }
 }

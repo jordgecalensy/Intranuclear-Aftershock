@@ -13,6 +13,10 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
         [SerializeField] private float _tickInterval = 1f;
         [SerializeField] private bool _scaleByContextPower = false;
 
+        [Header("Resistance")]
+        [SerializeField] private bool _ignoreResistance = false;
+        [SerializeField] private bool _logResistance = false;
+
         public override bool CanApply(EffectContext context)
         {
             return DamageTargetResolver.TryResolve(context, out _);
@@ -31,7 +35,9 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
                 _tickInterval,
                 context.Source,
                 context.Power,
-                _scaleByContextPower);
+                _scaleByContextPower,
+                _ignoreResistance,
+                _logResistance);
         }
 
         public override string GetStackKey(EffectContext context)

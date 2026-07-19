@@ -61,7 +61,6 @@ public class PlayerHandsContainer
 
         if (_handState == HandState.ItemInHand)
         {
-            Debug.Log("TryTakeItemInHand. Не получилось взять предмет. Руки заняты");
             return false;
         }
 
@@ -100,13 +99,38 @@ public class PlayerHandsContainer
             out _itemUseStartDelay,
             out _itemUseDelay);
 
-        Debug.Log($"Предмет {itemObject.name} взят в руку");
         OnItemTaken?.Invoke(_itemInHand.ItemObject.ItemData.Type);
 
         return true;
     }
 
     private IUsable ResolveUsable(Item itemObject)
+    {
+        IUsable componentUsable = ResolveComponentUsable(itemObject);
+
+        if (componentUsable != null)
+            return componentUsable;
+
+        IUsable registeredUsable = ResolveRegisteredUsable(itemObject);
+
+        if (registeredUsable != null)
+            return registeredUsable;
+
+        if (itemObject.IsUsable())
+            return new LegacyActionsGroupUsable(itemObject);
+
+        return null;
+    }
+
+    private static IUsable ResolveComponentUsable(Item itemObject)
+    {
+        return itemObject
+            .GetComponents<MonoBehaviour>()
+            .OfType<IUsable>()
+            .FirstOrDefault();
+    }
+
+    private IUsable ResolveRegisteredUsable(Item itemObject)
     {
         ItemType type = itemObject.ItemData.Type;
 
@@ -120,6 +144,49 @@ public class PlayerHandsContainer
 
             default:
                 return _items.FirstOrDefault(x => itemObject.name.StartsWith(x.GetType().Name));
+        }
+    }
+
+    private sealed class LegacyActionsGroupUsable : IUsable
+    {
+        private Item _item;
+
+        public LegacyActionsGroupUsable(Item item)
+        {
+            _item = item;
+        }
+
+        public ItemUseResult Use()
+        {
+            _item?.Use();
+
+            return new ItemUseResult
+            {
+                UsageType = UsageType.ClickToUse,
+                ItemStateAfterUse = ItemState.Hold
+            };
+        }
+
+        public void AltMode()
+        {
+        }
+
+        public void ParseItem(Item item_object)
+        {
+            if (item_object != null)
+                _item = item_object;
+        }
+
+        public void GetItemUseDelays(out float startDelay, out float useDelay)
+        {
+            startDelay = 0f;
+            useDelay = 0.2f;
+
+            if (_item?.ItemData == null)
+                return;
+
+            startDelay = Mathf.Max(0f, _item.ItemData.StartUseDelay);
+            useDelay = Mathf.Max(0f, _item.ItemData.UseDelay);
         }
     }
 
