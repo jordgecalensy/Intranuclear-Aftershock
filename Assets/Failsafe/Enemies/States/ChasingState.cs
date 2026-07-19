@@ -47,62 +47,50 @@ public class ChasingState : BehaviorState
 
     public override void Update()
     {
-        // 1. Сброс данных перед опросом сенсоров
         _playerInSight = false;
         _distanceToPlayer = float.MaxValue;
-        Vector3? liveTargetPos = null;
 
-        // 2. Опрос сенсоров
         foreach (var sensor in _sensors)
         {
-            if (sensor.IsActivated())
+            if (!sensor.IsActivated())
+                continue;
+
+            Vector3? signalPosition = sensor.SignalSourcePosition;
+
+            if (!signalPosition.HasValue)
+                continue;
+
+            Vector3 targetPosition = signalPosition.Value;
+
+            if (sensor is VisualSensor)
             {
-                // Если видим глазами
-                if (sensor is VisualSensor)
-                {
-                    _playerInSight = true;
-                }
-
-                liveTargetPos = sensor.SignalSourcePosition;
-                _distanceToPlayer = Vector3.Distance(_transform.position, liveTargetPos.Value);
-
-                // Запоминаем в память
-                if (liveTargetPos.HasValue)
-                {
-                    _enemyMemory.SetLastKnownPlayerPosition(
-                        liveTargetPos.Value,
-                        (liveTargetPos.Value - _transform.position).normalized
-                    );
-                }
-
-                if (_playerInSight) break; // Приоритет зрения
+                _playerInSight = true;
             }
+
+            _distanceToPlayer = Vector3.Distance(_transform.position, targetPosition);
+
+            _enemyMemory.SetLastKnownPlayerPosition(
+                targetPosition,
+                (targetPosition - _transform.position).normalized
+            );
+
+            if (_playerInSight)
+                break;
         }
 
-        // 3. Логика Динамической Остановки (Ваш запрос)
         if (_playerInSight)
         {
-            // Если видим: держим дистанцию, чтобы не набегать на игрока
-            // Используем ваш метод из EnemyNavMeshActions
             _navMeshActions.SetStoppingDistance(_enemyConfig.AttackRangeMin);
-            
-            // Если нужно повернуться к игроку (NavMeshAgent делает это при движении, 
-            // но если мы уже стоим - можно добавить ручной поворот)
         }
         else
         {
-            // Если НЕ видим (игрок за углом): дистанция 0, бежим до точки потери контакта
             _navMeshActions.SetStoppingDistance(0f);
         }
 
-        // 4. Движение через ваш скрипт
         Vector3 targetDest = _enemyMemory.LastKnownPlayerPosition;
-        
-        // Используем MoveToPoint из вашего EnemyNavMeshActions
+
         _navMeshActions.MoveToPoint(targetDest, _enemyConfig.ChaseSpeed);
 
-        // 5. Опционально: управление прыжками (Area Cost)
-        // Для этого придется обратиться к Agent напрямую через ваше свойство
         UpdateJumpAreaCost();
     }
 
