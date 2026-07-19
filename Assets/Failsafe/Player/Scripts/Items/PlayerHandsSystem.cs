@@ -40,6 +40,7 @@ public class PlayerHandsSystem : ITickable
             [ItemType.Gun] = new ShootAction(playerView.WeaponController,playerView.PlayerCamera),
             [ItemType.Grenade] = new ThrowItemAction(playerView.PlayerCamera, _throwItemPower),
             [ItemType.GroundItem] = new DropItemAction(playerView.PlayerCamera),
+            [ItemType.Tool] = new ToolItemAction(playerView.PlayerCamera),
         };
     }
 
