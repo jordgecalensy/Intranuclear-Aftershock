@@ -1,4 +1,5 @@
 using Failsafe.Scripts.Damage;
+using Failsafe.Scripts.EffectSystem;
 using UnityEngine;
 
 namespace Failsafe.Scripts.EffectSystem.Effects
@@ -9,6 +10,8 @@ namespace Failsafe.Scripts.EffectSystem.Effects
         private readonly DamageType _damageType;
         private readonly GameObject _source;
         private readonly bool _scaleByPower;
+        private readonly bool _ignoreResistance;
+        private readonly bool _logResistance;
 
         private float _damagePerTick;
         private float _tickInterval;
@@ -23,12 +26,16 @@ namespace Failsafe.Scripts.EffectSystem.Effects
             float tickInterval,
             GameObject source,
             float power = 1f,
-            bool scaleByPower = false)
+            bool scaleByPower = false,
+            bool ignoreResistance = false,
+            bool logResistance = false)
         {
             _target = target;
             _damageType = damageType;
             _source = source;
             _scaleByPower = scaleByPower;
+            _ignoreResistance = ignoreResistance;
+            _logResistance = logResistance;
 
             _duration = Mathf.Max(0f, duration);
             _damagePerTick = Mathf.Max(0f, damagePerTick);
@@ -56,12 +63,18 @@ namespace Failsafe.Scripts.EffectSystem.Effects
                 ? _damagePerTick * _power
                 : _damagePerTick;
 
-            _target.TakeDamage(new DamageInfo(
+            var damage = new DamageInfo(
                 amount,
                 _damageType,
                 DamageApplicationKind.DotTick,
                 _source,
-                power: _power));
+                power: _power);
+
+            DamageResistanceUtility.ApplyDamage(
+                _target,
+                damage,
+                _ignoreResistance,
+                _logResistance);
         }
 
         public override void ClearEffect()

@@ -12,6 +12,10 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
         [SerializeField] private DamageApplicationKind _applicationKind = DamageApplicationKind.Instant;
         [SerializeField] private bool _scaleByContextPower = false;
 
+        [Header("Resistance")]
+        [SerializeField] private bool _ignoreResistance = false;
+        [SerializeField] private bool _logResistance = false;
+
         public override bool CanApply(EffectContext context)
         {
             return DamageTargetResolver.TryResolve(context, out _);
@@ -35,7 +39,11 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
                 context.Direction,
                 context.Power);
 
-            return new InstantDamageEffect(target, damage);
+            return new InstantDamageEffect(
+                target,
+                damage,
+                _ignoreResistance,
+                _logResistance);
         }
     }
 }

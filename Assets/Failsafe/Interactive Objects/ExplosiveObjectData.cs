@@ -1,4 +1,5 @@
 ﻿using FMODUnity;
+using Failsafe.Scripts.EffectSystem;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -26,6 +27,8 @@ public class ExplosiveObjectData : ScriptableObject
     [SerializeField] private int _explosionDamage;
     [SerializeField] private float _explosionRadius;
     [SerializeField] private float _explosionForce;
+    [Header("Effect System")]
+    [SerializeField] private EffectBundle _explosionEffects;
     [Header("Explosion post effect")]
     [SerializeField] private List<PostEffect> _postEffect;
     [Header("On Enemy Effect")]
@@ -55,6 +58,13 @@ public class ExplosiveObjectData : ScriptableObject
         get
         {
             return _explosionForce;
+        }
+    }
+    public EffectBundle ExplosionEffects
+    {
+        get
+        {
+            return _explosionEffects;
         }
     }
     public List<PostEffect> PostEffects

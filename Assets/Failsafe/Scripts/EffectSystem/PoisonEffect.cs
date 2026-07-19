@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Failsafe.Player.Model;
-using Failsafe.Scripts.Damage.Implementation;
+using Failsafe.Scripts.Damage;
 using UnityEngine;
 
 namespace Failsafe.Scripts.EffectSystem
@@ -13,7 +13,11 @@ namespace Failsafe.Scripts.EffectSystem
     {
         private readonly StatusEffectState _state;
         private readonly IStamina _stamina;
-        private readonly DamageableComponent _damageable;
+        private readonly DamageTarget _damageTarget;
+        private readonly GameObject _source;
+        private readonly Vector3 _point;
+        private readonly Vector3 _direction;
+        private readonly float _power;
 
         private readonly float _maxBuildUp;
         private readonly bool _clampBuildUpToMax;
@@ -35,7 +39,11 @@ namespace Failsafe.Scripts.EffectSystem
         public PoisonEffect(
             StatusEffectState state,
             IStamina stamina,
-            DamageableComponent damageable,
+            DamageTarget damageTarget,
+            GameObject source,
+            Vector3 point,
+            Vector3 direction,
+            float power,
             float duration,
             float buildUpPerApplication,
             float maxBuildUp,
@@ -47,7 +55,11 @@ namespace Failsafe.Scripts.EffectSystem
         {
             _state = state;
             _stamina = stamina;
-            _damageable = damageable;
+            _damageTarget = damageTarget;
+            _source = source;
+            _point = point;
+            _direction = direction;
+            _power = Mathf.Max(0f, power);
 
             _duration = Mathf.Max(0f, duration);
 
@@ -165,7 +177,7 @@ namespace Failsafe.Scripts.EffectSystem
 
         private void TickDamage(PoisonStageSettings stage)
         {
-            if (_damageable == null)
+            if (!_damageTarget.IsValid)
                 return;
 
             if (stage.DamagePerTick <= 0f)
@@ -176,7 +188,19 @@ namespace Failsafe.Scripts.EffectSystem
             if (_damageTimer > 0f)
                 return;
 
-            _damageable.TakeDamage(new FlatDamage(stage.DamagePerTick));
+            var damage = new DamageInfo(
+                stage.DamagePerTick,
+                DamageType.Poison,
+                DamageApplicationKind.DotTick,
+                _source,
+                _point,
+                _direction,
+                _power);
+
+            DamageResistanceUtility.ApplyDamage(
+                _damageTarget,
+                damage);
+
             _damageTimer = stage.DamageTickInterval;
 
             Debug.Log(

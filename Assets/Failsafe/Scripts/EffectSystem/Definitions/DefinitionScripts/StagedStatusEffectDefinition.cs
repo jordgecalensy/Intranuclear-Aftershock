@@ -67,7 +67,16 @@ namespace Failsafe.Scripts.EffectSystem
                 return false;
             }
 
-            return state != null && state.CanReceive(_statusType);
+            return state != null &&
+                   state.CanReceive(_statusType) &&
+                   StatusResistanceUtility.ApplyDurationMultiplier(
+                       state,
+                       _statusType,
+                       _duration) > 0f &&
+                   StatusResistanceUtility.ApplyBuildUpMultiplier(
+                       state,
+                       _statusType,
+                       _buildUpPerApplication) > 0f;
         }
 
         public override Effect CreateEffect(EffectContext context)
@@ -83,11 +92,21 @@ namespace Failsafe.Scripts.EffectSystem
             if (state == null)
                 return null;
 
+            float duration = StatusResistanceUtility.ApplyDurationMultiplier(
+                state,
+                _statusType,
+                _duration);
+
+            float buildUpPerApplication = StatusResistanceUtility.ApplyBuildUpMultiplier(
+                state,
+                _statusType,
+                _buildUpPerApplication);
+
             return new StagedStatusEffect(
                 state,
                 _statusType,
-                _duration,
-                _buildUpPerApplication,
+                duration,
+                buildUpPerApplication,
                 _maxBuildUp,
                 _clampBuildUpToMax,
                 _stages,
@@ -102,7 +121,11 @@ namespace Failsafe.Scripts.EffectSystem
                 return CalculateStage(_buildUpPerApplication, _stages);
 
             float currentBuildUp = state.GetStatusBuildUpValue(_statusType);
-            float predictedBuildUp = currentBuildUp + Mathf.Max(0f, _buildUpPerApplication);
+            float buildUpPerApplication = StatusResistanceUtility.ApplyBuildUpMultiplier(
+                state,
+                _statusType,
+                _buildUpPerApplication);
+            float predictedBuildUp = currentBuildUp + Mathf.Max(0f, buildUpPerApplication);
 
             if (_clampBuildUpToMax)
                 predictedBuildUp = Mathf.Min(predictedBuildUp, Mathf.Max(0f, _maxBuildUp));

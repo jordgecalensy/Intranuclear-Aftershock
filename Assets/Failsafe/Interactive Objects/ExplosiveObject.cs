@@ -1,17 +1,36 @@
 ﻿using Failsafe.Scripts.Damage.Implementation;
+using Failsafe.Scripts.EffectSystem;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.UIElements;
+using VContainer;
+using VContainer.Unity;
 
 public abstract class ExplosiveObject : MonoBehaviour
 {
     [SerializeField] protected ExplosiveObjectData Data;
     protected List<GameObject> DamagedObjects = new List<GameObject>();
+
+    private IEffectApplicationService _effects;
+
+    [Inject]
+    public void Construct(IEffectApplicationService effects)
+    {
+        _effects = effects;
+    }
+
     public void Explosion()
     {
+        if (Data == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         Collider[] hitsInfo = Physics.OverlapSphere(transform.position, Data.ExplosionRadius);
         DamagedObjects.Clear();
+        EffectBundle explosionEffects = ResolveExplosionEffects();
+        bool useEffectBundle = explosionEffects != null && ResolveEffectsIfNeeded();
+
         foreach (var hitInfo in hitsInfo)
         {
             Vector3 directionToEnemy = (hitInfo.transform.position - transform.position).normalized;
@@ -19,8 +38,14 @@ public abstract class ExplosiveObject : MonoBehaviour
             if (Physics.Raycast(transform.position, directionToEnemy, out hit, Data.ExplosionRadius))
             {
                 if (HitsChecking(hit, hitInfo)) continue;
-                DamagebleExplosionEffect(hitInfo);
-                PhysicsExplosionEffect(hitInfo, directionToEnemy);
+
+                if (useEffectBundle)
+                    BundleExplosionEffect(explosionEffects, hitInfo, directionToEnemy);
+                else
+                {
+                    DamagebleExplosionEffect(hitInfo);
+                    PhysicsExplosionEffect(hitInfo, directionToEnemy);
+                }
 
             }
         }
@@ -63,6 +88,100 @@ public abstract class ExplosiveObject : MonoBehaviour
         Debug.Log($"Rigidbody: {hitInfo.name}");
         hitInfo.GetComponent<Rigidbody>().AddForce(directionToEnemy * Data.ExplosionForce, ForceMode.Impulse);
     }
+
+    protected virtual EffectBundle ResolveExplosionEffects()
+    {
+        return Data != null ? Data.ExplosionEffects : null;
+    }
+
+    protected virtual void OnBundleExplosionEffectApplied(Collider hitInfo, Vector3 directionToEnemy)
+    {
+    }
+
+    private void BundleExplosionEffect(
+        EffectBundle explosionEffects,
+        Collider hitInfo,
+        Vector3 directionToEnemy)
+    {
+        if (explosionEffects == null || hitInfo == null)
+            return;
+
+        GameObject target = ResolveExplosionTarget(hitInfo);
+
+        if (target != null && DamagedObjects.Contains(target))
+            return;
+
+        Vector3 point = hitInfo.ClosestPoint(transform.position);
+        Vector3 direction = directionToEnemy.sqrMagnitude > 0.0001f
+            ? directionToEnemy.normalized
+            : (hitInfo.transform.position - transform.position).normalized;
+
+        if (direction.sqrMagnitude <= 0.0001f)
+            direction = Vector3.up;
+
+        float radius = Mathf.Max(0.01f, Data.ExplosionRadius);
+        float distance = Vector3.Distance(transform.position, point);
+        float power = Mathf.Clamp01(1f - distance / radius);
+
+        var context = new EffectContext(
+            gameObject,
+            hitInfo,
+            point,
+            -direction,
+            direction,
+            power);
+
+        _effects.Apply(explosionEffects, context);
+
+        if (target != null)
+            DamagedObjects.Add(target);
+
+        OnBundleExplosionEffectApplied(hitInfo, direction);
+    }
+
+    private static GameObject ResolveExplosionTarget(Collider hitInfo)
+    {
+        if (hitInfo == null)
+            return null;
+
+        DamageableComponent damageableComponent = hitInfo.GetComponentInParent<DamageableComponent>();
+
+        if (damageableComponent != null)
+            return damageableComponent.gameObject;
+
+        if (hitInfo.attachedRigidbody != null)
+            return hitInfo.attachedRigidbody.gameObject;
+
+        return hitInfo.transform.root != null
+            ? hitInfo.transform.root.gameObject
+            : hitInfo.gameObject;
+    }
+
+    private bool ResolveEffectsIfNeeded()
+    {
+        if (_effects != null)
+            return true;
+
+        LifetimeScope scope = GetComponentInParent<LifetimeScope>();
+
+        if (scope == null && gameObject.scene.IsValid())
+            scope = LifetimeScope.Find<LifetimeScope>(gameObject.scene);
+
+        if (scope == null || scope.Container == null)
+            return false;
+
+        try
+        {
+            _effects = scope.Container.Resolve<IEffectApplicationService>();
+        }
+        catch
+        {
+            _effects = null;
+        }
+
+        return _effects != null;
+    }
+
     protected virtual void SingleExplosionEffect()
     {
         if (Data.PostEffects != null)
