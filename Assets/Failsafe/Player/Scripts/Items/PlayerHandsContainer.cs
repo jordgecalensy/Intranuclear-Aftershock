@@ -81,9 +81,15 @@ public class PlayerHandsContainer
         itemObject.transform.SetParent(_rightHandItemPlace, false);
 
         if (handlePoint != null)
+        {
             itemObject.transform.localPosition = handlePoint.localPosition * -1;
+            itemObject.transform.rotation = _rightHandItemPlace.rotation;
+        }
         else
+        {
+            Debug.LogWarning("У предмета " + itemObject.name + "нет handlepoint, используем дефолт");
             itemObject.transform.localPosition = Vector3.zero;
+        }
 
         usableItem.ParseItem(itemObject);
 
