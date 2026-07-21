@@ -1,35 +1,85 @@
-﻿using System.IO;
+using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
+using VContainer;
 
-public class SaveLoadManager : MonoBehaviour
+namespace Failsafe.Scripts.SaveSystem
 {
-    private string savePath;
-
-    private void Start()
+    [Obsolete("Use IRunSaveService from gameplay code. This component is a temporary UnityEvent bridge.")]
+    public sealed class SaveLoadManager : MonoBehaviour
     {
-        savePath = Path.Combine(Application.persistentDataPath, "gameData.json");
-    }
+        private IRunSaveService _runSaveService;
 
-    public void SaveGame(GameData gameData)
-    {
-        string json = JsonUtility.ToJson(gameData, true);
-        File.WriteAllText(savePath, json);
-        Debug.Log("Game saved!");
-    }
-
-    public GameData LoadGame()
-    {
-        if (File.Exists(savePath))
+        [Inject]
+        public void Construct(IRunSaveService runSaveService)
         {
-            string json = File.ReadAllText(savePath);
-            GameData gameData = JsonUtility.FromJson<GameData>(json);
-            Debug.Log("Game loaded!");
-            return gameData;
+            _runSaveService = runSaveService;
         }
-        else
+
+        public bool BeginNewRun()
         {
-            Debug.LogError("Save file not found!");
-            return null;
+            return LogResult(_runSaveService?.BeginNewRun(), "New run started.");
+        }
+
+        public bool SaveCheckpoint(string sceneId, int floorIndex, int dungeonSeed)
+        {
+            return LogResult(
+                _runSaveService?.SaveCheckpoint(sceneId, floorIndex, dungeonSeed),
+                "Run checkpoint saved.");
+        }
+
+        public bool SaveCurrentCheckpoint()
+        {
+            RunCheckpointData checkpoint = _runSaveService?.CurrentSave?.checkpoint;
+            if (checkpoint == null || !checkpoint.hasCheckpoint)
+            {
+                Debug.LogError(
+                    "Cannot repeat the current checkpoint save before an initial checkpoint has been created.",
+                    this);
+                return false;
+            }
+
+            return SaveCheckpoint(checkpoint.sceneId, checkpoint.floorIndex, checkpoint.dungeonSeed);
+        }
+
+        public void LoadGame()
+        {
+            LoadAndRestoreAsync().Forget();
+        }
+
+        private async UniTask LoadAndRestoreAsync()
+        {
+            if (_runSaveService == null)
+            {
+                Debug.LogError("IRunSaveService was not injected into SaveLoadManager.", this);
+                return;
+            }
+
+            RunSaveOperationResult loadResult = _runSaveService.LoadRun();
+            if (!LogResult(loadResult, "Run save loaded."))
+                return;
+
+            RunSaveOperationResult restoreResult = await _runSaveService.RestoreCheckpointAsync();
+            LogResult(restoreResult, "Run checkpoint restored.");
+        }
+
+        private bool LogResult(RunSaveOperationResult? result, string successMessage)
+        {
+            if (!result.HasValue)
+            {
+                Debug.LogError("IRunSaveService was not injected into SaveLoadManager.", this);
+                return false;
+            }
+
+            if (!result.Value.Succeeded)
+            {
+                Debug.LogError(result.Value.Error, this);
+                return false;
+            }
+
+            string backupSuffix = result.Value.LoadedFromBackup ? " The backup file was used." : string.Empty;
+            Debug.Log(successMessage + backupSuffix, this);
+            return true;
         }
     }
 }
