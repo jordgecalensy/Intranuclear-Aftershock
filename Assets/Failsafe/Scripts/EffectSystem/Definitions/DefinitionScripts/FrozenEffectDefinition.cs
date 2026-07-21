@@ -47,7 +47,12 @@ namespace Failsafe.Scripts.EffectSystem
                 return false;
             }
 
-            return state != null && state.CanReceive(StatusEffectType.Frozen);
+            return state != null &&
+                   state.CanReceive(StatusEffectType.Frozen) &&
+                   StatusResistanceUtility.ApplyDurationMultiplier(
+                       state,
+                       StatusEffectType.Frozen,
+                       _duration) > 0f;
         }
 
         public override Effect CreateEffect(EffectContext context)
@@ -72,11 +77,16 @@ namespace Failsafe.Scripts.EffectSystem
             if (physicsResponder == null && _useStasisableFallback)
                 stasisFallback = ResolveStasisable(target, context);
 
+            float duration = StatusResistanceUtility.ApplyDurationMultiplier(
+                state,
+                StatusEffectType.Frozen,
+                _duration);
+
             return new FrozenEffect(
                 state,
                 physicsResponder,
                 stasisFallback,
-                _duration,
+                duration,
                 context.Source,
                 _removeStatusesOnApply,
                 _immunityStatusesOnEnd,

@@ -124,12 +124,17 @@ public sealed class FireAreaAdvanced : MonoBehaviour
     private readonly HashSet<Transform> _seenTargets = new HashSet<Transform>(128);
 
     private ParticleSystem _fxInstance;
+    private ParticleSystem[] _fxParticleSystems = Array.Empty<ParticleSystem>();
     private float _scaleVelocity;
     private float _emissionVelocity;
     private float _currentScale = 1f;
     private float _currentEmission = 1f;
+    private bool _extinguishing;
 
     private IEffectApplicationService _effects;
+    private float _nextEffectsResolveAttemptAt;
+
+    private const float EffectsResolveRetryInterval = 1f;
 
     [Inject]
     public void Construct(IEffectApplicationService effects)
@@ -139,12 +144,14 @@ public sealed class FireAreaAdvanced : MonoBehaviour
 
     private void OnEnable()
     {
+        _nextEffectsResolveAttemptAt = 0f;
         ResolveEffectsIfNeeded();
 
         _radius = Mathf.Clamp(initialRadius, 0.1f, maxRadius);
         _nextTickAt = Time.time + tickInterval;
         _nextSpreadAt = Time.time + spreadEvery;
         _burningOut = false;
+        _extinguishing = false;
 
         var sphereCollider = GetComponent<SphereCollider>();
         sphereCollider.isTrigger = true;
@@ -156,6 +163,7 @@ public sealed class FireAreaAdvanced : MonoBehaviour
             _fxInstance.name = fxPrefab.name + "(Runtime)";
             _fxInstance.transform.localPosition = Vector3.zero;
             _fxInstance.transform.localRotation = Quaternion.identity;
+            _fxParticleSystems = _fxInstance.GetComponentsInChildren<ParticleSystem>(true);
 
             var main = _fxInstance.main;
             main.prewarm = true;
@@ -182,10 +190,14 @@ public sealed class FireAreaAdvanced : MonoBehaviour
         _fxInstance.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         Destroy(_fxInstance.gameObject);
         _fxInstance = null;
+        _fxParticleSystems = Array.Empty<ParticleSystem>();
     }
 
     private void Update()
     {
+        if (_extinguishing)
+            return;
+
         ResolveEffectsIfNeeded();
 
         float deltaTime = Time.deltaTime;
@@ -215,6 +227,7 @@ public sealed class FireAreaAdvanced : MonoBehaviour
 
         if (intensity <= extinguishAt)
         {
+            _extinguishing = true;
             StartCoroutine(ExtinguishAndMaybeDestroy());
             return;
         }
@@ -364,18 +377,18 @@ public sealed class FireAreaAdvanced : MonoBehaviour
         }
 
         _fxInstance.transform.localScale = Vector3.one * _currentScale;
-        SetEmissionMultiplier(_fxInstance, _currentEmission);
+        SetEmissionMultiplier(_currentEmission);
     }
 
-    private void SetEmissionMultiplier(ParticleSystem root, float multiplier)
+    private void SetEmissionMultiplier(float multiplier)
     {
-        if (root == null)
-            return;
-
-        var particleSystems = root.GetComponentsInChildren<ParticleSystem>(true);
-
-        foreach (var particleSystem in particleSystems)
+        for (int i = 0; i < _fxParticleSystems.Length; i++)
         {
+            ParticleSystem particleSystem = _fxParticleSystems[i];
+
+            if (particleSystem == null)
+                continue;
+
             var emission = particleSystem.emission;
             var rate = emission.rateOverTime;
             rate.curveMultiplier = multiplier;
@@ -385,27 +398,33 @@ public sealed class FireAreaAdvanced : MonoBehaviour
 
     private IEnumerator ExtinguishAndMaybeDestroy()
     {
-        enabled = false;
-
         if (_fxInstance != null)
         {
             float duration = Mathf.Max(0.05f, extinguishFadeTime);
             float time = 0f;
 
-            var particleSystems = _fxInstance.GetComponentsInChildren<ParticleSystem>(true);
-            var initialEmission = new float[particleSystems.Length];
+            var initialEmission = new float[_fxParticleSystems.Length];
 
-            for (int i = 0; i < particleSystems.Length; i++)
-                initialEmission[i] = particleSystems[i].emission.rateOverTime.curveMultiplier;
+            for (int i = 0; i < _fxParticleSystems.Length; i++)
+            {
+                ParticleSystem particleSystem = _fxParticleSystems[i];
+
+                if (particleSystem != null)
+                    initialEmission[i] = particleSystem.emission.rateOverTime.curveMultiplier;
+            }
 
             while (time < duration)
             {
                 time += Time.deltaTime;
                 float k = 1f - Mathf.Clamp01(time / duration);
 
-                for (int i = 0; i < particleSystems.Length; i++)
+                for (int i = 0; i < _fxParticleSystems.Length; i++)
                 {
-                    var particleSystem = particleSystems[i];
+                    ParticleSystem particleSystem = _fxParticleSystems[i];
+
+                    if (particleSystem == null)
+                        continue;
+
                     var emission = particleSystem.emission;
                     var rate = emission.rateOverTime;
                     rate.curveMultiplier = initialEmission[i] * k;
@@ -417,12 +436,22 @@ public sealed class FireAreaAdvanced : MonoBehaviour
                 yield return null;
             }
 
-            foreach (var particleSystem in particleSystems)
-                particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            for (int i = 0; i < _fxParticleSystems.Length; i++)
+            {
+                ParticleSystem particleSystem = _fxParticleSystems[i];
+
+                if (particleSystem != null)
+                    particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
         }
 
         if (destroyOnExtinguish)
+        {
             Destroy(gameObject);
+            yield break;
+        }
+
+        enabled = false;
     }
 
     public void AddExtinguishImpulse(float amount)
@@ -508,6 +537,13 @@ public sealed class FireAreaAdvanced : MonoBehaviour
     {
         if (_effects != null)
             return;
+
+        float now = Time.unscaledTime;
+
+        if (now < _nextEffectsResolveAttemptAt)
+            return;
+
+        _nextEffectsResolveAttemptAt = now + EffectsResolveRetryInterval;
 
         LifetimeScope scope = GetComponentInParent<LifetimeScope>();
 
