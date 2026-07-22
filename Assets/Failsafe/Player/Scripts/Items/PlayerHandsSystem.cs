@@ -135,6 +135,12 @@ public class PlayerHandsSystem : ITickable
         else if (useResult.UsageType == UsageType.HoldToUse)
         {
             _skipStartDelay = true;
+
+            _usingState = UsingState.OnDelay;
+
+            float useDelay = Mathf.Max(0.02f, _playerHandsContainer.ItemUseDelay);
+            await UniTask.Delay(TimeSpan.FromSeconds(useDelay));
+
             _usingState = UsingState.None;
         }
 
