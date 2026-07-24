@@ -1,6 +1,7 @@
 using Assets.Failsafe.Scripts.RandomGeneration;
 using Failsafe.GameSceneServices.SpawnSystem;
 using Failsafe.Scripts.EffectSystem;
+using Failsafe.Scripts.SaveSystem;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -20,11 +21,24 @@ namespace Failsafe.GameSceneServices
 
         protected override void Configure(IContainerBuilder builder)
         {
+            builder.Register<EnemyRuntimeRegistry>(Lifetime.Scoped)
+                .AsSelf();
+
             builder.RegisterComponent(_enemySpawnSystemBuilder);
 
             builder.RegisterComponentInHierarchy<SignalManager>();
 
-            builder.RegisterEntryPoint<EnemySpawnSystem>().AsSelf();
+            builder.RegisterEntryPoint<PlacedEnemyRegistrationService>(Lifetime.Scoped);
+
+            builder.RegisterEntryPoint<EnemySpawnSystem>()
+                .As<IEnemySpawnSystem>()
+                .AsSelf();
+
+            builder.RegisterEntryPoint<EnemyRunSaveParticipant>(Lifetime.Scoped);
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            builder.RegisterEntryPoint<RunSaveDebugHotkey>(Lifetime.Scoped);
+#endif
 
             builder.RegisterEntryPoint<EffectManager>()
                 .As<IEffectManager>()

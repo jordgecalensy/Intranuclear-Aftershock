@@ -1,5 +1,6 @@
-﻿using Failsafe.Scripts.Bootstrap;
+using Failsafe.Scripts.Bootstrap;
 using Failsafe.Scripts.Configs;
+using Failsafe.Scripts.SaveSystem;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -18,6 +19,19 @@ namespace Failsafe.Scripts.DependencyInjection
 
             builder.Register<SceneLoader.SceneLoader>(Lifetime.Singleton)
                 .As<ISceneLoader>();
+
+            builder.Register<IRunSaveRepository>(
+                _ => new RunSaveRepository(),
+                Lifetime.Singleton);
+
+            builder.Register<RunSaveParticipantRegistry>(Lifetime.Singleton)
+                .AsSelf();
+
+            builder.Register<RunSaveService>(Lifetime.Singleton)
+                .As<IRunSaveService>();
+
+            builder.Register<RunSessionCoordinator>(Lifetime.Singleton)
+                .As<IRunSessionCoordinator>();
 
             builder.RegisterEntryPoint<Bootstrapper>();
         }

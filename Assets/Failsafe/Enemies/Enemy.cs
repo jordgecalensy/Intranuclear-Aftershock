@@ -35,6 +35,12 @@ public class Enemy : MonoBehaviour
     public IHealth Health => _health;
     public EnemyMovement Movement => _enemyMovement;
     public Enemy_ScriptableObject EnemyConfig => _enemyConfig;
+    public bool IsEngagedWithPlayer =>
+        currentState is CheckState ||
+        currentState is AlertState ||
+        currentState is ChasingState ||
+        currentState is AttackState ||
+        currentState is SearchingState;
 
     [Inject]
     public void Construct(IHealth health) => _health = health;

@@ -6,10 +6,11 @@ using UnityEngine;
 namespace Failsafe.Scripts.Health
 {
 	[Serializable]
-	public class PlayerHealth : IHealth
+	public class PlayerHealth : IRestorableHealth
 	{
 		public event Action<float> OnHealthChanged = delegate { };
 		public event Action OnDeath = delegate { };
+		public event Action<float> OnStateRestored = delegate { };
 
 		private bool _maxHealthAlreadyModified;
 
@@ -52,6 +53,12 @@ namespace Failsafe.Scripts.Health
 				_maxHealth.AddModificator(modificator);
 				_maxHealthAlreadyModified = true;
 			}
+		}
+
+		public void RestoreState(float health)
+		{
+			_health = Mathf.Clamp(health, 0f, MaxHealth);
+			OnStateRestored.Invoke(_health);
 		}
 	}
 }

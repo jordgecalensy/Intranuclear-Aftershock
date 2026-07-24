@@ -7,6 +7,13 @@ public class Enemy_ScriptableObject : ScriptableObject
 {
     public enum AttackType { LaserBeam, Projectile }
 
+    [Header("Persistence")]
+    [SerializeField]
+    [Tooltip("Stable ID of this enemy type used by run saves, for example: walker.")]
+    private string _persistenceArchetypeId;
+
+    public string PersistenceArchetypeId => _persistenceArchetypeId;
+
     [Header("Enemy Parameters")]
     public string enemyName; // Имя врага
     public float accelaration = 120; // Ускорение врага, как быстро он может развить максимальную скорость измерения метры в секунду
