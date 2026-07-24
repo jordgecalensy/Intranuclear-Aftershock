@@ -32,12 +32,20 @@ namespace Failsafe.Scripts.SaveSystem
         RunSaveFile CurrentSave { get; }
         bool HasLoadedRun { get; }
         bool HasCheckpoint { get; }
+        bool IsRunActive { get; }
         bool IsRestoring { get; }
 
         RunSaveOperationResult BeginNewRun();
+        RunSaveOperationResult BeginNewRunWithCheckpoint(
+            string sceneId,
+            int floorIndex,
+            int dungeonSeed);
         RunSaveOperationResult LoadRun();
         RunSaveOperationResult SaveCheckpoint(string sceneId, int floorIndex, int dungeonSeed);
+        RunSaveOperationResult PrepareCheckpointRestore();
+        void CancelCheckpointRestore();
         UniTask<RunSaveOperationResult> RestoreCheckpointAsync();
+        RunSaveOperationResult EndRun(string endReason);
         RunSaveOperationResult RecordDeath(DeathRecordData deathRecord);
         int GetDeathCount(string causeId);
         RunSaveOperationResult DeleteRun();
@@ -51,9 +59,10 @@ namespace Failsafe.Scripts.SaveSystem
         private RunSaveFile _currentSave;
         private bool _operationInProgress;
 
-        public RunSaveFile CurrentSave => _currentSave;
+        public RunSaveFile CurrentSave => _currentSave?.DeepCopy();
         public bool HasLoadedRun => _currentSave != null;
         public bool HasCheckpoint => _currentSave?.checkpoint != null && _currentSave.checkpoint.hasCheckpoint;
+        public bool IsRunActive => _currentSave != null && _currentSave.IsActive;
         public bool IsRestoring { get; private set; }
 
         public RunSaveService(
@@ -73,10 +82,41 @@ namespace Failsafe.Scripts.SaveSystem
 
             try
             {
-                if (!_repository.TryDelete(out string deleteError))
-                    return RunSaveOperationResult.Failure(deleteError);
-
                 RunSaveFile newSave = RunSaveFile.CreateNew();
+                newSave.saveRevision = 1;
+
+                // TrySave commits through a temporary file and keeps the previous
+                // primary save as a backup. Never delete the valid run first.
+                if (!_repository.TrySave(newSave, out string saveError))
+                    return RunSaveOperationResult.Failure(saveError);
+
+                _currentSave = newSave;
+                return RunSaveOperationResult.Success();
+            }
+            finally
+            {
+                _operationInProgress = false;
+            }
+        }
+
+        public RunSaveOperationResult BeginNewRunWithCheckpoint(
+            string sceneId,
+            int floorIndex,
+            int dungeonSeed)
+        {
+            if (_operationInProgress)
+                return BusyFailure();
+
+            string validationError = ValidateCheckpointCapture(sceneId);
+            if (validationError != null)
+                return RunSaveOperationResult.Failure(validationError);
+
+            _operationInProgress = true;
+
+            try
+            {
+                RunSaveFile newSave = RunSaveFile.CreateNew();
+                newSave.checkpoint = CaptureCheckpoint(sceneId, floorIndex, dungeonSeed);
                 newSave.saveRevision = 1;
 
                 if (!_repository.TrySave(newSave, out string saveError))
@@ -84,6 +124,11 @@ namespace Failsafe.Scripts.SaveSystem
 
                 _currentSave = newSave;
                 return RunSaveOperationResult.Success();
+            }
+            catch (Exception exception)
+            {
+                return RunSaveOperationResult.Failure(
+                    $"A save participant failed while capturing the initial checkpoint: {exception.Message}");
             }
             finally
             {
@@ -128,28 +173,19 @@ namespace Failsafe.Scripts.SaveSystem
                     "No run is active. Begin a new run or load an existing run before saving a checkpoint.");
             }
 
-            if (string.IsNullOrWhiteSpace(sceneId))
-                return RunSaveOperationResult.Failure("Checkpoint scene id cannot be empty.");
+            if (!_currentSave.IsActive)
+                return RunSaveOperationResult.Failure("Cannot save a checkpoint for an ended run.");
+
+            string validationError = ValidateCheckpointCapture(sceneId);
+            if (validationError != null)
+                return RunSaveOperationResult.Failure(validationError);
 
             _operationInProgress = true;
 
             try
             {
                 RunSaveFile candidate = _currentSave.DeepCopy();
-                RunCheckpointData checkpoint = new RunCheckpointData
-                {
-                    hasCheckpoint = true,
-                    checkpointId = Guid.NewGuid().ToString("N"),
-                    createdAtUnixMilliseconds = UtcNowMilliseconds(),
-                    sceneId = sceneId,
-                    floorIndex = floorIndex,
-                    dungeonSeed = dungeonSeed
-                };
-
-                _participantRegistry.CaptureAll(checkpoint);
-                checkpoint.EnsureInitialized();
-
-                candidate.checkpoint = checkpoint;
+                candidate.checkpoint = CaptureCheckpoint(sceneId, floorIndex, dungeonSeed);
                 candidate.saveRevision++;
 
                 if (!_repository.TrySave(candidate, out string saveError))
@@ -169,13 +205,56 @@ namespace Failsafe.Scripts.SaveSystem
             }
         }
 
+        public RunSaveOperationResult PrepareCheckpointRestore()
+        {
+            if (_operationInProgress || IsRestoring)
+                return BusyFailure();
+
+            if (!HasCheckpoint)
+            {
+                IsRestoring = false;
+                return RunSaveOperationResult.Failure("The active run does not contain a checkpoint.");
+            }
+
+            if (!_currentSave.IsActive)
+            {
+                IsRestoring = false;
+                return RunSaveOperationResult.Failure("An ended run cannot be continued.");
+            }
+
+            IsRestoring = true;
+            return RunSaveOperationResult.Success();
+        }
+
+        public void CancelCheckpointRestore()
+        {
+            if (!_operationInProgress)
+                IsRestoring = false;
+        }
+
         public async UniTask<RunSaveOperationResult> RestoreCheckpointAsync()
         {
             if (_operationInProgress)
                 return BusyFailure();
 
             if (!HasCheckpoint)
+            {
+                IsRestoring = false;
                 return RunSaveOperationResult.Failure("The active run does not contain a checkpoint.");
+            }
+
+            if (!_currentSave.IsActive)
+            {
+                IsRestoring = false;
+                return RunSaveOperationResult.Failure("An ended run cannot be continued.");
+            }
+
+            string participantValidationError = ValidateRequiredParticipants(_currentSave.checkpoint);
+            if (participantValidationError != null)
+            {
+                IsRestoring = false;
+                return RunSaveOperationResult.Failure(participantValidationError);
+            }
 
             _operationInProgress = true;
             IsRestoring = true;
@@ -195,6 +274,75 @@ namespace Failsafe.Scripts.SaveSystem
             finally
             {
                 IsRestoring = false;
+                _operationInProgress = false;
+            }
+        }
+
+        public RunSaveOperationResult EndRun(string endReason)
+        {
+            if (_operationInProgress)
+                return BusyFailure();
+
+            if (_currentSave == null)
+                return RunSaveOperationResult.Failure("Cannot end a run when no run is active.");
+
+            if (_currentSave.IsEnded)
+                return RunSaveOperationResult.Success();
+
+            if (!_currentSave.IsActive)
+            {
+                return RunSaveOperationResult.Failure(
+                    $"Cannot end a run with lifecycle state '{_currentSave.lifecycleState}'.");
+            }
+
+            if (string.IsNullOrWhiteSpace(endReason))
+                return RunSaveOperationResult.Failure("Run end reason cannot be empty.");
+
+            _operationInProgress = true;
+
+            try
+            {
+                RunSaveFile candidate = _currentSave.DeepCopy();
+                candidate.lifecycleState = RunLifecycleStates.Ended;
+                candidate.endedAtUnixMilliseconds = UtcNowMilliseconds();
+                candidate.endReason = endReason.Trim();
+                candidate.saveRevision++;
+
+                bool markerSaved = _repository.TryMarkRunEnded(
+                    candidate.runId,
+                    candidate.endedAtUnixMilliseconds,
+                    candidate.endReason,
+                    out string markerError);
+
+                bool saveSucceeded = _repository.TrySave(candidate, out string saveError);
+
+                // Death is terminal for the current session even if the storage device
+                // reports an error. The marker and the full snapshot are attempted
+                // independently so either one can still prevent an ended run from loading.
+                _currentSave = candidate;
+
+                if (!markerSaved && !saveSucceeded)
+                {
+                    return RunSaveOperationResult.Failure(
+                        $"Failed to end the run. Marker: {markerError} Save: {saveError}");
+                }
+
+                if (!markerSaved)
+                {
+                    return RunSaveOperationResult.Failure(
+                        $"The ended run snapshot was saved, but its recovery marker failed: {markerError}");
+                }
+
+                if (!saveSucceeded)
+                {
+                    return RunSaveOperationResult.Failure(
+                        $"The run was locked as ended, but its full snapshot failed to save: {saveError}");
+                }
+
+                return RunSaveOperationResult.Success();
+            }
+            finally
+            {
                 _operationInProgress = false;
             }
         }
@@ -291,6 +439,71 @@ namespace Failsafe.Scripts.SaveSystem
             }
 
             return false;
+        }
+
+        private string ValidateRequiredParticipants(RunCheckpointData checkpoint)
+        {
+            if (checkpoint.player != null &&
+                checkpoint.player.hasState &&
+                !_participantRegistry.IsRegistered(RunSaveParticipantIds.Player))
+            {
+                return
+                    $"Cannot restore checkpoint because the required save participant " +
+                    $"'{RunSaveParticipantIds.Player}' is not registered.";
+            }
+
+            if (checkpoint.enemies != null &&
+                checkpoint.enemies.Count > 0 &&
+                !_participantRegistry.IsRegistered(RunSaveParticipantIds.Enemies))
+            {
+                return
+                    $"Cannot restore checkpoint because the required save participant " +
+                    $"'{RunSaveParticipantIds.Enemies}' is not registered.";
+            }
+
+            return null;
+        }
+
+        private string ValidateCheckpointCapture(string sceneId)
+        {
+            if (string.IsNullOrWhiteSpace(sceneId))
+                return "Checkpoint scene id cannot be empty.";
+
+            if (!_participantRegistry.IsRegistered(RunSaveParticipantIds.Player))
+            {
+                return
+                    $"Cannot create checkpoint because the required save participant " +
+                    $"'{RunSaveParticipantIds.Player}' is not registered.";
+            }
+
+            if (!_participantRegistry.IsRegistered(RunSaveParticipantIds.Enemies))
+            {
+                return
+                    $"Cannot create checkpoint because the required save participant " +
+                    $"'{RunSaveParticipantIds.Enemies}' is not registered.";
+            }
+
+            return null;
+        }
+
+        private RunCheckpointData CaptureCheckpoint(
+            string sceneId,
+            int floorIndex,
+            int dungeonSeed)
+        {
+            RunCheckpointData checkpoint = new RunCheckpointData
+            {
+                hasCheckpoint = true,
+                checkpointId = Guid.NewGuid().ToString("N"),
+                createdAtUnixMilliseconds = UtcNowMilliseconds(),
+                sceneId = sceneId.Trim(),
+                floorIndex = floorIndex,
+                dungeonSeed = dungeonSeed
+            };
+
+            _participantRegistry.CaptureAll(checkpoint);
+            checkpoint.EnsureInitialized();
+            return checkpoint;
         }
 
         private static long UtcNowMilliseconds()

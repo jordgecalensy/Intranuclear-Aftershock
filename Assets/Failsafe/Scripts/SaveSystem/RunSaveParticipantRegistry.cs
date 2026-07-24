@@ -10,6 +10,25 @@ namespace Failsafe.Scripts.SaveSystem
 
         public int Count => _participants.Count;
 
+        public bool IsRegistered(string participantId)
+        {
+            if (string.IsNullOrWhiteSpace(participantId))
+                return false;
+
+            for (int i = 0; i < _participants.Count; i++)
+            {
+                if (string.Equals(
+                        _participants[i].ParticipantId,
+                        participantId,
+                        StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public IDisposable Register(IRunSaveParticipant participant)
         {
             if (participant == null)

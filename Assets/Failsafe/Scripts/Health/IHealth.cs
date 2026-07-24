@@ -13,4 +13,11 @@ namespace Failsafe.Scripts.Health
 
 		void AddHealth(float health);
 	}
+
+	public interface IRestorableHealth : IHealth
+	{
+		event Action<float> OnStateRestored;
+
+		void RestoreState(float health);
+	}
 }

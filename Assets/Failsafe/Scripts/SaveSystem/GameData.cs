@@ -4,6 +4,17 @@ using UnityEngine;
 
 namespace Failsafe.Scripts.SaveSystem
 {
+    public static class RunLifecycleStates
+    {
+        public const string Active = "active";
+        public const string Ended = "ended";
+    }
+
+    public static class RunEndReasons
+    {
+        public const string PlayerDeath = "player_death";
+    }
+
     [Serializable]
     public sealed class RunSaveFile
     {
@@ -12,8 +23,17 @@ namespace Failsafe.Scripts.SaveSystem
         public int schemaVersion = CurrentSchemaVersion;
         public long saveRevision;
         public string runId;
+        public string lifecycleState = RunLifecycleStates.Active;
+        public long endedAtUnixMilliseconds;
+        public string endReason;
         public RunCheckpointData checkpoint = new RunCheckpointData();
         public RunJournalData journal = new RunJournalData();
+
+        public bool IsActive =>
+            string.Equals(lifecycleState, RunLifecycleStates.Active, StringComparison.Ordinal);
+
+        public bool IsEnded =>
+            string.Equals(lifecycleState, RunLifecycleStates.Ended, StringComparison.Ordinal);
 
         public static RunSaveFile CreateNew()
         {
@@ -30,6 +50,9 @@ namespace Failsafe.Scripts.SaveSystem
 
             if (string.IsNullOrWhiteSpace(runId))
                 runId = Guid.NewGuid().ToString("N");
+
+            if (string.IsNullOrWhiteSpace(lifecycleState))
+                lifecycleState = RunLifecycleStates.Active;
 
             if (checkpoint == null)
                 checkpoint = new RunCheckpointData();
@@ -50,6 +73,9 @@ namespace Failsafe.Scripts.SaveSystem
                 schemaVersion = schemaVersion,
                 saveRevision = saveRevision,
                 runId = runId,
+                lifecycleState = lifecycleState,
+                endedAtUnixMilliseconds = endedAtUnixMilliseconds,
+                endReason = endReason,
                 checkpoint = checkpoint.DeepCopy(),
                 journal = journal.DeepCopy()
             };

@@ -20,14 +20,18 @@ namespace Failsafe.Scripts.DependencyInjection
             builder.Register<SceneLoader.SceneLoader>(Lifetime.Singleton)
                 .As<ISceneLoader>();
 
-            builder.Register<RunSaveRepository>(Lifetime.Singleton)
-                .As<IRunSaveRepository>();
+            builder.Register<IRunSaveRepository>(
+                _ => new RunSaveRepository(),
+                Lifetime.Singleton);
 
             builder.Register<RunSaveParticipantRegistry>(Lifetime.Singleton)
                 .AsSelf();
 
             builder.Register<RunSaveService>(Lifetime.Singleton)
                 .As<IRunSaveService>();
+
+            builder.Register<RunSessionCoordinator>(Lifetime.Singleton)
+                .As<IRunSessionCoordinator>();
 
             builder.RegisterEntryPoint<Bootstrapper>();
         }

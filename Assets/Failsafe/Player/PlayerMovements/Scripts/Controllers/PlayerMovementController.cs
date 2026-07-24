@@ -112,6 +112,17 @@ namespace Failsafe.PlayerMovements.Controllers
             SetGravity(_playerMovementParameters.GravityForce * Vector3.down);
         }
 
+        public void ResetTransientState()
+        {
+            _movement = Vector3.zero;
+            _gravity = Vector3.zero;
+            Velocity = Vector3.zero;
+            _coyoteTimeProgress = 0f;
+            _groundedAt = Time.time;
+
+            UpdateNoiseSignal();
+        }
+
         public void HandleMovement()
         {
             if (IsMovementBlocked)

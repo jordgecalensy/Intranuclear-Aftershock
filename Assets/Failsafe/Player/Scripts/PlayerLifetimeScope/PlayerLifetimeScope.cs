@@ -11,6 +11,7 @@ using Failsafe.Scripts.Damage.Implementation;
 using Failsafe.Scripts.Damage.Providers;
 using Failsafe.Scripts.EffectSystem;
 using Failsafe.Scripts.Health;
+using Failsafe.Scripts.SaveSystem;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
@@ -68,11 +69,15 @@ namespace Failsafe.Player
 
             builder.Register<InputHandler>(Lifetime.Scoped);
 
-            builder.Register<IHealth, PlayerHealth>(Lifetime.Singleton)
+            builder.Register<PlayerHealth>(Lifetime.Singleton)
+                .As<IHealth>()
+                .As<IRestorableHealth>()
                 .AsSelf()
                 .WithParameter(_playerModelParameters.MaxHealth);
 
-            builder.Register<IStamina, PlayerStamina>(Lifetime.Singleton)
+            builder.Register<PlayerStamina>(Lifetime.Singleton)
+                .As<IStamina>()
+                .As<IRestorableStamina>()
                 .AsSelf()
                 .WithParameter(_playerModelParameters.MaxStamina);
 
@@ -112,7 +117,16 @@ namespace Failsafe.Player
             builder.RegisterComponentInHierarchy<PlayerControlBlocker>();
 
             builder.Register<PlayerMovementController>(Lifetime.Scoped);
-            
+
+            builder.RegisterEntryPoint<PlayerRunSaveParticipant>(Lifetime.Scoped);
+            builder.RegisterEntryPoint<PlayerRunTerminationHandler>(Lifetime.Scoped);
+
+            builder.RegisterEntryPoint<PlayerRunCheckpointSafetyPolicy>(Lifetime.Scoped)
+                .As<IRunCheckpointSafetyPolicy>()
+                .AsSelf();
+
+            builder.RegisterEntryPoint<RunAutosaveController>(Lifetime.Scoped);
+
             builder.RegisterEntryPoint<EffectManager>(Lifetime.Scoped)
                 .As<IEffectManager>()
                 .AsSelf();
