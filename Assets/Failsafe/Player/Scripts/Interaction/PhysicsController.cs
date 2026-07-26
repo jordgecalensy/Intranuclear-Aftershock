@@ -178,6 +178,42 @@ namespace Failsafe.Player.Scripts.Interaction
             MoveToPosition(holderTransform.position, holderTransform.rotation, speed);
         }
 
+        internal void RestoreAttached(Transform holderTransform)
+        {
+            if (holderTransform == null)
+                throw new ArgumentNullException(nameof(holderTransform));
+
+            StopAllCoroutines();
+
+            _grabPoint = null;
+            _fixRotation = false;
+            _occupied = false;
+            _isAttached = true;
+
+            DisablePhysics();
+            _rb.linearVelocity = Vector3.zero;
+            _rb.angularVelocity = Vector3.zero;
+            _rb.position = holderTransform.position;
+            _rb.rotation = holderTransform.rotation;
+            transform.SetPositionAndRotation(
+                holderTransform.position,
+                holderTransform.rotation);
+        }
+
+        internal void RestoreDetached()
+        {
+            StopAllCoroutines();
+
+            _grabPoint = null;
+            _fixRotation = false;
+            _occupied = false;
+            _isAttached = false;
+
+            EnablePhysics();
+            _rb.linearVelocity = Vector3.zero;
+            _rb.angularVelocity = Vector3.zero;
+        }
+
         /// <summary>Выталкивает объект из слота, включает физику</summary>
         public void Detach()
         {

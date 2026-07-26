@@ -151,6 +151,11 @@ namespace Failsafe.Scripts.SaveSystem
                         restorePairs[i].State);
                 }
 
+                for (int i = 0; i < restorePairs.Count; i++)
+                {
+                    restorePairs[i].RuntimeObject.FinalizeCustomStateRestore();
+                }
+
                 Physics.SyncTransforms();
                 await UniTask.Yield(PlayerLoopTiming.FixedUpdate);
             }

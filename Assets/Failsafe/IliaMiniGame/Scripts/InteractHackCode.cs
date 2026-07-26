@@ -1,8 +1,15 @@
 using System;
+using Failsafe.Scripts.SaveSystem;
 using UnityEngine;
 
-public class InteractHackCode : Interactable, ICodeSuccessReceiver
+public class InteractHackCode :
+    Interactable,
+    ICodeSuccessReceiver,
+    IRunPersistentStateProvider
 {
+    private const string PersistentStateTypeId = "code-hack-minigame";
+    private const int PersistentStateVersion = 1;
+
     [Header("Мини-игра")]
     [SerializeField] private CodePatternSO pattern;          // что показывать в UI
     [SerializeField] private CodeOrderJudge judge;           // судья мини-игры (в UI)
@@ -15,11 +22,13 @@ public class InteractHackCode : Interactable, ICodeSuccessReceiver
     private Renderer _renderer;
     private bool isSolved = false;
 
+    public string StateTypeId => PersistentStateTypeId;
+    public int StateVersion => PersistentStateVersion;
+
     private void Awake()
     {
         _renderer = GetComponent<Renderer>();
-        if (_renderer != null)
-            _renderer.material.color = baseColor;
+        ApplyPersistentPresentation();
     }
 
     private void Start()
@@ -63,20 +72,72 @@ public class InteractHackCode : Interactable, ICodeSuccessReceiver
     {
         if (isSolved) return;
 
-        ChangeColor();
+        SetSolved();
         judge.CloseGame();      // закрыть UI после успеха (если требуется)
         // очищаем адресата:
          judge.SetExternalReceiver(null);
     }
 
-    private void ChangeColor()
+    public string CapturePersistentState()
+    {
+        HackMinigamePersistentState state =
+            new HackMinigamePersistentState
+            {
+                isSolved = isSolved
+            };
+
+        return JsonUtility.ToJson(state);
+    }
+
+    public void RestorePersistentState(
+        string serializedState,
+        int stateVersion)
+    {
+        if (stateVersion != PersistentStateVersion)
+        {
+            throw new InvalidOperationException(
+                $"Code hack minigame state version {stateVersion} is not supported. " +
+                $"Expected {PersistentStateVersion}.");
+        }
+
+        if (string.IsNullOrWhiteSpace(serializedState))
+        {
+            throw new InvalidOperationException(
+                "Saved code hack minigame state is empty.");
+        }
+
+        HackMinigamePersistentState state =
+            JsonUtility.FromJson<HackMinigamePersistentState>(
+                serializedState);
+
+        if (state == null)
+        {
+            throw new InvalidOperationException(
+                "Saved code hack minigame state is invalid.");
+        }
+
+        isSolved = state.isSolved;
+        ApplyPersistentPresentation();
+    }
+
+    private void SetSolved()
+    {
+        isSolved = true;
+        ApplyPersistentPresentation();
+    }
+
+    private void ApplyPersistentPresentation()
     {
         if (_renderer == null)
             _renderer = GetComponent<Renderer>();
 
         if (_renderer != null)
-            _renderer.material.color = onColor;
+            _renderer.material.color = isSolved ? onColor : baseColor;
+    }
 
-        isSolved = true;
+    [Serializable]
+    private sealed class HackMinigamePersistentState
+    {
+        public bool isSolved;
     }
 }

@@ -205,6 +205,14 @@ namespace Failsafe.Scripts.SaveSystem
             stateProvider.RestorePersistentState(state.state, state.stateVersion);
         }
 
+        internal void FinalizeCustomStateRestore()
+        {
+            IRunPersistentStateProvider stateProvider = ResolveStateProvider();
+
+            if (stateProvider is IRunPersistentStateRestoreFinalizer finalizer)
+                finalizer.FinalizePersistentStateRestore();
+        }
+
         internal void CompleteRestore(PersistentObjectStateData state)
         {
             if (_hasPendingRigidbodyRestore && _rigidbody != null)

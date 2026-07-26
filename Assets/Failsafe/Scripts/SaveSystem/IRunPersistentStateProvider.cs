@@ -8,4 +8,9 @@ namespace Failsafe.Scripts.SaveSystem
         string CapturePersistentState();
         void RestorePersistentState(string serializedState, int stateVersion);
     }
+
+    public interface IRunPersistentStateRestoreFinalizer
+    {
+        void FinalizePersistentStateRestore();
+    }
 }
