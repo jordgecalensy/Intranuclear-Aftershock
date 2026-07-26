@@ -10,6 +10,7 @@ namespace Failsafe.Scripts.SaveSystem
         public const string Enemy = "ENEMY";
         public const string DebugTools = "DEBUG";
         public const string Autosave = "AUTOSAVE";
+        public const string DeathScreen = "DEATH-SCREEN";
 
         public static string Format(string category, string message)
         {

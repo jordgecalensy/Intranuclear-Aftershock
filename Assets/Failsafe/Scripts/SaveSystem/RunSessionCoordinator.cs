@@ -10,6 +10,7 @@ namespace Failsafe.Scripts.SaveSystem
 
         UniTask<RunSaveOperationResult> StartNewRunAsync();
         UniTask<RunSaveOperationResult> ContinueRunAsync();
+        UniTask<RunSaveOperationResult> ReturnToMainMenuAsync();
     }
 
     public sealed class RunSessionCoordinator : IRunSessionCoordinator
@@ -123,6 +124,33 @@ namespace Failsafe.Scripts.SaveSystem
                 if (restorePrepared)
                     _runSaveService.CancelCheckpointRestore();
 
+                IsBusy = false;
+            }
+        }
+
+        public async UniTask<RunSaveOperationResult> ReturnToMainMenuAsync()
+        {
+            if (IsBusy)
+                return BusyFailure();
+
+            string mainMenuSceneName =
+                NormalizeSceneName(_gameConfig.MainMenuSceneName);
+            string validationError =
+                ValidateSceneName(
+                    mainMenuSceneName,
+                    nameof(GameConfig.MainMenuSceneName));
+
+            if (validationError != null)
+                return RunSaveOperationResult.Failure(validationError);
+
+            IsBusy = true;
+
+            try
+            {
+                return await TryLoadSceneAsync(mainMenuSceneName);
+            }
+            finally
+            {
                 IsBusy = false;
             }
         }

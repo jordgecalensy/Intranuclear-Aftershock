@@ -115,11 +115,29 @@ namespace Failsafe.Player
             builder.RegisterEntryPoint<PlayerUIPresenter>();
             
             builder.RegisterComponentInHierarchy<PlayerControlBlocker>();
+            builder.RegisterComponentInHierarchy<global::CursorLock>();
 
             builder.Register<PlayerMovementController>(Lifetime.Scoped);
 
             builder.RegisterEntryPoint<PlayerRunSaveParticipant>(Lifetime.Scoped);
             builder.RegisterEntryPoint<PlayerRunTerminationHandler>(Lifetime.Scoped);
+
+            DeathScreenView deathScreenView =
+                GetComponentInChildren<DeathScreenView>(true);
+
+            if (deathScreenView != null)
+            {
+                builder.RegisterComponent(deathScreenView);
+                builder.RegisterEntryPoint<DeathScreenPresenter>(Lifetime.Scoped);
+            }
+            else
+            {
+                RunSaveLog.Warning(
+                    RunSaveLog.DeathScreen,
+                    $"{nameof(DeathScreenView)} is not configured on the player prefab. " +
+                    "The run will still end on death, but the death screen will not be shown.",
+                    this);
+            }
 
             builder.RegisterEntryPoint<PlayerRunCheckpointSafetyPolicy>(Lifetime.Scoped)
                 .As<IRunCheckpointSafetyPolicy>()
