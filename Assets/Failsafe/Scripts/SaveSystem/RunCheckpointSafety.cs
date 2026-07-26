@@ -7,7 +7,8 @@ namespace Failsafe.Scripts.SaveSystem
         Airborne,
         RestoreInProgress,
         Combat,
-        DamageOverTime
+        DamageOverTime,
+        CarryingObject
     }
 
     public readonly struct RunCheckpointSafetyDecision

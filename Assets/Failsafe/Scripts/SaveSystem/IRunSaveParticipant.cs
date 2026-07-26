@@ -4,6 +4,7 @@ namespace Failsafe.Scripts.SaveSystem
 {
     public static class RunSaveParticipantIds
     {
+        public const string World = "world";
         public const string Player = "player";
         public const string Enemies = "enemies";
     }

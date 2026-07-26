@@ -111,6 +111,7 @@ namespace Failsafe.Player
             builder.RegisterComponentInHierarchy<PlayerUIController>();
 
             builder.RegisterComponentInHierarchy<PlayerCrosshairRaycaster>();
+            builder.RegisterComponentInHierarchy<PhysicsInteraction>();
 
             builder.RegisterEntryPoint<PlayerUIPresenter>();
             

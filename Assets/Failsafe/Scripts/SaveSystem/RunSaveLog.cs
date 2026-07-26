@@ -6,6 +6,7 @@ namespace Failsafe.Scripts.SaveSystem
     {
         public const string Marker = "[RUN-SAVE]";
         public const string Menu = "MENU";
+        public const string World = "WORLD";
         public const string Player = "PLAYER";
         public const string Enemy = "ENEMY";
         public const string DebugTools = "DEBUG";
