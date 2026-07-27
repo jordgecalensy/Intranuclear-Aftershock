@@ -1,5 +1,6 @@
 using System;
 using Failsafe.Player.View;
+using Failsafe.Player.Scripts.Interaction;
 using Failsafe.PlayerMovements.Controllers;
 using Failsafe.Scripts.Configs;
 using Failsafe.Scripts.Damage;
@@ -25,6 +26,8 @@ namespace Failsafe.Player.Scripts
         private readonly PlayerView _playerView;
         private readonly EnemyRuntimeRegistry _enemyRegistry;
         private readonly GameConfig _gameConfig;
+        private readonly PhysicsInteraction _physicsInteraction;
+        private readonly PlayerHandsContainer _playerHandsContainer;
 
         private float _previousHealth;
         private float _lastCombatActivityAt = float.NegativeInfinity;
@@ -38,7 +41,9 @@ namespace Failsafe.Player.Scripts
             DamageableComponent damageable,
             PlayerView playerView,
             EnemyRuntimeRegistry enemyRegistry,
-            GameConfig gameConfig)
+            GameConfig gameConfig,
+            PhysicsInteraction physicsInteraction,
+            PlayerHandsContainer playerHandsContainer)
         {
             _health =
                 health ?? throw new ArgumentNullException(nameof(health));
@@ -60,6 +65,12 @@ namespace Failsafe.Player.Scripts
             _gameConfig =
                 gameConfig ??
                 throw new ArgumentNullException(nameof(gameConfig));
+            _physicsInteraction =
+                physicsInteraction ??
+                throw new ArgumentNullException(nameof(physicsInteraction));
+            _playerHandsContainer =
+                playerHandsContainer ??
+                throw new ArgumentNullException(nameof(playerHandsContainer));
         }
 
         public void Initialize()
@@ -106,6 +117,21 @@ namespace Failsafe.Player.Scripts
                     RunCheckpointBlockReason.Airborne,
                     $"the player has not been grounded for " +
                     $"{groundedSeconds:0.##} seconds");
+            }
+
+            if (_physicsInteraction.IsDragging)
+            {
+                return RunCheckpointSafetyDecision.Blocked(
+                    RunCheckpointBlockReason.CarryingObject,
+                    "the player is carrying a physics object");
+            }
+
+            if (_playerHandsContainer.State ==
+                PlayerHandsContainer.HandState.ItemInHand)
+            {
+                return RunCheckpointSafetyDecision.Blocked(
+                    RunCheckpointBlockReason.CarryingObject,
+                    "the player is holding an inventory item");
             }
 
             if (HasActiveDamageOverTime())

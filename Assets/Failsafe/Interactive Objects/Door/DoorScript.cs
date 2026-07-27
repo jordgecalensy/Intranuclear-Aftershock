@@ -1,8 +1,13 @@
+using System;
+using Failsafe.Scripts.SaveSystem;
 using UnityEngine;
 using Assets.Failsafe.Scripts.interaction_System;
 
-public class DoorScript : MonoBehaviour
+public class DoorScript : MonoBehaviour, IRunPersistentStateProvider
 {
+    private const string PersistentStateTypeId = "door";
+    private const int PersistentStateVersion = 1;
+
     private Animator _animator;
     private string _enemyTag = "Enemy";
 
@@ -25,13 +30,12 @@ public class DoorScript : MonoBehaviour
     [SerializeField] private GameObject[] _noPowerGifObjects;
 
     public bool IsPowered => _isPowered;
+    public string StateTypeId => PersistentStateTypeId;
+    public int StateVersion => PersistentStateVersion;
 
     private void Start()
     {
-        _animator = GetComponent<Animator>();
-        _animator.SetBool("isOpen", _isOpen);
-        UpdateCardSlotCollider();
-        UpdateStatusVisuals();
+        ApplyPersistentPresentation(true);
     }
 
     private void Update()
@@ -68,6 +72,47 @@ public class DoorScript : MonoBehaviour
     public void InteractDoor()
     {
         OpenCloseDoor(!_isOpen);
+    }
+
+    public string CapturePersistentState()
+    {
+        DoorPersistentState state = new DoorPersistentState
+        {
+            isPowered = _isPowered,
+            isOpen = _isOpen
+        };
+
+        return JsonUtility.ToJson(state);
+    }
+
+    public void RestorePersistentState(
+        string serializedState,
+        int stateVersion)
+    {
+        if (stateVersion != PersistentStateVersion)
+        {
+            throw new InvalidOperationException(
+                $"Door state version {stateVersion} is not supported. " +
+                $"Expected {PersistentStateVersion}.");
+        }
+
+        if (string.IsNullOrWhiteSpace(serializedState))
+            throw new InvalidOperationException("Saved door state is empty.");
+
+        DoorPersistentState state =
+            JsonUtility.FromJson<DoorPersistentState>(serializedState);
+
+        if (state == null)
+            throw new InvalidOperationException("Saved door state is invalid.");
+
+        _isPowered = state.isPowered;
+        _isOpen = state.isOpen;
+
+        // Trigger occupancy is transient and is rebuilt by Unity physics.
+        _enemyBlockDoor = false;
+        _doorWasOpen = false;
+
+        ApplyPersistentPresentation(true);
     }
     private void OnTriggerEnter(Collider other)
     {
@@ -106,6 +151,24 @@ public class DoorScript : MonoBehaviour
         _lastIsPowered = _isPowered;
         _lastNeedsCard = needsCard;
         _statusVisualsInitialized = true;
+    }
+
+    private void ApplyPersistentPresentation(bool forceStatusRefresh)
+    {
+        if (_animator == null)
+            _animator = GetComponent<Animator>();
+
+        if (_animator == null)
+        {
+            throw new InvalidOperationException(
+                $"Door '{name}' has no Animator component.");
+        }
+
+        _animator.SetBool("isOpen", _isOpen);
+        _animator.Update(0f);
+
+        UpdateCardSlotCollider();
+        UpdateStatusVisuals(forceStatusRefresh);
     }
 
     private Material GetStatusMaterial(bool needsCard)
@@ -179,5 +242,12 @@ public class DoorScript : MonoBehaviour
 
             targetObject.SetActive(isActive);
         }
+    }
+
+    [Serializable]
+    private sealed class DoorPersistentState
+    {
+        public bool isPowered;
+        public bool isOpen;
     }
 }

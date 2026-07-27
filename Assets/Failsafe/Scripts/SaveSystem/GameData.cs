@@ -285,7 +285,17 @@ namespace Failsafe.Scripts.SaveSystem
     public sealed class PersistentObjectStateData
     {
         public string persistentId;
+        public bool requiredOnRestore;
         public bool isActive;
+        public bool hasTransform;
+        public Vector3 position;
+        public Quaternion rotation = Quaternion.identity;
+        public bool hasRigidbody;
+        public bool isKinematic;
+        public bool useGravity;
+        public int rigidbodyConstraints;
+        public string stateType;
+        public int stateVersion;
         public string state;
 
         public PersistentObjectStateData DeepCopy()
