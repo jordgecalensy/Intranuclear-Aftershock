@@ -9,9 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 908acbdff339ac342b358b32e91caf5d, type: 3}
-  m_Name: Poison
+  m_Script: {fileID: 11500000, guid: 74ee5f7844d8e7c43beaaa15eda4df6e, type: 3}
+  m_Name: PlayerParameterModifierEffectDefinition.Jumper
   m_EditorClassIdentifier: 
-  _effects:
-  - {fileID: 11400000, guid: 0aa9cc60a3234764187dc1222e5e5ce2, type: 2}
-  - {fileID: 11400000, guid: 0aa9cc60a3234764187dc1222e5e5ce2, type: 2}
+  _duration: 12
+  _multiplier: 1.4
+  _priority: 100
+  _parameters: 0400000005000000
+  _logResolveErrors: 0
+  _logApply: 0
