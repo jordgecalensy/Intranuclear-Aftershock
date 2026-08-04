@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System;
 using UnityEngine;
-using UnityEditor;
-using System.Linq;
 
 namespace Assets.Failsafe.Scripts.RandomGeneration
 {
@@ -12,8 +10,16 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
         private List<RandomizationItem> _inputList;
         private int _totalWeight;
         private bool _removeItem;
-        private System.Random _rnd = new System.Random();
-        private Array _rarityList = Enum.GetValues(typeof(ItemRarity));
+        private static Int32 _rndSeed;
+        private System.Random _rnd;
+
+        public RandomGenerator()
+        {
+            _rndSeed = (int)DateTime.Now.Ticks;
+            _rnd = new System.Random(_rndSeed);
+            Debug.Log("Seed: " + _rndSeed);
+            //save seed here
+        }
 
         public List<RandomizationItem> BlessRNG(RandomGeneratorInput input, int minWeight, int maxWeight)
         {
@@ -24,51 +30,49 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
             _inputList.Shuffle(_rnd);
             _removeItem = input.GetRemoveItem;
 
-            List<ItemRarity> rarityList = CreateRarityList();
-
-            List<RandomizationItem> properList = CreateProperList(_inputList, rarityList, _totalWeight, _removeItem);
+            List<RandomizationItem> properList = CreateProperList(_inputList, _totalWeight, _removeItem);
 
             return properList;
         }
 
-        private List<ItemRarity> CreateRarityList() 
+        private ItemRarity RollRarity()
         {
-            List<ItemRarity> rarityList = new List<ItemRarity>();
-            foreach (ItemRarity rarity in _rarityList) 
+            int roll = _rnd.Next(100);
+            switch (roll)
             {
-                for (int extraItems = 0; extraItems < (int)rarity; extraItems++) 
-                {
-                    rarityList.Add(rarity);
-                }
+                case >= (int)ItemRarity.Unique:
+                    return ItemRarity.Unique;
+                case >= (int)ItemRarity.Rare:
+                    return ItemRarity.Rare;
+                case >= (int)ItemRarity.Uncommon:
+                    return ItemRarity.Uncommon;
+                default:
+                    return ItemRarity.Common;
             }
-            rarityList.Shuffle(_rnd);
-            return rarityList;
         }
 
-        private List<RandomizationItem> CreateProperList(List<RandomizationItem> itemList, List<ItemRarity> rarityList, int weight, bool removeItem) 
+        private List<RandomizationItem> CreateProperList(List<RandomizationItem> itemList, int weight, bool removeItem)
         {
             List<RandomizationItem> properList = new List<RandomizationItem>();
             int counter = 0;
             while (counter < weight) 
             {
                 //Select rarity
-                int idx = _rnd.Next(0, rarityList.Count-1);
-                ItemRarity selectedRarity = rarityList[idx];
-                //Debug.Log("Selected rarity: " + selectedRarity);
+                ItemRarity selectedRarity = RollRarity();
 
                 //Get first item which rarity matches selected
                 RandomizationItem selectedItem = itemList.Find(item => item.Rarity == selectedRarity);
-                Debug.Log("Selected item: " + selectedItem.Name);
 
                 //Remove item and excluded if needed
-                foreach (RandomizationItem item in itemList) 
-                {
-                    if (removeItem && item.Name == selectedItem.Name || Array.Exists(selectedItem.Exclude, name => name == item.Name))
+                if (removeItem)
+                    itemList.Remove(selectedItem);
+
+                if (selectedItem.Exclude.Length > 0)
+                    foreach (String itemName in selectedItem.Exclude)
                     {
-                        itemList.Remove(item);
-                        Debug.Log("Removing item");
+                        RandomizationItem excludedItem = itemList.Find(item => item.Name == itemName);
+                        itemList.Remove(excludedItem);
                     }
-                }
 
                 properList.Add(selectedItem);
 

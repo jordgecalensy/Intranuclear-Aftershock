@@ -1,3 +1,4 @@
+using Assets.Failsafe.Scripts.RandomGeneration;
 using Failsafe.Scripts.Bootstrap;
 using Failsafe.Scripts.Configs;
 using Failsafe.Scripts.SaveSystem;
@@ -34,6 +35,7 @@ namespace Failsafe.Scripts.DependencyInjection
                 .As<IRunSessionCoordinator>();
 
             builder.RegisterEntryPoint<Bootstrapper>();
+            builder.Register<RandomGenerator>(Lifetime.Singleton);
         }
     }
 }

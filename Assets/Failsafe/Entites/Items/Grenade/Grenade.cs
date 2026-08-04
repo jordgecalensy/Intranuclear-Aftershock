@@ -23,7 +23,7 @@ public class Grenade : IUsable
         GranadeItem.gameObject.GetComponent<BaseGrеnadeObject>().ActivesionGranade(Data, ItsMineState);
         Debug.Log("Use");
         SoundUtils3D.Play(GranadeItem.gameObject, Data.ThrowGrendeSfx);
-        return new ItemUseResult { ItemStateAfterUse = ItemState.Drop, UsageType = UsageType.HoldToUse };
+        return new ItemUseResult { ItemStateAfterUse = ItemState.Throw, UsageType = UsageType.HoldToUse };
     }
     public void AltMode()
     {

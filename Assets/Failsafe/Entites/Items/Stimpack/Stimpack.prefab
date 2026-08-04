@@ -149,15 +149,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 45.840145
+      value: 1.8175813
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -4.8665648
+      value: 0.474
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 129.41216
+      value: 8.9488735
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalRotation.w
@@ -240,29 +240,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
   m_PrefabInstance: {fileID: 5190504837043407516}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &8794300228156334011
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1971230809139740364}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0819cade252ccc4a85b9f080d9ad7d6, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  _targetMode: 0
-  _selfTargetRoot: {fileID: 0}
-  _selfTargetCollider: {fileID: 0}
-  _aimOrigin: {fileID: 0}
-  _power: 1
-  _sourceOverride: {fileID: 0}
-  _usageType: 0
-  _itemStateAfterSuccessfulUse: 2
-  _consumeConsumableOnSuccessfulUse: 1
-  _allowUseWithoutRaycastHit: 0
-  _log: 1
 --- !u!114 &7157800356650614481
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -317,6 +294,29 @@ CapsuleCollider:
   m_Height: 0.5373689
   m_Direction: 1
   m_Center: {x: 0, y: -0.009058058, z: 0.022733381}
+--- !u!114 &8794300228156334011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1971230809139740364}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0819cade252ccc4a85b9f080d9ad7d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _targetMode: 0
+  _selfTargetRoot: {fileID: 0}
+  _selfTargetCollider: {fileID: 0}
+  _aimOrigin: {fileID: 0}
+  _power: 1
+  _sourceOverride: {fileID: 0}
+  _usageType: 0
+  _itemStateAfterSuccessfulUse: 2
+  _consumeConsumableOnSuccessfulUse: 1
+  _allowUseWithoutRaycastHit: 0
+  _log: 1
 --- !u!4 &8881726440552349880 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}

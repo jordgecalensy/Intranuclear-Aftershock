@@ -1,5 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Failsafe.Items;
+using Failsafe.Player.Model;
+using Failsafe.Player.View;
 using Failsafe.PlayerMovements;
 using System;
 using UnityEngine;
@@ -19,6 +21,8 @@ public class PlayerHandsSystem : ITickable
     private readonly PlayerHandsContainer _playerHandsContainer;
     private readonly InputHandler _inputHandler;
     private readonly PlayerControlBlocker _controlBlocker;
+    private readonly PlayerModelParameters _playerModelParameters;
+    private readonly Transform _itemThrowOrigin;
 
     private UsingState _usingState = UsingState.None;
 
@@ -30,11 +34,17 @@ public class PlayerHandsSystem : ITickable
     public PlayerHandsSystem(
         PlayerHandsContainer playerHandsContainer,
         InputHandler inputHandler,
-        PlayerControlBlocker controlBlocker)
+        PlayerControlBlocker controlBlocker,
+        PlayerModelParameters playerModelParameters,
+        PlayerView playerView)
     {
         _playerHandsContainer = playerHandsContainer;
         _inputHandler = inputHandler;
         _controlBlocker = controlBlocker;
+        _playerModelParameters = playerModelParameters;
+        _itemThrowOrigin = playerView != null
+            ? playerView.PlayerCamera
+            : null;
     }
 
     public void Tick()
@@ -156,6 +166,17 @@ public class PlayerHandsSystem : ITickable
 
             case ItemState.Drop:
                 _playerHandsContainer.DropItemFromHand();
+                return;
+
+            case ItemState.Throw:
+                float throwForce =
+                    _playerModelParameters?.ThrowItemPower != null
+                        ? _playerModelParameters.ThrowItemPower.Value
+                        : 0f;
+
+                _playerHandsContainer.ThrowItemFromHand(
+                    _itemThrowOrigin,
+                    throwForce);
                 return;
 
             case ItemState.Consume:
