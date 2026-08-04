@@ -1,4 +1,3 @@
-using Assets.Failsafe.Scripts.RandomGeneration;
 using Failsafe.GameSceneServices.SpawnSystem;
 using Failsafe.Scripts.EffectSystem;
 using Failsafe.Scripts.SaveSystem;
@@ -56,7 +55,6 @@ namespace Failsafe.GameSceneServices
                 .AsSelf();
             
             builder.RegisterEntryPoint<EarthquakeEnvironmentController>().AsSelf();
-            builder.Register<RandomGenerator>(Lifetime.Singleton);
         }
     }
 }
