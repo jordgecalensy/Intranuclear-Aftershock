@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System;
 using UnityEngine;
-using UnityEditor;
-using System.Linq;
 
 namespace Assets.Failsafe.Scripts.RandomGeneration
 {
@@ -12,7 +10,16 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
         private List<RandomizationItem> _inputList;
         private int _totalWeight;
         private bool _removeItem;
-        private System.Random _rnd = new System.Random(Int32.MaxValue);
+        private static Int32 _rndSeed;
+        private System.Random _rnd;
+
+        public RandomGenerator()
+        {
+            _rndSeed = (int)DateTime.Now.Ticks;
+            _rnd = new System.Random(_rndSeed);
+            Debug.Log("Seed: " + _rndSeed);
+            //save seed here
+        }
 
         public List<RandomizationItem> BlessRNG(RandomGeneratorInput input, int minWeight, int maxWeight)
         {
@@ -31,14 +38,17 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
         private ItemRarity RollRarity()
         {
             int roll = _rnd.Next(100);
-            foreach (ItemRarity rarity in Enum.GetValues(typeof(ItemRarity)))
+            switch (roll)
             {
-                if (roll >= (int)rarity)
-                    return rarity;
+                case >= (int)ItemRarity.Unique:
+                    return ItemRarity.Unique;
+                case >= (int)ItemRarity.Rare:
+                    return ItemRarity.Rare;
+                case >= (int)ItemRarity.Uncommon:
+                    return ItemRarity.Uncommon;
+                default:
+                    return ItemRarity.Common;
             }
-
-            //Default
-            return ItemRarity.Common;
         }
 
         private List<RandomizationItem> CreateProperList(List<RandomizationItem> itemList, int weight, bool removeItem)
