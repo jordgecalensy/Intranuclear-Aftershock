@@ -9,8 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 908acbdff339ac342b358b32e91caf5d, type: 3}
-  m_Name: Test_Percs
+  m_Script: {fileID: 11500000, guid: 74ee5f7844d8e7c43beaaa15eda4df6e, type: 3}
+  m_Name: StrongArms_Effect
   m_EditorClassIdentifier: 
-  _effects:
-  - {fileID: 11400000, guid: 1ac9f4a1d8721bf46998308cff2153aa, type: 2}
+  _permanent: 1
+  _duration: 5
+  _multiplier: 1.3
+  _priority: 100
+  _parameters: 060000000700000008000000
+  _logResolveErrors: 0
+  _logApply: 0
