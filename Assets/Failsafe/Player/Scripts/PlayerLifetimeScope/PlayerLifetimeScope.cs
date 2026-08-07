@@ -150,6 +150,8 @@ namespace Failsafe.Player
                 .As<IEffectManager>()
                 .AsSelf();
 
+            builder.RegisterEntryPoint<SelectedEngineerPerkApplier>(Lifetime.Scoped);
+
             builder.Register<PlayerNoiseSignal>(Lifetime.Scoped)
                 .WithParameter(transform);
 

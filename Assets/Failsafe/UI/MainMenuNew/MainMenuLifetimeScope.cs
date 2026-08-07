@@ -8,6 +8,7 @@ namespace Failsafe.UI.MainMenuNew
         protected override void Configure(IContainerBuilder builder)
         {
             builder.RegisterComponentInHierarchy<global::MainMenu>();
+            builder.RegisterComponentInHierarchy<EngineerSelectionView>();
         }
     }
 }

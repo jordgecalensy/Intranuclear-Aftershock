@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c76e89d2b83e08b4fb79aa178685a330, type: 3}
+  m_Name: EngineerGenerationConfig
+  m_EditorClassIdentifier: 
+  _perkPool: {fileID: 11400000, guid: 93627e3c13b957d4aa51b6bfb9d23d73, type: 2}
+  _perkDefinitions:
+  - {fileID: 11400000, guid: 8f101392bd8f6594f91a12daa6027c75, type: 2}
+  - {fileID: 11400000, guid: 78dacfb424046944b8f0eef3a7e947c4, type: 2}
+  - {fileID: 11400000, guid: 47afb8d04839de74f8594a844c634b96, type: 2}
+  - {fileID: 11400000, guid: 11447127d7275c24689250730ca4ec2e, type: 2}
+  - {fileID: 11400000, guid: f72d45ec519f445499290ffa8081a190, type: 2}
+  - {fileID: 11400000, guid: 1be663cc8e022ce46b4303a5aaa3f260, type: 2}
+  _engineerCount: 3
+  _maxPerksPerEngineer: 3
+  _maxNegativePerksPerEngineer: 1
+  _minTotalWeight: 70
+  _maxTotalWeight: 90
+  _maxAttemptsPerEngineer: 100
+  _engineerNames:
+  - "\u0418\u043D\u0436\u0435\u043D\u0435\u0440 1"
+  - "\u0418\u043D\u0436\u0435\u043D\u0435\u0440 2"
+  - "\u0418\u043D\u0436\u0435\u043D\u0435\u0440 3"
