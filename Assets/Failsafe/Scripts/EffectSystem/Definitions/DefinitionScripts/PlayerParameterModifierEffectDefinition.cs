@@ -28,6 +28,8 @@ namespace Failsafe.Scripts.EffectSystem
     public sealed class PlayerParameterModifierEffectDefinition : EffectDefinition
     {
         [Header("Modifier")]
+        [SerializeField] private bool _permanent = false;
+
         [SerializeField] private float _duration = 5f;
 
         [SerializeField, Min(0.01f)] private float _multiplier = 1.25f;
@@ -48,7 +50,7 @@ namespace Failsafe.Scripts.EffectSystem
 
         public override bool CanApply(EffectContext context)
         {
-            return _duration > 0f &&
+            return ResolveDuration() > 0f &&
                    _multiplier > 0f &&
                    TryBuildBindings(context, out PlayerParameterModifierBinding[] bindings) &&
                    bindings.Length > 0;
@@ -64,7 +66,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             return new PlayerParameterModifierEffect(
                 bindings,
-                _duration,
+                ResolveDuration(),
                 _multiplier,
                 _priority,
                 _logApply);
@@ -73,6 +75,13 @@ namespace Failsafe.Scripts.EffectSystem
         public override string GetStackKey(EffectContext context)
         {
             return $"positive.player-parameter-modifier.{GetInstanceID()}";
+        }
+
+        private float ResolveDuration()
+        {
+            return _permanent
+                ? float.PositiveInfinity
+                : _duration;
         }
 
         private bool TryBuildBindings(
