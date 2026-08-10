@@ -9,7 +9,8 @@ public class PowerEndPoint : PowerNode
     protected override void OnPowered()
     {
         base.OnPowered();
-        Debug.Log($"{name} запитан!");
+        Debug.Log(
+            $"[POWER-NET] Endpoint '{name}' received power.");
         onPowered?.Invoke();
     }
     protected override void OnPowerLost()

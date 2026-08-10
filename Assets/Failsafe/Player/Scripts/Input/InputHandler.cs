@@ -5,20 +5,30 @@ using UnityEngine.InputSystem;
 /// <summary>
 /// Класс работы с инпутом от игрока
 /// </summary>
-public class InputHandler
+public class InputHandler : System.IDisposable
 {
     private readonly InputActionAsset _playerControls;
+    private InputActionMap _playerActionMap;
+    private bool _isDisposed;
 
     public InputHandler(InputActionAsset playerControls)
     {
         _playerControls = playerControls;
         Init();
         SubscribeOnActionsPerformed();
+        SetGameplayInputEnabled(true);
     }
 
-    ~InputHandler()
+    public void Dispose()
     {
+        if (_isDisposed)
+            return;
+
+        UnsubscribeActionValuesFromInputEvents();
         UnsubscribeOnActionsPerformed();
+        ResetCachedInputState();
+
+        _isDisposed = true;
     }
 
     private const string _actionMapName = "Player";
@@ -86,23 +96,23 @@ public class InputHandler
 
     private void Init()
     {
-        InputActionMap mapReference = _playerControls.FindActionMap(_actionMapName);
+        _playerActionMap = _playerControls.FindActionMap(_actionMapName);
 
-        _movementAction = mapReference.FindAction(_movement);
-        _rotationAction = mapReference.FindAction(_rotation);
-        _jumpAction = mapReference.FindAction(_jump);
-        _sprintAction = mapReference.FindAction(_sprint);
-        _crouchAction = mapReference.FindAction(_crouch);
-        GrabOrDropAction = mapReference.FindAction(_grabOrDrop);
-        FlashLightAction = mapReference.FindAction(_attack);
-        _grabLedgeAction = mapReference.FindAction(_grabLedge);
-        _zoomAction = mapReference.FindAction(_zoom);
-        _attackAction = mapReference.FindAction(_use);
-        _altModeAction = mapReference.FindAction(_altMode);
-        _visorAction = mapReference.FindAction(_visor);
-        ThrowObjectAction = mapReference.FindAction(_throwObject);
-        _slantRightAction = mapReference.FindAction(_slantRight);
-        _slantLeftAction = mapReference.FindAction(_slantLeft);
+        _movementAction = _playerActionMap.FindAction(_movement);
+        _rotationAction = _playerActionMap.FindAction(_rotation);
+        _jumpAction = _playerActionMap.FindAction(_jump);
+        _sprintAction = _playerActionMap.FindAction(_sprint);
+        _crouchAction = _playerActionMap.FindAction(_crouch);
+        GrabOrDropAction = _playerActionMap.FindAction(_grabOrDrop);
+        FlashLightAction = _playerActionMap.FindAction(_attack);
+        _grabLedgeAction = _playerActionMap.FindAction(_grabLedge);
+        _zoomAction = _playerActionMap.FindAction(_zoom);
+        _attackAction = _playerActionMap.FindAction(_use);
+        _altModeAction = _playerActionMap.FindAction(_altMode);
+        _visorAction = _playerActionMap.FindAction(_visor);
+        ThrowObjectAction = _playerActionMap.FindAction(_throwObject);
+        _slantRightAction = _playerActionMap.FindAction(_slantRight);
+        _slantLeftAction = _playerActionMap.FindAction(_slantLeft);
 
         SubscribeActionValuesToInputEvents();
     }
@@ -110,15 +120,25 @@ public class InputHandler
     private void SubscribeOnActionsPerformed()
     {
         foreach (var actionMap in _playerControls.actionMaps)
+        {
             foreach (var action in actionMap.actions)
+            {
                 action.performed += AddPerformedAction;
+                action.canceled += RemovePerformedAction;
+            }
+        }
     }
 
     private void UnsubscribeOnActionsPerformed()
     {
         foreach (var actionMap in _playerControls.actionMaps)
+        {
             foreach (var action in actionMap.actions)
+            {
+                action.performed -= AddPerformedAction;
                 action.canceled -= RemovePerformedAction;
+            }
+        }
     }
 
     public void AddPerformedAction(InputAction.CallbackContext context)
@@ -130,29 +150,29 @@ public class InputHandler
 
     private void SubscribeActionValuesToInputEvents()
     {
-        _movementAction.performed += inputInfo => MovementInput = inputInfo.ReadValue<Vector2>();
-        _movementAction.canceled += inputInfo => MovementInput = Vector2.zero;
+        _movementAction.performed += OnMovementPerformed;
+        _movementAction.canceled += OnMovementCanceled;
 
-        _rotationAction.performed += inputInfo => RotationInput = inputInfo.ReadValue<Vector2>();
-        _rotationAction.canceled += inputInfo => RotationInput = Vector2.zero;
+        _rotationAction.performed += OnRotationPerformed;
+        _rotationAction.canceled += OnRotationCanceled;
 
-        _jumpAction.performed += inputInfo => JumpTriggered = true;
-        _jumpAction.canceled += inputInfo => JumpTriggered = false;
+        _jumpAction.performed += OnJumpPerformed;
+        _jumpAction.canceled += OnJumpCanceled;
 
-        _sprintAction.performed += inputInfo => SprintTriggered = true;
-        _sprintAction.canceled += inputInfo => SprintTriggered = false;
+        _sprintAction.performed += OnSprintPerformed;
+        _sprintAction.canceled += OnSprintCanceled;
 
         _crouchAction.performed += CrouchTrigger.OnInputStart;
         _crouchAction.canceled += CrouchTrigger.OnInputCancel;
 
-        FlashLightAction.performed += inputInfo => FlashLightTriggered = true;
-        FlashLightAction.canceled += inputInfo => FlashLightTriggered = false;
+        FlashLightAction.performed += OnFlashLightPerformed;
+        FlashLightAction.canceled += OnFlashLightCanceled;
 
         _grabLedgeAction.performed += GrabLedgeTrigger.OnInputStart;
         _grabLedgeAction.canceled += GrabLedgeTrigger.OnInputCancel;
 
-        _zoomAction.performed += inputInfo => ZoomTriggered = true;
-        _zoomAction.canceled += inputInfo => ZoomTriggered = false;
+        _zoomAction.performed += OnZoomPerformed;
+        _zoomAction.canceled += OnZoomCanceled;
 
         _attackAction.performed += AttackTrigger.OnInputStart;
         _attackAction.canceled += AttackTrigger.OnInputCancel;
@@ -163,12 +183,167 @@ public class InputHandler
         _visorAction.performed += VisorTrigger.OnInputStart;
         _visorAction.canceled += VisorTrigger.OnInputCancel;
 
-        _slantRightAction.performed += inputInfo => SlantRightTrigger = true;
-        _slantRightAction.canceled += inputInfo => SlantRightTrigger = false;
+        _slantRightAction.performed += OnSlantRightPerformed;
+        _slantRightAction.canceled += OnSlantRightCanceled;
 
-        _slantLeftAction.performed += inputInfo => SlantLeftTrigger = true;
-        _slantLeftAction.canceled += inputInfo => SlantLeftTrigger = false;
+        _slantLeftAction.performed += OnSlantLeftPerformed;
+        _slantLeftAction.canceled += OnSlantLeftCanceled;
+    }
 
+    private void UnsubscribeActionValuesFromInputEvents()
+    {
+        _movementAction.performed -= OnMovementPerformed;
+        _movementAction.canceled -= OnMovementCanceled;
+
+        _rotationAction.performed -= OnRotationPerformed;
+        _rotationAction.canceled -= OnRotationCanceled;
+
+        _jumpAction.performed -= OnJumpPerformed;
+        _jumpAction.canceled -= OnJumpCanceled;
+
+        _sprintAction.performed -= OnSprintPerformed;
+        _sprintAction.canceled -= OnSprintCanceled;
+
+        _crouchAction.performed -= CrouchTrigger.OnInputStart;
+        _crouchAction.canceled -= CrouchTrigger.OnInputCancel;
+
+        FlashLightAction.performed -= OnFlashLightPerformed;
+        FlashLightAction.canceled -= OnFlashLightCanceled;
+
+        _grabLedgeAction.performed -= GrabLedgeTrigger.OnInputStart;
+        _grabLedgeAction.canceled -= GrabLedgeTrigger.OnInputCancel;
+
+        _zoomAction.performed -= OnZoomPerformed;
+        _zoomAction.canceled -= OnZoomCanceled;
+
+        _attackAction.performed -= AttackTrigger.OnInputStart;
+        _attackAction.canceled -= AttackTrigger.OnInputCancel;
+
+        _altModeAction.performed -= AltModeTrigger.OnInputStart;
+        _altModeAction.canceled -= AltModeTrigger.OnInputCancel;
+
+        _visorAction.performed -= VisorTrigger.OnInputStart;
+        _visorAction.canceled -= VisorTrigger.OnInputCancel;
+
+        _slantRightAction.performed -= OnSlantRightPerformed;
+        _slantRightAction.canceled -= OnSlantRightCanceled;
+
+        _slantLeftAction.performed -= OnSlantLeftPerformed;
+        _slantLeftAction.canceled -= OnSlantLeftCanceled;
+    }
+
+    private void OnMovementPerformed(InputAction.CallbackContext context)
+    {
+        MovementInput = context.ReadValue<Vector2>();
+    }
+
+    private void OnMovementCanceled(InputAction.CallbackContext context)
+    {
+        MovementInput = Vector2.zero;
+    }
+
+    private void OnRotationPerformed(InputAction.CallbackContext context)
+    {
+        RotationInput = context.ReadValue<Vector2>();
+    }
+
+    private void OnRotationCanceled(InputAction.CallbackContext context)
+    {
+        RotationInput = Vector2.zero;
+    }
+
+    private void OnJumpPerformed(InputAction.CallbackContext context)
+    {
+        JumpTriggered = true;
+    }
+
+    private void OnJumpCanceled(InputAction.CallbackContext context)
+    {
+        JumpTriggered = false;
+    }
+
+    private void OnSprintPerformed(InputAction.CallbackContext context)
+    {
+        SprintTriggered = true;
+    }
+
+    private void OnSprintCanceled(InputAction.CallbackContext context)
+    {
+        SprintTriggered = false;
+    }
+
+    private void OnFlashLightPerformed(InputAction.CallbackContext context)
+    {
+        FlashLightTriggered = true;
+    }
+
+    private void OnFlashLightCanceled(InputAction.CallbackContext context)
+    {
+        FlashLightTriggered = false;
+    }
+
+    private void OnZoomPerformed(InputAction.CallbackContext context)
+    {
+        ZoomTriggered = true;
+    }
+
+    private void OnZoomCanceled(InputAction.CallbackContext context)
+    {
+        ZoomTriggered = false;
+    }
+
+    private void OnSlantRightPerformed(InputAction.CallbackContext context)
+    {
+        SlantRightTrigger = true;
+    }
+
+    private void OnSlantRightCanceled(InputAction.CallbackContext context)
+    {
+        SlantRightTrigger = false;
+    }
+
+    private void OnSlantLeftPerformed(InputAction.CallbackContext context)
+    {
+        SlantLeftTrigger = true;
+    }
+
+    private void OnSlantLeftCanceled(InputAction.CallbackContext context)
+    {
+        SlantLeftTrigger = false;
+    }
+
+    public void SetGameplayInputEnabled(bool enabled)
+    {
+        if (_playerActionMap == null)
+            return;
+
+        if (enabled)
+        {
+            _playerActionMap.Enable();
+            return;
+        }
+
+        ResetCachedInputState();
+        _playerActionMap.Disable();
+    }
+
+    private void ResetCachedInputState()
+    {
+        MovementInput = Vector2.zero;
+        RotationInput = Vector2.zero;
+        JumpTriggered = false;
+        SprintTriggered = false;
+        FlashLightTriggered = false;
+        ZoomTriggered = false;
+        SlantRightTrigger = false;
+        SlantLeftTrigger = false;
+
+        CrouchTrigger.Reset();
+        GrabLedgeTrigger.Reset();
+        AttackTrigger.Reset();
+        AltModeTrigger.Reset();
+        VisorTrigger.Reset();
+        PerformedActions.Clear();
     }
 
     public class InputTrigger
@@ -200,6 +375,12 @@ public class InputHandler
         public void ReleaseTrigger()
         {
             IsTriggered = false;
+        }
+
+        public void Reset()
+        {
+            IsTriggered = false;
+            IsPressed = false;
         }
     }
 }

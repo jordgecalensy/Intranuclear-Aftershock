@@ -2,10 +2,14 @@
 
 public abstract class Interactable : MonoBehaviour
 {
-
     public void BaseInteract()
     {
         Interact();
+    }
+
+    public void BaseInteract(PlayerInteractionContext context)
+    {
+        Interact(context);
     }
 
     public void OnHover()
@@ -20,16 +24,23 @@ public abstract class Interactable : MonoBehaviour
 
     protected virtual void Interact()
     {
-        //функция которую будут переопределять подклассы
+        // Старый вариант без контекста.
+    }
+
+    protected virtual void Interact(PlayerInteractionContext context)
+    {
+        // По умолчанию вызываем старый Interact(),
+        // чтобы не ломать уже существующие Interactable.
+        Interact();
     }
 
     protected virtual void Hover()
     {
-        //можно добавить эффект наведения на кнопку
+        // Можно добавить эффект наведения.
     }
 
     protected virtual void HoverExit()
     {
-        //можно добавить эффект выхода из наведения на кнопку
+        // Можно добавить эффект выхода из наведения.
     }
 }

@@ -32,14 +32,22 @@ namespace Failsafe.Player.Model
         public void RestoreStamina(float amount);
     }
 
+    public interface IRestorableStamina : IStamina
+    {
+        public event Action<float> OnStateRestored;
+
+        public void RestoreState(float stamina);
+    }
+
     /// <summary>
     /// Выносливость персонажа
     /// </summary>
-    public class PlayerStamina : IStamina
+    public class PlayerStamina : IRestorableStamina
     {
 
         public event Action<float> OnStaminaSpended;
         public event Action<float> OnStaminaRestored;
+        public event Action<float> OnStateRestored;
 
         public bool IsEmpty => _currentStamina <= 0;
 
@@ -66,6 +74,11 @@ namespace Failsafe.Player.Model
             // Значение может быть отрицательнмы, чтобы не абузить затратные действия при низкой выносливости
             _currentStamina -= amount;
             OnStaminaSpended?.Invoke(amount);
+        }
+        public void RestoreState(float stamina)
+        {
+            _currentStamina = Mathf.Clamp(stamina, 0f, MaxStamina);
+            OnStateRestored?.Invoke(_currentStamina);
         }
     }
 }

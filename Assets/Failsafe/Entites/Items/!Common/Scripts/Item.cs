@@ -6,74 +6,189 @@ public class Item : Prop
 {
     public ItemData ItemData;
     public List<ActionsGroup> ActionsGroups;
+
     private Rigidbody _rigidbody;
     private Collider _collider;
     private Transform _handlePoint;
+
+    private int _energyAmountCurrent;
+    private bool _runtimeStateInitialized;
+
     public Transform HandlePoint => _handlePoint;
+
+    public int EnergyAmountCurrent => _energyAmountCurrent;
+
+    public int EnergyAmountMax
+    {
+        get
+        {
+            if (!HasEnergySystem())
+                return 0;
+
+            return Mathf.Max(0, ItemData.EnergyAmountMax);
+        }
+    }
 
     private void Awake()
     {
         if (!GetComponentInChildren<Collider>())
-        {
-            Debug.LogError("No colliders on item " + this.name);
-        }
-        _rigidbody = gameObject.GetComponent<Rigidbody>();
-        _collider = gameObject.GetComponentInChildren<Collider>();
+            Debug.LogError("No colliders on item " + name, this);
+
+        _rigidbody = GetComponent<Rigidbody>();
+        _collider = GetComponentInChildren<Collider>();
         _handlePoint = transform.Find("HandlePoint");
+
+        InitializeRuntimeState();
     }
 
+    private void InitializeRuntimeState()
+    {
+        if (_runtimeStateInitialized)
+            return;
+
+        _runtimeStateInitialized = true;
+
+        if (HasEnergySystem())
+            _energyAmountCurrent = Mathf.Max(0, ItemData.EnergyAmountMax);
+        else
+            _energyAmountCurrent = 0;
+    }
+
+    public bool HasEnergySystem()
+    {
+        return ItemData != null && ItemData.UsesEnergy;
+    }
+
+    public bool IsEnergyEmpty()
+    {
+        if (!HasEnergySystem())
+            return false;
+
+        return _energyAmountCurrent <= 0;
+    }
+
+    public bool IsEnergyFull()
+    {
+        if (!HasEnergySystem())
+            return true;
+
+        return _energyAmountCurrent >= Mathf.Max(0, ItemData.EnergyAmountMax);
+    }
+
+    public bool CanUseEnergy()
+    {
+        if (!HasEnergySystem())
+            return true;
+
+        int cost = Mathf.Max(1, ItemData.EnergyCostPerUse);
+        return _energyAmountCurrent >= cost;
+    }
+
+    public bool TryUseEnergy()
+    {
+        if (!HasEnergySystem())
+            return true;
+
+        int cost = Mathf.Max(1, ItemData.EnergyCostPerUse);
+
+        if (_energyAmountCurrent < cost)
+            return false;
+
+        _energyAmountCurrent -= cost;
+        _energyAmountCurrent = Mathf.Clamp(_energyAmountCurrent, 0, Mathf.Max(0, ItemData.EnergyAmountMax));
+
+        return true;
+    }
+
+    public void ReloadEnergy(int amount)
+    {
+        if (!HasEnergySystem())
+            return;
+
+        _energyAmountCurrent += Mathf.Max(0, amount);
+        _energyAmountCurrent = Mathf.Clamp(_energyAmountCurrent, 0, Mathf.Max(0, ItemData.EnergyAmountMax));
+
+    }
+
+    public void FillEnergy()
+    {
+        if (!HasEnergySystem())
+            return;
+
+        _energyAmountCurrent = Mathf.Max(0, ItemData.EnergyAmountMax);
+
+    }
+
+    public int GetEnergyAmountForMax()
+    {
+        if (!HasEnergySystem())
+            return 0;
+
+        return Mathf.Max(0, ItemData.EnergyAmountMax - _energyAmountCurrent);
+    }
 
     /// <summary>
-    /// Предмет можно использовать
+    /// Предмет можно использовать через старый ActionsGroup.
+    /// Legacy.
     /// </summary>
-    /// <returns></returns>
     public bool IsUsable()
     {
-        // Захардкоженное значение для Player/Use
-        // Если вместо InputActionReference использовать простой enum то было бы проще с этим работать, пока такой костыль
         var playerUseActionId = System.Guid.Parse("316f217b-db19-4ab3-992d-f06d0052d966");
-        return ActionsGroups.Where(x => x.Actions.Any(x => x.action.id == playerUseActionId)).Any();
+
+        return ActionsGroups != null &&
+               ActionsGroups.Where(x => x.Actions.Any(z => z.action.id == playerUseActionId)).Any();
     }
 
     /// <summary>
-    /// Использовать предмет
+    /// Использовать предмет через старый ActionsGroup.
+    /// Legacy.
     /// </summary>
     public void Use()
     {
-        // Захардкоженное значение для Player/Use
-        // Если вместо InputActionReference использовать простой enum то было бы проще с этим работать, пока такой костыль
         var playerUseActionId = System.Guid.Parse("316f217b-db19-4ab3-992d-f06d0052d966");
-        foreach (var action in ActionsGroups.Where(x => x.Actions.Any(x => x.action.id == playerUseActionId)))
-        {
+
+        if (ActionsGroups == null)
+            return;
+
+        foreach (var action in ActionsGroups.Where(x => x.Actions.Any(z => z.action.id == playerUseActionId)))
             action.Invoke();
-        }
     }
 
     /// <summary>
-    /// Состояние в инвентаре/руке/ящике
+    /// Состояние в инвентаре/руке/ящике.
     /// </summary>
     public void ToInventoryState()
     {
-        _rigidbody.linearVelocity = Vector3.zero;
-        _rigidbody.angularVelocity = Vector3.zero;
-        _rigidbody.isKinematic = true;
-        _collider.enabled = false;
+        if (_rigidbody != null)
+        {
+#if UNITY_6000_0_OR_NEWER
+            _rigidbody.linearVelocity = Vector3.zero;
+#else
+            _rigidbody.velocity = Vector3.zero;
+#endif
+            _rigidbody.angularVelocity = Vector3.zero;
+            _rigidbody.isKinematic = true;
+        }
+
+        if (_collider != null)
+            _collider.enabled = false;
     }
 
     /// <summary>
-    /// Состояние в игровом мире
+    /// Состояние в игровом мире.
     /// </summary>
     public void ToWorldState()
     {
-        _rigidbody.isKinematic = false;
-        _collider.enabled = true;
+        if (_rigidbody != null)
+            _rigidbody.isKinematic = false;
+
+        if (_collider != null)
+            _collider.enabled = true;
     }
 
     public void SetKinematic(bool value)
     {
-        if (_rigidbody)
-        {
+        if (_rigidbody != null)
             _rigidbody.isKinematic = value;
-        }
     }
 }

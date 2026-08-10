@@ -7,11 +7,10 @@ using UnityEngine.UI;
 public class OnSelectEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     string _mainOriginalText;
-    Color _originalColor;
-    Material _originMaterial;
+    readonly Dictionary<TextMeshProUGUI, Color> _originalTextColors = new();
     Image _buttonBackground;
+    Color _originalBackgroundColor;
     [SerializeField] bool _addArrow;
-    [SerializeField] Material _targetMaterial;
     [SerializeField] Color _targetColor;
     [SerializeField] TextMeshProUGUI _mainTextMeshProUGUI;
     [SerializeField] List<TextMeshProUGUI> _optionalTextsGO;
@@ -21,10 +20,18 @@ public class OnSelectEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     {
         _buttonBackground = GetComponent<Image>();
 
-        _originMaterial = _mainTextMeshProUGUI.fontSharedMaterial;
         _mainOriginalText = _mainTextMeshProUGUI.text;
-        _optionalTextsGO.Add(_mainTextMeshProUGUI);
+        if (!_optionalTextsGO.Contains(_mainTextMeshProUGUI))
+        {
+            _optionalTextsGO.Add(_mainTextMeshProUGUI);
+        }
 
+        foreach (TextMeshProUGUI text in _optionalTextsGO)
+        {
+            _originalTextColors[text] = text.color;
+        }
+
+        _originalBackgroundColor = _buttonBackground.color;
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -34,8 +41,9 @@ public class OnSelectEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
         foreach (TextMeshProUGUI v in _optionalTextsGO)
         {
-            v.fontSharedMaterial = _targetMaterial;
-            v.fontWeight = FontWeight.SemiBold;
+            Color targetColor = _targetColor;
+            targetColor.a = _originalTextColors[v].a;
+            v.color = targetColor;
 
         }
         if (_addArrow)
@@ -53,13 +61,12 @@ public class OnSelectEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
         foreach (TextMeshProUGUI v in _optionalTextsGO)
         {
-            v.fontSharedMaterial = _originMaterial;
-            v.fontWeight = FontWeight.Regular;
+            v.color = _originalTextColors[v];
 
         }
 
         _mainTextMeshProUGUI.text = _mainOriginalText;
-        _buttonBackground.color = new Color(1, 1, 1, 0);
+        _buttonBackground.color = _originalBackgroundColor;
 
     }
 

@@ -1,70 +1,134 @@
+using Failsafe.Scripts.EffectSystem;
 using UnityEngine;
-using Failsafe.Scripts.Damage.Implementation; // Твой namespace для урона
 
-[CreateAssetMenu(menuName = "Combat/Strategies/LaserBeam")]
-public class LaserBeamStrategy : WeaponStrategy
+namespace Failsafe.Enemies.Projectiles
 {
-    public GameObject laserVfxPrefab; // Сюда префаб с LaserBeamController
-
-    public override bool Fire(WeaponController controller, Vector3 targetPoint)
+    [CreateAssetMenu(menuName = "Combat/Strategies/LaserBeam")]
+    public class LaserBeamStrategy : WeaponStrategy
     {
-        // 1. Пытаемся получить уже созданный лазер из памяти контроллера
-        LaserBeamController beam = controller.GetRuntimeObject<LaserBeamController>("active_beam");
-        Transform targetHelper = controller.GetRuntimeObject<Transform>("beam_target");
+        private const string ActiveBeamKey = "active_beam";
+        private const string BeamTargetKey = "beam_target";
+        private const string NextEffectTickKey = "beam_next_effect_tick";
 
-        // 2. Если лазера нет - создаем
-        if (beam == null)
+        public GameObject laserVfxPrefab;
+
+        [SerializeField] private float _effectTickInterval = 0.1f;
+
+        public override bool Fire(WeaponController controller, Vector3 targetPoint)
         {
-            var go = Instantiate(laserVfxPrefab, controller.firePoint.position, Quaternion.identity);
-            beam = go.GetComponent<LaserBeamController>();
-            
-            // Создаем невидимую точку-цель, за которой следит лазер
-            var helperObj = new GameObject("LaserTargetHelper");
-            targetHelper = helperObj.transform;
-            
-            // Инициализация твоим скриптом
-            beam.Initialize(controller.firePoint, targetHelper);
+            if (controller.firePoint == null)
+                return false;
 
-            // Сохраняем в память контроллера
-            controller.SetRuntimeObject("active_beam", beam);
-            controller.SetRuntimeObject("beam_target", targetHelper);
+            if (stats == null)
+            {
+                Debug.LogError($"[{nameof(LaserBeamStrategy)}] WeaponStats is not assigned.", this);
+                return false;
+            }
+
+            LaserBeamController beam = controller.GetRuntimeObject<LaserBeamController>(ActiveBeamKey);
+            Transform targetHelper = controller.GetRuntimeObject<Transform>(BeamTargetKey);
+
+            if (beam == null)
+            {
+                if (laserVfxPrefab == null)
+                {
+                    Debug.LogError($"[{nameof(LaserBeamStrategy)}] Laser VFX prefab is not assigned.", this);
+                    return false;
+                }
+
+                GameObject beamObject = Instantiate(
+                    laserVfxPrefab,
+                    controller.firePoint.position,
+                    Quaternion.identity);
+
+                beam = beamObject.GetComponent<LaserBeamController>();
+
+                if (beam == null)
+                {
+                    Debug.LogError(
+                        $"[{nameof(LaserBeamStrategy)}] Laser VFX prefab must contain LaserBeamController.",
+                        laserVfxPrefab);
+
+                    Destroy(beamObject);
+                    return false;
+                }
+
+                GameObject helperObject = new GameObject("LaserTargetHelper");
+                targetHelper = helperObject.transform;
+
+                beam.Initialize(controller.firePoint, targetHelper);
+
+                controller.SetRuntimeObject(ActiveBeamKey, beam);
+                controller.SetRuntimeObject(BeamTargetKey, targetHelper);
+            }
+
+            if (targetHelper != null)
+                targetHelper.position = targetPoint;
+
+            TryApplyEffects(controller, targetPoint);
+
+            return true;
         }
 
-        // 3. Обновляем позицию цели
-        if (targetHelper != null) targetHelper.position = targetPoint;
-
-        // 4. Наносим урон (Raycast от дула к точке)
-        ApplyLaserDamage(controller, targetPoint);
-
-        return true;
-    }
-
-    public override void StopFiring(WeaponController controller)
-    {
-        LaserBeamController beam = controller.GetRuntimeObject<LaserBeamController>("active_beam");
-        Transform targetHelper = controller.GetRuntimeObject<Transform>("beam_target");
-
-        if (beam != null) Destroy(beam.gameObject);
-        if (targetHelper != null) Destroy(targetHelper.gameObject);
-
-        controller.ClearRuntimeObject("active_beam");
-        controller.ClearRuntimeObject("beam_target");
-    }
-
-    private void ApplyLaserDamage(WeaponController controller, Vector3 targetPoint)
-    {
-        Vector3 dir = (targetPoint - controller.firePoint.position).normalized;
-        float dist = Vector3.Distance(controller.firePoint.position, targetPoint);
-
-        // Рейкаст для нанесения урона
-        if (Physics.Raycast(controller.firePoint.position, dir, out RaycastHit hit, dist + 0.5f, stats.hitMask))
+        public override void StopFiring(WeaponController controller)
         {
-            // Используем твою систему урона
-            var damageable = hit.collider.GetComponentInChildren<DamageableComponent>();
-            if (damageable != null)
+            LaserBeamController beam = controller.GetRuntimeObject<LaserBeamController>(ActiveBeamKey);
+            Transform targetHelper = controller.GetRuntimeObject<Transform>(BeamTargetKey);
+
+            if (beam != null)
+                Destroy(beam.gameObject);
+
+            if (targetHelper != null)
+                Destroy(targetHelper.gameObject);
+
+            controller.ClearRuntimeObject(ActiveBeamKey);
+            controller.ClearRuntimeObject(BeamTargetKey);
+            controller.ClearRuntimeObject(NextEffectTickKey);
+        }
+
+        private void TryApplyEffects(WeaponController controller, Vector3 targetPoint)
+        {
+            float tickInterval = Mathf.Max(0.01f, _effectTickInterval);
+            float nextTick = controller.GetRuntimeValue<float>(NextEffectTickKey);
+
+            if (Time.time < nextTick)
+                return;
+
+            controller.SetRuntimeObject(
+                NextEffectTickKey,
+                Time.time + tickInterval);
+
+            Vector3 origin = controller.firePoint.position;
+            Vector3 direction = targetPoint - origin;
+
+            if (direction.sqrMagnitude <= 0.0001f)
+                direction = controller.firePoint.forward;
+
+            direction.Normalize();
+
+            float distance = Vector3.Distance(origin, targetPoint);
+
+            if (!Physics.Raycast(
+                    origin,
+                    direction,
+                    out RaycastHit hit,
+                    distance + 0.5f,
+                    stats.hitMask))
             {
-                damageable.TakeDamage(new FlatDamage(stats.damage * Time.deltaTime));
+                return;
             }
+
+            float power = Mathf.Max(0f, stats.damage) * tickInterval;
+
+            var context = new EffectContext(
+                controller.gameObject,
+                hit.collider,
+                hit.point,
+                hit.normal,
+                direction,
+                power);
+
+            controller.Effects?.Apply(impactEffects, context);
         }
     }
 }

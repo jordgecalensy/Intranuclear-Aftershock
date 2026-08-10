@@ -1,6 +1,6 @@
+using Failsafe.PlayerMovements.Controllers;
 using Failsafe.Scripts.EffectSystem;
 using Failsafe.Scripts.EffectSystem.Effects;
-using Failsafe.PlayerMovements.Controllers;
 using Failsafe.Scripts.Health;
 using UnityEngine;
 
@@ -23,12 +23,18 @@ namespace Failsafe.PlayerMovements.States
         private bool _flybyNoiseTriggered;
         private bool _wasGroundedLastFrame;
 
-        private enum LandingKind { None, DamageOnly, MinorSlow, HeavyRecover }
+        private enum LandingKind
+        {
+            None,
+            DamageOnly,
+            MinorSlow,
+            HeavyRecover
+        }
+
         private LandingKind _landingDecision = LandingKind.None;
 
         public float FallHeight => _startPos.y - _cc.transform.position.y;
 
-        // 👉 этим флагом пользуемся в переходах
         public bool ShouldRecover => _landingDecision == LandingKind.HeavyRecover;
 
         public FallState(
@@ -40,13 +46,13 @@ namespace Failsafe.PlayerMovements.States
             IEffectManager effectManager,
             IHealth health)
         {
-            _input   = input;
-            _cc      = characterController;
-            _pmc     = movementController;
-            _p       = movementParameters;
-            _noise   = noiseController;
+            _input = input;
+            _cc = characterController;
+            _pmc = movementController;
+            _p = movementParameters;
+            _noise = noiseController;
             _effects = effectManager;
-            _health  = health;
+            _health = health;
         }
 
         public override void Enter()
@@ -68,60 +74,68 @@ namespace Failsafe.PlayerMovements.States
         {
             _fallProgress += Time.deltaTime;
 
-            // Гравитация → 100%
-            float gK = Mathf.Lerp(_p.InitialGravityStrength, 1f, _fallProgress / _p.TimeToFullGravityForce);
-            Vector3 gravity = _p.GravityForce * gK * Vector3.down;
+            float gravityMultiplier = Mathf.Lerp(
+                _p.InitialGravityStrength,
+                1f,
+                _fallProgress / _p.TimeToFullGravityForce);
 
-            // Управление в воздухе
+            Vector3 gravity = _p.GravityForce * gravityMultiplier * Vector3.down;
+
             Vector3 air = _pmc.GetRelativeMovement(_input.MovementInput) * _p.AirMovementSpeed;
 
             _pmc.Move(_initialVelXZ + air);
             _pmc.SetGravity(gravity);
 
-            // Fly-by шум (один раз)
             if (!_flybyNoiseTriggered && FallHeight > _p.FlybyNoiseHeight)
             {
                 _noise.CreateNoise(_p.FlybyNoiseRadius, 2);
                 _flybyNoiseTriggered = true;
             }
 
-            // 🔎 Детект "только что приземлились" (без ожидания FixedUpdate)
             bool groundedNow = _pmc.IsGrounded || _cc.isGrounded;
+
             if (groundedNow && !_wasGroundedLastFrame && _landingDecision == LandingKind.None)
             {
-                float h = FallHeight;
+                float height = FallHeight;
 
-                // Урон — считаем сразу (если включён)
-                if (_p.FallDamageEnabled && h >= _p.FallDamageStartHeight)
+                if (_p.FallDamageEnabled && height >= _p.FallDamageStartHeight)
                 {
                     float steps = 0f;
+
                     if (_p.FallDamageHeightStep > 0.0001f)
-                        steps = Mathf.Max(0f, Mathf.Floor((h - _p.FallDamageStartHeight) / _p.FallDamageHeightStep));
+                    {
+                        steps = Mathf.Max(
+                            0f,
+                            Mathf.Floor((height - _p.FallDamageStartHeight) / _p.FallDamageHeightStep));
+                    }
 
                     float damage = _p.FallDamageBase + steps * _p.FallDamageStepAmount;
+
                     if (damage > 0.01f && _health != null)
                         _health.AddHealth(-damage);
                 }
 
-                // Выбор типа приземления (фиксируем решение)
-                if (h >= _p.HeavyLandingHeight)
+                if (height >= _p.HeavyLandingHeight)
                     _landingDecision = LandingKind.HeavyRecover;
-                else if (h >= _p.SlowMinorHeight)
+                else if (height >= _p.SlowMinorHeight)
                     _landingDecision = LandingKind.MinorSlow;
-                else if (h >= _p.FallDamageStartHeight)
+                else if (height >= _p.FallDamageStartHeight)
                     _landingDecision = LandingKind.DamageOnly;
                 else
                     _landingDecision = LandingKind.None;
 
-                // Мгновенно применяем MINOR-slow (уровень 2) — Recover сделает MAIN-slow позже
                 if (_landingDecision == LandingKind.MinorSlow)
                 {
-                    var minor = new SlowMovementEffect(_pmc, _p.MinorSlowDuration, _p.MinorSlowMultiplier, unique: true);
-                    _effects.ApplyEffect(minor);
+                    var minorSlow = new SpeedMultiplierEffect(
+                        _pmc,
+                        _p.MinorSlowDuration,
+                        _p.MinorSlowMultiplier,
+                        SpeedStackPolicy.Strongest);
+
+                    _effects.ApplyEffect(minorSlow);
                 }
 
-                // Базовый шум приземления
-                _noise.CreateNoise(h, 2);
+                _noise.CreateNoise(height, 2);
             }
 
             _wasGroundedLastFrame = groundedNow;
@@ -130,7 +144,6 @@ namespace Failsafe.PlayerMovements.States
         public override void Exit()
         {
             _pmc.SetGravityDefault();
-            // Ничего больше здесь НЕ делаем: урон/минор слоу/шум уже обработаны в момент приземления.
         }
     }
 }
