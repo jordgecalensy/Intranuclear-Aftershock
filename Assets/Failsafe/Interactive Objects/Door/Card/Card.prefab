@@ -30,7 +30,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 460296773807546381}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 207.26898, y: 1.0247296, z: 18.257042}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -90,6 +90,11 @@ MonoBehaviour:
       Data4: 0
     Path: 
   _stasisMaterial: {fileID: 0}
+  _freezeRigidbody: 1
+  _disableEnemyState: 1
+  _freezeDamageObstacle: 1
+  _blockPlayerControls: 1
+  _playerBlocks: 1023
 --- !u!54 &5572433315692890955
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -170,8 +175,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0c6486fb5da960488c3f5d4e58b647a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PropData: {fileID: 11400000, guid: eb1179cd519c75f4b8cd36caf7a5fd6e, type: 2}
-  ItemData: {fileID: 11400000, guid: 613804eb793a14143b30687b26839ace, type: 2}
+  PropData: {fileID: 11400000, guid: 3a2feb5a6d4889e43aeb84938d4ee8ea, type: 2}
+  ItemData: {fileID: 11400000, guid: 6e2c44f45ce5a1b4eb1b9c4b084bd571, type: 2}
   ActionsGroups: []
 --- !u!1 &7172207126010247775
 GameObject:

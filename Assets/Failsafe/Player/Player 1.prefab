@@ -743,6 +743,7 @@ GameObject:
   - component: {fileID: 2585149125515000090}
   - component: {fileID: 6059183665494774997}
   - component: {fileID: 7637033719518998099}
+  - component: {fileID: 2644374166868239687}
   m_Layer: 6
   m_Name: Player 1
   m_TagString: Player
@@ -1208,6 +1209,19 @@ MonoBehaviour:
   _localOverrides: []
   _runtimeModifiers: []
   _log: 0
+--- !u!114 &2644374166868239687
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2939128531959195477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d2989220623c430ab404eb70cd84c7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PlayerCamera: {fileID: 1318708040991210610}
 --- !u!1 &3296388069423751947
 GameObject:
   m_ObjectHideFlags: 0
@@ -3510,6 +3524,10 @@ PrefabInstance:
     - target: {fileID: 7413623066839654582, guid: 2af6a35dab3266b4d9c50cdecd15f02d, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7686600835874295907, guid: 2af6a35dab3266b4d9c50cdecd15f02d, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -10.159668
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 8907869834193331032, guid: 2af6a35dab3266b4d9c50cdecd15f02d, type: 3}
