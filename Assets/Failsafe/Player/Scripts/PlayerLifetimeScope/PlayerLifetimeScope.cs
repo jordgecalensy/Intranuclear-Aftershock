@@ -208,6 +208,10 @@ namespace Failsafe.Player
             builder.Register<ScanGrenade>(Lifetime.Scoped)
                 .AsImplementedInterfaces()
                 .AsSelf();
+
+            builder.Register<Card>(Lifetime.Scoped)
+                .AsImplementedInterfaces()
+                .AsSelf();
         }
     }
 
