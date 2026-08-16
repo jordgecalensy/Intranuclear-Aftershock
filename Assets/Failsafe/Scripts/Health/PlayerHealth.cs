@@ -1,6 +1,5 @@
 using Failsafe.Player.Model;
 using Failsafe.Scripts.Modifiebles;
-using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
 
@@ -21,7 +20,7 @@ namespace Failsafe.Scripts.Health
 
 		public float MaxHealth => Mathf.Max(1f, _maxHealth);
 		public float CurrentHealth => _health;
-		[ShowInInspector] public bool IsDead => _health <= 0 || Mathf.Approximately(_health, 0f);
+		public bool IsDead => _health <= 0 || Mathf.Approximately(_health, 0f);
 
 		public PlayerHealth(PlayerRuntimeParameters runtimeParameters)
 		{
