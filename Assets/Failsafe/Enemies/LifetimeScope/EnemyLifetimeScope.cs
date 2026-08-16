@@ -3,6 +3,7 @@ using Failsafe.Scripts.Damage;
 using Failsafe.Scripts.Damage.Implementation;
 using Failsafe.Scripts.Damage.Providers;
 using Failsafe.Scripts.Health;
+using Failsafe.Scripts.Modifiebles;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -35,7 +36,8 @@ namespace Failsafe.Enemies
 
             builder.Register<IHealth, PlayerHealth>(Lifetime.Singleton)
                 .AsSelf()
-                .WithParameter(_enemyParameters.enemyHealth);
+                .WithParameter(
+                    new ModifiableField<float>(_enemyParameters.enemyHealth));
 
             builder.Register<FlatDamageProvider>(Lifetime.Scoped)
                 .As<IDamageProvider>();

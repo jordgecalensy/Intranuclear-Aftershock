@@ -26,31 +26,37 @@ public abstract class ExplosiveObject : MonoBehaviour
             return;
         }
 
-        Collider[] hitsInfo = Physics.OverlapSphere(transform.position, Data.ExplosionRadius);
-        DamagedObjects.Clear();
-        EffectBundle explosionEffects = ResolveExplosionEffects();
-        bool useEffectBundle = explosionEffects != null && ResolveEffectsIfNeeded();
-
-        foreach (var hitInfo in hitsInfo)
+        try
         {
-            Vector3 directionToEnemy = (hitInfo.transform.position - transform.position).normalized;
-            RaycastHit hit;          
-            if (Physics.Raycast(transform.position, directionToEnemy, out hit, Data.ExplosionRadius))
+            Collider[] hitsInfo = Physics.OverlapSphere(transform.position, Data.ExplosionRadius);
+            DamagedObjects.Clear();
+            EffectBundle explosionEffects = ResolveExplosionEffects();
+            bool useEffectBundle = explosionEffects != null && ResolveEffectsIfNeeded();
+
+            foreach (var hitInfo in hitsInfo)
             {
-                if (HitsChecking(hit, hitInfo)) continue;
-
-                if (useEffectBundle)
-                    BundleExplosionEffect(explosionEffects, hitInfo, directionToEnemy);
-                else
+                Vector3 directionToEnemy = (hitInfo.transform.position - transform.position).normalized;
+                RaycastHit hit;
+                if (Physics.Raycast(transform.position, directionToEnemy, out hit, Data.ExplosionRadius))
                 {
-                    DamagebleExplosionEffect(hitInfo);
-                    PhysicsExplosionEffect(hitInfo, directionToEnemy);
-                }
+                    if (HitsChecking(hit, hitInfo)) continue;
 
+                    if (useEffectBundle)
+                        BundleExplosionEffect(explosionEffects, hitInfo, directionToEnemy);
+                    else
+                    {
+                        DamagebleExplosionEffect(hitInfo);
+                        PhysicsExplosionEffect(hitInfo, directionToEnemy);
+                    }
+                }
             }
+
+            SingleExplosionEffect();
         }
-        SingleExplosionEffect();
-        Destroy(gameObject);
+        finally
+        {
+            Destroy(gameObject);
+        }
     }
     protected virtual bool HitsChecking(RaycastHit hit, Collider hitInfo)
     {
@@ -188,6 +194,9 @@ public abstract class ExplosiveObject : MonoBehaviour
         {
             foreach (var postEffect in Data.PostEffects)
             {
+                if (postEffect.Effect == null)
+                    continue;
+
                 var fire = Instantiate(postEffect.Effect, gameObject.transform.position, Quaternion.identity);
                 Destroy(fire, postEffect.Duration);
             }
@@ -196,6 +205,9 @@ public abstract class ExplosiveObject : MonoBehaviour
         {
             foreach (var vfx in Data.ExplosiveVfx)
             {
+                if (vfx.Effect == null)
+                    continue;
+
                 var Vfx = Instantiate(vfx.Effect, gameObject.transform.position, Quaternion.identity);
                 Destroy(Vfx, vfx.Duration);
                 // визуалный эффект после взрыва гранаты

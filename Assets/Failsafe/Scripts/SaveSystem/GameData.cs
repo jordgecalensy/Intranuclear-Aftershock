@@ -91,6 +91,7 @@ namespace Failsafe.Scripts.SaveSystem
         public string sceneId;
         public int floorIndex;
         public int dungeonSeed;
+        public EngineerStateData engineer = new EngineerStateData();
         public PlayerStateData player = new PlayerStateData();
         public InventoryStateData inventory = new InventoryStateData();
         public List<QuestStateData> quests = new List<QuestStateData>();
@@ -99,6 +100,9 @@ namespace Failsafe.Scripts.SaveSystem
 
         public void EnsureInitialized()
         {
+            if (engineer == null)
+                engineer = new EngineerStateData();
+
             if (player == null)
                 player = new PlayerStateData();
 
@@ -114,6 +118,7 @@ namespace Failsafe.Scripts.SaveSystem
             if (enemies == null)
                 enemies = new List<EnemyStateData>();
 
+            engineer.EnsureInitialized();
             inventory.EnsureInitialized();
             floor.EnsureInitialized();
 
@@ -133,6 +138,7 @@ namespace Failsafe.Scripts.SaveSystem
                 sceneId = sceneId,
                 floorIndex = floorIndex,
                 dungeonSeed = dungeonSeed,
+                engineer = engineer.DeepCopy(),
                 player = player.DeepCopy(),
                 inventory = inventory.DeepCopy(),
                 floor = floor.DeepCopy()
@@ -151,6 +157,38 @@ namespace Failsafe.Scripts.SaveSystem
             }
 
             return copy;
+        }
+    }
+
+    [Serializable]
+    public sealed class EngineerStateData
+    {
+        public bool hasState;
+        public string name;
+        public string operatorCode;
+        public int totalWeight;
+        public int spentWeight;
+        public List<string> perkIds = new List<string>();
+
+        public void EnsureInitialized()
+        {
+            if (perkIds == null)
+                perkIds = new List<string>();
+        }
+
+        public EngineerStateData DeepCopy()
+        {
+            EnsureInitialized();
+
+            return new EngineerStateData
+            {
+                hasState = hasState,
+                name = name,
+                operatorCode = operatorCode,
+                totalWeight = totalWeight,
+                spentWeight = spentWeight,
+                perkIds = new List<string>(perkIds)
+            };
         }
     }
 

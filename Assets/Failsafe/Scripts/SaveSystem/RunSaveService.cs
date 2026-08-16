@@ -443,6 +443,15 @@ namespace Failsafe.Scripts.SaveSystem
 
         private string ValidateRequiredParticipants(RunCheckpointData checkpoint)
         {
+            if (checkpoint.engineer != null &&
+                checkpoint.engineer.hasState &&
+                !_participantRegistry.IsRegistered(RunSaveParticipantIds.Engineer))
+            {
+                return
+                    $"Cannot restore checkpoint because the required save participant " +
+                    $"'{RunSaveParticipantIds.Engineer}' is not registered.";
+            }
+
             if (checkpoint.floor?.objects != null &&
                 checkpoint.floor.objects.Count > 0 &&
                 !_participantRegistry.IsRegistered(RunSaveParticipantIds.World))
@@ -477,6 +486,13 @@ namespace Failsafe.Scripts.SaveSystem
         {
             if (string.IsNullOrWhiteSpace(sceneId))
                 return "Checkpoint scene id cannot be empty.";
+
+            if (!_participantRegistry.IsRegistered(RunSaveParticipantIds.Engineer))
+            {
+                return
+                    $"Cannot create checkpoint because the required save participant " +
+                    $"'{RunSaveParticipantIds.Engineer}' is not registered.";
+            }
 
             if (!_participantRegistry.IsRegistered(RunSaveParticipantIds.World))
             {

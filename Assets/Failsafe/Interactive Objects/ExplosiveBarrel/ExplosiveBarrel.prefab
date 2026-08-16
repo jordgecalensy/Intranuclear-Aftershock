@@ -197,6 +197,11 @@ MonoBehaviour:
       Data4: 0
     Path: 
   _stasisMaterial: {fileID: 0}
+  _freezeRigidbody: 1
+  _disableEnemyState: 1
+  _freezeDamageObstacle: 1
+  _blockPlayerControls: 1
+  _playerBlocks: 1023
 --- !u!114 &541757270501684402
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -210,6 +215,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _config: {fileID: 11400000, guid: 7b0ca923d5812a944aedce26c633cede, type: 2}
+  _damagingObjectMask:
+    serializedVersion: 2
+    m_Bits: 1892343
+  _impactEffects: {fileID: 0}
+  _sameSourceCooldown: 0.25
+  _debugLogs: 1
 --- !u!136 &2221315553315568719
 CapsuleCollider:
   m_ObjectHideFlags: 0
