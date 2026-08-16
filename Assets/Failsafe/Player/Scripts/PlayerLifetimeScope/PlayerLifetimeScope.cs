@@ -75,7 +75,8 @@ namespace Failsafe.Player
             builder.Register<PlayerHealth>(Lifetime.Singleton)
                 .As<IHealth>()
                 .As<IRestorableHealth>()
-                .AsSelf();
+                .AsSelf()
+                .WithParameter(runtimeParameters.MaxHealth);
 
             builder.Register<PlayerStamina>(Lifetime.Singleton)
                 .As<IStamina>()
