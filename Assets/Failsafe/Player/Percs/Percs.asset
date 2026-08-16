@@ -44,7 +44,35 @@ MonoBehaviour:
     _weight: -10
     _exclude:
     - strong_arms
-  - _name: Former intelligence officer
+  - _name: Former_ntelligence_officer
     _rarity: 0
     _weight: 5
     _exclude: []
+  - _name: health_regeneration
+    _rarity: 0
+    _weight: 15
+    _exclude: []
+  - _name: soft_landing
+    _rarity: 0
+    _weight: 15
+    _exclude: []
+  - _name: tenacious
+    _rarity: 0
+    _weight: 10
+    _exclude:
+    - sickly
+  - _name: sickly
+    _rarity: 0
+    _weight: -10
+    _exclude:
+    - tenacious
+  - _name: enduring
+    _rarity: 0
+    _weight: 10
+    _exclude:
+    - smoker
+  - _name: smoker
+    _rarity: 0
+    _weight: -10
+    _exclude:
+    - enduring

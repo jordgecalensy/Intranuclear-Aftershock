@@ -11,12 +11,17 @@ namespace Failsafe.Player.Model
     {
         private readonly IStamina _stamina;
         private readonly PlayerModelParameters _playerModelParameters;
+        private readonly PlayerRuntimeParameters _runtimeParameters;
         private float _spentAt = -1;
 
-        public PlayerStaminaController(IStamina stamina, PlayerModelParameters playerModelParameters)
+        public PlayerStaminaController(
+            IStamina stamina,
+            PlayerModelParameters playerModelParameters,
+            PlayerRuntimeParameters runtimeParameters)
         {
             _stamina = stamina;
             _playerModelParameters = playerModelParameters;
+            _runtimeParameters = runtimeParameters;
 
             _stamina.OnStaminaSpended += OnSpend;
         }
@@ -57,8 +62,16 @@ namespace Failsafe.Player.Model
                 return;
             if (_stamina.CurrentStamina >= _stamina.MaxStamina)
                 return;
-            var regenerateAmmount = _playerModelParameters.RegenerateStaminaPerSecond * Time.fixedDeltaTime;
-            _stamina.RestoreStamina(regenerateAmmount);
+
+            float regenerationPerSecond = Mathf.Max(
+                0f,
+                _runtimeParameters.StaminaRegenerationPerSecond);
+
+            if (regenerationPerSecond <= 0f)
+                return;
+
+            float regenerateAmount = regenerationPerSecond * Time.fixedDeltaTime;
+            _stamina.RestoreStamina(regenerateAmount);
         }
 
         private void OnSpend(float ammount)

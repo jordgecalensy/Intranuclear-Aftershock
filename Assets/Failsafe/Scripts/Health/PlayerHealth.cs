@@ -1,3 +1,4 @@
+using Failsafe.Player.Model;
 using Failsafe.Scripts.Modifiebles;
 using Sirenix.OdinInspector;
 using System;
@@ -18,15 +19,15 @@ namespace Failsafe.Scripts.Health
 
 		[SerializeField] private float _health;
 
-		public float MaxHealth => _maxHealth;
+		public float MaxHealth => Mathf.Max(1f, _maxHealth);
 		public float CurrentHealth => _health;
 		[ShowInInspector] public bool IsDead => _health <= 0 || Mathf.Approximately(_health, 0f);
 
-		public PlayerHealth(float maxHealth)
+		public PlayerHealth(PlayerRuntimeParameters runtimeParameters)
 		{
-			this._maxHealth = maxHealth;
+			_maxHealth = runtimeParameters.MaxHealth;
 
-			_health = maxHealth;
+			_health = MaxHealth;
 		}
 
 		public void AddHealth(float toAdd)
@@ -50,9 +51,36 @@ namespace Failsafe.Scripts.Health
 		{
 			if (!_maxHealthAlreadyModified) //Проверка на то что максимальное здоровье уже было модифицировано
 			{
-				_maxHealth.AddModificator(modificator);
+				AddMaxHealthModifier(modificator);
 				_maxHealthAlreadyModified = true;
 			}
+		}
+
+		public void AddMaxHealthModifier(IModificator<float> modificator)
+		{
+			ChangeMaxHealth(modificator, true);
+		}
+
+		public void RemoveMaxHealthModifier(IModificator<float> modificator)
+		{
+			ChangeMaxHealth(modificator, false);
+		}
+
+		private void ChangeMaxHealth(IModificator<float> modificator, bool add)
+		{
+			if (modificator == null)
+				return;
+
+			float previousMaxHealth = Mathf.Max(0.0001f, MaxHealth);
+			float healthRatio = Mathf.Clamp01(_health / previousMaxHealth);
+
+			if (add)
+				_maxHealth.AddModificator(modificator);
+			else
+				_maxHealth.RemoveModificator(modificator);
+
+			_health = Mathf.Clamp(MaxHealth * healthRatio, 0f, MaxHealth);
+			OnHealthChanged.Invoke(_health);
 		}
 
 		public void RestoreState(float health)

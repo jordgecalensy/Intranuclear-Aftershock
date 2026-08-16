@@ -1,4 +1,5 @@
 using System;
+using Failsafe.Player.Model;
 using Failsafe.PlayerMovements.Controllers;
 using UnityEngine;
 using VContainer;
@@ -87,6 +88,8 @@ namespace Failsafe.Scripts.EffectSystem
             if (_useSignalManagerFallback &&
                 TryResolveSignalManager(out SignalManager signalManager))
             {
+                finalStrength *= ResolveNoiseMultiplier(target);
+
                 if (_log)
                 {
                     Debug.Log(
@@ -110,6 +113,28 @@ namespace Failsafe.Scripts.EffectSystem
             }
 
             return null;
+        }
+
+        private static float ResolveNoiseMultiplier(GameObject target)
+        {
+            LifetimeScope scope = ResolveLifetimeScope(target);
+
+            if (scope == null || scope.Container == null)
+                return 1f;
+
+            try
+            {
+                PlayerRuntimeParameters runtimeParameters =
+                    scope.Container.Resolve<PlayerRuntimeParameters>();
+
+                return runtimeParameters != null
+                    ? Mathf.Max(0f, runtimeParameters.NoiseStrengthMultiplier)
+                    : 1f;
+            }
+            catch
+            {
+                return 1f;
+            }
         }
 
         public override string GetStackKey(EffectContext context)

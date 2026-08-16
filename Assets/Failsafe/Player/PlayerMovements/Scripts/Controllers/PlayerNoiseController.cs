@@ -1,3 +1,4 @@
+using Failsafe.Player.Model;
 using UnityEngine;
 
 namespace Failsafe.PlayerMovements.Controllers
@@ -15,12 +16,18 @@ namespace Failsafe.PlayerMovements.Controllers
         private readonly Transform _playerTransform;
         private readonly SignalChannel _playerSignalChannel;
         private readonly PlayerNoiseSignal _noiseSignal;
+        private readonly PlayerRuntimeParameters _runtimeParameters;
 
-        public PlayerNoiseController(Transform playerTransform, PlayerNoiseParameters playerNoiseParametrs, SignalManager signalManager)
+        public PlayerNoiseController(
+            Transform playerTransform,
+            PlayerNoiseParameters playerNoiseParametrs,
+            SignalManager signalManager,
+            PlayerRuntimeParameters runtimeParameters)
         {
             _playerTransform = playerTransform;
             _playerNoiseParametrs = playerNoiseParametrs;
             _playerSignalChannel = signalManager.PlayerNoiseChanel;
+            _runtimeParameters = runtimeParameters;
             _noiseSignal = new PlayerNoiseSignal(_playerTransform);
             _playerSignalChannel.AddConstant(_noiseSignal);
         }
@@ -47,7 +54,7 @@ namespace Failsafe.PlayerMovements.Controllers
         /// <param name="strength"></param>
         private void SetNoiseStrength(float strength)
         {
-            _noiseSignal.UpdateStrength(strength);
+            _noiseSignal.UpdateStrength(ApplyNoiseMultiplier(strength));
         }
 
         /// <summary>
@@ -57,7 +64,19 @@ namespace Failsafe.PlayerMovements.Controllers
         /// <param name="duration">Длительность</param>
         public void CreateNoise(float strength, float duration = 5f)
         {
-            _playerSignalChannel.Add(_playerTransform.position, strength, duration);
+            _playerSignalChannel.Add(
+                _playerTransform.position,
+                ApplyNoiseMultiplier(strength),
+                duration);
+        }
+
+        private float ApplyNoiseMultiplier(float strength)
+        {
+            float multiplier = _runtimeParameters != null
+                ? Mathf.Max(0f, _runtimeParameters.NoiseStrengthMultiplier)
+                : 1f;
+
+            return Mathf.Max(0f, strength) * multiplier;
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Failsafe.Player.Model;
 using Failsafe.Scripts.EffectSystem.Targets;
 using UnityEngine;
 
@@ -11,6 +12,7 @@ namespace Failsafe.PlayerMovements.Controllers
         private readonly CharacterController _characterController;
         private readonly PlayerMovementParameters _playerMovementParameters;
         private readonly PlayerControlBlocker _controlBlocker;
+        private readonly PlayerRuntimeParameters _runtimeParameters;
 
         private Vector3 _movement;
         private Vector3 _gravity;
@@ -52,11 +54,13 @@ namespace Failsafe.PlayerMovements.Controllers
         public PlayerMovementController(
             CharacterController characterController,
             PlayerMovementParameters playerMovementParameters,
-            PlayerControlBlocker controlBlocker)
+            PlayerControlBlocker controlBlocker,
+            PlayerRuntimeParameters runtimeParameters)
         {
             _characterController = characterController;
             _playerMovementParameters = playerMovementParameters;
             _controlBlocker = controlBlocker;
+            _runtimeParameters = runtimeParameters;
         }
 
         public void SetSpeedModifier(int modifierId, float multiplier)
@@ -174,7 +178,11 @@ namespace Failsafe.PlayerMovements.Controllers
                 ? horizontalSpeed
                 : 0f;
 
-            _playerNoiseSignal.UpdateStrength(noiseStrength);
+            float noiseMultiplier = _runtimeParameters != null
+                ? Mathf.Max(0f, _runtimeParameters.NoiseStrengthMultiplier)
+                : 1f;
+
+            _playerNoiseSignal.UpdateStrength(noiseStrength * noiseMultiplier);
         }
     }
 }
