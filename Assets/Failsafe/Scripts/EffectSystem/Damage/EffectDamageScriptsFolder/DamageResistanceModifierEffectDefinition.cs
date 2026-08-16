@@ -15,6 +15,8 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
         [Tooltip("0.5 = цель получает половину этого типа урона. 1.5 = получает на 50% больше.")]
         [SerializeField, Min(0f)] private float _multiplier = 0.5f;
 
+        [SerializeField] private bool _permanent = false;
+
         [SerializeField, Min(0.01f)] private float _duration = 5f;
 
         [Tooltip("Пусто = будет использован id этого SO. Заполняй, если нужно, чтобы несколько SO считались одним баффом.")]
@@ -66,7 +68,7 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
                 sourceId,
                 _damageType,
                 _multiplier,
-                _duration,
+                ResolveDuration(),
                 _unique,
                 _log);
         }
@@ -85,6 +87,13 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
                 return _modifierIdOverride;
 
             return $"{name}.{GetInstanceID()}";
+        }
+
+        private float ResolveDuration()
+        {
+            return _permanent
+                ? float.PositiveInfinity
+                : _duration;
         }
 
         private static GameObject ResolveTargetObject(EffectContext context)

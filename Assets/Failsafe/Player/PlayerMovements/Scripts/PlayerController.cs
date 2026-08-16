@@ -28,6 +28,7 @@ namespace Failsafe.PlayerMovements
         private readonly IEffectManager _effectManager;
         private readonly PlayerMovementController _movementController;
         private readonly PlayerControlBlocker _controlBlocker;
+        private readonly PlayerRuntimeParameters _runtimeParameters;
         
         private PlayerRotationController _playerRotationController;
         private PlayerBodyController _playerBodyController;
@@ -59,7 +60,8 @@ namespace Failsafe.PlayerMovements
             PlayerStaminaController playerStaminaController,
             IEffectManager effectManager,
             PlayerMovementController movementController,
-            PlayerControlBlocker controlBlocker)
+            PlayerControlBlocker controlBlocker,
+            PlayerRuntimeParameters runtimeParameters)
         {
             _movementParametrs = movementParametrs;
             _noiseParametrs = noiseParametrs;
@@ -72,6 +74,7 @@ namespace Failsafe.PlayerMovements
             _effectManager = effectManager;
             _movementController = movementController;
             _controlBlocker = controlBlocker;
+            _runtimeParameters = runtimeParameters;
         }
 
         public void SetControlLock(int lockId, bool locked)
@@ -100,7 +103,8 @@ namespace Failsafe.PlayerMovements
             _noiseController = new PlayerNoiseController(
                 _playerView.PlayerTransform,
                 _noiseParametrs,
-                _signalManager);
+                _signalManager,
+                _runtimeParameters);
 
             _stepController = new StepController(
                 _playerView.CharacterController,

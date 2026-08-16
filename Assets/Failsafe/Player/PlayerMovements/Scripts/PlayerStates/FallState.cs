@@ -1,4 +1,5 @@
 using Failsafe.PlayerMovements.Controllers;
+using Failsafe.Scripts.Damage;
 using Failsafe.Scripts.EffectSystem;
 using Failsafe.Scripts.EffectSystem.Effects;
 using Failsafe.Scripts.Health;
@@ -112,7 +113,21 @@ namespace Failsafe.PlayerMovements.States
                     float damage = _p.FallDamageBase + steps * _p.FallDamageStepAmount;
 
                     if (damage > 0.01f && _health != null)
-                        _health.AddHealth(-damage);
+                    {
+                        var target = new DamageTarget(
+                            null,
+                            _health,
+                            _cc.gameObject);
+
+                        var damageInfo = new DamageInfo(
+                            damage,
+                            DamageType.Environment,
+                            DamageApplicationKind.Fall,
+                            point: _cc.transform.position,
+                            direction: Vector3.down);
+
+                        DamageResistanceUtility.ApplyDamage(target, damageInfo);
+                    }
                 }
 
                 if (height >= _p.HeavyLandingHeight)
