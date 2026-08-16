@@ -4305,6 +4305,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _config: {fileID: 11400000, guid: 22e18573ab2349a42a26a9865501c2a8, type: 2}
+  _damagingObjectMask:
+    serializedVersion: 2
+    m_Bits: 1892343
+  _impactEffects: {fileID: 0}
+  _sameSourceCooldown: 0.25
+  _debugLogs: 1
 --- !u!114 &5359436733145833668
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4429,6 +4435,11 @@ MonoBehaviour:
       Data4: 0
     Path: 
   _stasisMaterial: {fileID: 0}
+  _freezeRigidbody: 1
+  _disableEnemyState: 1
+  _freezeDamageObstacle: 1
+  _blockPlayerControls: 1
+  _playerBlocks: 1023
 --- !u!114 &6206973088133588022
 MonoBehaviour:
   m_ObjectHideFlags: 0
