@@ -1,4 +1,3 @@
-using Failsafe.Player.Model;
 using Failsafe.Scripts.Modifiebles;
 using System;
 using UnityEngine;
@@ -22,9 +21,10 @@ namespace Failsafe.Scripts.Health
 		public float CurrentHealth => _health;
 		public bool IsDead => _health <= 0 || Mathf.Approximately(_health, 0f);
 
-		public PlayerHealth(PlayerRuntimeParameters runtimeParameters)
+		public PlayerHealth(ModifiableField<float> maxHealth)
 		{
-			_maxHealth = runtimeParameters.MaxHealth;
+			_maxHealth = maxHealth ??
+				throw new ArgumentNullException(nameof(maxHealth));
 
 			_health = MaxHealth;
 		}
