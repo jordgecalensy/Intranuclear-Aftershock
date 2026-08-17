@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: FireGrenadeData
   m_EditorClassIdentifier: 
   _ignoreCollision: 0
-  _explosionDamage: 20
-  _explosionRadius: 8
-  _explosionForce: 4
-  _explosionEffects: {fileID: 0}
+  _explosionDamage: 25
+  _explosionRadius: 9
+  _explosionForce: 5
+  _explosionEffects: {fileID: 11400000, guid: 438f62f84078f184f907ccefa8866f42, type: 2}
   _postEffect:
-  - Duration: 12
+  - Duration: 30
     Effect: {fileID: 3659837796846025382, guid: e1ba04339260bcb428a97ac99626bbae, type: 3}
   _durationOnEnemyEffect: 0
   _onEnemyEffect: {fileID: 0}
