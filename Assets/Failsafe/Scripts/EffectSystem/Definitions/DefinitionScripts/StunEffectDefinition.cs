@@ -50,7 +50,12 @@ namespace Failsafe.Scripts.EffectSystem
                 return false;
             }
 
-            return state != null && state.CanReceive(StatusEffectType.Stun);
+            return state != null &&
+                   state.CanReceive(StatusEffectType.Stun) &&
+                   StatusResistanceUtility.ApplyDurationMultiplier(
+                       state,
+                       StatusEffectType.Stun,
+                       _duration) > 0f;
         }
 
         public override Effect CreateEffect(EffectContext context)
@@ -70,12 +75,16 @@ namespace Failsafe.Scripts.EffectSystem
 
             Enemy enemy = ResolveEnemy(target, context);
             PlayerControlBlocker playerControlBlocker = ResolvePlayerControlBlocker(target, context);
+            float duration = StatusResistanceUtility.ApplyDurationMultiplier(
+                state,
+                StatusEffectType.Stun,
+                _duration);
 
             return new StunEffect(
                 state,
                 enemy,
                 playerControlBlocker,
-                _duration,
+                duration,
                 context.Source,
                 _disableEnemyState,
                 _blockPlayerControls,

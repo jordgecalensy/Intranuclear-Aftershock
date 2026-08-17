@@ -63,8 +63,6 @@ public class Insertable : MonoBehaviour
             _physicsController.Detach();
             _charger.OnExited();
             _owner?.OnEjected();
-            _owner = null;
-            _charger = null;
         }
     }
 
@@ -78,6 +76,34 @@ public class Insertable : MonoBehaviour
 
     public void ExitTrigger()
     {
+        _holderTransform = null;
+        _charger = null;
+        _inInsertTrigger = false;
+    }
+
+    internal void RestoreInserted(
+        Transform holderTransform,
+        IEnterable charger)
+    {
+        if (holderTransform == null)
+            throw new System.ArgumentNullException(nameof(holderTransform));
+
+        if (charger == null)
+            throw new System.ArgumentNullException(nameof(charger));
+
+        _owner ??= GetComponent<IInsertable>();
+        _holderTransform = holderTransform;
+        _charger = charger;
+        _inInsertTrigger = true;
+
+        _physicsController.RestoreAttached(holderTransform);
+    }
+
+    internal void RestoreOutsideTrigger()
+    {
+        if (IsInserted)
+            _physicsController.RestoreDetached();
+
         _holderTransform = null;
         _charger = null;
         _inInsertTrigger = false;

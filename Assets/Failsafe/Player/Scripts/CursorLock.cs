@@ -9,22 +9,22 @@ public class CursorLock : MonoBehaviour
     
     private EventSystem _eventSystem;
     private GameObject _lastHoveredObject = null;
+    private bool _isCursorLocked;
+
+    public bool IsCursorLocked => _isCursorLocked;
 
     private void Start()
     {
-        // Настройка состояния курсора при старте
-        if (_lockCursor)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
-
         // Первичный поиск EventSystem
         _eventSystem = EventSystem.current;
+        SetCursorLocked(_lockCursor);
     }
 
     private void Update()
     {
+        if (!_isCursorLocked)
+            return;
+
         // 1. Проверяем наличие EventSystem (если вдруг его не было на старте)
         if (_eventSystem == null)
         {
@@ -48,6 +48,43 @@ public class CursorLock : MonoBehaviour
         // 5. Обрабатываем наведение (Hover) и нажатия (Click)
         HandleHover(currentHovered, pointerData);
         HandleClick(currentHovered, pointerData);
+    }
+
+    public void SetCursorLocked(bool locked)
+    {
+        _isCursorLocked = locked;
+        Cursor.lockState =
+            locked
+                ? CursorLockMode.Locked
+                : CursorLockMode.None;
+        Cursor.visible = !locked;
+
+        if (!locked)
+            ClearVirtualHover();
+    }
+
+    private void ClearVirtualHover()
+    {
+        if (_lastHoveredObject == null)
+            return;
+
+        if (_eventSystem != null)
+        {
+            PointerEventData pointerData =
+                new PointerEventData(_eventSystem)
+                {
+                    position = new Vector2(
+                        Screen.width / 2f,
+                        Screen.height / 2f)
+                };
+
+            ExecuteEvents.Execute(
+                _lastHoveredObject,
+                pointerData,
+                ExecuteEvents.pointerExitHandler);
+        }
+
+        _lastHoveredObject = null;
     }
 
     private void HandleHover(GameObject current, PointerEventData data)

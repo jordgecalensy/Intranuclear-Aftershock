@@ -1,4 +1,5 @@
 using System;
+using Failsafe.Scripts.Modifiebles;
 using UnityEngine;
 
 namespace Failsafe.Player.Model
@@ -32,27 +33,62 @@ namespace Failsafe.Player.Model
         public void RestoreStamina(float amount);
     }
 
+    public interface IRestorableStamina : IStamina
+    {
+        public event Action<float> OnStateRestored;
+
+        public void RestoreState(float stamina);
+    }
+
     /// <summary>
     /// Выносливость персонажа
     /// </summary>
-    public class PlayerStamina : IStamina
+    public class PlayerStamina : IRestorableStamina
     {
 
         public event Action<float> OnStaminaSpended;
         public event Action<float> OnStaminaRestored;
+        public event Action<float> OnStateRestored;
 
         public bool IsEmpty => _currentStamina <= 0;
 
-        public float MaxStamina { get; private set; }
+        public float MaxStamina => Mathf.Max(1f, _maxStamina);
 
         public float CurrentStamina => Mathf.Max(0, _currentStamina);
+        private readonly ModifiableField<float> _maxStamina;
         private float _currentStamina;
 
 
-        public PlayerStamina(float maxStamina)
+        public PlayerStamina(PlayerRuntimeParameters runtimeParameters)
         {
-            MaxStamina = maxStamina;
-            _currentStamina = maxStamina;
+            _maxStamina = runtimeParameters.MaxStamina;
+            _currentStamina = MaxStamina;
+        }
+
+        public void AddMaxStaminaModifier(IModificator<float> modificator)
+        {
+            ChangeMaxStamina(modificator, true);
+        }
+
+        public void RemoveMaxStaminaModifier(IModificator<float> modificator)
+        {
+            ChangeMaxStamina(modificator, false);
+        }
+
+        private void ChangeMaxStamina(IModificator<float> modificator, bool add)
+        {
+            if (modificator == null)
+                return;
+
+            float previousMaxStamina = Mathf.Max(0.0001f, MaxStamina);
+            float staminaRatio = Mathf.Clamp01(CurrentStamina / previousMaxStamina);
+
+            if (add)
+                _maxStamina.AddModificator(modificator);
+            else
+                _maxStamina.RemoveModificator(modificator);
+
+            _currentStamina = Mathf.Clamp(MaxStamina * staminaRatio, 0f, MaxStamina);
         }
 
         public void RestoreStamina(float amount)
@@ -66,6 +102,11 @@ namespace Failsafe.Player.Model
             // Значение может быть отрицательнмы, чтобы не абузить затратные действия при низкой выносливости
             _currentStamina -= amount;
             OnStaminaSpended?.Invoke(amount);
+        }
+        public void RestoreState(float stamina)
+        {
+            _currentStamina = Mathf.Clamp(stamina, 0f, MaxStamina);
+            OnStateRestored?.Invoke(_currentStamina);
         }
     }
 }

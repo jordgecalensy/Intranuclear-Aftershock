@@ -7,13 +7,17 @@ public class PowerCross : PowerNode
 {
     // Ориентация - поворот на 90 градусы
     private int _rotationSteps = 0; // 0..3
+    private Quaternion _initialLocalRotation;
 
     [SerializeField] private Direction[] _baseConnections = new Direction[] { 
         Direction.Forward, 
         Direction.Left}; // пример базовой конфигурации
 
+    public int RotationSteps => _rotationSteps;
+
     protected override void Awake()
     {
+        _initialLocalRotation = transform.localRotation;
         Neighbors = new Dictionary<Direction, PowerNode>();
         ConnectedDirections = new HashSet<Direction>();
         foreach (var pair in NeighborsSerialized)
@@ -28,7 +32,7 @@ public class PowerCross : PowerNode
     public void Rotate()
     {
         _rotationSteps = (_rotationSteps + 1) % 4;
-        transform.localRotation *= Quaternion.AngleAxis(90f, Vector3.up);
+        ApplyRotation();
         UpdateConnectedDirections();
         // Найдём менеджер и попросим обновить питание
         var manager =  FindFirstObjectByType<PowerNetworkManager>();
@@ -38,9 +42,32 @@ public class PowerCross : PowerNode
         }
         else
         {
-            Debug.LogWarning("PowerNetworkManager not found in scene.");
+            Debug.LogWarning(
+                "[POWER-NET] PowerNetworkManager not found in scene.");
         }
     }
+    public void RestoreRotationSteps(int rotationSteps)
+    {
+        if (rotationSteps < 0 || rotationSteps > 3)
+        {
+            throw new System.ArgumentOutOfRangeException(
+                nameof(rotationSteps),
+                rotationSteps,
+                "Power cross rotation steps must be between 0 and 3.");
+        }
+
+        _rotationSteps = rotationSteps;
+        ApplyRotation();
+        UpdateConnectedDirections();
+    }
+
+    private void ApplyRotation()
+    {
+        transform.localRotation =
+            _initialLocalRotation *
+            Quaternion.AngleAxis(90f * _rotationSteps, Vector3.up);
+    }
+
     private void UpdateConnectedDirections()
     {
         ConnectedDirections.Clear();
@@ -54,7 +81,6 @@ public class PowerCross : PowerNode
     {
         int intConnection = (int)connection;
         intConnection = (intConnection + steps) % 4;
-        Debug.Log((Direction)intConnection);
         return (Direction)intConnection;
     }
 

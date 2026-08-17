@@ -49,7 +49,7 @@ namespace Failsafe.Scripts.EffectSystem.Effects
                 return;
 
             _multiplier = ResolveMultiplier(_multiplier, reapplied._multiplier, _stackPolicy);
-            _duration = Mathf.Max(ElapsedAt - Time.time, 0f) + reapplied._duration;
+            _duration += reapplied._duration;
 
             _target?.SetSpeedModifier(_modifierId, _multiplier);
         }

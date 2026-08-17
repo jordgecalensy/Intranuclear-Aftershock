@@ -25,6 +25,8 @@ public abstract class PowerNode : MonoBehaviour
     //public Direction FromDirection;
     protected bool PowerReceivedThisCycle = false;
 
+    public bool HasPower => IsPowered;
+
     protected virtual void Awake()
     {
         Neighbors = new Dictionary <Direction, PowerNode>();
@@ -43,13 +45,10 @@ public abstract class PowerNode : MonoBehaviour
     public void ReceivePower(Direction fromDirection)
     {
         if (IsPowered) return;
-        Debug.Log(gameObject.name);
         if (!ConnectedDirections.Contains(Opposite(fromDirection)))
         {
-            Debug.Log(ConnectedDirections.Contains(Opposite(fromDirection)));
             return; // Питание пришло не с подключенной стороны
         }
-        Debug.Log(gameObject.name + "+");
         IsPowered = true;
         OnPowered();
 
@@ -83,8 +82,6 @@ public abstract class PowerNode : MonoBehaviour
 
     protected virtual void OnPowered()
     {
-        Debug.Log($"{name} powered");
-
         ObjectXRay xray = GetComponent<ObjectXRay>();
         if (xray != null)
             xray.SetPoweredState(true);
@@ -100,8 +97,6 @@ public abstract class PowerNode : MonoBehaviour
     // Метод, вызываемый при отключении питания (можно переопределять)
     protected virtual void OnPowerLost()
     {
-        Debug.Log($"{name} потеряно питание");
-
         ObjectXRay xray = GetComponent<ObjectXRay>();
         if (xray != null)
             xray.SetPoweredState(false);

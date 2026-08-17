@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ad3706b69fb79346892ed7a65a9d621, type: 3}
+  m_Name: Percs
+  m_EditorClassIdentifier: 
+  _removeItemAfterSelection: 1
+  _items:
+  - _name: fast
+    _rarity: 0
+    _weight: 15
+    _exclude:
+    - slow
+  - _name: slow
+    _rarity: 0
+    _weight: -10
+    _exclude:
+    - fast
+  - _name: jumper
+    _rarity: 60
+    _weight: 15
+    _exclude:
+    - weak_legs
+  - _name: weak_legs
+    _rarity: 60
+    _weight: -10
+    _exclude:
+    - jumper
+  - _name: strong_arms
+    _rarity: 85
+    _weight: 15
+    _exclude:
+    - weak_arms
+  - _name: weak_arms
+    _rarity: 95
+    _weight: -10
+    _exclude:
+    - strong_arms
+  - _name: Former_ntelligence_officer
+    _rarity: 0
+    _weight: 5
+    _exclude: []
+  - _name: health_regeneration
+    _rarity: 0
+    _weight: 15
+    _exclude: []
+  - _name: soft_landing
+    _rarity: 0
+    _weight: 15
+    _exclude: []
+  - _name: tenacious
+    _rarity: 0
+    _weight: 10
+    _exclude:
+    - sickly
+  - _name: sickly
+    _rarity: 0
+    _weight: -10
+    _exclude:
+    - tenacious
+  - _name: enduring
+    _rarity: 0
+    _weight: 10
+    _exclude:
+    - smoker
+  - _name: smoker
+    _rarity: 0
+    _weight: -10
+    _exclude:
+    - enduring

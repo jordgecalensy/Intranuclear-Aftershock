@@ -1,14 +1,20 @@
 using TMPro;
 using UnityEngine;
 using System;
+using Failsafe.Scripts.SaveSystem;
 using Tayx.Graphy.Utils.NumString;
 using UnityEngine.UI;
 using System.Collections;
 
 public enum MathematicalVariations {variant_1, variant_2, variant_3}
 
-public class MathematicalMinigameManager : MonoBehaviour
+public class MathematicalMinigameManager :
+    MonoBehaviour,
+    IRunPersistentStateProvider
 {
+    private const string PersistentStateTypeId = "mathematical-minigame";
+    private const int PersistentStateVersion = 1;
+
     private string[] _operations = { "+", "-" };
 
     private int _resultCalculation;
@@ -37,6 +43,7 @@ public class MathematicalMinigameManager : MonoBehaviour
 
     private float time;
     private bool _timerRunning = false;
+    private bool _isSolved;
 
     [Header("Text Settings")]
     [SerializeField] private TextMeshProUGUI _comparedNumberText;
@@ -54,8 +61,17 @@ public class MathematicalMinigameManager : MonoBehaviour
     [SerializeField] private GameObject _minigameWindow;
     [SerializeField] private GameObject _failedWindow;
 
+    public string StateTypeId => PersistentStateTypeId;
+    public int StateVersion => PersistentStateVersion;
+
     private void OnEnable()
     {
+        if (_isSolved)
+        {
+            ApplySolvedState();
+            return;
+        }
+
         CreateNewGame();
     }
     private void Update()
@@ -192,9 +208,83 @@ public class MathematicalMinigameManager : MonoBehaviour
     private void UnlockConsole()
     {
         Debug.Log("Unlock");
+        _isSolved = true;
         _timerRunning = false;
         Lock(false);
         StartCoroutine(GameOver(true));
+    }
+
+    public string CapturePersistentState()
+    {
+        MathematicalMinigamePersistentState state =
+            new MathematicalMinigamePersistentState
+            {
+                isSolved = _isSolved
+            };
+
+        return JsonUtility.ToJson(state);
+    }
+
+    public void RestorePersistentState(
+        string serializedState,
+        int stateVersion)
+    {
+        if (stateVersion != PersistentStateVersion)
+        {
+            throw new InvalidOperationException(
+                $"Mathematical minigame state version {stateVersion} is not supported. " +
+                $"Expected {PersistentStateVersion}.");
+        }
+
+        if (string.IsNullOrWhiteSpace(serializedState))
+        {
+            throw new InvalidOperationException(
+                "Saved mathematical minigame state is empty.");
+        }
+
+        MathematicalMinigamePersistentState state =
+            JsonUtility.FromJson<MathematicalMinigamePersistentState>(
+                serializedState);
+
+        if (state == null)
+        {
+            throw new InvalidOperationException(
+                "Saved mathematical minigame state is invalid.");
+        }
+
+        StopAllCoroutines();
+        _isSolved = state.isSolved;
+
+        if (_isSolved)
+        {
+            ApplySolvedState();
+            return;
+        }
+
+        ApplyUnsolvedState();
+    }
+
+    private void ApplySolvedState()
+    {
+        _timerRunning = false;
+        Lock(false);
+
+        if (_failedWindow != null)
+            _failedWindow.SetActive(false);
+
+        if (_mainWindow != null)
+            _mainWindow.SetActive(true);
+
+        if (_minigameWindow != null)
+            _minigameWindow.SetActive(false);
+    }
+
+    private void ApplyUnsolvedState()
+    {
+        if (_failedWindow != null)
+            _failedWindow.SetActive(false);
+
+        CreateNewGame();
     }
 
     IEnumerator GameOver(bool win)
@@ -210,5 +300,11 @@ public class MathematicalMinigameManager : MonoBehaviour
             _failedWindow.SetActive(true);
             _minigameWindow.SetActive(false);
         }
+    }
+
+    [Serializable]
+    private sealed class MathematicalMinigamePersistentState
+    {
+        public bool isSolved;
     }
 }

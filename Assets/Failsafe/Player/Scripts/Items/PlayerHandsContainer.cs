@@ -21,6 +21,8 @@ public class PlayerHandsContainer
 {
     public enum HandState { EmptyHands, ItemInHand }
 
+    private static readonly Vector3 ItemThrowLocalOffset = new Vector3(0.5f, 0f, 0f);
+
     public event Action<ItemType> OnItemTaken;
     public event Action OnItemDropped;
 
@@ -81,9 +83,15 @@ public class PlayerHandsContainer
         itemObject.transform.SetParent(_rightHandItemPlace, false);
 
         if (handlePoint != null)
+        {
             itemObject.transform.localPosition = handlePoint.localPosition * -1;
+            itemObject.transform.rotation = _rightHandItemPlace.rotation;
+        }
         else
+        {
+            Debug.LogWarning("У предмета " + itemObject.name + "нет handlepoint, используем дефолт");
             itemObject.transform.localPosition = Vector3.zero;
+        }
 
         usableItem.ParseItem(itemObject);
 
@@ -208,6 +216,49 @@ public class PlayerHandsContainer
         _handState = HandState.EmptyHands;
 
         OnItemDropped?.Invoke();
+
+        return item;
+    }
+
+    /// <summary>
+    /// Бросить предмет из руки в направлении камеры.
+    /// </summary>
+    public Item ThrowItemFromHand(Transform throwOrigin, float throwForce)
+    {
+        Item item = DropItemFromHand();
+
+        if (item == null)
+            return null;
+
+        Transform origin = throwOrigin != null
+            ? throwOrigin
+            : _rightHandItemPlace;
+
+        if (origin != null)
+        {
+            item.transform.position =
+                origin.position +
+                origin.rotation * ItemThrowLocalOffset;
+        }
+
+        Rigidbody itemRigidbody = item.GetComponent<Rigidbody>();
+
+        if (itemRigidbody == null)
+        {
+            Debug.LogWarning(
+                $"ThrowItemFromHand. У предмета {item.name} нет Rigidbody.",
+                item);
+
+            return item;
+        }
+
+        Vector3 direction = origin != null
+            ? origin.forward
+            : item.transform.forward;
+
+        itemRigidbody.AddForce(
+            direction * Mathf.Max(0f, throwForce),
+            ForceMode.Impulse);
 
         return item;
     }

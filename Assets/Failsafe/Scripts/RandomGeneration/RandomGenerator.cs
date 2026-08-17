@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System;
 using UnityEngine;
-using UnityEditor;
-using System.Linq;
 
 namespace Assets.Failsafe.Scripts.RandomGeneration
 {
@@ -12,63 +10,106 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
         private List<RandomizationItem> _inputList;
         private int _totalWeight;
         private bool _removeItem;
-        private System.Random _rnd = new System.Random();
-        private Array _rarityList = Enum.GetValues(typeof(ItemRarity));
+        private static Int32 _rndSeed;
+        private System.Random _rnd;
+
+        public int Seed => _rndSeed;
+
+        public RandomGenerator()
+        {
+            BeginRun();
+        }
+
+        public void BeginRun(int? seed = null)
+        {
+            _rndSeed = seed ?? (int)DateTime.Now.Ticks;
+            _rnd = new System.Random(_rndSeed);
+            Debug.Log("Seed: " + _rndSeed);
+            //save seed here
+        }
 
         public List<RandomizationItem> BlessRNG(RandomGeneratorInput input, int minWeight, int maxWeight)
         {
+            return BlessRNG(input, minWeight, maxWeight, int.MaxValue, out _);
+        }
+
+        public List<RandomizationItem> BlessRNG(
+            RandomGeneratorInput input,
+            int minWeight,
+            int maxWeight,
+            int maxItems,
+            out int totalWeight)
+        {
             _inputList = new List<RandomizationItem>();
             _totalWeight = _rnd.Next(minWeight, maxWeight);
+            totalWeight = _totalWeight;
             foreach (RandomizationItem rndItem in input.GetItems)
                 _inputList.Add(rndItem);
             _inputList.Shuffle(_rnd);
             _removeItem = input.GetRemoveItem;
 
-            List<ItemRarity> rarityList = CreateRarityList();
-
-            List<RandomizationItem> properList = CreateProperList(_inputList, rarityList, _totalWeight, _removeItem);
+            List<RandomizationItem> properList = CreateProperList(
+                _inputList,
+                _totalWeight,
+                _removeItem,
+                maxItems);
 
             return properList;
         }
 
-        private List<ItemRarity> CreateRarityList() 
+        private ItemRarity RollRarity()
         {
-            List<ItemRarity> rarityList = new List<ItemRarity>();
-            foreach (ItemRarity rarity in _rarityList) 
+            int roll = _rnd.Next(100);
+            switch (roll)
             {
-                for (int extraItems = 0; extraItems < (int)rarity; extraItems++) 
-                {
-                    rarityList.Add(rarity);
-                }
+                case >= (int)ItemRarity.Unique:
+                    return ItemRarity.Unique;
+                case >= (int)ItemRarity.Rare:
+                    return ItemRarity.Rare;
+                case >= (int)ItemRarity.Uncommon:
+                    return ItemRarity.Uncommon;
+                default:
+                    return ItemRarity.Common;
             }
-            rarityList.Shuffle(_rnd);
-            return rarityList;
         }
 
-        private List<RandomizationItem> CreateProperList(List<RandomizationItem> itemList, List<ItemRarity> rarityList, int weight, bool removeItem) 
+        private List<RandomizationItem> CreateProperList(
+            List<RandomizationItem> itemList,
+            int weight,
+            bool removeItem,
+            int maxItems)
         {
             List<RandomizationItem> properList = new List<RandomizationItem>();
             int counter = 0;
-            while (counter < weight) 
+            while (counter < weight &&
+                   itemList.Count > 0 &&
+                   properList.Count < maxItems)
             {
                 //Select rarity
-                int idx = _rnd.Next(0, rarityList.Count-1);
-                ItemRarity selectedRarity = rarityList[idx];
-                //Debug.Log("Selected rarity: " + selectedRarity);
+                ItemRarity selectedRarity = RollRarity();
 
                 //Get first item which rarity matches selected
-                RandomizationItem selectedItem = itemList.Find(item => item.Rarity == selectedRarity);
-                Debug.Log("Selected item: " + selectedItem.Name);
+                int selectedItemIndex = itemList.FindIndex(item => item.Rarity == selectedRarity);
+
+                //The rolled rarity may be absent after removals or exclusions.
+                //The list is already shuffled, so the first remaining item is a safe fallback.
+                if (selectedItemIndex < 0)
+                    selectedItemIndex = 0;
+
+                RandomizationItem selectedItem = itemList[selectedItemIndex];
 
                 //Remove item and excluded if needed
-                foreach (RandomizationItem item in itemList) 
-                {
-                    if (removeItem && item.Name == selectedItem.Name || Array.Exists(selectedItem.Exclude, name => name == item.Name))
+                if (removeItem)
+                    itemList.RemoveAt(selectedItemIndex);
+
+                if (selectedItem.Exclude != null && selectedItem.Exclude.Length > 0)
+                    foreach (String itemName in selectedItem.Exclude)
                     {
-                        itemList.Remove(item);
-                        Debug.Log("Removing item");
+                        int excludedItemIndex = itemList.FindIndex(item => item.Name == itemName);
+
+                        if (excludedItemIndex >= 0)
+                            itemList.RemoveAt(excludedItemIndex);
                     }
-                }
 
                 properList.Add(selectedItem);
 

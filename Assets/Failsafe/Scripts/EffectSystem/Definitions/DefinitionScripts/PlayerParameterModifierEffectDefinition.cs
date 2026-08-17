@@ -2,13 +2,21 @@ using System;
 using System.Collections.Generic;
 using Failsafe.Player.Model;
 using Failsafe.PlayerMovements;
+using Failsafe.Scripts.Health;
 using Failsafe.Scripts.Modifiebles;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VContainer;
 using VContainer.Unity;
 
 namespace Failsafe.Scripts.EffectSystem
 {
+    public enum PlayerParameterModifierOperation
+    {
+        Multiply,
+        Add
+    }
+
     public enum PlayerParameterModifierKind
     {
         None,
@@ -19,7 +27,12 @@ namespace Failsafe.Scripts.EffectSystem
         JumpMaxSpeed,
         ThrowPower,
         ThrowTorquePower,
-        ThrowItemPower
+        ThrowItemPower,
+        MaxHealth,
+        MaxStamina,
+        HealthRegenerationPerSecond,
+        StaminaRegenerationPerSecond,
+        NoiseStrengthMultiplier
     }
 
     [CreateAssetMenu(
@@ -28,9 +41,15 @@ namespace Failsafe.Scripts.EffectSystem
     public sealed class PlayerParameterModifierEffectDefinition : EffectDefinition
     {
         [Header("Modifier")]
+        [SerializeField] private bool _permanent = false;
+
         [SerializeField] private float _duration = 5f;
 
-        [SerializeField, Min(0.01f)] private float _multiplier = 1.25f;
+        [SerializeField] private PlayerParameterModifierOperation _operation =
+            PlayerParameterModifierOperation.Multiply;
+
+        [FormerlySerializedAs("_multiplier")]
+        [SerializeField] private float _modifierValue = 1.25f;
 
         [SerializeField] private int _priority = 100;
 
@@ -48,8 +67,8 @@ namespace Failsafe.Scripts.EffectSystem
 
         public override bool CanApply(EffectContext context)
         {
-            return _duration > 0f &&
-                   _multiplier > 0f &&
+            return ResolveDuration() > 0f &&
+                   IsModifierValueValid() &&
                    TryBuildBindings(context, out PlayerParameterModifierBinding[] bindings) &&
                    bindings.Length > 0;
         }
@@ -64,8 +83,9 @@ namespace Failsafe.Scripts.EffectSystem
 
             return new PlayerParameterModifierEffect(
                 bindings,
-                _duration,
-                _multiplier,
+                ResolveDuration(),
+                _operation,
+                _modifierValue,
                 _priority,
                 _logApply);
         }
@@ -73,6 +93,20 @@ namespace Failsafe.Scripts.EffectSystem
         public override string GetStackKey(EffectContext context)
         {
             return $"positive.player-parameter-modifier.{GetInstanceID()}";
+        }
+
+        private float ResolveDuration()
+        {
+            return _permanent
+                ? float.PositiveInfinity
+                : _duration;
+        }
+
+        private bool IsModifierValueValid()
+        {
+            return _operation == PlayerParameterModifierOperation.Multiply
+                ? _modifierValue > 0f
+                : !Mathf.Approximately(_modifierValue, 0f);
         }
 
         private bool TryBuildBindings(
@@ -110,9 +144,15 @@ namespace Failsafe.Scripts.EffectSystem
 
             PlayerMovementParameters movementParameters = null;
             PlayerModelParameters modelParameters = null;
+            PlayerRuntimeParameters runtimeParameters = null;
+            PlayerHealth playerHealth = null;
+            PlayerStamina playerStamina = null;
 
             bool movementResolved = false;
             bool modelResolved = false;
+            bool runtimeResolved = false;
+            bool healthResolved = false;
+            bool staminaResolved = false;
 
             var result = new List<PlayerParameterModifierBinding>(_parameters.Length);
             var usedParameters = new HashSet<PlayerParameterModifierKind>();
@@ -132,9 +172,42 @@ namespace Failsafe.Scripts.EffectSystem
                         ref movementResolved,
                         ref modelParameters,
                         ref modelResolved,
+                        ref runtimeParameters,
+                        ref runtimeResolved,
                         out ModifiableField<float> field))
                 {
-                    result.Add(new PlayerParameterModifierBinding(parameter, field));
+                    if (parameter == PlayerParameterModifierKind.MaxHealth)
+                    {
+                        if (!healthResolved)
+                            healthResolved = TryResolve(scope, out playerHealth);
+
+                        if (playerHealth != null)
+                        {
+                            result.Add(new PlayerParameterModifierBinding(
+                                parameter,
+                                field,
+                                playerHealth.AddMaxHealthModifier,
+                                playerHealth.RemoveMaxHealthModifier));
+                        }
+                    }
+                    else if (parameter == PlayerParameterModifierKind.MaxStamina)
+                    {
+                        if (!staminaResolved)
+                            staminaResolved = TryResolve(scope, out playerStamina);
+
+                        if (playerStamina != null)
+                        {
+                            result.Add(new PlayerParameterModifierBinding(
+                                parameter,
+                                field,
+                                playerStamina.AddMaxStaminaModifier,
+                                playerStamina.RemoveMaxStaminaModifier));
+                        }
+                    }
+                    else
+                    {
+                        result.Add(new PlayerParameterModifierBinding(parameter, field));
+                    }
                 }
                 else if (_logResolveErrors)
                 {
@@ -155,6 +228,8 @@ namespace Failsafe.Scripts.EffectSystem
             ref bool movementResolved,
             ref PlayerModelParameters modelParameters,
             ref bool modelResolved,
+            ref PlayerRuntimeParameters runtimeParameters,
+            ref bool runtimeResolved,
             out ModifiableField<float> field)
         {
             field = null;
@@ -215,6 +290,41 @@ namespace Failsafe.Scripts.EffectSystem
                         modelResolved = TryResolve(scope, out modelParameters);
 
                     field = modelParameters?.ThrowItemPower;
+                    return field != null;
+
+                case PlayerParameterModifierKind.MaxHealth:
+                    if (!runtimeResolved)
+                        runtimeResolved = TryResolve(scope, out runtimeParameters);
+
+                    field = runtimeParameters?.MaxHealth;
+                    return field != null;
+
+                case PlayerParameterModifierKind.MaxStamina:
+                    if (!runtimeResolved)
+                        runtimeResolved = TryResolve(scope, out runtimeParameters);
+
+                    field = runtimeParameters?.MaxStamina;
+                    return field != null;
+
+                case PlayerParameterModifierKind.HealthRegenerationPerSecond:
+                    if (!runtimeResolved)
+                        runtimeResolved = TryResolve(scope, out runtimeParameters);
+
+                    field = runtimeParameters?.HealthRegenerationPerSecond;
+                    return field != null;
+
+                case PlayerParameterModifierKind.StaminaRegenerationPerSecond:
+                    if (!runtimeResolved)
+                        runtimeResolved = TryResolve(scope, out runtimeParameters);
+
+                    field = runtimeParameters?.StaminaRegenerationPerSecond;
+                    return field != null;
+
+                case PlayerParameterModifierKind.NoiseStrengthMultiplier:
+                    if (!runtimeResolved)
+                        runtimeResolved = TryResolve(scope, out runtimeParameters);
+
+                    field = runtimeParameters?.NoiseStrengthMultiplier;
                     return field != null;
 
                 default:

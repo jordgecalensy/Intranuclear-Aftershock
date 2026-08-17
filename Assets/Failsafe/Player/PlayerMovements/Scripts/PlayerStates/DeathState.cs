@@ -1,29 +1,40 @@
-using Failsafe.Player;
+using Failsafe.PlayerMovements.Controllers;
 using UnityEngine;
 
 namespace Failsafe.PlayerMovements.States
 {
 	public class DeathState : BehaviorForcedState
 	{
-        private Animator _animationController;
-        private int _deadId = Animator.StringToHash("Dead");
-        private BehaviorStateMachine _stateMachine;
-        public DeathState(Animator animationController, BehaviorStateMachine stateMachine)
+        private readonly Animator _animationController;
+        private readonly PlayerControlBlocker _controlBlocker;
+        private readonly InputHandler _inputHandler;
+        private readonly PlayerMovementController _movementController;
+        private readonly int _deadId = Animator.StringToHash("Dead");
+
+        public DeathState(
+            Animator animationController,
+            PlayerControlBlocker controlBlocker,
+            InputHandler inputHandler,
+            PlayerMovementController movementController)
         {
             _animationController = animationController;
-            _stateMachine = stateMachine;
+            _controlBlocker = controlBlocker;
+            _inputHandler = inputHandler;
+            _movementController = movementController;
         }
+
 		public override void Enter()
 		{
+			base.Enter();
+
+            _controlBlocker?.AddLock(PlayerControlLockIds.Death, PlayerControlBlock.All);
+            _movementController?.ResetTransientState();
+            _inputHandler?.SetGameplayInputEnabled(false);
+
+            if (_animationController != null)
+                _animationController.SetBool(_deadId, true);
+
 			Debug.Log("You are dead");
 		}
-        
-        public override void Update()
-        {
-            if (_animationController != null)
-            {
-                _animationController.SetBool(_deadId, true);
-            }
-        }
 	}
 }

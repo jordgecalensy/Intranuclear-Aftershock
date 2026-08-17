@@ -15,7 +15,8 @@ public class PowerSource : PowerNode
     }
     public void SetEnable(bool isEnable)
     {
-        _isEnable = isEnable;
+        SetEnabledState(isEnable);
+
         var manager = FindFirstObjectByType<PowerNetworkManager>();
         if (manager != null)
         {
@@ -23,12 +24,24 @@ public class PowerSource : PowerNode
         }
         else
         {
-            Debug.LogWarning("PowerNetworkManager not found in scene.");
+            Debug.LogWarning(
+                "[POWER-NET] PowerNetworkManager not found in scene.");
         }
     }
+
+    internal void RestoreEnabledState(bool isEnable)
+    {
+        SetEnabledState(isEnable);
+    }
+
     public override void StartPower()
     {
         if (!_isEnable) return;
         base.StartPower();
+    }
+
+    private void SetEnabledState(bool isEnable)
+    {
+        _isEnable = isEnable;
     }
 }

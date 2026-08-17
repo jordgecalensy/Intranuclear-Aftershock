@@ -11,6 +11,7 @@ using Failsafe.Scripts.Damage.Implementation;
 using Failsafe.Scripts.Damage.Providers;
 using Failsafe.Scripts.EffectSystem;
 using Failsafe.Scripts.Health;
+using Failsafe.Scripts.SaveSystem;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
@@ -35,9 +36,12 @@ namespace Failsafe.Player
 
         protected override void Configure(IContainerBuilder builder)
         {
+            var runtimeParameters = new PlayerRuntimeParameters(_playerModelParameters);
+
             builder.RegisterInstance(_playerModelParameters);
             builder.RegisterInstance(_playerMovementParameters);
             builder.RegisterInstance(_playerNoiseParameters);
+            builder.RegisterInstance(runtimeParameters);
 
             builder.RegisterComponent(_playerView);
             builder.RegisterComponent(_damageable);
@@ -68,13 +72,16 @@ namespace Failsafe.Player
 
             builder.Register<InputHandler>(Lifetime.Scoped);
 
-            builder.Register<IHealth, PlayerHealth>(Lifetime.Singleton)
+            builder.Register<PlayerHealth>(Lifetime.Singleton)
+                .As<IHealth>()
+                .As<IRestorableHealth>()
                 .AsSelf()
-                .WithParameter(_playerModelParameters.MaxHealth);
+                .WithParameter(runtimeParameters.MaxHealth);
 
-            builder.Register<IStamina, PlayerStamina>(Lifetime.Singleton)
-                .AsSelf()
-                .WithParameter(_playerModelParameters.MaxStamina);
+            builder.Register<PlayerStamina>(Lifetime.Singleton)
+                .As<IStamina>()
+                .As<IRestorableStamina>()
+                .AsSelf();
 
             builder.Register<FlatDamageProvider>(Lifetime.Scoped)
                 .As<IDamageProvider>();
@@ -91,6 +98,8 @@ namespace Failsafe.Player
             builder.RegisterEntryPoint<PlayerStaminaController>(Lifetime.Scoped)
                 .AsSelf();
 
+            builder.RegisterEntryPoint<PlayerHealthRegenerationController>(Lifetime.Scoped);
+
             builder.RegisterEntryPoint<PlayerController>(Lifetime.Scoped)
                 .AsSelf();
 
@@ -106,16 +115,46 @@ namespace Failsafe.Player
             builder.RegisterComponentInHierarchy<PlayerUIController>();
 
             builder.RegisterComponentInHierarchy<PlayerCrosshairRaycaster>();
+            builder.RegisterComponentInHierarchy<PhysicsInteraction>();
 
             builder.RegisterEntryPoint<PlayerUIPresenter>();
             
             builder.RegisterComponentInHierarchy<PlayerControlBlocker>();
+            builder.RegisterComponentInHierarchy<global::CursorLock>();
 
             builder.Register<PlayerMovementController>(Lifetime.Scoped);
-            
+
+            builder.RegisterEntryPoint<PlayerRunSaveParticipant>(Lifetime.Scoped);
+            builder.RegisterEntryPoint<PlayerRunTerminationHandler>(Lifetime.Scoped);
+
+            DeathScreenView deathScreenView =
+                GetComponentInChildren<DeathScreenView>(true);
+
+            if (deathScreenView != null)
+            {
+                builder.RegisterComponent(deathScreenView);
+                builder.RegisterEntryPoint<DeathScreenPresenter>(Lifetime.Scoped);
+            }
+            else
+            {
+                RunSaveLog.Warning(
+                    RunSaveLog.DeathScreen,
+                    $"{nameof(DeathScreenView)} is not configured on the player prefab. " +
+                    "The run will still end on death, but the death screen will not be shown.",
+                    this);
+            }
+
+            builder.RegisterEntryPoint<PlayerRunCheckpointSafetyPolicy>(Lifetime.Scoped)
+                .As<IRunCheckpointSafetyPolicy>()
+                .AsSelf();
+
+            builder.RegisterEntryPoint<RunAutosaveController>(Lifetime.Scoped);
+
             builder.RegisterEntryPoint<EffectManager>(Lifetime.Scoped)
                 .As<IEffectManager>()
                 .AsSelf();
+
+            builder.RegisterEntryPoint<SelectedEngineerPerkApplier>(Lifetime.Scoped);
 
             builder.Register<PlayerNoiseSignal>(Lifetime.Scoped)
                 .WithParameter(transform);
@@ -171,6 +210,10 @@ namespace Failsafe.Player
                 .AsSelf();
 
             builder.Register<ScanGrenade>(Lifetime.Scoped)
+                .AsImplementedInterfaces()
+                .AsSelf();
+
+            builder.Register<Card>(Lifetime.Scoped)
                 .AsImplementedInterfaces()
                 .AsSelf();
         }

@@ -14,7 +14,9 @@ namespace Failsafe.GameSceneServices.SpawnSystem
         /// Имя противника
         /// </summary>
         public string Name { get; private set; }
+        public string ArchetypeId { get; private set; }
         public GameObject EnemyPrefab { get; private set; }
+        public Enemy_ScriptableObject EnemyConfig { get; private set; }
         /// <summary>
         /// Вес противика, определяет шанс появления
         /// </summary>
@@ -28,10 +30,19 @@ namespace Failsafe.GameSceneServices.SpawnSystem
 
         public SpawnAgent SpawnAgent;
 
-        public SpawnCandidate(string name, GameObject enemyPrefab, int weight, SpawnPointType spawnPointType, SpawnPoint[] specificSpawnPoints = null)
+        public SpawnCandidate(
+            string name,
+            string archetypeId,
+            GameObject enemyPrefab,
+            Enemy_ScriptableObject enemyConfig,
+            int weight,
+            SpawnPointType spawnPointType,
+            SpawnPoint[] specificSpawnPoints = null)
         {
             Name = name;
+            ArchetypeId = archetypeId;
             EnemyPrefab = enemyPrefab;
+            EnemyConfig = enemyConfig;
             Weight = weight;
             SpawnPointType = spawnPointType;
             SpecificSpawnPoints = specificSpawnPoints?.Length > 0 ? specificSpawnPoints : null;

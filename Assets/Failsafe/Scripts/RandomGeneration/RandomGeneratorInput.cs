@@ -6,10 +6,10 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
 {
     public enum ItemRarity
     {
-        Unique = 5,
-        Rare = 10,
-        Uncommon = 25,
-        Common = 60
+        Unique = 95,
+        Rare = 85,
+        Uncommon = 60,
+        Common = 0
     }
     [System.Serializable]
     public struct RandomizationItem

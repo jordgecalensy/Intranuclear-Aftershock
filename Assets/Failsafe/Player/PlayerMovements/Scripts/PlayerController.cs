@@ -15,19 +15,20 @@ using Failsafe.Items;
 
 namespace Failsafe.PlayerMovements
 {
-    public class PlayerController : IInitializable, ITickable, IFixedTickable
+    public class PlayerController : IInitializable, ITickable, IFixedTickable, IDisposable
     {
         private readonly PlayerMovementParameters _movementParametrs;
         private readonly PlayerNoiseParameters _noiseParametrs;
         private readonly SignalManager _signalManager;
         private readonly InputHandler _inputHandler;
         private readonly PlayerView _playerView;
-        private readonly IHealth _health;
+        private readonly IRestorableHealth _health;
         private readonly IStamina _stamina;
         private readonly PlayerStaminaController _playerStaminaController;
         private readonly IEffectManager _effectManager;
         private readonly PlayerMovementController _movementController;
         private readonly PlayerControlBlocker _controlBlocker;
+        private readonly PlayerRuntimeParameters _runtimeParameters;
         
         private PlayerRotationController _playerRotationController;
         private PlayerBodyController _playerBodyController;
@@ -54,12 +55,13 @@ namespace Failsafe.PlayerMovements
             SignalManager signalManager,
             InputHandler inputHandler,
             PlayerView playerView,
-            IHealth health,
+            IRestorableHealth health,
             IStamina stamina,
             PlayerStaminaController playerStaminaController,
             IEffectManager effectManager,
             PlayerMovementController movementController,
-            PlayerControlBlocker controlBlocker)
+            PlayerControlBlocker controlBlocker,
+            PlayerRuntimeParameters runtimeParameters)
         {
             _movementParametrs = movementParametrs;
             _noiseParametrs = noiseParametrs;
@@ -72,6 +74,7 @@ namespace Failsafe.PlayerMovements
             _effectManager = effectManager;
             _movementController = movementController;
             _controlBlocker = controlBlocker;
+            _runtimeParameters = runtimeParameters;
         }
 
         public void SetControlLock(int lockId, bool locked)
@@ -100,7 +103,8 @@ namespace Failsafe.PlayerMovements
             _noiseController = new PlayerNoiseController(
                 _playerView.PlayerTransform,
                 _noiseParametrs,
-                _signalManager);
+                _signalManager,
+                _runtimeParameters);
 
             _stepController = new StepController(
                 _playerView.CharacterController,
@@ -115,9 +119,19 @@ namespace Failsafe.PlayerMovements
                 _playerRotationController);
 
             _health.OnHealthChanged += HandleHealthChanged;
+            _health.OnDeath += HandleDeath;
+            _health.OnStateRestored += HandleHealthStateRestored;
             EarthquakeTrigger.OnEarthquakeStarted += HandleEarthquake;
 
             InitializeStateMachine();
+        }
+
+        public void Dispose()
+        {
+            _health.OnHealthChanged -= HandleHealthChanged;
+            _health.OnDeath -= HandleDeath;
+            _health.OnStateRestored -= HandleHealthStateRestored;
+            EarthquakeTrigger.OnEarthquakeStarted -= HandleEarthquake;
         }
 
         private void HandleHealthChanged(float newValue)
@@ -170,6 +184,16 @@ namespace Failsafe.PlayerMovements
             _effectManager.ApplyEffect(new DamageHitEffect(0.25f));
 
             _prevHealth = newValue;
+        }
+
+        private void HandleHealthStateRestored(float restoredHealth)
+        {
+            _prevHealth = restoredHealth;
+        }
+
+        private void HandleDeath()
+        {
+            _behaviorStateMachine?.ForseChangeState<DeathState>();
         }
 
         private void HandleEarthquake(float strength, float duration)
@@ -250,7 +274,11 @@ namespace Failsafe.PlayerMovements
 
         private void InitializeStateMachine()
         {
-            var deathState = new DeathState(_playerView.Animator, _behaviorStateMachine);
+            var deathState = new DeathState(
+                _playerView.Animator,
+                _controlBlocker,
+                _inputHandler,
+                _movementController);
 
             var forcedStates = new List<BehaviorForcedState>
             {
@@ -365,6 +393,12 @@ namespace Failsafe.PlayerMovements
 
        public void Tick()
 {
+    if (_health.IsDead)
+    {
+        HandleDeath();
+        return;
+    }
+
     bool lookBlocked =
         _controlBlocker != null &&
         _controlBlocker.IsBlocked(PlayerControlBlock.Look);
@@ -402,12 +436,6 @@ namespace Failsafe.PlayerMovements
     }
 
     _stepController.Update();
-
-    if (_health.IsDead)
-    {
-        _behaviorStateMachine.ForseChangeState<DeathState>();
-        return;
-    }
 
     float currentHpPercent = _health.CurrentHealth / _health.MaxHealth;
 

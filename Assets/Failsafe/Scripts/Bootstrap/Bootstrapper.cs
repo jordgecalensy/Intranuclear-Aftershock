@@ -18,17 +18,21 @@ namespace Failsafe.Scripts.Bootstrap
         {
             //logic after container build & IInitializable
 
-            string sceneName;
-
 #if UNITY_EDITOR
-            // Загружается активная сцена. Если ее нет то загружется главное меню
-            sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
-                ?? _gameConfig.MainMenuSceneName;
-            await _sceneLoader.LoadSceneAsync(sceneName);
-#else
-            sceneName = _gameConfig.MainMenuSceneName;
-            await _sceneLoader.LoadSceneAsync(sceneName);
+            UnityEngine.SceneManagement.Scene activeScene =
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+
+            // RootLifetimeScope is created before scene entry points. Reloading the
+            // same editor scene creates overlapping GameSceneLifetimeScopes and
+            // duplicate run-save participants.
+            if (activeScene.IsValid() &&
+                !string.IsNullOrWhiteSpace(activeScene.name))
+            {
+                return;
+            }
 #endif
+
+            await _sceneLoader.LoadSceneAsync(_gameConfig.MainMenuSceneName);
         }
     }
 }
