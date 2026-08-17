@@ -1,6 +1,5 @@
 ﻿using Failsafe.Player.Model;
 using Failsafe.PlayerMovements;
-using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -47,7 +46,7 @@ namespace Failsafe.Player.Scripts.Interaction
         [Header("Debug")]
         [SerializeField] public GameObject CarryingObject;
         [SerializeField] private Transform _playerCameraTransform;
-        [SerializeField, ReadOnly] private float _currentCarryingDistance;
+        [SerializeField] private float _currentCarryingDistance;
 
         [SerializeField] private Vector3 _draggablePositionOffset;
         [SerializeField] private float _dragSpeed = 10f;
