@@ -195,7 +195,7 @@ public class PlayerHandsSystem : ITickable
 /// <summary>
 /// Действие с предметом.
 /// Legacy. Оставлено, чтобы старые action-классы не развалились.
-/// Новая логика должна идти через IUsable.Use().
+    /// Новая логика должна идти через IUsable.Use().
 /// </summary>
 public interface IActionWithItem
 {
