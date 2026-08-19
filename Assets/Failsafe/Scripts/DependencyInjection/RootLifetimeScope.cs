@@ -38,6 +38,8 @@ namespace Failsafe.Scripts.DependencyInjection
             builder.Register<RandomGenerator>(Lifetime.Singleton);
             builder.Register<EngineerBuildGenerator>(Lifetime.Singleton);
             builder.Register<EngineerSelectionState>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<EngineerRunSaveParticipant>(Lifetime.Singleton)
+                .AsSelf();
         }
     }
 }

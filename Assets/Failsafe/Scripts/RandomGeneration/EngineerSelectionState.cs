@@ -9,6 +9,13 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
 
         public bool HasSelection => SelectedEngineer != null;
 
+        public void RestoreSelectedEngineer(EngineerBuild selectedEngineer)
+        {
+            CurrentOffers = null;
+            SelectedEngineer = selectedEngineer ??
+                throw new ArgumentNullException(nameof(selectedEngineer));
+        }
+
         public void SetOffers(EngineerGenerationResult offers)
         {
             CurrentOffers = offers ??

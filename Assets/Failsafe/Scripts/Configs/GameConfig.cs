@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 
+using Assets.Failsafe.Scripts.RandomGeneration;
+
 namespace Failsafe.Scripts.Configs
 {
     [CreateAssetMenu(fileName = "GameConfig", menuName = "ScriptableObjects/GameConfig")]
@@ -10,6 +12,13 @@ namespace Failsafe.Scripts.Configs
 
         [field: SerializeField]
         public string FirstGameplaySceneName { get; private set; }
+
+        [Header("Engineer Generation")]
+        [SerializeField]
+        private EngineerGenerationConfig _engineerGenerationConfig;
+
+        public EngineerGenerationConfig EngineerGenerationConfig =>
+            _engineerGenerationConfig;
 
         [Header("Run Autosave")]
         [SerializeField, Min(10f)]

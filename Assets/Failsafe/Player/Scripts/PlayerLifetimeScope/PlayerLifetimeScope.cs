@@ -36,9 +36,12 @@ namespace Failsafe.Player
 
         protected override void Configure(IContainerBuilder builder)
         {
+            var runtimeParameters = new PlayerRuntimeParameters(_playerModelParameters);
+
             builder.RegisterInstance(_playerModelParameters);
             builder.RegisterInstance(_playerMovementParameters);
             builder.RegisterInstance(_playerNoiseParameters);
+            builder.RegisterInstance(runtimeParameters);
 
             builder.RegisterComponent(_playerView);
             builder.RegisterComponent(_damageable);
@@ -73,13 +76,12 @@ namespace Failsafe.Player
                 .As<IHealth>()
                 .As<IRestorableHealth>()
                 .AsSelf()
-                .WithParameter(_playerModelParameters.MaxHealth);
+                .WithParameter(runtimeParameters.MaxHealth);
 
             builder.Register<PlayerStamina>(Lifetime.Singleton)
                 .As<IStamina>()
                 .As<IRestorableStamina>()
-                .AsSelf()
-                .WithParameter(_playerModelParameters.MaxStamina);
+                .AsSelf();
 
             builder.Register<FlatDamageProvider>(Lifetime.Scoped)
                 .As<IDamageProvider>();
@@ -95,6 +97,8 @@ namespace Failsafe.Player
 
             builder.RegisterEntryPoint<PlayerStaminaController>(Lifetime.Scoped)
                 .AsSelf();
+
+            builder.RegisterEntryPoint<PlayerHealthRegenerationController>(Lifetime.Scoped);
 
             builder.RegisterEntryPoint<PlayerController>(Lifetime.Scoped)
                 .AsSelf();
