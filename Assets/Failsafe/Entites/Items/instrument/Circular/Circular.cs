@@ -16,14 +16,15 @@ public class Circular : IUsable
     }
     public ItemUseResult Use()
     {
-        Wrrr(Raycast());
+        //Wrrr(Raycast());
+        Debug.Log("Wrrr");
         return new ItemUseResult() { ItemStateAfterUse = ItemState.Hold, UsageType = UsageType.HoldToUse };
     }
     private void Wrrr(RaycastHit hit)
     {
-        DamageableComponent damageableComponent = hit.collider.GetComponentInParent<DamageableComponent>();
-        if (damageableComponent == null) return;
-        damageableComponent.TakeDamage(new FlatDamage(_data.Damage));
+        //DamageableComponent damageableComponent = hit.collider.GetComponentInParent<DamageableComponent>();
+        if (hit.collider.GetComponentInParent<DamageableComponent>() == null) return;
+        hit.collider.GetComponentInParent<DamageableComponent>().TakeDamage(new FlatDamage(_data.Damage));
         Debug.Log($"{hit.collider.name} Take {_data.Damage} Damage");
     }
     private RaycastHit Raycast()

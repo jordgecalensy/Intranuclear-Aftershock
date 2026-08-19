@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using FMODUnity;
 
 [CreateAssetMenu(fileName = "CircularData", menuName = "ScriptableObjects/Entities/Items/CircularData")]
 public class CircularData : ScriptableObject

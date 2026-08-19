@@ -216,6 +216,11 @@ namespace Failsafe.Player
             builder.Register<Card>(Lifetime.Scoped)
                 .AsImplementedInterfaces()
                 .AsSelf();
+
+            builder.Register<Circular>(Lifetime.Scoped)
+                .AsImplementedInterfaces()
+                .AsSelf();
+
         }
     }
 
