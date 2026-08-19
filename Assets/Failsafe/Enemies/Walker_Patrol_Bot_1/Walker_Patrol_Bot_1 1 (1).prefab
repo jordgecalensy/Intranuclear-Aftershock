@@ -1398,6 +1398,7 @@ GameObject:
   - component: {fileID: 6352954550288219278}
   - component: {fileID: 7351385856084928814}
   - component: {fileID: 8705966631546253072}
+  - component: {fileID: 6580506308015029544}
   m_Layer: 10
   m_Name: Walker_Patrol_Bot_1 1 (1)
   m_TagString: Enemy
@@ -1774,7 +1775,7 @@ MonoBehaviour:
   _damagingObjectMask:
     serializedVersion: 2
     m_Bits: 1892343
-  _impactEffects: {fileID: 0}
+  _impactEffects: {fileID: 11400000, guid: f174497a5e799224c9eb8990b4c42bc5, type: 2}
   _sameSourceCooldown: 0.25
   _debugLogs: 1
 --- !u!114 &6078384494664951033
@@ -2028,6 +2029,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _resistanceProfile: {fileID: 11400000, guid: 732c1fa465368eb48bc1e6c59f262bcd, type: 2}
   _runtimeResistanceModifiers: []
+--- !u!114 &6580506308015029544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4326282304392992769}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a90fa0fbdbb4dea4ba3239df5f7939c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _instanceId: placed:a1d4a183a527476bb433ef7373b5e287
 --- !u!1 &5228933252018573610
 GameObject:
   m_ObjectHideFlags: 0
