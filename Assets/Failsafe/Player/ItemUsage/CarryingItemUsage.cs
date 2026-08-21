@@ -2,7 +2,6 @@
 using UnityEngine;
 using VContainer;
 using System.Linq;
-using Sirenix.Utilities;
 using System.Collections.Generic;
 using System;
 
@@ -33,8 +32,13 @@ namespace Failsafe.Player.ItemUsage
             if (_physicsInteraction.CarryingObject.TryGetComponent(out Item item))
             {
                 foreach (var action in _inputHandler.PerformedActions)
+                {
                     //if(action != false)
-                    item.ActionsGroups.Where(x => x.Actions.FirstOrDefault(z => z.action.id == action.id))?.ForEach(x => x.Invoke());
+                    foreach (var actionsGroup in item.ActionsGroups.Where(x => x.Actions.Any(z => z.action.id == action.id)))
+                    {
+                        actionsGroup.Invoke();
+                    }
+                }
             }
         }
     }

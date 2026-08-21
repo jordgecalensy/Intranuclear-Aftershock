@@ -16,7 +16,10 @@ MonoBehaviour:
   _explosionDamage: 0
   _explosionRadius: 10
   _explosionForce: 4
-  _postEffect: []
+  _explosionEffects: {fileID: 11400000, guid: 77287e7869e248443bbb2560cdf538c4, type: 2}
+  _postEffect:
+  - Duration: 0
+    Effect: {fileID: 5078533678445521464, guid: 5855132fcdbded7428da319aa068050a, type: 3}
   _durationOnEnemyEffect: 10
   _onEnemyEffect: {fileID: 0}
   _explosiveVFX:

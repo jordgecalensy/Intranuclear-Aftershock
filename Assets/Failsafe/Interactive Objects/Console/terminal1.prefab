@@ -3532,11 +3532,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: debbefbf8580141a79143afcac414126, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cameraScript: []
+  cameraScript:
+  - {fileID: 0}
+  - {fileID: 0}
   cameraIndexText: {fileID: 4434657639294487479}
   cameraDisplay: {fileID: 6676835543142926489}
-  screenWidth: 378
-  screenHeight: 320
+  screenWidth: 1920
+  screenHeight: 1080
   cameraConsole: {fileID: 2383896475296683014}
 --- !u!1 &2995931371799801314
 GameObject:
@@ -10011,31 +10013,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5.8701534
+      value: 60.45
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.077
+      value: -3.753
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3.039
+      value: 122.6
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0
+      value: -0.73659986
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: -0.6763289
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -10043,7 +10045,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 180
+      value: 445.115
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 18197f05273aa95409aeb869b65df85e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z

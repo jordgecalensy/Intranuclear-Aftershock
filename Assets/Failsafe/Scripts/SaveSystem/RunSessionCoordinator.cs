@@ -18,17 +18,21 @@ namespace Failsafe.Scripts.SaveSystem
         private readonly IRunSaveService _runSaveService;
         private readonly ISceneLoader _sceneLoader;
         private readonly GameConfig _gameConfig;
+        private readonly EngineerRunSaveParticipant _engineerSaveParticipant;
 
         public bool IsBusy { get; private set; }
 
         public RunSessionCoordinator(
             IRunSaveService runSaveService,
             ISceneLoader sceneLoader,
-            GameConfig gameConfig)
+            GameConfig gameConfig,
+            EngineerRunSaveParticipant engineerSaveParticipant)
         {
             _runSaveService = runSaveService ?? throw new ArgumentNullException(nameof(runSaveService));
             _sceneLoader = sceneLoader ?? throw new ArgumentNullException(nameof(sceneLoader));
             _gameConfig = gameConfig ?? throw new ArgumentNullException(nameof(gameConfig));
+            _engineerSaveParticipant = engineerSaveParticipant ??
+                throw new ArgumentNullException(nameof(engineerSaveParticipant));
         }
 
         public async UniTask<RunSaveOperationResult> StartNewRunAsync()
@@ -95,6 +99,15 @@ namespace Failsafe.Scripts.SaveSystem
                 {
                     return RunSaveOperationResult.Failure(
                         "The run save does not contain a checkpoint to continue from.");
+                }
+
+                if (!_engineerSaveParticipant.TryRestoreBeforeSceneLoad(
+                        saveSnapshot.checkpoint.engineer,
+                        out string engineerRestoreError))
+                {
+                    return RunSaveOperationResult.Failure(
+                        "Failed to restore the selected engineer: " +
+                        engineerRestoreError);
                 }
 
                 string checkpointSceneName = NormalizeSceneName(saveSnapshot.checkpoint.sceneId);

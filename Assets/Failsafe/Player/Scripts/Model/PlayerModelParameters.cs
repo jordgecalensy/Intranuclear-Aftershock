@@ -14,6 +14,11 @@ namespace Failsafe.Player.Model
 		public float MaxStamina { get; private set; } = 100f;
 
 		/// <summary>
+		/// Пассивная регенерация здоровья. По умолчанию отключена.
+		/// </summary>
+		public float RegenerateHealthPerSecond = 0f;
+
+		/// <summary>
 		/// Пассивная регенерация выносливости
 		/// </summary>
 		public float RegenerateStaminaPerSecond = 20f;
