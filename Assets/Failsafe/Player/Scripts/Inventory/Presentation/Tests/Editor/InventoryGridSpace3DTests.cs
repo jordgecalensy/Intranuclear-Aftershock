@@ -35,6 +35,21 @@ namespace Failsafe.Inventory.Presentation.Tests
         }
 
         [Test]
+        public void GetCellCenter_MapsCoordinatesIncludingOutsidePreviewCells()
+        {
+            InventoryGridSpace3D gridSpace = new InventoryGridSpace3D(6, 5, 1f);
+
+            Vector3 inside = gridSpace.GetCellCenter(
+                new InventoryGridPosition(0, 0));
+
+            Vector3 outside = gridSpace.GetCellCenter(
+                new InventoryGridPosition(6, 5));
+
+            AssertVector(inside, new Vector3(-2.5f, 0f, 2f));
+            AssertVector(outside, new Vector3(3.5f, 0f, -3f));
+        }
+
+        [Test]
         public void GetGridRotation_ReturnsAbsoluteClockwiseQuarterTurn()
         {
             InventoryGridSpace3D gridSpace = new InventoryGridSpace3D(6, 5, 1f);

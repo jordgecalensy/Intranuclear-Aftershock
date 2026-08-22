@@ -31,6 +31,10 @@ namespace Failsafe.Inventory.Integration
 
         private int _inventoryLayerMask;
         private bool _pointerIsOnGrid;
+        private bool _hasPointerLocalPoint;
+        private Vector3 _pointerLocalPoint;
+        private Vector3 _initialPreviewGrabOffset;
+        private InventoryFailureReason _currentTargetFailureReason;
 
         private void Awake()
         {
@@ -129,18 +133,37 @@ namespace Failsafe.Inventory.Integration
                 return false;
             }
 
+            InventoryGridPresenter3D presenter = _inventory.Presenter;
+
+            if (presenter == null ||
+                !presenter.TryGetView(
+                    hitTarget.InstanceId,
+                    out InventoryItemView3D view) ||
+                !InventoryGridRaycaster3D.TryGetLocalPointOnGridPlane(
+                    pointerRay,
+                    presenter.transform,
+                    out _pointerLocalPoint))
+            {
+                return false;
+            }
+
             CurrentSession = new InventoryDragSession(
                 placement,
                 grabbedCell);
 
+            _initialPreviewGrabOffset =
+                view.transform.localPosition - _pointerLocalPoint;
+            _hasPointerLocalPoint = true;
             _pointerIsOnGrid = true;
             HasValidTarget = PreviewCurrentTarget();
 
             if (!HasValidTarget)
             {
-                CurrentSession = null;
+                ClearSession();
                 return false;
             }
+
+            PreviewFreeAtPointer();
 
             return true;
         }
@@ -150,18 +173,40 @@ namespace Failsafe.Inventory.Integration
             if (!IsDragging)
                 return false;
 
-            if (!TryGetPointerCell(
+            InventoryGridPresenter3D presenter = _inventory.Presenter;
+
+            if (presenter == null ||
+                !InventoryGridRaycaster3D.TryGetLocalPointOnGridPlane(
                     pointerRay,
+                    presenter.transform,
+                    out _pointerLocalPoint))
+            {
+                _pointerIsOnGrid = false;
+                _hasPointerLocalPoint = false;
+                HasValidTarget = false;
+                _currentTargetFailureReason = InventoryFailureReason.OutOfBounds;
+                presenter?.HidePlacementHighlight();
+                return false;
+            }
+
+            _hasPointerLocalPoint = true;
+
+            if (!presenter.GridSpace.TryGetGridPosition(
+                    _pointerLocalPoint,
                     out InventoryGridPosition pointerCell))
             {
                 _pointerIsOnGrid = false;
                 HasValidTarget = false;
+                _currentTargetFailureReason = InventoryFailureReason.OutOfBounds;
+                presenter.HidePlacementHighlight();
+                PreviewFreeAtPointer();
                 return false;
             }
 
             _pointerIsOnGrid = true;
             CurrentSession.UpdatePointer(pointerCell);
             HasValidTarget = PreviewCurrentTarget();
+            PreviewFreeAtPointer();
             return HasValidTarget;
         }
 
@@ -171,6 +216,7 @@ namespace Failsafe.Inventory.Integration
                 return false;
 
             HasValidTarget = _pointerIsOnGrid && PreviewCurrentTarget();
+            PreviewFreeAtPointer();
             return true;
         }
 
@@ -210,11 +256,17 @@ namespace Failsafe.Inventory.Integration
             else
             {
                 result = InventoryOperationResult.Failure(
-                    InventoryFailureReason.OutOfBounds);
+                    _currentTargetFailureReason == InventoryFailureReason.None
+                        ? InventoryFailureReason.OutOfBounds
+                        : _currentTargetFailureReason);
             }
 
-            if (!result.IsSuccess && _inventory.Presenter != null)
+            if (_inventory.Presenter != null &&
+                _inventory.Grid != null &&
+                _inventory.Grid.TryGetPlacement(session.InstanceId, out _))
+            {
                 _inventory.Presenter.RestorePlacement(session.InstanceId);
+            }
 
             ClearSession();
             return result;
@@ -359,25 +411,6 @@ namespace Failsafe.Inventory.Integration
             CancelDrag();
         }
 
-        private bool TryGetPointerCell(
-            Ray pointerRay,
-            out InventoryGridPosition pointerCell)
-        {
-            InventoryGridPresenter3D presenter = _inventory.Presenter;
-
-            if (presenter == null)
-            {
-                pointerCell = default;
-                return false;
-            }
-
-            return InventoryGridRaycaster3D.TryGetGridPosition(
-                pointerRay,
-                presenter.transform,
-                presenter.GridSpace,
-                out pointerCell);
-        }
-
         private bool TryGetHitCell(
             RaycastHit hit,
             out InventoryGridPosition hitCell)
@@ -402,19 +435,91 @@ namespace Failsafe.Inventory.Integration
         {
             InventoryDragSession session = CurrentSession;
 
-            return session != null &&
-                   _inventory.Presenter.TryPreviewPlacement(
-                       session.InstanceId,
-                       session.TargetOrigin,
-                       session.TargetFootprint,
-                       session.TargetRotation);
+            if (session == null ||
+                _inventory == null ||
+                _inventory.Grid == null ||
+                _inventory.Presenter == null)
+            {
+                _currentTargetFailureReason =
+                    InventoryFailureReason.InvalidItem;
+
+                return false;
+            }
+
+            InventoryOperationResult validation =
+                _inventory.Grid.ValidateRelocation(
+                    session.InstanceId,
+                    session.TargetOrigin,
+                    session.TargetRotation);
+
+            _currentTargetFailureReason = validation.FailureReason;
+
+            bool viewIsInsideGrid =
+                _inventory.Presenter.TryPreviewPlacement(
+                    session.InstanceId,
+                    session.TargetOrigin,
+                    session.TargetFootprint,
+                    session.TargetRotation);
+
+            _inventory.Presenter.ShowPlacementHighlight(
+                session.TargetOrigin,
+                session.TargetFootprint,
+                validation.IsSuccess && viewIsInsideGrid);
+
+            return validation.IsSuccess && viewIsInsideGrid;
+        }
+
+        private bool PreviewFreeAtPointer()
+        {
+            InventoryDragSession session = CurrentSession;
+
+            if (session == null ||
+                !_hasPointerLocalPoint ||
+                _inventory == null ||
+                _inventory.Presenter == null)
+            {
+                return false;
+            }
+
+            Vector3 rotatedGrabOffset = GetRotatedGrabOffset(session);
+
+            return _inventory.Presenter.TryPreviewFreePosition(
+                session.InstanceId,
+                _pointerLocalPoint + rotatedGrabOffset,
+                session.TargetFootprint,
+                session.TargetRotation);
+        }
+
+        private Vector3 GetRotatedGrabOffset(InventoryDragSession session)
+        {
+            float initialAngle = session.InitialRotation ==
+                                 InventoryItemRotation.Clockwise90
+                ? 90f
+                : 0f;
+
+            float targetAngle = session.TargetRotation ==
+                                InventoryItemRotation.Clockwise90
+                ? 90f
+                : 0f;
+
+            return Quaternion.AngleAxis(
+                       targetAngle - initialAngle,
+                       Vector3.up) *
+                   _initialPreviewGrabOffset;
         }
 
         private void ClearSession()
         {
+            if (_inventory != null && _inventory.Presenter != null)
+                _inventory.Presenter.HidePlacementHighlight();
+
             CurrentSession = null;
             HasValidTarget = false;
             _pointerIsOnGrid = false;
+            _hasPointerLocalPoint = false;
+            _pointerLocalPoint = default;
+            _initialPreviewGrabOffset = default;
+            _currentTargetFailureReason = InventoryFailureReason.None;
         }
     }
 }

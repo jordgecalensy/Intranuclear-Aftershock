@@ -33,8 +33,8 @@ namespace Failsafe.GameSceneServices
                 .As<IEnemySpawnSystem>()
                 .AsSelf();
 
-            builder.RegisterEntryPoint<WorldRunSaveParticipant>(Lifetime.Scoped);
-            builder.RegisterEntryPoint<EnemyRunSaveParticipant>(Lifetime.Scoped);
+            builder.RegisterEntryPoint<WorldRunSaveParticipant>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<EnemyRunSaveParticipant>(Lifetime.Singleton);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             builder.RegisterEntryPoint<RunSaveDebugHotkey>(Lifetime.Scoped);

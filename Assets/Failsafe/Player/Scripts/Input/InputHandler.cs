@@ -47,6 +47,14 @@ public class InputHandler : System.IDisposable
     private const string _throwObject = "ThrowObject"; ///временно
     private const string _slantRight = "SlantRight"; ///временно
     private const string _slantLeft = "SlantLeft"; ///временно
+    private static readonly string[] QuickSlotActionNames =
+    {
+        "QuickSlot1",
+        "QuickSlot2",
+        "QuickSlot3",
+        "QuickSlot4",
+        "QuickSlot5"
+    };
 
     private InputAction _movementAction;
     private InputAction _rotationAction;
@@ -63,6 +71,10 @@ public class InputHandler : System.IDisposable
     public InputAction ThrowObjectAction; ///временно
     private InputAction _slantRightAction;
     private InputAction _slantLeftAction;
+    private readonly InputAction[] _quickSlotActions =
+        new InputAction[QuickSlotActionNames.Length];
+    private readonly InputTrigger[] _quickSlotTriggers =
+        new InputTrigger[QuickSlotActionNames.Length];
 
 
     public List<InputAction> PerformedActions = new List<InputAction>();
@@ -82,6 +94,24 @@ public class InputHandler : System.IDisposable
     public InputTrigger VisorTrigger { get; private set; } = new InputTrigger();
     public bool SlantRightTrigger { get; private set; } 
     public bool SlantLeftTrigger { get; private set; }
+
+    public bool TryConsumeQuickSlotSelection(out int slotIndex)
+    {
+        for (int index = 0; index < _quickSlotTriggers.Length; index++)
+        {
+            InputTrigger trigger = _quickSlotTriggers[index];
+
+            if (trigger == null || !trigger.IsTriggered)
+                continue;
+
+            trigger.ReleaseTrigger();
+            slotIndex = index;
+            return true;
+        }
+
+        slotIndex = -1;
+        return false;
+    }
 
 
     /// <summary>
@@ -113,6 +143,16 @@ public class InputHandler : System.IDisposable
         ThrowObjectAction = _playerActionMap.FindAction(_throwObject);
         _slantRightAction = _playerActionMap.FindAction(_slantRight);
         _slantLeftAction = _playerActionMap.FindAction(_slantLeft);
+
+        for (int index = 0; index < QuickSlotActionNames.Length; index++)
+        {
+            _quickSlotActions[index] =
+                _playerActionMap.FindAction(
+                    QuickSlotActionNames[index],
+                    throwIfNotFound: true);
+
+            _quickSlotTriggers[index] = new InputTrigger();
+        }
 
         SubscribeActionValuesToInputEvents();
     }
@@ -188,6 +228,14 @@ public class InputHandler : System.IDisposable
 
         _slantLeftAction.performed += OnSlantLeftPerformed;
         _slantLeftAction.canceled += OnSlantLeftCanceled;
+
+        for (int index = 0; index < _quickSlotActions.Length; index++)
+        {
+            _quickSlotActions[index].performed +=
+                _quickSlotTriggers[index].OnInputStart;
+            _quickSlotActions[index].canceled +=
+                _quickSlotTriggers[index].OnInputCancel;
+        }
     }
 
     private void UnsubscribeActionValuesFromInputEvents()
@@ -230,6 +278,20 @@ public class InputHandler : System.IDisposable
 
         _slantLeftAction.performed -= OnSlantLeftPerformed;
         _slantLeftAction.canceled -= OnSlantLeftCanceled;
+
+        for (int index = 0; index < _quickSlotActions.Length; index++)
+        {
+            if (_quickSlotActions[index] == null ||
+                _quickSlotTriggers[index] == null)
+            {
+                continue;
+            }
+
+            _quickSlotActions[index].performed -=
+                _quickSlotTriggers[index].OnInputStart;
+            _quickSlotActions[index].canceled -=
+                _quickSlotTriggers[index].OnInputCancel;
+        }
     }
 
     private void OnMovementPerformed(InputAction.CallbackContext context)
@@ -343,6 +405,10 @@ public class InputHandler : System.IDisposable
         AttackTrigger.Reset();
         AltModeTrigger.Reset();
         VisorTrigger.Reset();
+
+        for (int index = 0; index < _quickSlotTriggers.Length; index++)
+            _quickSlotTriggers[index]?.Reset();
+
         PerformedActions.Clear();
     }
 

@@ -94,6 +94,18 @@ namespace Failsafe.Inventory.Presentation
             _gridRotationRoot.localRotation = gridSpace.GetGridRotation(rotation);
         }
 
+        public void ApplyFreePreview(
+            Vector3 localPosition,
+            InventoryItemRotation rotation,
+            InventoryGridSpace3D gridSpace)
+        {
+            if (!IsInitialized)
+                throw new InvalidOperationException("Inventory item view is not initialized.");
+
+            transform.localPosition = localPosition;
+            _gridRotationRoot.localRotation = gridSpace.GetGridRotation(rotation);
+        }
+
         private void CreateHierarchy()
         {
             _gridRotationRoot = CreateChild("Grid Rotation", transform);

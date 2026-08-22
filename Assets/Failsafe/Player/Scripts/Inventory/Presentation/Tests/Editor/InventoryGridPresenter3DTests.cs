@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Failsafe.Inventory.Core;
 using NUnit.Framework;
 using UnityEngine;
@@ -188,6 +189,125 @@ namespace Failsafe.Inventory.Presentation.Tests
         }
 
         [Test]
+        public void TryPreviewFreePosition_MovesOnlyViewAndHitTarget()
+        {
+            InventoryGridModel grid = new InventoryGridModel();
+            InventoryItemModel item = CreateItem("free-preview", 2, 1);
+            FakeResolver resolver = new FakeResolver();
+            resolver.Register(item.InstanceId, CreateDefinition());
+
+            InventoryGridPresenter3D presenter = CreatePresenter();
+            presenter.Initialize(
+                grid,
+                new InventoryGridSpace3D(6, 5, 1f),
+                resolver);
+
+            Assert.That(
+                grid.TryPlace(item, new InventoryGridPosition(0, 0)).IsSuccess,
+                Is.True);
+
+            Vector3 previewPosition = new Vector3(0.37f, 0f, -0.22f);
+            bool previewed = presenter.TryPreviewFreePosition(
+                item.InstanceId,
+                previewPosition,
+                new InventoryGridSize(1, 2),
+                InventoryItemRotation.Clockwise90);
+
+            Assert.That(previewed, Is.True);
+            Assert.That(
+                presenter.TryGetView(item.InstanceId, out InventoryItemView3D view),
+                Is.True);
+            AssertVector(view.transform.localPosition, previewPosition);
+            Assert.That(
+                Quaternion.Angle(
+                    view.AppliedGridRotation,
+                    Quaternion.AngleAxis(90f, Vector3.up)),
+                Is.LessThan(Tolerance));
+
+            Assert.That(
+                presenter.TryGetHitTarget(
+                    item.InstanceId,
+                    out InventoryItemHitTarget3D hitTarget),
+                Is.True);
+            AssertVector(hitTarget.Collider.size, new Vector3(1f, 1f, 2f));
+
+            Assert.That(
+                grid.TryGetPlacement(item.InstanceId, out InventoryPlacement placement),
+                Is.True);
+            Assert.That(placement.Origin, Is.EqualTo(new InventoryGridPosition(0, 0)));
+            Assert.That(item.Rotation, Is.EqualTo(InventoryItemRotation.Default));
+        }
+
+        [Test]
+        public void PlacementHighlight_TogglesManualValidAndInvalidVisuals()
+        {
+            InventoryGridPresenter3D presenter = CreatePresenter();
+            presenter.Initialize(
+                new InventoryGridModel(),
+                new InventoryGridSpace3D(6, 5, 1f),
+                new FakeResolver());
+
+            InventoryRobotPresentationLayout3D layout =
+                CreateManualHighlightLayout(
+                    out GameObject[] validHighlights,
+                    out GameObject[] invalidHighlights);
+
+            presenter.SetManualGridLayout(layout);
+
+            Assert.That(
+                presenter.ShowPlacementHighlight(
+                    new InventoryGridPosition(4, 3),
+                    new InventoryGridSize(2, 2),
+                    true),
+                Is.True);
+
+            Assert.That(CountActive(validHighlights), Is.EqualTo(4));
+            Assert.That(CountActive(invalidHighlights), Is.Zero);
+            Assert.That(validHighlights[22].activeSelf, Is.True);
+            Assert.That(validHighlights[23].activeSelf, Is.True);
+            Assert.That(validHighlights[28].activeSelf, Is.True);
+            Assert.That(validHighlights[29].activeSelf, Is.True);
+
+            Assert.That(
+                presenter.ShowPlacementHighlight(
+                    new InventoryGridPosition(1, 1),
+                    new InventoryGridSize(1, 2),
+                    false),
+                Is.True);
+
+            Assert.That(CountActive(validHighlights), Is.Zero);
+            Assert.That(CountActive(invalidHighlights), Is.EqualTo(2));
+            Assert.That(invalidHighlights[7].activeSelf, Is.True);
+            Assert.That(invalidHighlights[13].activeSelf, Is.True);
+
+            presenter.HidePlacementHighlight();
+
+            Assert.That(CountActive(validHighlights), Is.Zero);
+            Assert.That(CountActive(invalidHighlights), Is.Zero);
+        }
+
+        [Test]
+        public void Initialize_CreatesSixByFivePrototypeGridVisual()
+        {
+            InventoryGridPresenter3D presenter = CreatePresenter();
+            presenter.Initialize(
+                new InventoryGridModel(),
+                new InventoryGridSpace3D(6, 5, 1f),
+                new FakeResolver());
+
+            Assert.That(
+                presenter.TryGetPrototypeGridVisual(
+                    out InventoryPrototypeGridVisual3D visual),
+                Is.True);
+            Assert.That(visual.IsInitialized, Is.True);
+            Assert.That(visual.Columns, Is.EqualTo(6));
+            Assert.That(visual.Rows, Is.EqualTo(5));
+            Assert.That(visual.VerticalLineCount, Is.EqualTo(7));
+            Assert.That(visual.HorizontalLineCount, Is.EqualTo(6));
+            Assert.That(visual.LineCount, Is.EqualTo(13));
+        }
+
+        [Test]
         public void RestorePlacement_ReappliesAuthoritativeCorePlacement()
         {
             InventoryGridModel grid = new InventoryGridModel();
@@ -285,6 +405,78 @@ namespace Failsafe.Inventory.Presentation.Tests
             GameObject presenterObject = new GameObject("Inventory Presenter Test");
             _createdObjects.Add(presenterObject);
             return presenterObject.AddComponent<InventoryGridPresenter3D>();
+        }
+
+        private InventoryRobotPresentationLayout3D
+            CreateManualHighlightLayout(
+                out GameObject[] validHighlights,
+                out GameObject[] invalidHighlights)
+        {
+            GameObject layoutObject = new GameObject(
+                "Inventory Robot Layout Test");
+            _createdObjects.Add(layoutObject);
+
+            InventoryRobotPresentationLayout3D layout =
+                layoutObject.AddComponent<
+                    InventoryRobotPresentationLayout3D>();
+
+            GameObject cellsRootObject = new GameObject(
+                "Cells",
+                typeof(RectTransform));
+            _createdObjects.Add(cellsRootObject);
+
+            RectTransform cellsRoot =
+                cellsRootObject.GetComponent<RectTransform>();
+
+            validHighlights = new GameObject[30];
+            invalidHighlights = new GameObject[30];
+
+            for (int index = 0; index < 30; index++)
+            {
+                GameObject cell = new GameObject(
+                    $"Cell {index}",
+                    typeof(RectTransform));
+                cell.transform.SetParent(cellsRoot, false);
+
+                GameObject valid = new GameObject("HighlightValid");
+                valid.transform.SetParent(cell.transform, false);
+                valid.SetActive(false);
+                validHighlights[index] = valid;
+
+                GameObject invalid = new GameObject("HighlightInvalid");
+                invalid.transform.SetParent(cell.transform, false);
+                invalid.SetActive(false);
+                invalidHighlights[index] = invalid;
+            }
+
+            SetPrivateField(layout, "_gridCellsRoot", cellsRoot);
+            return layout;
+        }
+
+        private static int CountActive(GameObject[] objects)
+        {
+            int count = 0;
+
+            foreach (GameObject target in objects)
+            {
+                if (target.activeSelf)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static void SetPrivateField<T>(
+            object target,
+            string fieldName,
+            T value)
+        {
+            FieldInfo field = target.GetType().GetField(
+                fieldName,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+            Assert.That(field, Is.Not.Null);
+            field.SetValue(target, value);
         }
 
         private InventoryModelViewDefinition CreateDefinition()

@@ -181,6 +181,54 @@ namespace Failsafe.Inventory.Core
                 return failure;
             }
 
+            InventoryOperationResult validation = ValidateRelocation(
+                placement,
+                targetOrigin,
+                targetRotation);
+
+            if (!validation.IsSuccess)
+                return validation;
+
+            if (placement.Origin.Equals(targetOrigin) &&
+                placement.Item.Rotation == targetRotation)
+            {
+                return validation;
+            }
+
+            ClearOccupancy(placement);
+            placement.Origin = targetOrigin;
+            placement.Item.SetRotation(targetRotation);
+            Occupy(placement);
+            PlacementChanged?.Invoke(placement);
+
+            return InventoryOperationResult.Success(
+                remainingQuantity: placement.Item.Quantity);
+        }
+
+        public InventoryOperationResult ValidateRelocation(
+            string instanceId,
+            InventoryGridPosition targetOrigin,
+            InventoryItemRotation targetRotation)
+        {
+            if (!TryGetPlacementInternal(
+                    instanceId,
+                    out InventoryPlacement placement,
+                    out InventoryOperationResult failure))
+            {
+                return failure;
+            }
+
+            return ValidateRelocation(
+                placement,
+                targetOrigin,
+                targetRotation);
+        }
+
+        private InventoryOperationResult ValidateRelocation(
+            InventoryPlacement placement,
+            InventoryGridPosition targetOrigin,
+            InventoryItemRotation targetRotation)
+        {
             if (targetRotation != InventoryItemRotation.Default &&
                 targetRotation != InventoryItemRotation.Clockwise90)
             {
@@ -210,19 +258,6 @@ namespace Failsafe.Inventory.Core
                     failureReason,
                     placement.Item.Quantity);
             }
-
-            if (placement.Origin.Equals(targetOrigin) &&
-                placement.Item.Rotation == targetRotation)
-            {
-                return InventoryOperationResult.Success(
-                    remainingQuantity: placement.Item.Quantity);
-            }
-
-            ClearOccupancy(placement);
-            placement.Origin = targetOrigin;
-            placement.Item.SetRotation(targetRotation);
-            Occupy(placement);
-            PlacementChanged?.Invoke(placement);
 
             return InventoryOperationResult.Success(
                 remainingQuantity: placement.Item.Quantity);

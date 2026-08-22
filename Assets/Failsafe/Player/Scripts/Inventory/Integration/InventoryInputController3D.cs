@@ -1,7 +1,10 @@
 using System;
+using Failsafe.Inventory.Core;
+using Failsafe.Inventory.Presentation;
 using Failsafe.PlayerMovements;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using VContainer;
 
 namespace Failsafe.Inventory.Integration
 {
@@ -11,6 +14,10 @@ namespace Failsafe.Inventory.Integration
         [Header("References")]
         [SerializeField] private InventoryRuntimeController _inventory;
         [SerializeField] private InventoryDragController3D _dragController;
+        [SerializeField] private InventoryRobotPresentationController
+            _robotPresentation;
+        [SerializeField] private InventoryQuickBarPresentationLayout3D
+            _closedQuickBarLayout;
         [SerializeField] private CursorLock _cursorLock;
         [SerializeField] private PlayerControlBlocker _controlBlocker;
 
@@ -19,8 +26,13 @@ namespace Failsafe.Inventory.Integration
         [SerializeField] private bool _startOpen;
 
         public bool IsOpen { get; private set; }
+        public bool IsTransitioning =>
+            _robotPresentation != null &&
+            _robotPresentation.IsTransitioning;
+
         public bool CanClose =>
             IsOpen &&
+            !IsTransitioning &&
             (_dragController == null || !_dragController.IsDragging);
 
         public event Action<bool> OpenStateChanged;
@@ -29,6 +41,30 @@ namespace Failsafe.Inventory.Integration
         private bool _cursorVisibleBeforeOpen;
         private bool _cursorWasLockedBeforeOpen;
         private bool _hasSavedCursorState;
+        private InputHandler _inputHandler;
+        private InventoryQuickSlotEquipService _quickSlotEquipService;
+        private InventoryRobotPresentationLayout3D _robotLayout;
+
+        [Inject]
+        public void Construct(
+            InputHandler inputHandler,
+            InventoryQuickSlotEquipService quickSlotEquipService)
+        {
+            if (_quickSlotEquipService != null)
+            {
+                _quickSlotEquipService.ActiveSlotChanged -=
+                    HandleActiveSlotChanged;
+            }
+
+            _inputHandler = inputHandler;
+            _quickSlotEquipService = quickSlotEquipService;
+
+            if (_quickSlotEquipService != null)
+            {
+                _quickSlotEquipService.ActiveSlotChanged +=
+                    HandleActiveSlotChanged;
+            }
+        }
 
         private void Awake()
         {
@@ -38,11 +74,34 @@ namespace Failsafe.Inventory.Integration
             if (_dragController == null)
                 _dragController = GetComponentInParent<InventoryDragController3D>();
 
+            if (_robotPresentation == null)
+            {
+                _robotPresentation = GetComponentInChildren<
+                    InventoryRobotPresentationController>(true);
+            }
+
+            if (_robotPresentation != null)
+            {
+                _robotLayout = _robotPresentation.GetComponentInChildren<
+                    InventoryRobotPresentationLayout3D>(true);
+            }
+
+            if (_closedQuickBarLayout == null)
+            {
+                _closedQuickBarLayout = GetComponentInChildren<
+                    InventoryQuickBarPresentationLayout3D>(true);
+            }
+
             if (_cursorLock == null)
                 _cursorLock = GetComponentInParent<CursorLock>();
 
             if (_controlBlocker == null)
                 _controlBlocker = GetComponentInParent<PlayerControlBlocker>();
+        }
+
+        private void OnEnable()
+        {
+            SubscribeToRobotPresentation();
         }
 
         private void Start()
@@ -60,7 +119,22 @@ namespace Failsafe.Inventory.Integration
             }
 
             _dragController.SetInteractionEnabled(false);
+
+            if (_closedQuickBarLayout != null &&
+                !_inventory.TryBindClosedQuickBarLayout(
+                    _closedQuickBarLayout,
+                    out string quickBarLayoutError))
+            {
+                Debug.LogWarning(
+                    $"Closed quick-bar layout could not be bound: " +
+                    $"{quickBarLayoutError}. Using the procedural fallback.",
+                    this);
+            }
+
             _inventory.SetPresentationVisible(false);
+            _inventory.QuickBarPresenter?.SetActiveSlot(
+                _quickSlotEquipService?.ActiveSlotIndex ??
+                InventoryQuickBarPresenter3D.NoActiveSlot);
 
             if (_startOpen)
                 Open();
@@ -79,6 +153,64 @@ namespace Failsafe.Inventory.Integration
             {
                 Toggle();
             }
+
+            if (_inputHandler != null &&
+                _inputHandler.TryConsumeQuickSlotSelection(
+                    out int quickSlotIndex) &&
+                !TryHandleQuickSlotInput(
+                    quickSlotIndex,
+                    out string error) &&
+                !string.IsNullOrWhiteSpace(error))
+            {
+                Debug.LogWarning(
+                    $"Quick-slot selection failed: {error}",
+                    this);
+            }
+        }
+
+        private bool TryHandleQuickSlotInput(
+            int slotIndex,
+            out string error)
+        {
+            if (IsOpen)
+            {
+                InventoryDragSession session =
+                    _dragController?.CurrentSession;
+
+                if (session == null)
+                {
+                    error = null;
+                    return true;
+                }
+
+                InventoryOperationResult result =
+                    _inventory.AssignQuickSlot(
+                        slotIndex,
+                        session.InstanceId);
+
+                error = result.IsSuccess
+                    ? null
+                    : $"Could not assign inventory item " +
+                      $"'{session.InstanceId}' to quick slot " +
+                      $"{slotIndex + 1}: {result.FailureReason}.";
+
+                return result.IsSuccess;
+            }
+
+            if (_quickSlotEquipService == null)
+            {
+                error = "Quick-slot equip service was not injected.";
+                return false;
+            }
+
+            return _quickSlotEquipService.TrySelectSlot(
+                slotIndex,
+                out error);
+        }
+
+        private void HandleActiveSlotChanged(int slotIndex)
+        {
+            _inventory?.QuickBarPresenter?.SetActiveSlot(slotIndex);
         }
 
         public void SetInputEnabled(bool inputEnabled)
@@ -88,6 +220,9 @@ namespace Failsafe.Inventory.Integration
 
         public bool Toggle()
         {
+            if (IsTransitioning)
+                return false;
+
             return IsOpen
                 ? Close()
                 : Open();
@@ -95,36 +230,41 @@ namespace Failsafe.Inventory.Integration
 
         public bool Open()
         {
+            if (IsTransitioning)
+                return false;
+
             if (IsOpen)
                 return true;
 
             if (_inventory == null ||
                 !_inventory.IsInitialized ||
-                _dragController == null ||
-                !_inventory.SetPresentationVisible(true))
+                _dragController == null)
             {
                 return false;
             }
 
             SaveCursorState();
-            SetCursorLocked(false);
+            AddInventoryControlLock();
+            _dragController.SetInteractionEnabled(false);
 
-            _controlBlocker?.AddLock(
-                PlayerControlLockIds.InventoryOpened,
-                PlayerControlBlock.Look |
-                PlayerControlBlock.Interaction |
-                PlayerControlBlock.Shooting |
-                PlayerControlBlock.ItemUse |
-                PlayerControlBlock.Visor);
+            if (_robotPresentation != null)
+            {
+                if (_robotPresentation.RequestOpen())
+                    return true;
 
-            _dragController.SetInteractionEnabled(true);
-            IsOpen = true;
-            OpenStateChanged?.Invoke(true);
-            return true;
+                ReleaseInventoryControlLock();
+                RestoreCursorState();
+                return false;
+            }
+
+            return CompleteOpen();
         }
 
         public bool Close()
         {
+            if (IsTransitioning)
+                return false;
+
             if (!IsOpen)
                 return true;
 
@@ -138,17 +278,86 @@ namespace Failsafe.Inventory.Integration
             }
 
             _dragController?.SetInteractionEnabled(false);
-            _controlBlocker?.RemoveLock(
-                PlayerControlLockIds.InventoryOpened);
+
+            if (_robotPresentation != null)
+            {
+                if (_robotPresentation.RequestClose())
+                    return true;
+
+                _inventory.SetPresentationVisible(true);
+                _dragController?.SetInteractionEnabled(true);
+                return false;
+            }
+
+            CompleteClose();
+            return true;
+        }
+
+        private bool CompleteOpen()
+        {
+            if (_inventory != null &&
+                _robotLayout != null &&
+                !_inventory.TryBindRobotPresentationLayout(
+                    _robotLayout,
+                    out string layoutError))
+            {
+                Debug.LogWarning(
+                    $"Robot inventory layout could not be bound: " +
+                    $"{layoutError}. Using the procedural presentation.",
+                    this);
+            }
+
+            if (_inventory == null ||
+                !_inventory.SetPresentationVisible(true))
+            {
+                Debug.LogError(
+                    "Inventory robot opened, but inventory presentation " +
+                    "could not be shown.",
+                    this);
+
+                _robotPresentation?.RequestClose();
+                CompleteClose();
+                return false;
+            }
+
+            SetCursorLocked(false);
+            _dragController?.SetInteractionEnabled(true);
+
+            if (IsOpen)
+                return true;
+
+            IsOpen = true;
+            OpenStateChanged?.Invoke(true);
+            return true;
+        }
+
+        private void CompleteClose()
+        {
+            _dragController?.SetInteractionEnabled(false);
+            ReleaseInventoryControlLock();
             RestoreCursorState();
+
+            if (!IsOpen)
+                return;
 
             IsOpen = false;
             OpenStateChanged?.Invoke(false);
-            return true;
+        }
+
+        private void HandleRobotOpenCompleted()
+        {
+            CompleteOpen();
+        }
+
+        private void HandleRobotCloseCompleted()
+        {
+            CompleteClose();
         }
 
         private void OnDisable()
         {
+            UnsubscribeFromRobotPresentation();
+
             if (_dragController != null)
             {
                 _dragController.CancelDrag();
@@ -158,8 +367,8 @@ namespace Failsafe.Inventory.Integration
             if (_inventory != null && _inventory.IsInitialized)
                 _inventory.SetPresentationVisible(false);
 
-            _controlBlocker?.RemoveLock(
-                PlayerControlLockIds.InventoryOpened);
+            _robotPresentation?.ForceHidden();
+            ReleaseInventoryControlLock();
             RestoreCursorState();
 
             if (!IsOpen)
@@ -167,6 +376,61 @@ namespace Failsafe.Inventory.Integration
 
             IsOpen = false;
             OpenStateChanged?.Invoke(false);
+        }
+
+        private void OnDestroy()
+        {
+            UnsubscribeFromRobotPresentation();
+
+            if (_quickSlotEquipService != null)
+            {
+                _quickSlotEquipService.ActiveSlotChanged -=
+                    HandleActiveSlotChanged;
+            }
+        }
+
+        private void SubscribeToRobotPresentation()
+        {
+            if (_robotPresentation == null)
+                return;
+
+            _robotPresentation.OpenCompleted -=
+                HandleRobotOpenCompleted;
+            _robotPresentation.CloseCompleted -=
+                HandleRobotCloseCompleted;
+
+            _robotPresentation.OpenCompleted +=
+                HandleRobotOpenCompleted;
+            _robotPresentation.CloseCompleted +=
+                HandleRobotCloseCompleted;
+        }
+
+        private void UnsubscribeFromRobotPresentation()
+        {
+            if (_robotPresentation == null)
+                return;
+
+            _robotPresentation.OpenCompleted -=
+                HandleRobotOpenCompleted;
+            _robotPresentation.CloseCompleted -=
+                HandleRobotCloseCompleted;
+        }
+
+        private void AddInventoryControlLock()
+        {
+            _controlBlocker?.AddLock(
+                PlayerControlLockIds.InventoryOpened,
+                PlayerControlBlock.Look |
+                PlayerControlBlock.Interaction |
+                PlayerControlBlock.Shooting |
+                PlayerControlBlock.ItemUse |
+                PlayerControlBlock.Visor);
+        }
+
+        private void ReleaseInventoryControlLock()
+        {
+            _controlBlocker?.RemoveLock(
+                PlayerControlLockIds.InventoryOpened);
         }
 
         private void SaveCursorState()

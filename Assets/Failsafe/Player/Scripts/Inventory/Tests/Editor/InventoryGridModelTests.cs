@@ -210,6 +210,43 @@ namespace Failsafe.Inventory.Core.Tests
         }
 
         [Test]
+        public void ValidateRelocation_ReportsValidityWithoutChangingGrid()
+        {
+            InventoryGridModel grid = new InventoryGridModel();
+            InventoryItemModel item = CreateItem("item", width: 2, height: 1);
+            InventoryItemModel blocker = CreateItem("blocker");
+            int changeEventCount = 0;
+
+            grid.TryPlace(item, new InventoryGridPosition(0, 0));
+            grid.TryPlace(blocker, new InventoryGridPosition(3, 2));
+            grid.PlacementChanged += _ => changeEventCount++;
+
+            InventoryOperationResult valid = grid.ValidateRelocation(
+                item.InstanceId,
+                new InventoryGridPosition(2, 1),
+                InventoryItemRotation.Clockwise90);
+
+            InventoryOperationResult overlap = grid.ValidateRelocation(
+                item.InstanceId,
+                new InventoryGridPosition(3, 1),
+                InventoryItemRotation.Clockwise90);
+
+            Assert.That(valid.IsSuccess, Is.True);
+            Assert.That(overlap.IsSuccess, Is.False);
+            Assert.That(
+                overlap.FailureReason,
+                Is.EqualTo(InventoryFailureReason.Overlap));
+            Assert.That(changeEventCount, Is.Zero);
+            Assert.That(item.Rotation, Is.EqualTo(InventoryItemRotation.Default));
+            Assert.That(
+                grid.TryGetPlacement(item.InstanceId, out InventoryPlacement placement),
+                Is.True);
+            Assert.That(placement.Origin, Is.EqualTo(new InventoryGridPosition(0, 0)));
+            Assert.That(grid.IsOccupied(new InventoryGridPosition(0, 0)), Is.True);
+            Assert.That(grid.IsOccupied(new InventoryGridPosition(1, 0)), Is.True);
+        }
+
+        [Test]
         public void TryMerge_TransfersOnlyAvailableCapacityAndKeepsRemainder()
         {
             InventoryGridModel grid = new InventoryGridModel();

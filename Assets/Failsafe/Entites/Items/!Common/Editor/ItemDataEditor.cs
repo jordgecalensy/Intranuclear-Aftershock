@@ -52,8 +52,11 @@ public sealed class ItemDataEditor : Editor
     private bool _showEffects;
     private bool _showSfx;
 
+    private InventoryModelPosePreview _inventoryModelPosePreview;
+
     private void OnEnable()
     {
+        _inventoryModelPosePreview = new InventoryModelPosePreview();
         _script = serializedObject.FindProperty("m_Script");
 
         _description = serializedObject.FindProperty(nameof(ItemData.Description));
@@ -91,6 +94,12 @@ public sealed class ItemDataEditor : Editor
         _useSfx = serializedObject.FindProperty(nameof(ItemData.UseSFX));
         _emptyUseSfx = serializedObject.FindProperty(nameof(ItemData.EmptyUseSFX));
         _modeSwitchSfx = serializedObject.FindProperty(nameof(ItemData.ModeSwitchSFX));
+    }
+
+    private void OnDisable()
+    {
+        _inventoryModelPosePreview?.Dispose();
+        _inventoryModelPosePreview = null;
     }
 
     public override void OnInspectorGUI()
@@ -146,12 +155,14 @@ public sealed class ItemDataEditor : Editor
             EditorGUILayout.LabelField("3D Inventory Model", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(_inventoryModelPrefab);
             EditorGUILayout.PropertyField(_inventoryBaseEulerAngles);
+            DrawInventoryPoseButtons();
             EditorGUILayout.PropertyField(_inventoryModelOffsetInCells);
             EditorGUILayout.PropertyField(_inventoryModelScaleMultiplier);
             EditorGUILayout.PropertyField(_inventoryModelFitPadding);
             EditorGUILayout.PropertyField(_inventoryModelMaxDepthInCells);
 
             DrawInventoryModelValidation();
+            DrawInventoryModelPreview();
 
             EditorGUILayout.Space(3f);
             EditorGUILayout.LabelField("Grid Rules", EditorStyles.boldLabel);
@@ -174,6 +185,102 @@ public sealed class ItemDataEditor : Editor
 
         EditorGUILayout.EndFoldoutHeaderGroup();
         EditorGUILayout.Space(2f);
+    }
+
+    private void DrawInventoryPoseButtons()
+    {
+        using (new EditorGUI.DisabledScope(
+                   _inventoryBaseEulerAngles.hasMultipleDifferentValues))
+        {
+            EditorGUILayout.LabelField(
+                "Canonical Pose Quarter-Turns",
+                EditorStyles.miniBoldLabel);
+
+            DrawAxisRotationButtons("X", 0);
+            DrawAxisRotationButtons("Y", 1);
+            DrawAxisRotationButtons("Z", 2);
+
+            if (GUILayout.Button("Reset Inventory Pose"))
+                _inventoryBaseEulerAngles.vector3Value = Vector3.zero;
+        }
+    }
+
+    private void DrawAxisRotationButtons(string axisName, int axisIndex)
+    {
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            EditorGUILayout.LabelField(axisName, GUILayout.Width(18f));
+
+            if (GUILayout.Button("-90°"))
+                RotateInventoryPoseAxis(axisIndex, -90f);
+
+            if (GUILayout.Button("+90°"))
+                RotateInventoryPoseAxis(axisIndex, 90f);
+        }
+    }
+
+    private void RotateInventoryPoseAxis(int axisIndex, float delta)
+    {
+        Vector3 eulerAngles = _inventoryBaseEulerAngles.vector3Value;
+        eulerAngles[axisIndex] = NormalizeAngle(
+            eulerAngles[axisIndex] + delta);
+
+        _inventoryBaseEulerAngles.vector3Value = eulerAngles;
+    }
+
+    private void DrawInventoryModelPreview()
+    {
+        EditorGUILayout.Space(3f);
+        EditorGUILayout.LabelField(
+            "Inventory Pose Preview",
+            EditorStyles.boldLabel);
+
+        EditorGUILayout.HelpBox(
+            "Preview matches the runtime inventory pose. Screen horizontal is inventory X, " +
+            "screen vertical is inventory Z, and the camera looks along inventory -Y.",
+            MessageType.Info);
+
+        Rect previewRect = GUILayoutUtility.GetRect(
+            100f,
+            240f,
+            GUILayout.ExpandWidth(true));
+
+        if (_inventoryModelPosePreview == null ||
+            _inventoryModelPrefab.hasMultipleDifferentValues ||
+            _inventoryBaseEulerAngles.hasMultipleDifferentValues)
+        {
+            EditorGUI.HelpBox(
+                previewRect,
+                "Select a single shared model and pose to display the preview.",
+                MessageType.Info);
+
+            return;
+        }
+
+        InventoryModelPosePreviewSettings settings =
+            new InventoryModelPosePreviewSettings(
+                _inventoryModelPrefab.objectReferenceValue as GameObject,
+                _inventoryBaseEulerAngles.vector3Value,
+                _inventoryModelOffsetInCells.vector3Value,
+                _inventoryModelScaleMultiplier.floatValue,
+                _inventoryModelFitPadding.floatValue,
+                _inventoryModelMaxDepthInCells.floatValue,
+                _inventoryWidth.intValue,
+                _inventoryHeight.intValue);
+
+        _inventoryModelPosePreview.Draw(previewRect, settings);
+    }
+
+    private static float NormalizeAngle(float angle)
+    {
+        angle %= 360f;
+
+        if (angle > 180f)
+            angle -= 360f;
+        else if (angle <= -180f)
+            angle += 360f;
+
+        return angle;
     }
 
     private void DrawInventoryModelValidation()

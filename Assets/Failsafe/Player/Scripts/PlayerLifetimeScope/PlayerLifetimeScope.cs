@@ -1,5 +1,6 @@
 ﻿using Failsafe.Items;
 using Failsafe.Player.Model;
+using Failsafe.Inventory.Integration;
 using Failsafe.Player.Scripts;
 using Failsafe.Player.Scripts.Interaction;
 using Failsafe.Player.UI;
@@ -71,6 +72,7 @@ namespace Failsafe.Player
             builder.RegisterInstance(camera);
 
             builder.Register<InputHandler>(Lifetime.Scoped);
+            RegisterInventory(builder);
 
             builder.Register<PlayerHealth>(Lifetime.Singleton)
                 .As<IHealth>()
@@ -124,7 +126,7 @@ namespace Failsafe.Player
 
             builder.Register<PlayerMovementController>(Lifetime.Scoped);
 
-            builder.RegisterEntryPoint<PlayerRunSaveParticipant>(Lifetime.Scoped);
+            builder.RegisterEntryPoint<PlayerRunSaveParticipant>(Lifetime.Singleton);
             builder.RegisterEntryPoint<PlayerRunTerminationHandler>(Lifetime.Scoped);
 
             DeathScreenView deathScreenView =
@@ -162,6 +164,33 @@ namespace Failsafe.Player
             builder.RegisterEntryPoint<PlayerSignalConnector>(Lifetime.Scoped);
             
             RegisterItems(builder);
+        }
+
+        private void RegisterInventory(IContainerBuilder builder)
+        {
+            InventoryRuntimeController inventoryRuntime =
+                GetComponentInChildren<InventoryRuntimeController>(true);
+            InventoryInputController3D inventoryInput =
+                GetComponentInChildren<InventoryInputController3D>(true);
+
+            if (inventoryRuntime == null || inventoryInput == null)
+            {
+                builder.Register<
+                        PassthroughInventoryHeldItemLifecycleService>(
+                        Lifetime.Scoped)
+                    .As<IInventoryHeldItemLifecycle>();
+
+                return;
+            }
+
+            builder.RegisterComponent(inventoryRuntime);
+            builder.RegisterComponent(inventoryInput);
+            builder.Register<InventoryHeldItemLifecycleService>(
+                    Lifetime.Scoped)
+                .As<IInventoryHeldItemLifecycle>();
+            builder.RegisterEntryPoint<InventoryQuickSlotEquipService>(
+                    Lifetime.Singleton)
+                .AsSelf();
         }
 
         private void RegisterItems(IContainerBuilder builder)

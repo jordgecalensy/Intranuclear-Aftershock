@@ -19,6 +19,7 @@ namespace Failsafe.Inventory.Integration
         public InventoryGridModel Grid { get; private set; }
         public InventoryQuickSlots QuickSlots { get; private set; }
         public InventoryGridPresenter3D Presenter { get; private set; }
+        public InventoryQuickBarPresenter3D QuickBarPresenter { get; private set; }
         public int RegisteredWorldItemCount => _worldItemsByInstanceId.Count;
         public bool IsPresentationVisible =>
             _generatedPresentationRoot != null &&
@@ -29,6 +30,7 @@ namespace Failsafe.Inventory.Integration
 
         private ItemDataInventoryViewResolver _viewResolver;
         private GameObject _generatedPresentationRoot;
+        private GameObject _generatedQuickBarRoot;
         private GameObject _storedWorldItemsRoot;
 
         private void Awake()
@@ -80,14 +82,31 @@ namespace Failsafe.Inventory.Integration
             Presenter = _generatedPresentationRoot
                 .AddComponent<InventoryGridPresenter3D>();
 
+            _generatedQuickBarRoot = new GameObject(
+                "Inventory Quick Bar 3D");
+
+            _generatedQuickBarRoot.layer = inventoryLayer;
+            _generatedQuickBarRoot.transform.SetParent(parent, false);
+
+            QuickBarPresenter = _generatedQuickBarRoot
+                .AddComponent<InventoryQuickBarPresenter3D>();
+
+            InventoryGridSpace3D gridSpace = new InventoryGridSpace3D(
+                Grid.Columns,
+                Grid.Rows,
+                _cellSize);
+
             try
             {
                 Presenter.Initialize(
                     Grid,
-                    new InventoryGridSpace3D(
-                        Grid.Columns,
-                        Grid.Rows,
-                        _cellSize),
+                    gridSpace,
+                    _viewResolver);
+
+                QuickBarPresenter.Initialize(
+                    Grid,
+                    QuickSlots,
+                    gridSpace,
                     _viewResolver);
             }
             catch (Exception exception)
@@ -114,7 +133,71 @@ namespace Failsafe.Inventory.Integration
                 return false;
 
             _generatedPresentationRoot.SetActive(visible);
+            QuickBarPresenter?.SetInventoryOpen(visible);
             return true;
+        }
+
+        public bool TryBindRobotPresentationLayout(
+            InventoryRobotPresentationLayout3D layout,
+            out string error)
+        {
+            if (!EnsureInitialized(out error))
+                return false;
+
+            if (layout == null)
+            {
+                error = "Robot inventory presentation layout is null.";
+                return false;
+            }
+
+            if (!layout.TryValidate(
+                    Grid.Columns,
+                    Grid.Rows,
+                    QuickSlots.SlotCount,
+                    out error))
+            {
+                return false;
+            }
+
+            if (!layout.TryApplyGridPose(
+                    _generatedPresentationRoot.transform,
+                    Grid.Columns,
+                    Grid.Rows,
+                    _cellSize,
+                    out error))
+            {
+                return false;
+            }
+
+            if (!QuickBarPresenter.TrySetExternalOpenLayout(
+                    layout,
+                    out error))
+            {
+                return false;
+            }
+
+            Presenter.SetManualGridLayout(layout);
+            Presenter.SetPrototypeGridVisible(false);
+            error = null;
+            return true;
+        }
+
+        public bool TryBindClosedQuickBarLayout(
+            InventoryQuickBarPresentationLayout3D layout,
+            out string error)
+        {
+            if (!EnsureInitialized(out error))
+                return false;
+
+            if (layout == null)
+            {
+                error = "Closed quick-bar presentation layout is null.";
+                return false;
+            }
+
+            return QuickBarPresenter.TrySetExternalClosedLayout(
+                layout,
+                out error);
         }
 
         public InventoryOperationResult AddFirstAvailable(
@@ -240,6 +323,37 @@ namespace Failsafe.Inventory.Integration
             return false;
         }
 
+        public bool TryMoveRegisteredWorldItemToStorage(
+            string instanceId,
+            out string error)
+        {
+            if (!EnsureInitialized(out error))
+                return false;
+
+            if (_storedWorldItemsRoot == null)
+            {
+                error = "Inventory world-item storage is not initialized.";
+                return false;
+            }
+
+            if (!TryGetWorldItem(instanceId, out Item worldItem))
+            {
+                error =
+                    $"No world item is registered for inventory item " +
+                    $"'{instanceId}'.";
+
+                return false;
+            }
+
+            worldItem.ToInventoryState();
+            worldItem.transform.SetParent(
+                _storedWorldItemsRoot.transform,
+                true);
+
+            error = null;
+            return true;
+        }
+
         public bool TryAssignFirstAvailableQuickSlot(
             string instanceId,
             out int slotIndex,
@@ -355,6 +469,80 @@ namespace Failsafe.Inventory.Integration
 
             error = null;
             return result;
+        }
+
+        public InventoryOperationResult ConsumeRegisteredWorldItem(
+            string instanceId,
+            out string error)
+        {
+            if (!EnsureInitialized(out error))
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem);
+            }
+
+            if (!TryGetWorldItem(instanceId, out Item worldItem))
+            {
+                error =
+                    $"No world item is registered for inventory item " +
+                    $"'{instanceId}'.";
+
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.ItemNotFound);
+            }
+
+            if (!Grid.TryGetItem(
+                    instanceId,
+                    out InventoryItemModel inventoryItem))
+            {
+                error = $"Inventory item '{instanceId}' was not found.";
+
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.ItemNotFound);
+            }
+
+            if (inventoryItem.Quantity > 1)
+            {
+                if (_storedWorldItemsRoot == null)
+                {
+                    error =
+                        "Inventory world-item storage is not initialized.";
+
+                    return InventoryOperationResult.Failure(
+                        InventoryFailureReason.InvalidItem,
+                        inventoryItem.Quantity);
+                }
+
+                InventoryOperationResult quantityResult =
+                    Grid.TryRemoveQuantity(instanceId, 1);
+
+                if (!quantityResult.IsSuccess)
+                {
+                    error =
+                        $"Could not consume one unit of inventory item " +
+                        $"'{instanceId}': " +
+                        $"{quantityResult.FailureReason}.";
+
+                    return quantityResult;
+                }
+
+                worldItem.ToInventoryState();
+                worldItem.transform.SetParent(
+                    _storedWorldItemsRoot.transform,
+                    true);
+
+                error = null;
+                return quantityResult;
+            }
+
+            InventoryOperationResult removeResult = Remove(instanceId);
+
+            error = removeResult.IsSuccess
+                ? null
+                : $"Could not remove consumed inventory item " +
+                  $"'{instanceId}': {removeResult.FailureReason}.";
+
+            return removeResult;
         }
 
         public InventoryOperationResult Move(
@@ -515,6 +703,9 @@ namespace Failsafe.Inventory.Integration
 
         private void DisposeRuntime()
         {
+            if (QuickBarPresenter != null)
+                QuickBarPresenter.Dispose();
+
             if (Presenter != null)
                 Presenter.Dispose();
 
@@ -529,14 +720,19 @@ namespace Failsafe.Inventory.Integration
             if (_generatedPresentationRoot != null)
                 DestroyUnityObject(_generatedPresentationRoot);
 
+            if (_generatedQuickBarRoot != null)
+                DestroyUnityObject(_generatedQuickBarRoot);
+
             if (_storedWorldItemsRoot != null)
                 DestroyUnityObject(_storedWorldItemsRoot);
 
             Presenter = null;
+            QuickBarPresenter = null;
             QuickSlots = null;
             Grid = null;
             _viewResolver = null;
             _generatedPresentationRoot = null;
+            _generatedQuickBarRoot = null;
             _storedWorldItemsRoot = null;
             IsInitialized = false;
         }

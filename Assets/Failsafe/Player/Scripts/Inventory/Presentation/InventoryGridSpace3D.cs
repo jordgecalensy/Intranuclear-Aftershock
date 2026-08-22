@@ -41,6 +41,14 @@ namespace Failsafe.Inventory.Presentation
                 (Rows * 0.5f - centerRow) * CellSize);
         }
 
+        public Vector3 GetCellCenter(InventoryGridPosition position)
+        {
+            return new Vector3(
+                (position.Column + 0.5f - Columns * 0.5f) * CellSize,
+                0f,
+                (Rows * 0.5f - position.Row - 0.5f) * CellSize);
+        }
+
         public Quaternion GetGridRotation(InventoryItemRotation rotation)
         {
             switch (rotation)

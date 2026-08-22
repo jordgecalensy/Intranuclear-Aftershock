@@ -79,6 +79,27 @@ namespace Failsafe.Inventory.Presentation.Tests
             Assert.That(found, Is.False);
         }
 
+        [Test]
+        public void TryGetLocalPointOnGridPlane_ReturnsPointOutsideGridBounds()
+        {
+            Transform gridTransform = CreateGridTransform();
+            Vector3 expected = new Vector3(10f, 0f, -3f);
+            Vector3 worldPoint = gridTransform.TransformPoint(expected);
+            Ray ray = new Ray(
+                worldPoint + gridTransform.up * 2f,
+                -gridTransform.up);
+
+            bool found = InventoryGridRaycaster3D.TryGetLocalPointOnGridPlane(
+                ray,
+                gridTransform,
+                out Vector3 actual);
+
+            Assert.That(found, Is.True);
+            Assert.That(actual.x, Is.EqualTo(expected.x).Within(0.0001f));
+            Assert.That(actual.y, Is.EqualTo(expected.y).Within(0.0001f));
+            Assert.That(actual.z, Is.EqualTo(expected.z).Within(0.0001f));
+        }
+
         private Transform CreateGridTransform()
         {
             _gridObject = new GameObject("Inventory Grid Raycaster Test");

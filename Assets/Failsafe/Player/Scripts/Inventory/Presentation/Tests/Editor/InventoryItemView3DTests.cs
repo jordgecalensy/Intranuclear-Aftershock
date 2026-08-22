@@ -135,6 +135,32 @@ namespace Failsafe.Inventory.Presentation.Tests
         }
 
         [Test]
+        public void ApplyFreePreview_FollowsArbitraryPositionAndRotation()
+        {
+            GameObject model = CreateModel(Vector3.one, Vector3.zero);
+            InventoryItemView3D view = CreateView();
+            view.Initialize(
+                CreateDefinition(model),
+                new InventoryGridSize(2, 1),
+                1f);
+
+            InventoryGridSpace3D gridSpace = new InventoryGridSpace3D(6, 5, 1f);
+            Vector3 previewPosition = new Vector3(0.37f, 0f, -0.22f);
+
+            view.ApplyFreePreview(
+                previewPosition,
+                InventoryItemRotation.Clockwise90,
+                gridSpace);
+
+            AssertVector(view.transform.localPosition, previewPosition);
+            Assert.That(
+                Quaternion.Angle(
+                    view.AppliedGridRotation,
+                    Quaternion.AngleAxis(90f, Vector3.up)),
+                Is.LessThan(Tolerance));
+        }
+
+        [Test]
         public void Initialize_DisablesPhysicsOnVisualCopy()
         {
             GameObject model = CreateModel(Vector3.one, Vector3.zero);

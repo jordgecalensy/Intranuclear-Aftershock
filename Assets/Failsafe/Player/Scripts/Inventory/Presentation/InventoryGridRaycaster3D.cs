@@ -12,6 +12,23 @@ namespace Failsafe.Inventory.Presentation
             InventoryGridSpace3D gridSpace,
             out InventoryGridPosition position)
         {
+            if (!TryGetLocalPointOnGridPlane(
+                    worldRay,
+                    gridTransform,
+                    out Vector3 localPoint))
+            {
+                position = default;
+                return false;
+            }
+
+            return gridSpace.TryGetGridPosition(localPoint, out position);
+        }
+
+        public static bool TryGetLocalPointOnGridPlane(
+            Ray worldRay,
+            Transform gridTransform,
+            out Vector3 localPoint)
+        {
             if (gridTransform == null)
                 throw new ArgumentNullException(nameof(gridTransform));
 
@@ -21,14 +38,13 @@ namespace Failsafe.Inventory.Presentation
 
             if (!gridPlane.Raycast(worldRay, out float distance))
             {
-                position = default;
+                localPoint = default;
                 return false;
             }
 
             Vector3 worldPoint = worldRay.GetPoint(distance);
-            Vector3 localPoint = gridTransform.InverseTransformPoint(worldPoint);
-
-            return gridSpace.TryGetGridPosition(localPoint, out position);
+            localPoint = gridTransform.InverseTransformPoint(worldPoint);
+            return true;
         }
     }
 }
