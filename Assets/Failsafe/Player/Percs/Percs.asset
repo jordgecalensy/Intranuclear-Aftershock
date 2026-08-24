@@ -76,3 +76,25 @@ MonoBehaviour:
     _weight: -10
     _exclude:
     - enduring
+  - _name: battleeng
+    _rarity: 85
+    _weight: 15
+    _exclude:
+    - firefighter
+    - Former_ntelligence_officer
+  - _name: firefighter
+    _rarity: 85
+    _weight: 10
+    _exclude:
+    - battleeng
+    - Former_ntelligence_officer
+  - _name: quiet
+    _rarity: 0
+    _weight: 10
+    _exclude:
+    - noisy
+  - _name: noisy
+    _rarity: 0
+    _weight: 10
+    _exclude:
+    - quiet
