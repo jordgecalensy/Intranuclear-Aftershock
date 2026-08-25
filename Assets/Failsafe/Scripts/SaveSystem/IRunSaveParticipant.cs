@@ -7,6 +7,7 @@ namespace Failsafe.Scripts.SaveSystem
         public const string Engineer = "engineer";
         public const string World = "world";
         public const string Player = "player";
+        public const string Inventory = "inventory";
         public const string Enemies = "enemies";
     }
 

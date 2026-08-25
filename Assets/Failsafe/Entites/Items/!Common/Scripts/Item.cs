@@ -59,6 +59,42 @@ public class Item : Prop
         return ItemData != null && ItemData.UsesEnergy;
     }
 
+    public bool TryRestoreEnergy(int energyAmount, out string error)
+    {
+        InitializeRuntimeState();
+
+        if (!HasEnergySystem())
+        {
+            if (energyAmount != 0)
+            {
+                error =
+                    $"Item '{name}' has no energy system, but the save " +
+                    $"contains energy value {energyAmount}.";
+
+                return false;
+            }
+
+            _energyAmountCurrent = 0;
+            error = null;
+            return true;
+        }
+
+        int maximum = Mathf.Max(0, ItemData.EnergyAmountMax);
+
+        if (energyAmount < 0 || energyAmount > maximum)
+        {
+            error =
+                $"Saved energy for item '{name}' must be between 0 " +
+                $"and {maximum}.";
+
+            return false;
+        }
+
+        _energyAmountCurrent = energyAmount;
+        error = null;
+        return true;
+    }
+
     public bool IsEnergyEmpty()
     {
         if (!HasEnergySystem())

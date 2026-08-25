@@ -54,12 +54,98 @@ namespace Failsafe.Inventory.Integration
 
         public bool TrySelectSlot(int slotIndex, out string error)
         {
+            return TrySelectSlotInternal(
+                slotIndex,
+                respectControlBlock: true,
+                out error);
+        }
+
+        public bool TryPrepareForRestore(out string error)
+        {
             if (!TryEnsureInitialized(out error))
                 return false;
 
-            if (_controlBlocker.IsBlocked(PlayerControlBlock.Inventory) ||
-                _controlBlocker.IsLockedBy(
-                    PlayerControlLockIds.InventoryOpened))
+            Item currentItem = _hands.ItemInHand?.ItemObject;
+
+            if (currentItem == null)
+            {
+                SetActiveSlot(NoActiveSlot);
+                error = null;
+                return true;
+            }
+
+            if (!_inventory.TryGetWorldItemInstanceId(
+                    currentItem,
+                    out string instanceId))
+            {
+                error =
+                    $"The item currently held in hand is not registered " +
+                    $"in the inventory and cannot be replaced during load.";
+
+                return false;
+            }
+
+            int previousActiveSlotIndex = ActiveSlotIndex;
+            Item stowedItem = _hands.StowItemFromHand();
+
+            if (stowedItem != currentItem)
+            {
+                error =
+                    "The hand system returned a different item while " +
+                    "preparing inventory restore.";
+                TryRestoreItemInHand(
+                    stowedItem,
+                    previousActiveSlotIndex);
+                return false;
+            }
+
+            if (!_inventory.TryMoveRegisteredWorldItemToStorage(
+                    instanceId,
+                    out error))
+            {
+                TryRestoreItemInHand(
+                    stowedItem,
+                    previousActiveSlotIndex);
+                return false;
+            }
+
+            SetActiveSlot(NoActiveSlot);
+            error = null;
+            return true;
+        }
+
+        public bool TryRestoreActiveSlot(
+            int slotIndex,
+            out string error)
+        {
+            if (!TryEnsureInitialized(out error))
+                return false;
+
+            if (slotIndex == NoActiveSlot)
+            {
+                SetActiveSlot(NoActiveSlot);
+                error = null;
+                return true;
+            }
+
+            return TrySelectSlotInternal(
+                slotIndex,
+                respectControlBlock: false,
+                out error);
+        }
+
+        private bool TrySelectSlotInternal(
+            int slotIndex,
+            bool respectControlBlock,
+            out string error)
+        {
+            if (!TryEnsureInitialized(out error))
+                return false;
+
+            if (respectControlBlock &&
+                (_controlBlocker.IsBlocked(PlayerControlBlock.Inventory) ||
+                 _controlBlocker.IsLockedBy(
+                     PlayerControlLockIds.InventoryOpened)))
             {
                 error = null;
                 return true;

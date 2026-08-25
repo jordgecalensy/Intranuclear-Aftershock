@@ -210,18 +210,30 @@ namespace Failsafe.Scripts.SaveSystem
     [Serializable]
     public sealed class InventoryStateData
     {
+        public bool hasState;
         public List<InventoryItemStateData> items = new List<InventoryItemStateData>();
+        public List<string> quickSlotInstanceIds = new List<string>();
+        public int activeQuickSlotIndex = -1;
 
         public void EnsureInitialized()
         {
             if (items == null)
                 items = new List<InventoryItemStateData>();
+
+            if (quickSlotInstanceIds == null)
+                quickSlotInstanceIds = new List<string>();
         }
 
         public InventoryStateData DeepCopy()
         {
             EnsureInitialized();
-            InventoryStateData copy = new InventoryStateData();
+            InventoryStateData copy = new InventoryStateData
+            {
+                hasState = hasState,
+                activeQuickSlotIndex = activeQuickSlotIndex,
+                quickSlotInstanceIds =
+                    new List<string>(quickSlotInstanceIds)
+            };
 
             for (int i = 0; i < items.Count; i++)
             {
@@ -237,9 +249,15 @@ namespace Failsafe.Scripts.SaveSystem
     public sealed class InventoryItemStateData
     {
         public string itemId;
+        public string instanceId;
+        public int quantity = 1;
         public int row;
         public int column;
+        public int rotation;
         public float energy;
+        public bool hasWorldItem;
+        public bool runtimeGeneratedWorldItem;
+        public string worldSourcePersistentId;
         public string runtimeStateJson;
 
         public InventoryItemStateData DeepCopy()

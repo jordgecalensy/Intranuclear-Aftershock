@@ -470,6 +470,16 @@ namespace Failsafe.Scripts.SaveSystem
                     $"'{RunSaveParticipantIds.Player}' is not registered.";
             }
 
+            if (checkpoint.inventory != null &&
+                checkpoint.inventory.hasState &&
+                !_participantRegistry.IsRegistered(
+                    RunSaveParticipantIds.Inventory))
+            {
+                return
+                    $"Cannot restore checkpoint because the required save participant " +
+                    $"'{RunSaveParticipantIds.Inventory}' is not registered.";
+            }
+
             if (checkpoint.enemies != null &&
                 checkpoint.enemies.Count > 0 &&
                 !_participantRegistry.IsRegistered(RunSaveParticipantIds.Enemies))
@@ -506,6 +516,14 @@ namespace Failsafe.Scripts.SaveSystem
                 return
                     $"Cannot create checkpoint because the required save participant " +
                     $"'{RunSaveParticipantIds.Player}' is not registered.";
+            }
+
+            if (!_participantRegistry.IsRegistered(
+                    RunSaveParticipantIds.Inventory))
+            {
+                return
+                    $"Cannot create checkpoint because the required save participant " +
+                    $"'{RunSaveParticipantIds.Inventory}' is not registered.";
             }
 
             if (!_participantRegistry.IsRegistered(RunSaveParticipantIds.Enemies))

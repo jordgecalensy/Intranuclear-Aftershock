@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Failsafe.Inventory.Core;
 using Failsafe.Inventory.Presentation;
+using Failsafe.Scripts.SaveSystem;
 using UnityEngine;
 
 namespace Failsafe.Inventory.Integration
@@ -15,6 +16,10 @@ namespace Failsafe.Inventory.Integration
         [SerializeField] private string _inventoryLayerName = "Inventory";
         [SerializeField] private bool _initializeOnAwake = true;
 
+        [Header("Item Catalog")]
+        [SerializeField] private ItemData[] _itemCatalog =
+            Array.Empty<ItemData>();
+
         public bool IsInitialized { get; private set; }
         public InventoryGridModel Grid { get; private set; }
         public InventoryQuickSlots QuickSlots { get; private set; }
@@ -27,6 +32,8 @@ namespace Failsafe.Inventory.Integration
 
         private readonly Dictionary<string, Item> _worldItemsByInstanceId =
             new Dictionary<string, Item>(StringComparer.Ordinal);
+        private readonly Dictionary<string, ItemData> _itemDataByDefinitionId =
+            new Dictionary<string, ItemData>(StringComparer.Ordinal);
 
         private ItemDataInventoryViewResolver _viewResolver;
         private GameObject _generatedPresentationRoot;
@@ -70,6 +77,12 @@ namespace Failsafe.Inventory.Integration
             Grid = new InventoryGridModel();
             QuickSlots = new InventoryQuickSlots(Grid);
             _viewResolver = new ItemDataInventoryViewResolver();
+
+            if (!TryBuildItemCatalog(out error))
+            {
+                DisposeRuntime();
+                return false;
+            }
 
             Transform parent = _presentationRoot != null
                 ? _presentationRoot
@@ -209,6 +222,12 @@ namespace Failsafe.Inventory.Integration
             instanceId = null;
 
             if (!EnsureInitialized(out error))
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem);
+            }
+
+            if (!TryRegisterCatalogItem(itemData, out error))
             {
                 return InventoryOperationResult.Failure(
                     InventoryFailureReason.InvalidItem);
@@ -459,6 +478,10 @@ namespace Failsafe.Inventory.Integration
 
             _worldItemsByInstanceId.Remove(instanceId);
 
+            InventoryWorldItemOwnership ownership =
+                worldItem.GetComponent<InventoryWorldItemOwnership>();
+            ownership?.Release();
+
             if (_storedWorldItemsRoot != null &&
                 worldItem.transform.IsChildOf(
                     _storedWorldItemsRoot.transform))
@@ -672,6 +695,15 @@ namespace Failsafe.Inventory.Integration
                 addedInstanceId,
                 worldItem);
 
+            RunPersistentObject persistentObject =
+                worldItem.GetComponent<RunPersistentObject>();
+            ClaimWorldItem(
+                worldItem,
+                persistentObject != null
+                    ? persistentObject.PersistentId
+                    : null,
+                runtimeGenerated: false);
+
             if (moveToStorage)
             {
                 worldItem.ToInventoryState();
@@ -683,6 +715,289 @@ namespace Failsafe.Inventory.Integration
             instanceId = addedInstanceId;
             error = null;
             return result;
+        }
+
+        private bool TryBuildItemCatalog(out string error)
+        {
+            _itemDataByDefinitionId.Clear();
+
+            if (_itemCatalog == null)
+            {
+                error = null;
+                return true;
+            }
+
+            for (int i = 0; i < _itemCatalog.Length; i++)
+            {
+                if (!TryRegisterCatalogItem(_itemCatalog[i], out error))
+                {
+                    error = $"Item catalog entry {i}: {error}";
+                    return false;
+                }
+            }
+
+            error = null;
+            return true;
+        }
+
+        private bool TryRegisterCatalogItem(
+            ItemData itemData,
+            out string error)
+        {
+            if (!ItemDataInventoryAdapter.TryValidateView(
+                    itemData,
+                    out error))
+            {
+                return false;
+            }
+
+            string definitionId = itemData.InventoryDefinitionId.Trim();
+
+            if (_itemDataByDefinitionId.TryGetValue(
+                    definitionId,
+                    out ItemData registeredItemData))
+            {
+                if (registeredItemData == itemData)
+                {
+                    error = null;
+                    return true;
+                }
+
+                error =
+                    $"Inventory definition ID '{definitionId}' is used by " +
+                    $"both '{registeredItemData.name}' and '{itemData.name}'.";
+
+                return false;
+            }
+
+            _itemDataByDefinitionId.Add(definitionId, itemData);
+            error = null;
+            return true;
+        }
+
+        private static bool HasMatchingDefinition(
+            Item worldItem,
+            ItemData itemData)
+        {
+            return worldItem != null &&
+                   worldItem.ItemData != null &&
+                   itemData != null &&
+                   string.Equals(
+                       worldItem.ItemData.InventoryDefinitionId?.Trim(),
+                       itemData.InventoryDefinitionId?.Trim(),
+                       StringComparison.Ordinal);
+        }
+
+        private static void ClaimWorldItem(
+            Item worldItem,
+            string sourcePersistentId,
+            bool runtimeGenerated)
+        {
+            InventoryWorldItemOwnership ownership =
+                worldItem.GetComponent<InventoryWorldItemOwnership>();
+
+            if (ownership == null)
+            {
+                ownership = worldItem.gameObject
+                    .AddComponent<InventoryWorldItemOwnership>();
+            }
+
+            ownership.Claim(sourcePersistentId, runtimeGenerated);
+        }
+
+        public bool TryResolveItemData(
+            string definitionId,
+            out ItemData itemData,
+            out string error)
+        {
+            itemData = null;
+
+            if (!EnsureInitialized(out error))
+                return false;
+
+            string normalizedId = definitionId?.Trim();
+
+            if (string.IsNullOrWhiteSpace(normalizedId))
+            {
+                error = "Inventory definition ID cannot be empty.";
+                return false;
+            }
+
+            if (!_itemDataByDefinitionId.TryGetValue(
+                    normalizedId,
+                    out itemData) ||
+                itemData == null)
+            {
+                error =
+                    $"Inventory ItemData catalog has no definition " +
+                    $"'{normalizedId}'.";
+
+                return false;
+            }
+
+            error = null;
+            return true;
+        }
+
+        public bool TryGetItemDataForInstance(
+            string instanceId,
+            out ItemData itemData)
+        {
+            itemData = null;
+
+            return IsInitialized &&
+                   _viewResolver != null &&
+                   _viewResolver.TryGetItemData(instanceId, out itemData);
+        }
+
+        public InventoryOperationResult RestoreItem(
+            ItemData itemData,
+            string instanceId,
+            int quantity,
+            InventoryGridPosition origin,
+            InventoryItemRotation rotation,
+            Item worldItem,
+            bool runtimeGeneratedWorldItem,
+            string sourcePersistentId,
+            out string error)
+        {
+            if (!EnsureInitialized(out error))
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem);
+            }
+
+            if (!TryRegisterCatalogItem(itemData, out error) ||
+                !ItemDataInventoryAdapter.TryCreateModel(
+                    itemData,
+                    instanceId,
+                    quantity,
+                    out InventoryItemModel item,
+                    out error))
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem);
+            }
+
+            if (worldItem != null &&
+                !HasMatchingDefinition(worldItem, itemData))
+            {
+                error =
+                    $"World item '{worldItem.name}' does not match " +
+                    $"inventory definition '{itemData.InventoryDefinitionId}'.";
+
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem,
+                    quantity);
+            }
+
+            if (!_viewResolver.TryRegister(instanceId, itemData, out error))
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem,
+                    quantity);
+            }
+
+            InventoryOperationResult placementResult = Grid.TryPlace(
+                item,
+                origin,
+                rotation);
+
+            if (!placementResult.IsSuccess)
+            {
+                _viewResolver.Unregister(instanceId);
+                error =
+                    $"Saved inventory placement failed: " +
+                    $"{placementResult.FailureReason}.";
+
+                return placementResult;
+            }
+
+            if (!Presenter.TryGetView(instanceId, out _))
+            {
+                Grid.TryRemove(instanceId);
+                _viewResolver.Unregister(instanceId);
+                error =
+                    "The restored inventory item was placed, but its " +
+                    "3D view could not be created.";
+
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem,
+                    quantity);
+            }
+
+            if (worldItem != null)
+            {
+                _worldItemsByInstanceId.Add(instanceId, worldItem);
+                ClaimWorldItem(
+                    worldItem,
+                    sourcePersistentId,
+                    runtimeGeneratedWorldItem);
+                worldItem.gameObject.SetActive(true);
+                worldItem.ToInventoryState();
+                worldItem.transform.SetParent(
+                    _storedWorldItemsRoot.transform,
+                    true);
+            }
+
+            error = null;
+            return placementResult;
+        }
+
+        public bool TryClearForRestore(out string error)
+        {
+            if (!EnsureInitialized(out error))
+                return false;
+
+            List<string> instanceIds = new List<string>();
+
+            foreach (InventoryPlacement placement in Grid.Placements)
+                instanceIds.Add(placement.Item.InstanceId);
+
+            for (int i = 0; i < instanceIds.Count; i++)
+            {
+                string instanceId = instanceIds[i];
+
+                if (_worldItemsByInstanceId.TryGetValue(
+                        instanceId,
+                        out Item worldItem) &&
+                    worldItem != null)
+                {
+                    _worldItemsByInstanceId.Remove(instanceId);
+                    InventoryWorldItemOwnership ownership =
+                        worldItem.GetComponent<InventoryWorldItemOwnership>();
+
+                    if (ownership != null &&
+                        !ownership.IsRuntimeGenerated &&
+                        !string.IsNullOrWhiteSpace(
+                            ownership.SourcePersistentId))
+                    {
+                        ownership.Release();
+                        worldItem.transform.SetParent(null, true);
+                        worldItem.gameObject.SetActive(true);
+                        worldItem.ToWorldState();
+                    }
+                    else
+                    {
+                        DestroyUnityObject(worldItem.gameObject);
+                    }
+                }
+
+                InventoryOperationResult removeResult =
+                    RemoveInventoryEntry(instanceId);
+
+                if (!removeResult.IsSuccess)
+                {
+                    error =
+                        $"Could not clear inventory item '{instanceId}': " +
+                        $"{removeResult.FailureReason}.";
+
+                    return false;
+                }
+            }
+
+            error = null;
+            return true;
         }
 
         private InventoryOperationResult RemoveInventoryEntry(
@@ -716,6 +1031,7 @@ namespace Failsafe.Inventory.Integration
                 _viewResolver.Clear();
 
             _worldItemsByInstanceId.Clear();
+            _itemDataByDefinitionId.Clear();
 
             if (_generatedPresentationRoot != null)
                 DestroyUnityObject(_generatedPresentationRoot);

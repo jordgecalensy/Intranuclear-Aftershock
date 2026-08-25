@@ -40,8 +40,35 @@ namespace Failsafe.Inventory.Core
             InventoryItemModel item,
             InventoryGridPosition origin)
         {
+            return TryPlace(
+                item,
+                origin,
+                item?.Rotation ?? InventoryItemRotation.Default);
+        }
+
+        public InventoryOperationResult TryPlace(
+            InventoryItemModel item,
+            InventoryGridPosition origin,
+            InventoryItemRotation targetRotation)
+        {
             if (item == null)
                 return InventoryOperationResult.Failure(InventoryFailureReason.InvalidItem);
+
+            if (targetRotation != InventoryItemRotation.Default &&
+                targetRotation != InventoryItemRotation.Clockwise90)
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem,
+                    item.Quantity);
+            }
+
+            if (targetRotation != InventoryItemRotation.Default &&
+                !item.CanRotate)
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.RotationNotAllowed,
+                    item.Quantity);
+            }
 
             if (_placements.ContainsKey(item.InstanceId))
             {
@@ -50,8 +77,19 @@ namespace Failsafe.Inventory.Core
                     item.Quantity);
             }
 
-            if (!CanOccupy(item.Footprint, origin, null, out InventoryFailureReason failureReason))
+            InventoryGridSize targetFootprint =
+                item.GetFootprint(targetRotation);
+
+            if (!CanOccupy(
+                    targetFootprint,
+                    origin,
+                    null,
+                    out InventoryFailureReason failureReason))
+            {
                 return InventoryOperationResult.Failure(failureReason, item.Quantity);
+            }
+
+            item.SetRotation(targetRotation);
 
             InventoryPlacement placement = new InventoryPlacement(item, origin);
 
