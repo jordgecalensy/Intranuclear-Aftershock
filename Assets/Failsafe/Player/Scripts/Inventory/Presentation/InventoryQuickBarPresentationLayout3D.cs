@@ -21,6 +21,12 @@ namespace Failsafe.Inventory.Presentation
 
         [SerializeField] private float _modelDepthOffset;
 
+        [Header("Animator")]
+        [SerializeField] private Animator _animator;
+        [SerializeField] private string _showTriggerName = "Show";
+        [SerializeField] private string _hideTriggerName = "Hide";
+        [SerializeField, Min(0f)] private float _autoHideDelay = 3.5f;
+
         [Header("Validation")]
         [SerializeField, Range(0f, 0.25f)]
         private float _maximumSlotAspectError = 0.08f;
@@ -28,6 +34,13 @@ namespace Failsafe.Inventory.Presentation
         private RawImage[] _itemPreviewImages;
         private Transform[] _assignedStateRoots;
         private InventoryQuickBarPreviewStage3D _previewStage;
+        private int _showTriggerHash;
+        private int _hideTriggerHash;
+        private float _hideAt;
+        private bool _isPresentationEnabled;
+        private bool _isShownOrShowing;
+        private bool _animatorConfigurationChecked;
+        private bool _animatorConfigurationValid;
 
         public bool TryValidate(int expectedSlotCount, out string error)
         {
@@ -68,17 +81,120 @@ namespace Failsafe.Inventory.Presentation
 
             if (visible)
             {
+                _isPresentationEnabled = true;
+
                 if (!visualRoot.activeSelf)
                     visualRoot.SetActive(true);
 
                 _previewStage?.SetVisible(true);
+                RequestReveal();
                 return;
             }
 
+            _isPresentationEnabled = false;
+            _isShownOrShowing = false;
+            ResetAnimatorTriggers();
             _previewStage?.SetVisible(false);
 
             if (visualRoot.activeSelf)
                 visualRoot.SetActive(false);
+        }
+
+        public void RequestReveal()
+        {
+            if (!_isPresentationEnabled ||
+                !TryResolveAnimator(out Animator animator))
+            {
+                return;
+            }
+
+            _hideAt = Time.time + _autoHideDelay;
+
+            if (_isShownOrShowing)
+                return;
+
+            animator.ResetTrigger(_hideTriggerHash);
+            animator.SetTrigger(_showTriggerHash);
+            _isShownOrShowing = true;
+        }
+
+        private void Update()
+        {
+            if (!_isPresentationEnabled ||
+                !_isShownOrShowing ||
+                Time.time < _hideAt ||
+                !TryResolveAnimator(out Animator animator))
+            {
+                return;
+            }
+
+            animator.ResetTrigger(_showTriggerHash);
+            animator.SetTrigger(_hideTriggerHash);
+            _isShownOrShowing = false;
+        }
+
+        private bool TryResolveAnimator(out Animator animator)
+        {
+            if (_animator == null)
+                _animator = GetVisualRoot().GetComponent<Animator>();
+
+            animator = _animator;
+
+            if (animator == null || !animator.isActiveAndEnabled)
+                return false;
+
+            if (_animatorConfigurationChecked)
+                return _animatorConfigurationValid;
+
+            _showTriggerHash = Animator.StringToHash(
+                _showTriggerName ?? string.Empty);
+
+            _hideTriggerHash = Animator.StringToHash(
+                _hideTriggerName ?? string.Empty);
+
+            bool hasShowTrigger = false;
+            bool hasHideTrigger = false;
+
+            foreach (AnimatorControllerParameter parameter in
+                     animator.parameters)
+            {
+                if (parameter.type !=
+                    AnimatorControllerParameterType.Trigger)
+                {
+                    continue;
+                }
+
+                if (parameter.nameHash == _showTriggerHash)
+                    hasShowTrigger = true;
+
+                if (parameter.nameHash == _hideTriggerHash)
+                    hasHideTrigger = true;
+            }
+
+            _animatorConfigurationValid =
+                hasShowTrigger && hasHideTrigger;
+
+            _animatorConfigurationChecked = true;
+
+            if (!_animatorConfigurationValid)
+            {
+                Debug.LogWarning(
+                    $"Quick-bar Animator must contain Trigger parameters " +
+                    $"'{_showTriggerName}' and '{_hideTriggerName}'. " +
+                    "The quick bar will remain static.",
+                    this);
+            }
+
+            return _animatorConfigurationValid;
+        }
+
+        private void ResetAnimatorTriggers()
+        {
+            if (!TryResolveAnimator(out Animator animator))
+                return;
+
+            animator.ResetTrigger(_showTriggerHash);
+            animator.ResetTrigger(_hideTriggerHash);
         }
 
         public bool TryAttachPresenterRoot(
@@ -339,6 +455,9 @@ namespace Failsafe.Inventory.Presentation
         {
             _itemPreviewImages = null;
             _assignedStateRoots = null;
+            _animatorConfigurationChecked = false;
+            _animatorConfigurationValid = false;
+            _autoHideDelay = Mathf.Max(0f, _autoHideDelay);
         }
 
         private void OnDestroy()

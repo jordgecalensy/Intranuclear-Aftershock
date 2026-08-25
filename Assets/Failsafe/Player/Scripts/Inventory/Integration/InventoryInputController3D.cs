@@ -172,6 +172,9 @@ namespace Failsafe.Inventory.Integration
             int slotIndex,
             out string error)
         {
+            if (!IsOpen)
+                _closedQuickBarLayout?.RequestReveal();
+
             if (IsOpen)
             {
                 InventoryDragSession session =

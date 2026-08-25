@@ -270,6 +270,8 @@ namespace Failsafe.Inventory.Presentation
 
             if (ActiveSlotIndex >= 0)
                 ApplySlotState(ActiveSlotIndex);
+
+            _externalClosedLayout?.RequestReveal();
         }
 
         public bool TryGetSlotRoot(int slotIndex, out Transform slotRoot)
@@ -478,6 +480,7 @@ namespace Failsafe.Inventory.Presentation
                         StringComparison.Ordinal))
                 {
                     UpdateQuantityLabel(_slots[index], item);
+                    _externalClosedLayout?.RequestReveal();
                 }
             }
         }
@@ -691,6 +694,7 @@ namespace Failsafe.Inventory.Presentation
         private void RebuildSlot(int slotIndex, string instanceId)
         {
             SlotVisual slot = _slots[slotIndex];
+            _externalClosedLayout?.RequestReveal();
 
             if (slot.ItemView != null)
             {
