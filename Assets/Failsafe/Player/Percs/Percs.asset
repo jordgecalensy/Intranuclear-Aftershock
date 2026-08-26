@@ -15,7 +15,7 @@ MonoBehaviour:
   _removeItemAfterSelection: 1
   _items:
   - _name: fast
-    _rarity: 0
+    _rarity: 60
     _weight: 15
     _exclude:
     - slow
@@ -35,27 +35,31 @@ MonoBehaviour:
     _exclude:
     - jumper
   - _name: strong_arms
-    _rarity: 85
+    _rarity: 0
     _weight: 15
     _exclude:
     - weak_arms
   - _name: weak_arms
-    _rarity: 95
+    _rarity: 0
     _weight: -10
     _exclude:
     - strong_arms
   - _name: Former_ntelligence_officer
-    _rarity: 0
+    _rarity: 85
     _weight: 5
-    _exclude: []
+    _exclude:
+    - battleeng
+    - firefighter
   - _name: health_regeneration
-    _rarity: 0
+    _rarity: 85
     _weight: 15
     _exclude: []
-  - _name: soft_landing
-    _rarity: 0
+  - _name: DieHard
+    _rarity: 60
     _weight: 15
-    _exclude: []
+    _exclude:
+    - weak_legs
+    - weak_arms
   - _name: tenacious
     _rarity: 0
     _weight: 10
@@ -83,7 +87,7 @@ MonoBehaviour:
     - firefighter
     - Former_ntelligence_officer
   - _name: firefighter
-    _rarity: 85
+    _rarity: 60
     _weight: 10
     _exclude:
     - battleeng
@@ -95,6 +99,18 @@ MonoBehaviour:
     - noisy
   - _name: noisy
     _rarity: 0
-    _weight: 10
+    _weight: -10
+    _exclude:
+    - quiet
+  - _name: sprinter
+    _rarity: 85
+    _weight: 0
+    _exclude:
+    - quiet
+    - slow
+    - enduring
+  - _name: bomber
+    _rarity: 60
+    _weight: 0
     _exclude:
     - quiet
