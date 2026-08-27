@@ -1,3 +1,4 @@
+using Failsafe.PlayerMovements;
 using UnityEngine;
 using VContainer;
 
@@ -9,6 +10,7 @@ public class ZoomEffect : MonoBehaviour
     private float smooth = 5f;
     [SerializeField] private Camera m_Camera;
     [Inject] private InputHandler _inputHandler;
+    [Inject] private PlayerControlBlocker _controlBlocker;
 
     private void Awake()
     {
@@ -23,7 +25,11 @@ public class ZoomEffect : MonoBehaviour
     void Update()
     {
         // Считаем "зажата ли кнопка" прямо в апдейте
-        zooming = _inputHandler.ZoomTriggered;
+        bool zoomBlocked =
+            _controlBlocker != null &&
+            _controlBlocker.IsBlocked(PlayerControlBlock.ItemUse);
+
+        zooming = _inputHandler.ZoomTriggered && !zoomBlocked;
 
         if (zooming)
         {
