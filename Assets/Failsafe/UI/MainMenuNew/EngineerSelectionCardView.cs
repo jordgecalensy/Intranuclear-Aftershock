@@ -19,6 +19,9 @@ namespace Failsafe.UI.MainMenuNew
         [Header("Selection")]
         [SerializeField] private Button _selectButton;
         [SerializeField] private GameObject _selectionHighlight;
+        [SerializeField] private GameObject _selectionLine;
+        [SerializeField] private GameObject _confirmArea;
+        [SerializeField] private Button _confirmButton;
 
         [Header("Perk colors")]
         [SerializeField] private Color _positivePerkColor =
@@ -31,19 +34,25 @@ namespace Failsafe.UI.MainMenuNew
 
         private readonly List<PerkBadge> _perkBadges = new();
         private Action<int> _selectionRequested;
+        private Action _confirmationRequested;
         private int _engineerIndex;
-        private bool _buttonSubscribed;
+        private bool _selectButtonSubscribed;
+        private bool _confirmButtonSubscribed;
+        private bool _selected;
+        private bool _interactable;
         private bool _perkBadgeContainerConfigured;
 
         public void Bind(
             EngineerBuild engineer,
             int engineerIndex,
-            Action<int> selectionRequested)
+            Action<int> selectionRequested,
+            Action confirmationRequested)
         {
             _engineerIndex = engineerIndex;
             _selectionRequested = selectionRequested;
+            _confirmationRequested = confirmationRequested;
 
-            EnsureButtonSubscribed();
+            EnsureButtonsSubscribed();
 
             if (_operatorCodeText != null)
             {
@@ -71,26 +80,41 @@ namespace Failsafe.UI.MainMenuNew
                     : "Equipment points: -";
             }
 
-            SetInteractable(engineer != null);
             SetSelected(false);
+            SetInteractable(engineer != null);
             gameObject.SetActive(engineer != null);
         }
 
         public void SetInteractable(bool interactable)
         {
+            _interactable = interactable;
+
             if (_selectButton != null)
                 _selectButton.interactable = interactable;
+
+            UpdateConfirmButtonState();
         }
 
         public void SetSelected(bool selected)
         {
+            _selected = selected;
+
             if (_selectionHighlight != null)
                 _selectionHighlight.SetActive(selected);
+
+            if (_selectionLine != null)
+                _selectionLine.SetActive(selected);
+
+            if (_confirmArea != null)
+                _confirmArea.SetActive(selected);
+
+            UpdateConfirmButtonState();
         }
 
         public void Hide()
         {
             _selectionRequested = null;
+            _confirmationRequested = null;
             SetSelected(false);
             SetVisiblePerkBadgeCount(0);
             gameObject.SetActive(false);
@@ -98,24 +122,46 @@ namespace Failsafe.UI.MainMenuNew
 
         private void OnDestroy()
         {
-            if (_buttonSubscribed && _selectButton != null)
+            if (_selectButtonSubscribed && _selectButton != null)
                 _selectButton.onClick.RemoveListener(HandleSelectionRequested);
 
-            _buttonSubscribed = false;
+            if (_confirmButtonSubscribed && _confirmButton != null)
+                _confirmButton.onClick.RemoveListener(HandleConfirmationRequested);
+
+            _selectButtonSubscribed = false;
+            _confirmButtonSubscribed = false;
         }
 
-        private void EnsureButtonSubscribed()
+        private void EnsureButtonsSubscribed()
         {
-            if (_buttonSubscribed || _selectButton == null)
-                return;
+            if (!_selectButtonSubscribed && _selectButton != null)
+            {
+                _selectButton.onClick.AddListener(HandleSelectionRequested);
+                _selectButtonSubscribed = true;
+            }
 
-            _selectButton.onClick.AddListener(HandleSelectionRequested);
-            _buttonSubscribed = true;
+            if (!_confirmButtonSubscribed && _confirmButton != null)
+            {
+                _confirmButton.onClick.AddListener(HandleConfirmationRequested);
+                _confirmButtonSubscribed = true;
+            }
         }
 
         private void HandleSelectionRequested()
         {
             _selectionRequested?.Invoke(_engineerIndex);
+        }
+
+        private void HandleConfirmationRequested()
+        {
+            if (_selected && _interactable)
+                _confirmationRequested?.Invoke();
+        }
+
+        private void UpdateConfirmButtonState()
+        {
+            if (_confirmButton != null)
+                _confirmButton.interactable = _selected && _interactable;
         }
 
         private void RenderPerkBadges(EngineerBuild engineer)

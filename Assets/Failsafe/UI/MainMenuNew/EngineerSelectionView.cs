@@ -238,7 +238,8 @@ namespace Failsafe.UI.MainMenuNew
                 card.Bind(
                     result.Engineers[cardIndex],
                     cardIndex,
-                    HandleEngineerSelected);
+                    HandleEngineerSelected,
+                    ConfirmSelection);
             }
         }
 
