@@ -172,6 +172,9 @@ namespace Failsafe.Player
                 GetComponentInChildren<InventoryRuntimeController>(true);
             InventoryInputController3D inventoryInput =
                 GetComponentInChildren<InventoryInputController3D>(true);
+            InventoryItemContextMenuController3D itemContextMenu =
+                GetComponentInChildren<
+                    InventoryItemContextMenuController3D>(true);
 
             if (inventoryRuntime == null || inventoryInput == null)
             {
@@ -185,6 +188,10 @@ namespace Failsafe.Player
 
             builder.RegisterComponent(inventoryRuntime);
             builder.RegisterComponent(inventoryInput);
+
+            if (itemContextMenu != null)
+                builder.RegisterComponent(itemContextMenu);
+
             builder.Register<InventoryHeldItemLifecycleService>(
                     Lifetime.Scoped)
                 .As<IInventoryHeldItemLifecycle>();

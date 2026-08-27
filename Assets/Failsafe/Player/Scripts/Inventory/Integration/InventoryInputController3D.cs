@@ -18,6 +18,8 @@ namespace Failsafe.Inventory.Integration
             _robotPresentation;
         [SerializeField] private InventoryQuickBarPresentationLayout3D
             _closedQuickBarLayout;
+        [SerializeField] private InventoryItemContextMenuController3D
+            _itemContextMenu;
         [SerializeField] private CursorLock _cursorLock;
         [SerializeField] private PlayerControlBlocker _controlBlocker;
 
@@ -90,6 +92,12 @@ namespace Failsafe.Inventory.Integration
             {
                 _closedQuickBarLayout = GetComponentInChildren<
                     InventoryQuickBarPresentationLayout3D>(true);
+            }
+
+            if (_itemContextMenu == null)
+            {
+                _itemContextMenu = GetComponentInChildren<
+                    InventoryItemContextMenuController3D>(true);
             }
 
             if (_cursorLock == null)
@@ -274,6 +282,9 @@ namespace Failsafe.Inventory.Integration
             if (_dragController != null && _dragController.IsDragging)
                 return false;
 
+            _itemContextMenu?.CloseAll(
+                restoreDragInteraction: false);
+
             if (_inventory == null ||
                 !_inventory.SetPresentationVisible(false))
             {
@@ -336,6 +347,8 @@ namespace Failsafe.Inventory.Integration
 
         private void CompleteClose()
         {
+            _itemContextMenu?.CloseAll(
+                restoreDragInteraction: false);
             _dragController?.SetInteractionEnabled(false);
             ReleaseInventoryControlLock();
             RestoreCursorState();
@@ -360,6 +373,8 @@ namespace Failsafe.Inventory.Integration
         private void OnDisable()
         {
             UnsubscribeFromRobotPresentation();
+            _itemContextMenu?.CloseAll(
+                restoreDragInteraction: false);
 
             if (_dragController != null)
             {

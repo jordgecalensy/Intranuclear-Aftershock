@@ -1,4 +1,5 @@
 using System;
+using Failsafe.Inventory.Core;
 using Failsafe.PlayerMovements;
 using VContainer.Unity;
 
@@ -58,6 +59,84 @@ namespace Failsafe.Inventory.Integration
                 slotIndex,
                 respectControlBlock: true,
                 out error);
+        }
+
+        public bool TryEquipItem(
+            string instanceId,
+            out string error)
+        {
+            if (!TryEnsureInitialized(out error))
+                return false;
+
+            if (string.IsNullOrWhiteSpace(instanceId))
+            {
+                error = "Inventory instance ID is required.";
+                return false;
+            }
+
+            if (!_inventory.Grid.TryGetItem(instanceId, out _))
+            {
+                error = $"Inventory item '{instanceId}' was not found.";
+                return false;
+            }
+
+            if (!_inventory.TryGetWorldItem(
+                    instanceId,
+                    out Item targetItem))
+            {
+                error =
+                    $"Inventory item '{instanceId}' has no registered " +
+                    "world object.";
+
+                return false;
+            }
+
+            int slotIndex = FindAssignedSlot(instanceId);
+            bool assignedNewSlot = false;
+
+            if (slotIndex == NoActiveSlot)
+            {
+                if (!_inventory.TryAssignFirstAvailableQuickSlot(
+                        instanceId,
+                        out slotIndex,
+                        out error))
+                {
+                    return false;
+                }
+
+                assignedNewSlot = true;
+            }
+
+            if (_hands.ItemInHand?.ItemObject == targetItem)
+            {
+                SetActiveSlot(slotIndex);
+                error = null;
+                return true;
+            }
+
+            if (TrySelectSlotInternal(
+                    slotIndex,
+                    respectControlBlock: false,
+                    out error))
+            {
+                return true;
+            }
+
+            if (assignedNewSlot)
+            {
+                InventoryOperationResult cleanupResult =
+                    _inventory.QuickSlots.Clear(slotIndex);
+
+                if (!cleanupResult.IsSuccess)
+                {
+                    error =
+                        $"{error} The temporary quick-slot assignment " +
+                        $"could not be cleared: " +
+                        $"{cleanupResult.FailureReason}.";
+                }
+            }
+
+            return false;
         }
 
         public bool TryPrepareForRestore(out string error)
@@ -307,6 +386,25 @@ namespace Failsafe.Inventory.Integration
             _isInitialized = true;
             error = null;
             return true;
+        }
+
+        private int FindAssignedSlot(string instanceId)
+        {
+            for (int slotIndex = 0;
+                 slotIndex < _inventory.QuickSlots.SlotCount;
+                 slotIndex++)
+            {
+                if (string.Equals(
+                        _inventory.QuickSlots.GetAssignedInstanceId(
+                            slotIndex),
+                        instanceId,
+                        StringComparison.Ordinal))
+                {
+                    return slotIndex;
+                }
+            }
+
+            return NoActiveSlot;
         }
 
         private bool TryRestoreItemInHand(

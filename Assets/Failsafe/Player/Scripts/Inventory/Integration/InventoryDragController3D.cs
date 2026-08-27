@@ -251,7 +251,10 @@ namespace Failsafe.Inventory.Integration
             }
             else if (!_pointerIsOnGrid)
             {
-                result = TryDropIntoWorld(session, pointerRay);
+                result = TryDropInstanceIntoWorld(
+                    session.InstanceId,
+                    pointerRay,
+                    out _);
             }
             else
             {
@@ -272,14 +275,42 @@ namespace Failsafe.Inventory.Integration
             return result;
         }
 
-        private InventoryOperationResult TryDropIntoWorld(
-            InventoryDragSession session,
-            Ray pointerRay)
+        public bool TryDropItemIntoWorld(
+            string instanceId,
+            out string error)
         {
-            if (session == null ||
+            Transform cameraTransform = _playerCamera != null
+                ? _playerCamera.transform
+                : null;
+
+            Ray pointerRay = cameraTransform != null
+                ? new Ray(
+                    cameraTransform.position,
+                    cameraTransform.forward)
+                : default;
+
+            InventoryOperationResult result =
+                TryDropInstanceIntoWorld(
+                    instanceId,
+                    pointerRay,
+                    out error);
+
+            return result.IsSuccess;
+        }
+
+        private InventoryOperationResult TryDropInstanceIntoWorld(
+            string instanceId,
+            Ray pointerRay,
+            out string error)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId) ||
                 _inventory == null ||
                 !_inventory.IsInitialized)
             {
+                error =
+                    "An initialized inventory and a valid instance ID " +
+                    "are required to drop an item.";
+
                 return InventoryOperationResult.Failure(
                     InventoryFailureReason.InvalidItem);
             }
@@ -291,18 +322,24 @@ namespace Failsafe.Inventory.Integration
                     "because PlayerHandsContainer was not injected.",
                     this);
 
+                error = "PlayerHandsContainer was not injected.";
+
                 return InventoryOperationResult.Failure(
                     InventoryFailureReason.InvalidItem);
             }
 
             if (!_inventory.TryGetWorldItem(
-                    session.InstanceId,
+                    instanceId,
                     out Item worldItem))
             {
                 Debug.LogWarning(
-                    $"Inventory item '{session.InstanceId}' has no linked " +
+                    $"Inventory item '{instanceId}' has no linked " +
                     "world item and cannot be dropped.",
                     this);
+
+                error =
+                    $"Inventory item '{instanceId}' has no linked " +
+                    "world item.";
 
                 return InventoryOperationResult.Failure(
                     InventoryFailureReason.ItemNotFound);
@@ -313,15 +350,15 @@ namespace Failsafe.Inventory.Integration
 
             InventoryOperationResult result =
                 _inventory.DetachWorldItem(
-                    session.InstanceId,
+                    instanceId,
                     out Item detachedItem,
-                    out string error);
+                    out error);
 
             if (!result.IsSuccess || detachedItem == null)
             {
                 Debug.LogWarning(
                     $"Could not drop inventory item " +
-                    $"'{session.InstanceId}': {error}",
+                    $"'{instanceId}': {error}",
                     this);
 
                 return result;
@@ -335,13 +372,14 @@ namespace Failsafe.Inventory.Integration
                 if (droppedFromHand != detachedItem)
                 {
                     Debug.LogError(
-                        $"Inventory item '{session.InstanceId}' was detached, " +
+                        $"Inventory item '{instanceId}' was detached, " +
                         "but the hand system returned a different item.",
                         this);
                 }
             }
 
             PlaceDroppedItem(detachedItem, pointerRay);
+            error = null;
             return result;
         }
 
