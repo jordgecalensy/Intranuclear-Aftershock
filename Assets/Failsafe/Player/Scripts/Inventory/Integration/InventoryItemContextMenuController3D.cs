@@ -152,6 +152,7 @@ namespace Failsafe.Inventory.Integration
 
         public void CloseAll(bool restoreDragInteraction = true)
         {
+            _inventory?.Presenter?.ClearSelectedItem();
             SelectedInstanceId = null;
             SetMenuVisible(false);
             _infoPanel?.Hide();
@@ -196,6 +197,7 @@ namespace Failsafe.Inventory.Integration
             }
 
             SelectedInstanceId = hitTarget.InstanceId;
+            _inventory.Presenter?.SetSelectedItem(SelectedInstanceId);
             _infoPanel?.Hide();
             PositionMenu(pointerPosition);
             SetMenuVisible(true);
@@ -321,6 +323,7 @@ namespace Failsafe.Inventory.Integration
 
         private void HandleInfoCloseRequested()
         {
+            _inventory?.Presenter?.ClearSelectedItem();
             SelectedInstanceId = null;
             _infoPanel?.Hide();
             RestoreDragInteraction();

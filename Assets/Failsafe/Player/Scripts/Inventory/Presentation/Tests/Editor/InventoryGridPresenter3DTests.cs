@@ -287,6 +287,91 @@ namespace Failsafe.Inventory.Presentation.Tests
         }
 
         [Test]
+        public void ItemFootprintVisual_FollowsItemLifecycleAndSelection()
+        {
+            InventoryGridModel grid = new InventoryGridModel();
+            InventoryItemModel item = CreateItem("footprint", 2, 1);
+            FakeResolver resolver = new FakeResolver();
+            resolver.Register(item.InstanceId, CreateDefinition());
+
+            Assert.That(
+                grid.TryPlace(
+                    item,
+                    new InventoryGridPosition(1, 1)).IsSuccess,
+                Is.True);
+
+            InventoryGridPresenter3D presenter = CreatePresenter();
+            presenter.Initialize(
+                grid,
+                new InventoryGridSpace3D(6, 5, 1f),
+                resolver);
+
+            InventoryRobotPresentationLayout3D layout =
+                CreateFootprintLayout(6, 5);
+
+            presenter.SetManualGridLayout(layout);
+
+            Assert.That(layout.ItemFootprintVisualCount, Is.EqualTo(1));
+            Assert.That(
+                layout.TryGetItemFootprintVisual(
+                    item.InstanceId,
+                    out RectTransform visualRoot),
+                Is.True);
+
+            AssertVector2(
+                visualRoot.sizeDelta,
+                new Vector2(20f, 10f));
+
+            Transform selectedState = visualRoot.Find("Selected");
+            Assert.That(selectedState, Is.Not.Null);
+            Assert.That(selectedState.gameObject.activeSelf, Is.False);
+
+            Assert.That(
+                presenter.SetSelectedItem(item.InstanceId),
+                Is.True);
+            Assert.That(selectedState.gameObject.activeSelf, Is.True);
+
+            Assert.That(grid.TryRotate(item.InstanceId).IsSuccess, Is.True);
+            Assert.That(
+                layout.TryGetItemFootprintVisual(
+                    item.InstanceId,
+                    out visualRoot),
+                Is.True);
+
+            AssertVector2(
+                visualRoot.sizeDelta,
+                new Vector2(10f, 20f));
+            Assert.That(
+                visualRoot.Find("Selected").gameObject.activeSelf,
+                Is.True);
+
+            Assert.That(
+                presenter.TryPreviewFreePosition(
+                    item.InstanceId,
+                    Vector3.zero,
+                    new InventoryGridSize(1, 2),
+                    InventoryItemRotation.Clockwise90),
+                Is.True);
+            Assert.That(visualRoot.gameObject.activeSelf, Is.False);
+
+            Assert.That(
+                presenter.RestorePlacement(item.InstanceId),
+                Is.True);
+            Assert.That(visualRoot.gameObject.activeSelf, Is.True);
+
+            presenter.ClearSelectedItem();
+            Assert.That(
+                visualRoot.Find("Selected").gameObject.activeSelf,
+                Is.False);
+
+            Assert.That(grid.TryRemove(item.InstanceId).IsSuccess, Is.True);
+            Assert.That(layout.ItemFootprintVisualCount, Is.Zero);
+            Assert.That(
+                layout.TryGetItemFootprintVisual(item.InstanceId, out _),
+                Is.False);
+        }
+
+        [Test]
         public void Initialize_CreatesSixByFivePrototypeGridVisual()
         {
             InventoryGridPresenter3D presenter = CreatePresenter();
@@ -453,6 +538,81 @@ namespace Failsafe.Inventory.Presentation.Tests
             return layout;
         }
 
+        private InventoryRobotPresentationLayout3D CreateFootprintLayout(
+            int columns,
+            int rows)
+        {
+            GameObject layoutObject = new GameObject(
+                "Inventory Footprint Layout Test",
+                typeof(RectTransform));
+            _createdObjects.Add(layoutObject);
+
+            InventoryRobotPresentationLayout3D layout =
+                layoutObject.AddComponent<
+                    InventoryRobotPresentationLayout3D>();
+
+            RectTransform cellsRoot = new GameObject(
+                "Cells",
+                typeof(RectTransform)).GetComponent<RectTransform>();
+
+            cellsRoot.SetParent(layoutObject.transform, false);
+            cellsRoot.sizeDelta = new Vector2(
+                columns * 10f,
+                rows * 10f);
+
+            for (int row = 0; row < rows; row++)
+            {
+                for (int column = 0; column < columns; column++)
+                {
+                    RectTransform cell = new GameObject(
+                        $"Cell {row * columns + column}",
+                        typeof(RectTransform)).GetComponent<RectTransform>();
+
+                    cell.SetParent(cellsRoot, false);
+                    cell.anchorMin = new Vector2(0.5f, 0.5f);
+                    cell.anchorMax = new Vector2(0.5f, 0.5f);
+                    cell.pivot = new Vector2(0.5f, 0.5f);
+                    cell.sizeDelta = new Vector2(10f, 10f);
+                    cell.anchoredPosition = new Vector2(
+                        (column + 0.5f) * 10f,
+                        -(row + 0.5f) * 10f);
+                }
+            }
+
+            RectTransform visualsRoot = new GameObject(
+                "Item Footprints",
+                typeof(RectTransform)).GetComponent<RectTransform>();
+
+            visualsRoot.SetParent(layoutObject.transform, false);
+            visualsRoot.sizeDelta = cellsRoot.sizeDelta;
+
+            RectTransform template = new GameObject(
+                "Item Footprint Template",
+                typeof(RectTransform)).GetComponent<RectTransform>();
+
+            template.SetParent(visualsRoot, false);
+
+            GameObject selectedState = new GameObject(
+                "Selected",
+                typeof(RectTransform));
+
+            selectedState.transform.SetParent(template, false);
+            selectedState.SetActive(false);
+            template.gameObject.SetActive(false);
+
+            SetPrivateField(layout, "_gridCellsRoot", cellsRoot);
+            SetPrivateField(
+                layout,
+                "_itemFootprintVisualsRoot",
+                visualsRoot);
+            SetPrivateField(
+                layout,
+                "_itemFootprintVisualTemplate",
+                template);
+
+            return layout;
+        }
+
         private static int CountActive(GameObject[] objects)
         {
             int count = 0;
@@ -510,6 +670,12 @@ namespace Failsafe.Inventory.Presentation.Tests
             Assert.That(actual.x, Is.EqualTo(expected.x).Within(Tolerance));
             Assert.That(actual.y, Is.EqualTo(expected.y).Within(Tolerance));
             Assert.That(actual.z, Is.EqualTo(expected.z).Within(Tolerance));
+        }
+
+        private static void AssertVector2(Vector2 actual, Vector2 expected)
+        {
+            Assert.That(actual.x, Is.EqualTo(expected.x).Within(Tolerance));
+            Assert.That(actual.y, Is.EqualTo(expected.y).Within(Tolerance));
         }
 
         private sealed class FakeResolver : IInventoryItemViewDefinitionResolver

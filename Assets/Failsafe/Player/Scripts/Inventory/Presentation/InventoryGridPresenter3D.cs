@@ -19,6 +19,8 @@ namespace Failsafe.Inventory.Presentation
         private InventoryPrototypeGridVisual3D _prototypeGridVisual;
         private InventoryRobotPresentationLayout3D _manualGridLayout;
         private bool _highlightErrorLogged;
+        private bool _footprintErrorLogged;
+        private string _selectedInstanceId;
 
         public void Initialize(
             InventoryGridModel grid,
@@ -123,6 +125,9 @@ namespace Failsafe.Inventory.Presentation
 
             view.ApplyFreePreview(localPosition, rotation, GridSpace);
             hitTarget.ApplyFootprint(footprint);
+            _manualGridLayout?.SetItemFootprintVisible(
+                instanceId,
+                false);
             return true;
         }
 
@@ -173,6 +178,42 @@ namespace Failsafe.Inventory.Presentation
             _manualGridLayout?.HideGridCellHighlights();
         }
 
+        public bool SetSelectedItem(string instanceId)
+        {
+            if (!IsInitialized ||
+                string.IsNullOrWhiteSpace(instanceId) ||
+                !_grid.TryGetPlacement(instanceId, out _))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(_selectedInstanceId))
+            {
+                _manualGridLayout?.SetItemFootprintSelected(
+                    _selectedInstanceId,
+                    false);
+            }
+
+            _selectedInstanceId = instanceId;
+
+            return _manualGridLayout == null ||
+                   _manualGridLayout.SetItemFootprintSelected(
+                       instanceId,
+                       true);
+        }
+
+        public void ClearSelectedItem()
+        {
+            if (!string.IsNullOrWhiteSpace(_selectedInstanceId))
+            {
+                _manualGridLayout?.SetItemFootprintSelected(
+                    _selectedInstanceId,
+                    false);
+            }
+
+            _selectedInstanceId = null;
+        }
+
         public void SetManualGridLayout(
             InventoryRobotPresentationLayout3D layout)
         {
@@ -180,8 +221,23 @@ namespace Failsafe.Inventory.Presentation
                 return;
 
             _manualGridLayout?.HideGridCellHighlights();
+            _manualGridLayout?.ClearItemFootprints();
             _manualGridLayout = layout;
             _highlightErrorLogged = false;
+            _footprintErrorLogged = false;
+
+            if (_manualGridLayout == null || _grid == null)
+                return;
+
+            foreach (InventoryPlacement placement in _grid.Placements)
+                TrySyncItemFootprint(placement);
+
+            if (!string.IsNullOrWhiteSpace(_selectedInstanceId))
+            {
+                _manualGridLayout.SetItemFootprintSelected(
+                    _selectedInstanceId,
+                    true);
+            }
         }
 
         public bool TryGetPrototypeGridVisual(
@@ -203,12 +259,15 @@ namespace Failsafe.Inventory.Presentation
                 Unsubscribe();
 
             HidePlacementHighlight();
+            ClearSelectedItem();
+            _manualGridLayout?.ClearItemFootprints();
             DestroyAllViews();
             DestroyPrototypeGridVisual();
             _grid = null;
             _resolver = null;
             _manualGridLayout = null;
             _highlightErrorLogged = false;
+            _footprintErrorLogged = false;
             IsInitialized = false;
         }
 
@@ -265,10 +324,21 @@ namespace Failsafe.Inventory.Presentation
             if (string.IsNullOrWhiteSpace(instanceId) ||
                 !_views.TryGetValue(instanceId, out InventoryItemView3D view))
             {
+                _manualGridLayout?.RemoveItemFootprint(instanceId);
                 return;
             }
 
             _views.Remove(instanceId);
+            _manualGridLayout?.RemoveItemFootprint(instanceId);
+
+            if (string.Equals(
+                    _selectedInstanceId,
+                    instanceId,
+                    StringComparison.Ordinal))
+            {
+                _selectedInstanceId = null;
+            }
+
             DestroyObject(view.gameObject);
         }
 
@@ -364,6 +434,48 @@ namespace Failsafe.Inventory.Presentation
             {
                 hitTarget.ApplyFootprint(placement.Footprint);
             }
+
+            TrySyncItemFootprint(placement);
+        }
+
+        private bool TrySyncItemFootprint(InventoryPlacement placement)
+        {
+            if (_manualGridLayout == null ||
+                placement == null ||
+                placement.Item == null)
+            {
+                return false;
+            }
+
+            bool shown = _manualGridLayout.TryShowItemFootprint(
+                placement.Item.InstanceId,
+                placement.Origin,
+                placement.Footprint,
+                _grid.Columns,
+                _grid.Rows,
+                out string error);
+
+            if (!shown && !_footprintErrorLogged)
+            {
+                Debug.LogWarning(
+                    $"Inventory item footprint visuals are unavailable: " +
+                    $"{error}",
+                    this);
+
+                _footprintErrorLogged = true;
+            }
+
+            if (shown && string.Equals(
+                    _selectedInstanceId,
+                    placement.Item.InstanceId,
+                    StringComparison.Ordinal))
+            {
+                _manualGridLayout.SetItemFootprintSelected(
+                    placement.Item.InstanceId,
+                    true);
+            }
+
+            return shown;
         }
 
         private void DestroyAllViews()

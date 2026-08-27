@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Failsafe.Inventory.Core;
 using UnityEngine;
 
 namespace Failsafe.Inventory.Presentation
@@ -17,6 +19,12 @@ namespace Failsafe.Inventory.Presentation
         [SerializeField] private string _invalidCellHighlightPath =
             "HighlightInvalid";
 
+        [Header("Item Footprints")]
+        [SerializeField] private RectTransform _itemFootprintVisualsRoot;
+        [SerializeField] private RectTransform _itemFootprintVisualTemplate;
+        [SerializeField] private string _itemSelectedStatePath =
+            "Selected";
+
         [Header("Open Quick Slots")]
         [SerializeField] private RectTransform _quickSlotsRoot;
         [SerializeField] private Transform _quickSlotItemsRoot;
@@ -32,10 +40,16 @@ namespace Failsafe.Inventory.Presentation
         public Transform InventoryItemsRoot => _inventoryItemsRoot;
         public RectTransform QuickSlotsRoot => _quickSlotsRoot;
         public Transform QuickSlotItemsRoot => _quickSlotItemsRoot;
+        public int ItemFootprintVisualCount => _itemFootprintVisuals.Count;
 
         private GameObject[] _validCellHighlights;
         private GameObject[] _invalidCellHighlights;
         private Transform[] _quickSlotAssignedStates;
+
+        private readonly Dictionary<string, ItemFootprintVisual>
+            _itemFootprintVisuals =
+                new Dictionary<string, ItemFootprintVisual>(
+                    StringComparer.Ordinal);
 
         public bool TryValidate(
             int columns,
@@ -52,6 +66,27 @@ namespace Failsafe.Inventory.Presentation
             if (_inventoryItemsRoot == null)
             {
                 error = "Inventory items root is not assigned.";
+                return false;
+            }
+
+            if (_itemFootprintVisualsRoot == null)
+            {
+                error = "Item footprint visuals root is not assigned.";
+                return false;
+            }
+
+            if (_itemFootprintVisualTemplate == null)
+            {
+                error = "Item footprint visual template is not assigned.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(_itemSelectedStatePath) ||
+                _itemFootprintVisualTemplate.Find(
+                    _itemSelectedStatePath) == null)
+            {
+                error = $"Item footprint visual template must contain " +
+                        $"'{_itemSelectedStatePath}'.";
                 return false;
             }
 
@@ -276,6 +311,162 @@ namespace Failsafe.Inventory.Presentation
             SetHighlightsActive(_invalidCellHighlights, false);
         }
 
+        public bool TryShowItemFootprint(
+            string instanceId,
+            InventoryGridPosition origin,
+            InventoryGridSize footprint,
+            int columns,
+            int rows,
+            out string error)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId))
+            {
+                error = "Item footprint instance ID is required.";
+                return false;
+            }
+
+            if (!TryGetFootprintCells(
+                    origin,
+                    footprint,
+                    columns,
+                    rows,
+                    out RectTransform firstCell,
+                    out RectTransform lastCell,
+                    out error))
+            {
+                return false;
+            }
+
+            if (!TryGetOrCreateItemFootprintVisual(
+                    instanceId,
+                    out ItemFootprintVisual visual,
+                    out error))
+            {
+                return false;
+            }
+
+            Canvas.ForceUpdateCanvases();
+
+            Vector2 minimum = new Vector2(
+                float.PositiveInfinity,
+                float.PositiveInfinity);
+
+            Vector2 maximum = new Vector2(
+                float.NegativeInfinity,
+                float.NegativeInfinity);
+
+            EncapsulateRectInRoot(
+                firstCell,
+                _itemFootprintVisualsRoot,
+                ref minimum,
+                ref maximum);
+
+            EncapsulateRectInRoot(
+                lastCell,
+                _itemFootprintVisualsRoot,
+                ref minimum,
+                ref maximum);
+
+            RectTransform visualRoot = visual.Root;
+            visualRoot.anchorMin = new Vector2(0.5f, 0.5f);
+            visualRoot.anchorMax = new Vector2(0.5f, 0.5f);
+            visualRoot.pivot = new Vector2(0.5f, 0.5f);
+            visualRoot.localRotation = Quaternion.identity;
+            visualRoot.localScale = Vector3.one;
+            visualRoot.anchoredPosition =
+                (minimum + maximum) * 0.5f -
+                _itemFootprintVisualsRoot.rect.center;
+
+            visualRoot.sizeDelta = maximum - minimum;
+            visualRoot.gameObject.SetActive(true);
+
+            error = null;
+            return true;
+        }
+
+        public bool TryGetItemFootprintVisual(
+            string instanceId,
+            out RectTransform visualRoot)
+        {
+            visualRoot = null;
+
+            if (string.IsNullOrWhiteSpace(instanceId) ||
+                !_itemFootprintVisuals.TryGetValue(
+                    instanceId,
+                    out ItemFootprintVisual visual) ||
+                visual.Root == null)
+            {
+                return false;
+            }
+
+            visualRoot = visual.Root;
+            return true;
+        }
+
+        public bool SetItemFootprintSelected(
+            string instanceId,
+            bool selected)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId) ||
+                !_itemFootprintVisuals.TryGetValue(
+                    instanceId,
+                    out ItemFootprintVisual visual) ||
+                visual.SelectedState == null)
+            {
+                return false;
+            }
+
+            visual.SelectedState.gameObject.SetActive(selected);
+            return true;
+        }
+
+        public bool SetItemFootprintVisible(
+            string instanceId,
+            bool visible)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId) ||
+                !_itemFootprintVisuals.TryGetValue(
+                    instanceId,
+                    out ItemFootprintVisual visual) ||
+                visual.Root == null)
+            {
+                return false;
+            }
+
+            visual.Root.gameObject.SetActive(visible);
+            return true;
+        }
+
+        public bool RemoveItemFootprint(string instanceId)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId) ||
+                !_itemFootprintVisuals.TryGetValue(
+                    instanceId,
+                    out ItemFootprintVisual visual))
+            {
+                return false;
+            }
+
+            _itemFootprintVisuals.Remove(instanceId);
+
+            if (visual.Root != null)
+                DestroyObject(visual.Root.gameObject);
+
+            return true;
+        }
+
+        public void ClearItemFootprints()
+        {
+            foreach (ItemFootprintVisual visual in
+                     _itemFootprintVisuals.Values)
+            {
+                if (visual.Root != null)
+                    DestroyObject(visual.Root.gameObject);
+            }
+
+            _itemFootprintVisuals.Clear();
+        }
+
         public void SetQuickSlotState(
             int slotIndex,
             bool isAssigned)
@@ -348,6 +539,131 @@ namespace Failsafe.Inventory.Presentation
 
             error = null;
             return true;
+        }
+
+        private bool TryGetOrCreateItemFootprintVisual(
+            string instanceId,
+            out ItemFootprintVisual visual,
+            out string error)
+        {
+            if (_itemFootprintVisuals.TryGetValue(
+                    instanceId,
+                    out visual) &&
+                visual.Root != null &&
+                visual.SelectedState != null)
+            {
+                error = null;
+                return true;
+            }
+
+            if (_itemFootprintVisualsRoot == null ||
+                _itemFootprintVisualTemplate == null)
+            {
+                error = "Item footprint visual references are not assigned.";
+                visual = default;
+                return false;
+            }
+
+            RectTransform visualRoot = Instantiate(
+                _itemFootprintVisualTemplate,
+                _itemFootprintVisualsRoot,
+                false);
+
+            visualRoot.name = $"Item Footprint [{instanceId}]";
+
+            Transform selectedState = string.IsNullOrWhiteSpace(
+                    _itemSelectedStatePath)
+                ? null
+                : visualRoot.Find(_itemSelectedStatePath);
+
+            if (selectedState == null)
+            {
+                DestroyObject(visualRoot.gameObject);
+                error = $"Item footprint visual template must contain " +
+                        $"'{_itemSelectedStatePath}'.";
+                visual = default;
+                return false;
+            }
+
+            selectedState.gameObject.SetActive(false);
+            visual = new ItemFootprintVisual(
+                visualRoot,
+                selectedState);
+
+            _itemFootprintVisuals[instanceId] = visual;
+            error = null;
+            return true;
+        }
+
+        private bool TryGetFootprintCells(
+            InventoryGridPosition origin,
+            InventoryGridSize footprint,
+            int columns,
+            int rows,
+            out RectTransform firstCell,
+            out RectTransform lastCell,
+            out string error)
+        {
+            firstCell = null;
+            lastCell = null;
+
+            if (columns <= 0 || rows <= 0 ||
+                origin.Column < 0 ||
+                origin.Row < 0 ||
+                origin.Column + footprint.Width > columns ||
+                origin.Row + footprint.Height > rows)
+            {
+                error = "Item footprint must stay inside the inventory grid.";
+                return false;
+            }
+
+            int requiredCellCount = columns * rows;
+
+            if (_gridCellsRoot == null ||
+                _gridCellsRoot.childCount < requiredCellCount)
+            {
+                error = "Inventory grid cells root is incomplete.";
+                return false;
+            }
+
+            int firstIndex = origin.Row * columns + origin.Column;
+            int lastIndex =
+                (origin.Row + footprint.Height - 1) * columns +
+                origin.Column + footprint.Width - 1;
+
+            firstCell = _gridCellsRoot.GetChild(
+                firstIndex) as RectTransform;
+
+            lastCell = _gridCellsRoot.GetChild(
+                lastIndex) as RectTransform;
+
+            if (firstCell == null || lastCell == null)
+            {
+                error = "Inventory grid children must use RectTransform.";
+                return false;
+            }
+
+            error = null;
+            return true;
+        }
+
+        private static void EncapsulateRectInRoot(
+            RectTransform source,
+            RectTransform relativeTo,
+            ref Vector2 minimum,
+            ref Vector2 maximum)
+        {
+            Vector3[] corners = new Vector3[4];
+            source.GetWorldCorners(corners);
+
+            foreach (Vector3 corner in corners)
+            {
+                Vector3 localCorner = relativeTo.InverseTransformPoint(
+                    corner);
+
+                minimum = Vector2.Min(minimum, localCorner);
+                maximum = Vector2.Max(maximum, localCorner);
+            }
         }
 
         private void EnsureQuickSlotStateCache()
@@ -628,6 +944,17 @@ namespace Failsafe.Inventory.Presentation
                 : desiredWorldScale;
         }
 
+        private static void DestroyObject(GameObject target)
+        {
+            if (target == null)
+                return;
+
+            if (Application.isPlaying)
+                Destroy(target);
+            else
+                DestroyImmediate(target);
+        }
+
         private void OnValidate()
         {
             _validCellHighlights = null;
@@ -638,6 +965,20 @@ namespace Failsafe.Inventory.Presentation
         private void OnDisable()
         {
             HideGridCellHighlights();
+        }
+
+        private readonly struct ItemFootprintVisual
+        {
+            public RectTransform Root { get; }
+            public Transform SelectedState { get; }
+
+            public ItemFootprintVisual(
+                RectTransform root,
+                Transform selectedState)
+            {
+                Root = root;
+                SelectedState = selectedState;
+            }
         }
     }
 }
