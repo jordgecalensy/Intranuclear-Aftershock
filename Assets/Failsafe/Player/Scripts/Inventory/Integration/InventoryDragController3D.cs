@@ -35,6 +35,7 @@ namespace Failsafe.Inventory.Integration
         private Vector3 _pointerLocalPoint;
         private Vector3 _initialPreviewGrabOffset;
         private InventoryFailureReason _currentTargetFailureReason;
+        private string _mergeTargetInstanceId;
 
         private void Awake()
         {
@@ -242,7 +243,22 @@ namespace Failsafe.Inventory.Integration
             InventoryDragSession session = CurrentSession;
             InventoryOperationResult result;
 
-            if (HasValidTarget)
+            if (HasValidTarget && _mergeTargetInstanceId != null)
+            {
+                bool preferSourceWorldItem =
+                    _playerHandsContainer != null &&
+                    _inventory.TryGetWorldItem(
+                        session.InstanceId,
+                        out Item sourceWorldItem) &&
+                    _playerHandsContainer.ItemInHand?.ItemObject ==
+                    sourceWorldItem;
+
+                result = _inventory.MergeStacks(
+                    session.InstanceId,
+                    _mergeTargetInstanceId,
+                    preferSourceWorldItem);
+            }
+            else if (HasValidTarget)
             {
                 result = _inventory.Relocate(
                     session.InstanceId,
@@ -472,6 +488,7 @@ namespace Failsafe.Inventory.Integration
         private bool PreviewCurrentTarget()
         {
             InventoryDragSession session = CurrentSession;
+            _mergeTargetInstanceId = null;
 
             if (session == null ||
                 _inventory == null ||
@@ -480,6 +497,46 @@ namespace Failsafe.Inventory.Integration
             {
                 _currentTargetFailureReason =
                     InventoryFailureReason.InvalidItem;
+
+                return false;
+            }
+
+            if (_inventory.Grid.TryGetItemAt(
+                    session.PointerCell,
+                    out InventoryItemModel targetItem) &&
+                targetItem.InstanceId != session.InstanceId)
+            {
+                InventoryOperationResult mergeValidation =
+                    _inventory.ValidateMergeStacks(
+                        session.InstanceId,
+                        targetItem.InstanceId);
+
+                _currentTargetFailureReason =
+                    mergeValidation.FailureReason;
+
+                bool mergePreviewIsInsideGrid =
+                    _inventory.Presenter.TryPreviewPlacement(
+                        session.InstanceId,
+                        session.TargetOrigin,
+                        session.TargetFootprint,
+                        session.TargetRotation);
+
+                if (_inventory.Grid.TryGetPlacement(
+                        targetItem.InstanceId,
+                        out InventoryPlacement targetPlacement))
+                {
+                    _inventory.Presenter.ShowPlacementHighlight(
+                        targetPlacement.Origin,
+                        targetPlacement.Footprint,
+                        mergeValidation.IsSuccess);
+                }
+
+                if (mergeValidation.IsSuccess &&
+                    mergePreviewIsInsideGrid)
+                {
+                    _mergeTargetInstanceId = targetItem.InstanceId;
+                    return true;
+                }
 
                 return false;
             }
@@ -558,6 +615,7 @@ namespace Failsafe.Inventory.Integration
             _pointerLocalPoint = default;
             _initialPreviewGrabOffset = default;
             _currentTargetFailureReason = InventoryFailureReason.None;
+            _mergeTargetInstanceId = null;
         }
     }
 }

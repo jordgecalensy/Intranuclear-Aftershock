@@ -334,6 +334,83 @@ namespace Failsafe.Inventory.Core.Tests
         }
 
         [Test]
+        public void ValidateMerge_ReportsCompatibilityWithoutChangingStacks()
+        {
+            InventoryGridModel grid = new InventoryGridModel();
+            InventoryItemModel source = CreateItem(
+                "source",
+                definitionId: "stimpack",
+                quantity: 2,
+                maxStack: 5);
+            InventoryItemModel target = CreateItem(
+                "target",
+                definitionId: "stimpack",
+                quantity: 3,
+                maxStack: 5);
+
+            grid.TryPlace(source, new InventoryGridPosition(0, 0));
+            grid.TryPlace(target, new InventoryGridPosition(1, 0));
+
+            InventoryOperationResult result = grid.ValidateMerge(
+                source.InstanceId,
+                target.InstanceId);
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(source.Quantity, Is.EqualTo(2));
+            Assert.That(target.Quantity, Is.EqualTo(3));
+            Assert.That(grid.Placements.Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void TryAddQuantity_UpdatesStackAndRaisesQuantityChanged()
+        {
+            InventoryGridModel grid = new InventoryGridModel();
+            InventoryItemModel item = CreateItem(
+                "stack",
+                quantity: 1,
+                maxStack: 5);
+            InventoryItemModel changedItem = null;
+
+            grid.TryPlace(item, new InventoryGridPosition(0, 0));
+            grid.QuantityChanged += changed => changedItem = changed;
+
+            InventoryOperationResult result = grid.TryAddQuantity(
+                item.InstanceId,
+                2);
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.TransferredQuantity, Is.EqualTo(2));
+            Assert.That(result.RemainingQuantity, Is.EqualTo(3));
+            Assert.That(item.Quantity, Is.EqualTo(3));
+            Assert.That(changedItem, Is.SameAs(item));
+        }
+
+        [Test]
+        public void TryAddQuantity_WhenCapacityIsInsufficient_IsAtomic()
+        {
+            InventoryGridModel grid = new InventoryGridModel();
+            InventoryItemModel item = CreateItem(
+                "stack",
+                quantity: 4,
+                maxStack: 5);
+            int eventCount = 0;
+
+            grid.TryPlace(item, new InventoryGridPosition(0, 0));
+            grid.QuantityChanged += _ => eventCount++;
+
+            InventoryOperationResult result = grid.TryAddQuantity(
+                item.InstanceId,
+                2);
+
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(
+                result.FailureReason,
+                Is.EqualTo(InventoryFailureReason.StackFull));
+            Assert.That(item.Quantity, Is.EqualTo(4));
+            Assert.That(eventCount, Is.Zero);
+        }
+
+        [Test]
         public void TryRemoveQuantity_RemovesOnlyRequestedAmount()
         {
             InventoryGridModel grid = new InventoryGridModel();

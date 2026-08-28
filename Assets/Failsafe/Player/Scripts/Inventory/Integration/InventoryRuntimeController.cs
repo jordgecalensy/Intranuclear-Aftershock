@@ -524,6 +524,60 @@ namespace Failsafe.Inventory.Integration
                     InventoryFailureReason.ItemNotFound);
             }
 
+            if (!Grid.TryGetItem(
+                    instanceId,
+                    out InventoryItemModel inventoryItem))
+            {
+                worldItem = null;
+                error = $"Inventory item '{instanceId}' was not found.";
+
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.ItemNotFound);
+            }
+
+            if (inventoryItem.Quantity > 1)
+            {
+                if (!TryCreateStoredStackRepresentative(
+                        worldItem.ItemData,
+                        out Item replacement,
+                        out error))
+                {
+                    worldItem = null;
+
+                    return InventoryOperationResult.Failure(
+                        InventoryFailureReason.InvalidItem,
+                        inventoryItem.Quantity);
+                }
+
+                InventoryOperationResult quantityResult =
+                    Grid.TryRemoveQuantity(instanceId, 1);
+
+                if (!quantityResult.IsSuccess)
+                {
+                    DestroyUnityObject(replacement.gameObject);
+                    worldItem = null;
+                    error =
+                        $"Inventory quantity removal failed: " +
+                        $"{quantityResult.FailureReason}.";
+
+                    return quantityResult;
+                }
+
+                _worldItemsByInstanceId[instanceId] = replacement;
+                ReleaseWorldItem(worldItem);
+
+                if (_storedWorldItemsRoot != null &&
+                    worldItem.transform.IsChildOf(
+                        _storedWorldItemsRoot.transform))
+                {
+                    worldItem.transform.SetParent(null, true);
+                    worldItem.ToWorldState();
+                }
+
+                error = null;
+                return quantityResult;
+            }
+
             InventoryOperationResult result =
                 RemoveInventoryEntry(instanceId);
 
@@ -538,9 +592,7 @@ namespace Failsafe.Inventory.Integration
 
             _worldItemsByInstanceId.Remove(instanceId);
 
-            InventoryWorldItemOwnership ownership =
-                worldItem.GetComponent<InventoryWorldItemOwnership>();
-            ownership?.Release();
+            ReleaseWorldItem(worldItem);
 
             if (_storedWorldItemsRoot != null &&
                 worldItem.transform.IsChildOf(
@@ -660,6 +712,81 @@ namespace Failsafe.Inventory.Integration
                     InventoryFailureReason.InvalidItem);
         }
 
+        public InventoryOperationResult ValidateMergeStacks(
+            string sourceInstanceId,
+            string targetInstanceId)
+        {
+            return IsInitialized
+                ? Grid.ValidateMerge(sourceInstanceId, targetInstanceId)
+                : InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem);
+        }
+
+        public InventoryOperationResult MergeStacks(
+            string sourceInstanceId,
+            string targetInstanceId,
+            bool preferSourceWorldItem = false)
+        {
+            if (!IsInitialized)
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem);
+            }
+
+            InventoryOperationResult validation = Grid.ValidateMerge(
+                sourceInstanceId,
+                targetInstanceId);
+
+            if (!validation.IsSuccess)
+                return validation;
+
+            int sourceQuickSlot = FindAssignedQuickSlot(sourceInstanceId);
+            int targetQuickSlot = FindAssignedQuickSlot(targetInstanceId);
+
+            _worldItemsByInstanceId.TryGetValue(
+                sourceInstanceId,
+                out Item sourceWorldItem);
+
+            _worldItemsByInstanceId.TryGetValue(
+                targetInstanceId,
+                out Item targetWorldItem);
+
+            InventoryOperationResult result = Grid.TryMerge(
+                sourceInstanceId,
+                targetInstanceId);
+
+            if (!result.IsSuccess || result.RemainingQuantity > 0)
+                return result;
+
+            _viewResolver.Unregister(sourceInstanceId);
+            _worldItemsByInstanceId.Remove(sourceInstanceId);
+
+            bool useSourceWorldItem =
+                sourceWorldItem != null &&
+                (preferSourceWorldItem || targetWorldItem == null);
+
+            if (useSourceWorldItem)
+            {
+                _worldItemsByInstanceId[targetInstanceId] = sourceWorldItem;
+
+                if (targetWorldItem != null &&
+                    targetWorldItem != sourceWorldItem)
+                {
+                    RetireMergedWorldItem(targetWorldItem);
+                }
+            }
+            else if (sourceWorldItem != null &&
+                     sourceWorldItem != targetWorldItem)
+            {
+                RetireMergedWorldItem(sourceWorldItem);
+            }
+
+            if (sourceQuickSlot >= 0 && targetQuickSlot < 0)
+                QuickSlots.Assign(sourceQuickSlot, targetInstanceId);
+
+            return result;
+        }
+
         public InventoryOperationResult Remove(string instanceId)
         {
             if (!IsInitialized)
@@ -743,6 +870,71 @@ namespace Failsafe.Inventory.Integration
                     InventoryFailureReason.DuplicateInstanceId);
             }
 
+            if (!TryRegisterCatalogItem(worldItem.ItemData, out error))
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem);
+            }
+
+            if (TryFindAvailableStack(
+                    worldItem.ItemData,
+                    out InventoryItemModel availableStack))
+            {
+                InventoryOperationResult stackResult = Grid.TryAddQuantity(
+                    availableStack.InstanceId,
+                    1);
+
+                if (!stackResult.IsSuccess)
+                {
+                    error =
+                        $"Inventory stack update failed: " +
+                        $"{stackResult.FailureReason}.";
+
+                    return stackResult;
+                }
+
+                TryGetWorldItem(
+                    availableStack.InstanceId,
+                    out Item existingWorldItem);
+
+                if (!moveToStorage || existingWorldItem == null)
+                {
+                    RegisterWorldItem(
+                        availableStack.InstanceId,
+                        worldItem,
+                        runtimeGenerated);
+
+                    if (moveToStorage)
+                    {
+                        worldItem.ToInventoryState();
+                        worldItem.transform.SetParent(
+                            _storedWorldItemsRoot.transform,
+                            true);
+                    }
+
+                    if (existingWorldItem != null &&
+                        existingWorldItem != worldItem)
+                    {
+                        RetireMergedWorldItem(existingWorldItem);
+                    }
+                }
+                else
+                {
+                    ClaimWorldItem(
+                        worldItem,
+                        GetSourcePersistentId(
+                            worldItem,
+                            runtimeGenerated),
+                        runtimeGenerated);
+
+                    RetireMergedWorldItem(worldItem);
+                }
+
+                instanceId = availableStack.InstanceId;
+                error = null;
+                return stackResult;
+            }
+
             InventoryOperationResult result = AddFirstAvailable(
                 worldItem.ItemData,
                 1,
@@ -752,17 +944,9 @@ namespace Failsafe.Inventory.Integration
             if (!result.IsSuccess)
                 return result;
 
-            _worldItemsByInstanceId.Add(
+            RegisterWorldItem(
                 addedInstanceId,
-                worldItem);
-
-            RunPersistentObject persistentObject =
-                worldItem.GetComponent<RunPersistentObject>();
-            ClaimWorldItem(
                 worldItem,
-                !runtimeGenerated && persistentObject != null
-                    ? persistentObject.PersistentId
-                    : null,
                 runtimeGenerated);
 
             if (moveToStorage)
@@ -776,6 +960,175 @@ namespace Failsafe.Inventory.Integration
             instanceId = addedInstanceId;
             error = null;
             return result;
+        }
+
+        private bool TryFindAvailableStack(
+            ItemData itemData,
+            out InventoryItemModel stack)
+        {
+            stack = null;
+
+            if (itemData == null ||
+                itemData.InventoryMaxStack <= 1 ||
+                string.IsNullOrWhiteSpace(
+                    itemData.InventoryDefinitionId))
+            {
+                return false;
+            }
+
+            string definitionId = itemData.InventoryDefinitionId.Trim();
+
+            foreach (InventoryPlacement placement in Grid.Placements)
+            {
+                InventoryItemModel item = placement.Item;
+
+                if (item.MaxStack <= 1 ||
+                    item.Quantity >= item.MaxStack ||
+                    !string.Equals(
+                        item.DefinitionId,
+                        definitionId,
+                        StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                stack = item;
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool TryCreateStoredStackRepresentative(
+            ItemData itemData,
+            out Item worldItem,
+            out string error)
+        {
+            worldItem = null;
+
+            if (_storedWorldItemsRoot == null)
+            {
+                error = "Inventory world-item storage is not initialized.";
+                return false;
+            }
+
+            if (itemData == null || itemData.WorldItemPrefab == null)
+            {
+                error = "Stacked inventory item has no World Item Prefab.";
+                return false;
+            }
+
+            worldItem = Instantiate(itemData.WorldItemPrefab);
+            worldItem.name =
+                $"{itemData.WorldItemPrefab.name} (Stack Representative)";
+
+            if (!HasMatchingDefinition(worldItem, itemData))
+            {
+                error =
+                    $"World Item Prefab '{itemData.WorldItemPrefab.name}' " +
+                    $"does not use ItemData '{itemData.name}'.";
+
+                DestroyUnityObject(worldItem.gameObject);
+                worldItem = null;
+                return false;
+            }
+
+            ClaimWorldItem(
+                worldItem,
+                sourcePersistentId: null,
+                runtimeGenerated: true);
+
+            worldItem.ToInventoryState();
+            worldItem.transform.SetParent(
+                _storedWorldItemsRoot.transform,
+                true);
+
+            error = null;
+            return true;
+        }
+
+        private void RegisterWorldItem(
+            string instanceId,
+            Item worldItem,
+            bool runtimeGenerated)
+        {
+            _worldItemsByInstanceId[instanceId] = worldItem;
+
+            ClaimWorldItem(
+                worldItem,
+                GetSourcePersistentId(worldItem, runtimeGenerated),
+                runtimeGenerated);
+        }
+
+        private static string GetSourcePersistentId(
+            Item worldItem,
+            bool runtimeGenerated)
+        {
+            if (runtimeGenerated || worldItem == null)
+                return null;
+
+            RunPersistentObject persistentObject =
+                worldItem.GetComponent<RunPersistentObject>();
+
+            return persistentObject != null
+                ? persistentObject.PersistentId
+                : null;
+        }
+
+        private static void ReleaseWorldItem(Item worldItem)
+        {
+            if (worldItem == null)
+                return;
+
+            InventoryWorldItemOwnership ownership =
+                worldItem.GetComponent<InventoryWorldItemOwnership>();
+
+            ownership?.Release();
+        }
+
+        private static void RetireMergedWorldItem(Item worldItem)
+        {
+            if (worldItem == null)
+                return;
+
+            InventoryWorldItemOwnership ownership =
+                worldItem.GetComponent<InventoryWorldItemOwnership>();
+
+            bool preservePersistentSource =
+                ownership != null &&
+                !ownership.IsRuntimeGenerated &&
+                !string.IsNullOrWhiteSpace(
+                    ownership.SourcePersistentId);
+
+            if (!preservePersistentSource)
+            {
+                DestroyUnityObject(worldItem.gameObject);
+                return;
+            }
+
+            ownership.Release();
+            worldItem.transform.SetParent(null, true);
+            worldItem.ToWorldState();
+            worldItem.gameObject.SetActive(false);
+        }
+
+        private int FindAssignedQuickSlot(string instanceId)
+        {
+            if (QuickSlots == null || string.IsNullOrWhiteSpace(instanceId))
+                return -1;
+
+            for (int index = 0; index < QuickSlots.SlotCount; index++)
+            {
+                if (string.Equals(
+                        QuickSlots.GetAssignedInstanceId(index),
+                        instanceId,
+                        StringComparison.Ordinal))
+                {
+                    return index;
+                }
+            }
+
+            return -1;
         }
 
         private bool TryBuildItemCatalog(out string error)
