@@ -11,7 +11,11 @@ namespace Failsafe.Scripts.EffectSystem
         void Remove(EffectBundle bundle, EffectContext context);
     }
 
-    public sealed class EffectApplicationService : IEffectApplicationService, ITickable, IDisposable
+    public sealed class EffectApplicationService :
+        IEffectApplicationService,
+        IEffectPresentationSource,
+        ITickable,
+        IDisposable
     {
         private readonly List<Effect> _effects = new();
         private readonly Dictionary<EffectKey, Effect> _uniqueEffects = new();
@@ -19,6 +23,10 @@ namespace Failsafe.Scripts.EffectSystem
         private readonly Dictionary<Effect, EffectOrigin> _effectOrigins = new();
 
         private readonly IStatusReactionService _statusReactionService;
+
+        public event Action<EffectPresentation> EffectAdded;
+        public event Action<EffectPresentation> EffectRefreshed;
+        public event Action<EffectPresentation> EffectRemoved;
 
         public EffectApplicationService(IStatusReactionService statusReactionService)
         {
@@ -102,6 +110,20 @@ namespace Failsafe.Scripts.EffectSystem
             }
         }
 
+        public void GetActiveEffects(List<EffectPresentation> results)
+        {
+            if (results == null)
+                throw new ArgumentNullException(nameof(results));
+
+            results.Clear();
+
+            foreach (Effect effect in _effects)
+            {
+                if (_effectOrigins.TryGetValue(effect, out EffectOrigin origin))
+                    results.Add(origin.Presentation);
+            }
+        }
+
         private void RegisterEffect(
             Effect effect,
             EffectDefinition definition,
@@ -114,7 +136,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (!effect.IsUniqueEffect)
             {
-                StartAndStore(effect, definition, targetId);
+                StartAndStore(effect, definition, target, targetId);
                 return;
             }
 
@@ -128,7 +150,18 @@ namespace Failsafe.Scripts.EffectSystem
             if (_uniqueEffects.TryGetValue(key, out var existing))
             {
                 if (existing is IReapplicableEffect reapplicable)
+                {
                     reapplicable.OnReapply(effect);
+
+                    if (_effectOrigins.TryGetValue(existing, out EffectOrigin origin))
+                    {
+                        origin.Presentation.Refresh(
+                            Time.time,
+                            GetRemainingDuration(existing));
+
+                        Notify(EffectRefreshed, origin.Presentation);
+                    }
+                }
 
                 return;
             }
@@ -137,12 +170,21 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (effect.ElapsedAt > Time.time)
             {
+                var presentation = new EffectPresentation(
+                    effect,
+                    definition,
+                    target,
+                    Time.time,
+                    GetRemainingDuration(effect));
+
                 _effects.Add(effect);
                 _uniqueEffects.Add(key, effect);
                 _effectKeys.Add(effect, key);
                 _effectOrigins.Add(
                     effect,
-                    new EffectOrigin(definition, targetId));
+                    new EffectOrigin(definition, targetId, presentation));
+
+                Notify(EffectAdded, presentation);
             }
             else
             {
@@ -153,16 +195,26 @@ namespace Failsafe.Scripts.EffectSystem
         private void StartAndStore(
             Effect effect,
             EffectDefinition definition,
+            GameObject target,
             int targetId)
         {
             effect.Start();
 
             if (effect.ElapsedAt > Time.time)
             {
+                var presentation = new EffectPresentation(
+                    effect,
+                    definition,
+                    target,
+                    Time.time,
+                    GetRemainingDuration(effect));
+
                 _effects.Add(effect);
                 _effectOrigins.Add(
                     effect,
-                    new EffectOrigin(definition, targetId));
+                    new EffectOrigin(definition, targetId, presentation));
+
+                Notify(EffectAdded, presentation);
             }
             else
             {
@@ -200,9 +252,40 @@ namespace Failsafe.Scripts.EffectSystem
         {
             Effect effect = _effects[index];
 
+            if (_effectOrigins.TryGetValue(effect, out EffectOrigin origin))
+                Notify(EffectRemoved, origin.Presentation);
+
             _effects.RemoveAt(index);
             RemoveTracking(effect);
             effect.Dispose();
+        }
+
+        private static float GetRemainingDuration(Effect effect)
+        {
+            if (float.IsPositiveInfinity(effect.ElapsedAt))
+                return Mathf.Infinity;
+
+            return Mathf.Max(0f, effect.ElapsedAt - Time.time);
+        }
+
+        private static void Notify(
+            Action<EffectPresentation> notification,
+            EffectPresentation presentation)
+        {
+            if (notification == null)
+                return;
+
+            foreach (Action<EffectPresentation> subscriber in notification.GetInvocationList())
+            {
+                try
+                {
+                    subscriber(presentation);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                }
+            }
         }
 
         private void RemoveTracking(Effect effect)
@@ -220,13 +303,16 @@ namespace Failsafe.Scripts.EffectSystem
         {
             public readonly EffectDefinition Definition;
             public readonly int TargetId;
+            public readonly EffectPresentation Presentation;
 
             public EffectOrigin(
                 EffectDefinition definition,
-                int targetId)
+                int targetId,
+                EffectPresentation presentation)
             {
                 Definition = definition;
                 TargetId = targetId;
+                Presentation = presentation;
             }
         }
 

@@ -60,6 +60,7 @@ namespace Failsafe.GameSceneServices
 
             builder.RegisterEntryPoint<EffectApplicationService>(Lifetime.Scoped)
                 .As<IEffectApplicationService>()
+                .As<IEffectPresentationSource>()
                 .AsSelf();
             
             builder.RegisterEntryPoint<EarthquakeEnvironmentController>().AsSelf();
