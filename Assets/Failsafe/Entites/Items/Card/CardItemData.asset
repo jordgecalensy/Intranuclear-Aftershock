@@ -12,8 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55443d5422772514c80a38543eaeb7b5, type: 3}
   m_Name: CardItemData
   m_EditorClassIdentifier: 
-  Description: 
-  Type: 4
+  Description: 'USE ONLY IN CASE OF EXTREME NECESSITY Instructions for use: Use this
+    device if you observe a blocked or non-functional door or if you do not have
+    access to the control console.  When used on a door: Take the lockpick key in
+    your hand and insert it into the corresponding slot. When used on the control
+    console: Access the console OS and press the "Open lockpick key compartment"
+    button, after which be sure not to forget to press the "Call an engineer!!!"
+    button.'
+  Type: 0
+  InventoryDefinitionId: 7f8f8578078645599306f0ff999679bd
+  DisplayName: Hacking key
+  InventoryIcon: {fileID: 0}
+  WorldItemPrefab: {fileID: 0}
+  InventoryModelPrefab: {fileID: 919132149155446097, guid: 5b673a6f67bbfc1428fdfa358612d40e, type: 3}
+  InventoryBaseEulerAngles: {x: 90, y: 180, z: 0}
+  InventoryModelOffsetInCells: {x: 0, y: 0, z: 0}
+  InventoryModelScaleMultiplier: 1
+  InventoryModelFitPadding: 0.08
+  InventoryModelMaxDepthInCells: 0.75
+  InventoryWidth: 2
+  InventoryHeight: 1
+  InventoryMaxStack: 1
+  CanRotateInInventory: 1
+  CanAssignQuickSlot: 1
   StartUseDelay: 0
   UseDelay: 0.2
   UsesEnergy: 0

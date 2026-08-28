@@ -12,8 +12,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55443d5422772514c80a38543eaeb7b5, type: 3}
   m_Name: GrenadeItemData
   m_EditorClassIdentifier: 
-  Description: 
+  Description: Do not deploy in confined spaces. After throwing, seek cover immediately.
   Type: 3
+  InventoryDefinitionId: 2c4b3af3c1cc434b9f3e72e3a89b8132
+  DisplayName: Grenade
+  InventoryIcon: {fileID: 0}
+  WorldItemPrefab: {fileID: 6789007698695949001, guid: 6ea84fad65ebb9642ba5bc07ecd5d9aa, type: 3}
+  InventoryModelPrefab: {fileID: 919132149155446097, guid: 63ddd9e3d6a35b748b2e55bdd674c5ed, type: 3}
+  InventoryBaseEulerAngles: {x: 90, y: 0, z: 0}
+  InventoryModelOffsetInCells: {x: 0, y: 0, z: 0}
+  InventoryModelScaleMultiplier: 0.5
+  InventoryModelFitPadding: 0
+  InventoryModelMaxDepthInCells: 2
+  InventoryWidth: 2
+  InventoryHeight: 2
+  InventoryMaxStack: 1
+  CanRotateInInventory: 1
+  CanAssignQuickSlot: 1
   StartUseDelay: 0
   UseDelay: 0.2
   UsesEnergy: 0

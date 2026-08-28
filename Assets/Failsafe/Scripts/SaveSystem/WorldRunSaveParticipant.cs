@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using Failsafe.Inventory.Integration;
 using UnityEngine;
 using VContainer.Unity;
 
@@ -31,6 +32,9 @@ namespace Failsafe.Scripts.SaveSystem
 
         public void Initialize()
         {
+            if (_registration != null)
+                return;
+
             _registration = _participantRegistry.Register(this);
         }
 
@@ -48,7 +52,8 @@ namespace Failsafe.Scripts.SaveSystem
             if (checkpoint.floor == null)
                 checkpoint.floor = new FloorStateData();
 
-            RunPersistentObject[] runtimeObjects = FindRuntimeObjects();
+            RunPersistentObject[] runtimeObjects =
+                FindRuntimeObjects(includeInventoryOwned: false);
             List<PersistentObjectStateData> states =
                 new List<PersistentObjectStateData>(runtimeObjects.Length);
             HashSet<string> persistentIds =
@@ -175,16 +180,40 @@ namespace Failsafe.Scripts.SaveSystem
                 $"Restored {restorePairs.Count} persistent world objects.");
         }
 
-        private static RunPersistentObject[] FindRuntimeObjects()
+        private static RunPersistentObject[] FindRuntimeObjects(
+            bool includeInventoryOwned)
         {
-            return UnityEngine.Object.FindObjectsByType<RunPersistentObject>(
+            RunPersistentObject[] runtimeObjects =
+                UnityEngine.Object.FindObjectsByType<RunPersistentObject>(
                 FindObjectsInactive.Include,
                 FindObjectsSortMode.None);
+
+            if (includeInventoryOwned)
+                return runtimeObjects;
+
+            List<RunPersistentObject> worldOwnedObjects =
+                new List<RunPersistentObject>(runtimeObjects.Length);
+
+            for (int i = 0; i < runtimeObjects.Length; i++)
+            {
+                InventoryWorldItemOwnership ownership =
+                    runtimeObjects[i]
+                        .GetComponentInChildren<
+                            InventoryWorldItemOwnership>(true);
+
+                if (ownership != null && ownership.IsInventoryOwned)
+                    continue;
+
+                worldOwnedObjects.Add(runtimeObjects[i]);
+            }
+
+            return worldOwnedObjects.ToArray();
         }
 
         private static Dictionary<string, RunPersistentObject> IndexRuntimeObjects()
         {
-            RunPersistentObject[] runtimeObjects = FindRuntimeObjects();
+            RunPersistentObject[] runtimeObjects =
+                FindRuntimeObjects(includeInventoryOwned: true);
             Dictionary<string, RunPersistentObject> objectsById =
                 new Dictionary<string, RunPersistentObject>(StringComparer.Ordinal);
 

@@ -329,12 +329,42 @@ namespace Failsafe.Scripts.SaveSystem
                 $"{PlacedIdPrefix}{sceneGuid}:" +
                 $"{globalObjectId.targetObjectId}:" +
                 $"{globalObjectId.targetPrefabId}";
+            bool isPrefabInstance =
+                PrefabUtility.IsPartOfPrefabInstance(this);
+            bool hasIdentityOverride =
+                !isPrefabInstance || HasPersistentIdPrefabOverride();
 
-            if (string.Equals(_persistentId, expectedId, StringComparison.Ordinal))
+            if (string.Equals(
+                    _persistentId,
+                    expectedId,
+                    StringComparison.Ordinal) &&
+                hasIdentityOverride)
+            {
                 return;
+            }
 
             _persistentId = expectedId;
+
+            if (isPrefabInstance)
+            {
+                PrefabUtility.RecordPrefabInstancePropertyModifications(
+                    this);
+            }
+
             EditorUtility.SetDirty(this);
+
+            if (gameObject.scene.isLoaded)
+                EditorSceneManager.MarkSceneDirty(gameObject.scene);
+        }
+
+        private bool HasPersistentIdPrefabOverride()
+        {
+            var serializedObject = new SerializedObject(this);
+            SerializedProperty persistentIdProperty =
+                serializedObject.FindProperty(nameof(_persistentId));
+
+            return persistentIdProperty != null &&
+                   persistentIdProperty.prefabOverride;
         }
 #endif
 

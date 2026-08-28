@@ -1,4 +1,6 @@
 ﻿using Failsafe.Player.Model;
+using Failsafe.Inventory.Core;
+using Failsafe.Inventory.Integration;
 using Failsafe.PlayerMovements;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,6 +13,10 @@ namespace Failsafe.Player.Scripts.Interaction
         [Inject] private PlayerModelParameters _playerModelParameters;
         [Inject] private InputHandler _inputHandler;
         [Inject] private PlayerHandsContainer _playerHandsContainer;
+        [Inject] private PlayerControlBlocker _controlBlocker;
+
+        [Header("Inventory")]
+        [SerializeField] private InventoryRuntimeController _inventory;
 
         [Header("Picking Up")]
         [SerializeField] private float _maxPickupDistance = 5f;
@@ -104,10 +110,23 @@ namespace Failsafe.Player.Scripts.Interaction
             {
                 Debug.LogWarning("PhysicsInteraction: не назначен Grab Point.");
             }
+
+            if (!_inventory)
+            {
+                _inventory =
+                    GetComponentInParent<InventoryRuntimeController>();
+            }
         }
 
         private void Update()
         {
+            if (_controlBlocker != null &&
+                _controlBlocker.IsBlocked(
+                    PlayerControlBlock.Interaction))
+            {
+                return;
+            }
+
             if (_inputHandler.GrabOrDropAction.WasPressedThisFrame())
             {
                 GrabOrDrop();
@@ -197,12 +216,7 @@ namespace Failsafe.Player.Scripts.Interaction
 
             if (itemObject != null)
             {
-                if (_playerHandsContainer.State == PlayerHandsContainer.HandState.ItemInHand)
-                {
-                    _playerHandsContainer.DropItemFromHand();
-                }
-
-                _playerHandsContainer.TryTakeItemInHand(itemObject);
+                TryPickUpItem(itemObject);
                 return;
             }
 
@@ -232,6 +246,111 @@ namespace Failsafe.Player.Scripts.Interaction
             _isPreparingToThrow = false;
             _throwForceMultiplier = 0f;
             _currentCarryingDistance = _carryingDistance;
+        }
+
+        private void TryPickUpItem(Item itemObject)
+        {
+            bool handIsEmpty =
+                _playerHandsContainer.State ==
+                PlayerHandsContainer.HandState.EmptyHands;
+
+            if (_inventory == null || !_inventory.IsInitialized)
+            {
+                if (handIsEmpty)
+                    _playerHandsContainer.TryTakeItemInHand(itemObject);
+
+                return;
+            }
+
+            if (!ItemDataInventoryAdapter.TryValidateView(
+                    itemObject.ItemData,
+                    out string validationError))
+            {
+                if (handIsEmpty)
+                {
+                    Debug.LogWarning(
+                        $"Inventory metadata is not ready for item " +
+                        $"'{itemObject.name}'. Using legacy hand pickup: " +
+                        validationError,
+                        itemObject);
+
+                    _playerHandsContainer.TryTakeItemInHand(itemObject);
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"Item '{itemObject.name}' cannot be stored in the " +
+                        $"inventory: {validationError}",
+                        itemObject);
+                }
+
+                return;
+            }
+
+            if (handIsEmpty)
+            {
+                TryPickUpItemIntoHand(itemObject);
+                return;
+            }
+
+            InventoryOperationResult result =
+                _inventory.StoreWorldItem(
+                    itemObject,
+                    out _,
+                    out string error);
+
+            if (!result.IsSuccess)
+            {
+                Debug.LogWarning(
+                    $"Could not store item '{itemObject.name}' in the " +
+                    $"inventory: {error}",
+                    itemObject);
+            }
+        }
+
+        private void TryPickUpItemIntoHand(Item itemObject)
+        {
+            InventoryOperationResult result =
+                _inventory.RegisterEquippedWorldItem(
+                    itemObject,
+                    out string instanceId,
+                    out string error);
+
+            if (!result.IsSuccess)
+            {
+                Debug.LogWarning(
+                    $"Could not pick up item '{itemObject.name}': {error}",
+                    itemObject);
+
+                return;
+            }
+
+            if (!_playerHandsContainer.TryTakeItemInHand(itemObject))
+            {
+                _inventory.DetachWorldItem(
+                    instanceId,
+                    out _,
+                    out _);
+
+                Debug.LogWarning(
+                    $"Item '{itemObject.name}' was rejected by the hand " +
+                    "system. Inventory registration was rolled back.",
+                    itemObject);
+
+                return;
+            }
+
+            if (itemObject.ItemData.CanAssignQuickSlot &&
+                !_inventory.TryAssignFirstAvailableQuickSlot(
+                    instanceId,
+                    out _,
+                    out string quickSlotError))
+            {
+                Debug.LogWarning(
+                    $"Item '{itemObject.name}' was picked up, but could not " +
+                    $"be assigned to a quick slot: {quickSlotError}",
+                    itemObject);
+            }
         }
 
         private void HandleUseInput()

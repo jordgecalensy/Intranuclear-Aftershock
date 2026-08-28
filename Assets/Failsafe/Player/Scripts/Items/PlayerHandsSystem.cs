@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using Failsafe.Inventory.Integration;
 using Failsafe.Items;
 using Failsafe.Player.Model;
 using Failsafe.Player.View;
@@ -23,6 +24,7 @@ public class PlayerHandsSystem : ITickable
     private readonly PlayerControlBlocker _controlBlocker;
     private readonly PlayerModelParameters _playerModelParameters;
     private readonly Transform _itemThrowOrigin;
+    private readonly IInventoryHeldItemLifecycle _inventoryItemLifecycle;
 
     private UsingState _usingState = UsingState.None;
 
@@ -36,7 +38,8 @@ public class PlayerHandsSystem : ITickable
         InputHandler inputHandler,
         PlayerControlBlocker controlBlocker,
         PlayerModelParameters playerModelParameters,
-        PlayerView playerView)
+        PlayerView playerView,
+        IInventoryHeldItemLifecycle inventoryItemLifecycle)
     {
         _playerHandsContainer = playerHandsContainer;
         _inputHandler = inputHandler;
@@ -45,6 +48,9 @@ public class PlayerHandsSystem : ITickable
         _itemThrowOrigin = playerView != null
             ? playerView.PlayerCamera
             : null;
+        _inventoryItemLifecycle = inventoryItemLifecycle ??
+            throw new ArgumentNullException(
+                nameof(inventoryItemLifecycle));
     }
 
     public void Tick()
@@ -165,10 +171,15 @@ public class PlayerHandsSystem : ITickable
                 return;
 
             case ItemState.Drop:
+                PrepareReleaseToWorld(
+                    _playerHandsContainer.ItemInHand?.ItemObject);
                 _playerHandsContainer.DropItemFromHand();
                 return;
 
             case ItemState.Throw:
+                PrepareReleaseToWorld(
+                    _playerHandsContainer.ItemInHand?.ItemObject);
+
                 float throwForce =
                     _playerModelParameters?.ThrowItemPower != null
                         ? _playerModelParameters.ThrowItemPower.Value
@@ -180,22 +191,47 @@ public class PlayerHandsSystem : ITickable
                 return;
 
             case ItemState.Consume:
-                Item item = _playerHandsContainer.ItemInHand?.ItemObject;
+                Item item =
+                    _playerHandsContainer.ConsumeItemFromHand();
 
-                _playerHandsContainer.SetItemNull();
-
-                if (item != null)
-                    UnityEngine.Object.Destroy(item.gameObject);
+                if (item != null &&
+                    !_inventoryItemLifecycle.TryConsume(
+                        item,
+                        out string consumeError))
+                {
+                    Debug.LogError(
+                        $"Consumed item inventory cleanup failed: " +
+                        consumeError,
+                        item);
+                }
 
                 return;
         }
+    }
+
+    private void PrepareReleaseToWorld(Item item)
+    {
+        if (item == null)
+            return;
+
+        if (_inventoryItemLifecycle.TryReleaseToWorld(
+                item,
+                out string error))
+        {
+            return;
+        }
+
+        Debug.LogError(
+            $"Held item inventory cleanup failed before release: " +
+            error,
+            item);
     }
 }
 
 /// <summary>
 /// Действие с предметом.
 /// Legacy. Оставлено, чтобы старые action-классы не развалились.
-/// Новая логика должна идти через IUsable.Use().
+    /// Новая логика должна идти через IUsable.Use().
 /// </summary>
 public interface IActionWithItem
 {

@@ -221,6 +221,46 @@ public class PlayerHandsContainer
     }
 
     /// <summary>
+    /// Убрать предмет из руки, сохранив его в состоянии инвентаря.
+    /// </summary>
+    public Item StowItemFromHand()
+    {
+        if (_handState == HandState.EmptyHands)
+            return null;
+
+        Item item = _itemInHand.ItemObject;
+
+        item.ToInventoryState();
+        item.transform.SetParent(null, true);
+
+        _itemInHand = null;
+        _handState = HandState.EmptyHands;
+
+        OnItemDropped?.Invoke();
+        return item;
+    }
+
+    /// <summary>
+    /// Извлечь использованный предмет из руки для обработки расходования.
+    /// </summary>
+    public Item ConsumeItemFromHand()
+    {
+        if (_handState == HandState.EmptyHands)
+            return null;
+
+        Item item = _itemInHand.ItemObject;
+
+        item.ToInventoryState();
+        item.transform.SetParent(null, true);
+
+        _itemInHand = null;
+        _handState = HandState.EmptyHands;
+
+        OnItemDropped?.Invoke();
+        return item;
+    }
+
+    /// <summary>
     /// Бросить предмет из руки в направлении камеры.
     /// </summary>
     public Item ThrowItemFromHand(Transform throwOrigin, float throwForce)

@@ -13,8 +13,13 @@ MonoBehaviour:
   m_Name: sickly
   m_EditorClassIdentifier: 
   _id: sickly
-  _displayName: "Болезненный"
-  _description: "Максимальное здоровье уменьшено на 25 единиц"
+  _displayName: "\u0411\u043E\u043B\u0435\u0437\u043D\u0435\u043D\u043D\u044B\u0439"
+  _description: "\u041C\u0430\u043A\u0441\u0438\u043C\u0430\u043B\u044C\u043D\u043E\u0435
+    \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u0435 \u0443\u043C\u0435\u043D\u044C\u0448\u0435\u043D\u043E
+    \u043D\u0430 25 \u0435\u0434\u0438\u043D\u0438\u0446"
   _icon: {fileID: 0}
   _isNegative: 1
   _effectBundle: {fileID: 11400000, guid: 3f88073477ad4e81b82bf064e76dc8c6, type: 2}
+  _startingItems:
+  - _item: {fileID: 11400000, guid: b9d58ced6bd3b5643b1728c886e16f51, type: 2}
+    _quantity: 2
