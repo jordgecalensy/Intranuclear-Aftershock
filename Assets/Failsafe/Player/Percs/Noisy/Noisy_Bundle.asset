@@ -9,13 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 74ee5f7844d8e7c43beaaa15eda4df6e, type: 3}
-  m_Name: CrouchEffectDefinition
+  m_Script: {fileID: 11500000, guid: 908acbdff339ac342b358b32e91caf5d, type: 3}
+  m_Name: Noisy_Bundle
   m_EditorClassIdentifier: 
-  _permanent: 1
-  _duration: 5
-  _multiplier: 1.25
-  _priority: 100
-  _parameters: 03000000
-  _logResolveErrors: 0
-  _logApply: 0
+  _effects:
+  - {fileID: 11400000, guid: 2dc2c34f21394ad46bd376cca7971491, type: 2}

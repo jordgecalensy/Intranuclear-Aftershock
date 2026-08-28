@@ -9,14 +9,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 74ee5f7844d8e7c43beaaa15eda4df6e, type: 3}
-  m_Name: Fast_Effect
+  m_Script: {fileID: 11500000, guid: 29f0e6bf529af474c8747e275873e44e, type: 3}
+  m_Name: FireFigherDamageResistanceEffect
   m_EditorClassIdentifier: 
+  _damageType: 1
+  _multiplier: 0.75
   _permanent: 1
   _duration: 5
-  _operation: 0
-  _modifierValue: 1.1
-  _priority: 100
-  _parameters: 0100000002000000
-  _logResolveErrors: 0
-  _logApply: 0
+  _modifierIdOverride: 
+  _autoAddResistanceComponent: 1
+  _unique: 1
+  _log: 0
