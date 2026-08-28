@@ -1,16 +1,17 @@
 using UnityEngine;
 using Failsafe.PlayerMovements.Controllers;
 using Failsafe.Scripts.EffectSystem;
-using Failsafe.Scripts.EffectSystem.Effects;
 
 namespace Failsafe.PlayerMovements.States
 {
     public class RecoverFromJumpState : BehaviorState
     {
         private readonly Animator _animator;
+        private readonly CharacterController _characterController;
         private readonly PlayerMovementController _pmc;
         private readonly PlayerMovementParameters _p;
-        private readonly IEffectManager _effects;
+        private readonly IEffectApplicationService _effects;
+        private readonly GameplayEffectCatalog _effectCatalog;
 
         private readonly int _landingRecoverId = Animator.StringToHash("LandingRecover");
         private readonly int _recoveringId = Animator.StringToHash("Recovering");
@@ -22,14 +23,18 @@ namespace Failsafe.PlayerMovements.States
 
         public RecoverFromJumpState(
             Animator animator,
+            CharacterController characterController,
             PlayerMovementController pmc,
             PlayerMovementParameters parameters,
-            IEffectManager effects)
+            IEffectApplicationService effects,
+            GameplayEffectCatalog effectCatalog)
         {
             _animator = animator;
+            _characterController = characterController;
             _pmc = pmc;
             _p = parameters;
             _effects = effects;
+            _effectCatalog = effectCatalog;
         }
 
         public override void Enter()
@@ -58,13 +63,17 @@ namespace Failsafe.PlayerMovements.States
             {
                 _slowApplied = true;
 
-                var slow = new SpeedMultiplierEffect(
-                    _pmc,
-                    _p.MainSlowDuration,
+                var context = new EffectContext(
+                    _characterController.gameObject,
+                    _characterController,
+                    _characterController.bounds.center,
+                    Vector3.up,
+                    _characterController.transform.forward,
                     _p.MainSlowMultiplier,
-                    SpeedStackPolicy.Strongest);
+                    _characterController.gameObject,
+                    _p.MainSlowDuration);
 
-                _effects.ApplyEffect(slow);
+                _effects.Apply(_effectCatalog.LandingSlow, context);
             }
         }
 
