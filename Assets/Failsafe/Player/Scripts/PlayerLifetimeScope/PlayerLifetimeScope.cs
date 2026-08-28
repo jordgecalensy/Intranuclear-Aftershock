@@ -221,6 +221,10 @@ namespace Failsafe.Player
                 .AsImplementedInterfaces()
                 .AsSelf();
 
+            builder.Register<Wrench>(Lifetime.Scoped)
+                .AsImplementedInterfaces()
+                .AsSelf();
+
         }
     }
 
