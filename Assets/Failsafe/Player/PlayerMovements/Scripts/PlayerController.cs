@@ -25,7 +25,8 @@ namespace Failsafe.PlayerMovements
         private readonly IRestorableHealth _health;
         private readonly IStamina _stamina;
         private readonly PlayerStaminaController _playerStaminaController;
-        private readonly IEffectManager _effectManager;
+        private readonly IEffectApplicationService _effectApplicationService;
+        private readonly GameplayEffectCatalog _effectCatalog;
         private readonly PlayerMovementController _movementController;
         private readonly PlayerControlBlocker _controlBlocker;
         private readonly PlayerRuntimeParameters _runtimeParameters;
@@ -58,7 +59,8 @@ namespace Failsafe.PlayerMovements
             IRestorableHealth health,
             IStamina stamina,
             PlayerStaminaController playerStaminaController,
-            IEffectManager effectManager,
+            IEffectApplicationService effectApplicationService,
+            GameplayEffectCatalog effectCatalog,
             PlayerMovementController movementController,
             PlayerControlBlocker controlBlocker,
             PlayerRuntimeParameters runtimeParameters)
@@ -71,7 +73,8 @@ namespace Failsafe.PlayerMovements
             _health = health;
             _stamina = stamina;
             _playerStaminaController = playerStaminaController;
-            _effectManager = effectManager;
+            _effectApplicationService = effectApplicationService;
+            _effectCatalog = effectCatalog;
             _movementController = movementController;
             _controlBlocker = controlBlocker;
             _runtimeParameters = runtimeParameters;
@@ -115,8 +118,10 @@ namespace Failsafe.PlayerMovements
 
             _movementShakeProvider = new MovementCameraShakeProvider(
                 _inputHandler,
-                _effectManager,
-                _playerRotationController);
+                _effectApplicationService,
+                _effectCatalog,
+                _playerView.PlayerTransform.gameObject,
+                _playerView.CharacterController);
 
             _health.OnHealthChanged += HandleHealthChanged;
             _health.OnDeath += HandleDeath;
@@ -128,6 +133,10 @@ namespace Failsafe.PlayerMovements
 
         public void Dispose()
         {
+            EffectContext context = CreatePlayerEffectContext();
+            _effectApplicationService.Remove(_effectCatalog.LowHealth, context);
+            _effectApplicationService.Remove(_effectCatalog.Visor, context);
+
             _health.OnHealthChanged -= HandleHealthChanged;
             _health.OnDeath -= HandleDeath;
             _health.OnStateRestored -= HandleHealthStateRestored;
@@ -136,10 +145,6 @@ namespace Failsafe.PlayerMovements
 
         private void HandleHealthChanged(float newValue)
         {
-            float intensity = 0;
-            float duration = 0;
-            float frequency = 0;
-
             float damage = _prevHealth - newValue;
 
             if (damage <= 0f)
@@ -148,40 +153,9 @@ namespace Failsafe.PlayerMovements
                 return;
             }
 
-            switch (damage)
-            {
-                case >= 30f:
-                    intensity = 3.5f;
-                    duration = 0.6f;
-                    frequency = 8f;
-                    break;
-
-                case >= 15f:
-                    intensity = 1.1f;
-                    duration = 0.4f;
-                    frequency = 18f;
-                    break;
-
-                case >= 1f:
-                    intensity = 0.45f;
-                    duration = 0.25f;
-                    frequency = 20f;
-                    break;
-
-                default:
-                    intensity = 0.3f;
-                    duration = 0.2f;
-                    frequency = 20f;
-                    break;
-            }
-
-            _effectManager.ApplyEffect(new CameraShakeEffect(
-                _playerRotationController,
-                intensity,
-                duration,
-                frequency));
-
-            _effectManager.ApplyEffect(new DamageHitEffect(0.25f));
+            _effectApplicationService.Apply(
+                _effectCatalog.DamageFeedback,
+                CreatePlayerEffectContext(damage));
 
             _prevHealth = newValue;
         }
@@ -198,78 +172,9 @@ namespace Failsafe.PlayerMovements
 
         private void HandleEarthquake(float strength, float duration)
         {
-            float intensity = 0;
-            float shakeDuration = 0;
-            float frequency = 0;
-            float shakeFadeInDuration = 0;
-            float shakeFadeOutDuration = 0;
-
-            float slowMultiplier = 1f;
-            float slowDuration = 0;
-            float slowFadeInDuration = 0;
-            float slowFadeOutDuration = 0;
-
-            if (strength > 0)
-                switch (strength)
-                {
-                    case >= 3:
-                        intensity = 4.0f;
-                        shakeDuration = 3.5f;
-                        frequency = 6f;
-                        slowMultiplier = 0.45f;
-                        slowDuration = 3f;
-                        break;
-
-                    case >= 2:
-                        intensity = 2.5f;
-                        shakeDuration = 3f;
-                        frequency = 8f;
-                        slowMultiplier = 0.60f;
-                        slowDuration = 2.5f;
-                        break;
-
-                    case >= 1:
-                        intensity = 1.2f;
-                        shakeDuration = 5f;
-                        frequency = 10f;
-                        slowMultiplier = 0.75f;
-                        slowDuration = 5f;
-                        break;
-
-                    default:
-                        intensity = 0.6f;
-                        shakeDuration = 0.5f;
-                        frequency = 12f;
-                        slowMultiplier = 0.90f;
-                        slowDuration = 1.5f;
-                        break;
-                }
-
-            shakeDuration = Mathf.Max(shakeDuration, duration);
-            slowDuration = Mathf.Max(slowDuration, duration);
-
-            shakeFadeInDuration = Mathf.Min(0.45f, shakeDuration * 0.2f);
-            shakeFadeOutDuration = Mathf.Min(1.2f, shakeDuration * 0.35f);
-
-            slowFadeInDuration = Mathf.Min(0.6f, slowDuration * 0.2f);
-            slowFadeOutDuration = Mathf.Min(1.4f, slowDuration * 0.35f);
-
-            _effectManager.ApplyEffect(
-                new CameraShakeEffect(
-                    _playerRotationController,
-                    intensity,
-                    shakeDuration,
-                    frequency,
-                    shakeFadeInDuration,
-                    shakeFadeOutDuration));
-
-            _effectManager.ApplyEffect(
-                new EarthquakeMovementSlowEffect(
-                    _movementController,
-                    slowMultiplier,
-                    slowDuration,
-                    slowFadeInDuration,
-                    slowFadeOutDuration));
+            _effectApplicationService.Apply(
+                _effectCatalog.PlayerEarthquake,
+                CreatePlayerEffectContext(strength, duration));
         }
 
         private void InitializeStateMachine()
@@ -294,14 +199,14 @@ namespace Failsafe.PlayerMovements
             var crouchState = new CrouchState(_inputHandler, _movementController, _movementParametrs, _playerBodyController, _noiseController, _stepController);
             var slantState = new SlantState(_inputHandler, _movementController, _movementParametrs, _playerBodyController, _playerRotationController, _noiseController, _stepController, _playerView.CharacterController);
             var jumpState = new JumpState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _playerStaminaController);
-            var fallState = new FallState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _noiseController, _effectManager, _health);
+            var fallState = new FallState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _noiseController, _effectApplicationService, _effectCatalog, _health);
             var grabLedgeState = new GrabLedgeState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _playerRotationController, _ledgeController);
             var climbingUpState = new ClimbingUpState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _ledgeController);
             var climbingOnState = new ClimbingOnState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _ledgeController);
             var climbingOverState = new ClimbingOverState(_inputHandler, _playerView.CharacterController, _movementController, _movementParametrs, _ledgeController);
             var ledgeJumpState = new LedgeJumpState(_inputHandler, _playerView.CharacterController, _movementParametrs, _playerView.PlayerCamera);
             var crouchIdleState = new CrouchIdle(_playerBodyController, _movementController, _movementParametrs, _noiseController, _stepController, _playerRotationController);
-            var recoverState = new RecoverFromJumpState(_playerView.Animator, _movementController, _movementParametrs, _effectManager);
+            var recoverState = new RecoverFromJumpState(_playerView.Animator, _playerView.CharacterController, _movementController, _movementParametrs, _effectApplicationService, _effectCatalog);
             var blockState = new BlockState(_movementController);
 
             Func<bool> runStatePrecondition = () => _inputHandler.MoveForward && _inputHandler.SprintTriggered && !_stamina.IsEmpty;
@@ -441,12 +346,16 @@ namespace Failsafe.PlayerMovements
 
     if (currentHpPercent <= 0.2f && !_isLowHpEffectActive)
     {
-        _effectManager.ApplyEffect(new LowHealthEffect());
+        _effectApplicationService.Apply(
+            _effectCatalog.LowHealth,
+            CreatePlayerEffectContext());
         _isLowHpEffectActive = true;
     }
     else if (currentHpPercent > 0.2f && _isLowHpEffectActive)
     {
-        _effectManager.RemoveEffect<LowHealthEffect>();
+        _effectApplicationService.Remove(
+            _effectCatalog.LowHealth,
+            CreatePlayerEffectContext());
         _isLowHpEffectActive = false;
     }
 
@@ -455,19 +364,48 @@ namespace Failsafe.PlayerMovements
         if (!_isVisorEffectActive)
         {
             Debug.Log("Visor включен");
-            _effectManager.ApplyEffect(new VisorEffect(_playerView.PlayerTransform));
+            _effectApplicationService.Apply(
+                _effectCatalog.Visor,
+                CreatePlayerEffectContext());
             _isVisorEffectActive = true;
         }
         else
         {
             Debug.Log("Visor выключен");
-            _effectManager.RemoveEffect<VisorEffect>();
+            _effectApplicationService.Remove(
+                _effectCatalog.Visor,
+                CreatePlayerEffectContext());
             _isVisorEffectActive = false;
         }
 
         _inputHandler.VisorTrigger.ReleaseTrigger();
     }
 }
+
+        private EffectContext CreatePlayerEffectContext(
+            float power = 1f,
+            float durationOverride = 0f)
+        {
+            Transform targetTransform = _playerView.PlayerTransform;
+            GameObject target = targetTransform != null
+                ? targetTransform.gameObject
+                : _playerView.gameObject;
+
+            Collider targetCollider = _playerView.CharacterController;
+            Vector3 point = targetCollider != null
+                ? targetCollider.bounds.center
+                : target.transform.position;
+
+            return new EffectContext(
+                target,
+                targetCollider,
+                point,
+                Vector3.up,
+                target.transform.forward,
+                power,
+                target,
+                durationOverride);
+        }
 
         public void FixedTick()
         {

@@ -2,8 +2,6 @@ using Failsafe.PlayerMovements.Controllers;
 using Failsafe.Scripts.EffectSystem.Effects;
 using Failsafe.Scripts.EffectSystem.Targets;
 using UnityEngine;
-using VContainer;
-using VContainer.Unity;
 
 namespace Failsafe.Scripts.EffectSystem.Definitions
 {
@@ -14,6 +12,9 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
 
         [SerializeField, Range(0.01f, 10f)]
         private float _multiplier = 0.5f;
+
+        [SerializeField]
+        private bool _useContextPowerAsMultiplier;
 
         [SerializeField]
         private SpeedStackPolicy _stackPolicy = SpeedStackPolicy.Strongest;
@@ -28,10 +29,15 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
             if (!TryResolveTarget(context, out var target))
                 return null;
 
+            float duration = context.ResolveDuration(_duration);
+            float multiplier = _useContextPowerAsMultiplier
+                ? Mathf.Clamp(context.Power, 0.01f, 10f)
+                : _multiplier;
+
             return new SpeedMultiplierEffect(
                 target,
-                _duration,
-                _multiplier,
+                duration,
+                multiplier,
                 _stackPolicy);
         }
 
@@ -46,47 +52,7 @@ namespace Failsafe.Scripts.EffectSystem.Definitions
         {
             target = null;
 
-            if (context.TryGet<IMovementSpeedModifierTarget>(out var componentTarget))
-            {
-                target = componentTarget;
-                return true;
-            }
-
-            if (context.HitCollider == null)
-                return false;
-
-            LifetimeScope scope = FindClosestScope(context.HitCollider);
-
-            if (scope == null || scope.Container == null)
-                return false;
-
-            try
-            {
-                target = scope.Container.Resolve<PlayerMovementController>();
-                return target != null;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private static LifetimeScope FindClosestScope(Collider collider)
-        {
-            LifetimeScope scope = collider.GetComponentInParent<LifetimeScope>();
-
-            if (scope != null)
-                return scope;
-
-            if (collider.attachedRigidbody != null)
-            {
-                scope = collider.attachedRigidbody.GetComponentInParent<LifetimeScope>();
-
-                if (scope != null)
-                    return scope;
-            }
-
-            return collider.transform.root.GetComponentInChildren<LifetimeScope>();
+            return EffectTargetResolver.TryResolve(context, out target);
         }
     }
 }

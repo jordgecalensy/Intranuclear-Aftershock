@@ -152,10 +152,6 @@ namespace Failsafe.Player
 
             builder.RegisterEntryPoint<RunAutosaveController>(Lifetime.Scoped);
 
-            builder.RegisterEntryPoint<EffectManager>(Lifetime.Scoped)
-                .As<IEffectManager>()
-                .AsSelf();
-
             builder.RegisterEntryPoint<SelectedEngineerPerkApplier>(Lifetime.Scoped);
 
             builder.Register<PlayerNoiseSignal>(Lifetime.Scoped)
@@ -213,23 +209,7 @@ namespace Failsafe.Player
                 .AsImplementedInterfaces()
                 .AsSelf();
 
-            builder.Register<Stimpack>(Lifetime.Scoped)
-                .AsImplementedInterfaces()
-                .AsSelf();
-
             builder.Register<StasisGun>(Lifetime.Scoped)
-                .AsImplementedInterfaces()
-                .AsSelf();
-
-            builder.Register<Adrenaline>(Lifetime.Scoped)
-                .AsImplementedInterfaces()
-                .AsSelf();
-
-            builder.Register<Tushkan>(Lifetime.Scoped)
-                .AsImplementedInterfaces()
-                .AsSelf();
-
-            builder.Register<Gorilla>(Lifetime.Scoped)
                 .AsImplementedInterfaces()
                 .AsSelf();
 

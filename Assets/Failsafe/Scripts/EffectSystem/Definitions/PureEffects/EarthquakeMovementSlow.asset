@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7a8ae0d09984ca8bb17d1e0fb53c43d, type: 3}
+  m_Name: EarthquakeMovementSlow
+  m_EditorClassIdentifier:
+  _stages:
+  - MinPower: 0.0001
+    Multiplier: 0.9
+    Duration: 1.5
+    FadeInFraction: 0.2
+    FadeInMaximum: 0.6
+    FadeOutFraction: 0.35
+    FadeOutMaximum: 1.4
+  - MinPower: 1
+    Multiplier: 0.75
+    Duration: 5
+    FadeInFraction: 0.2
+    FadeInMaximum: 0.6
+    FadeOutFraction: 0.35
+    FadeOutMaximum: 1.4
+  - MinPower: 2
+    Multiplier: 0.6
+    Duration: 2.5
+    FadeInFraction: 0.2
+    FadeInMaximum: 0.6
+    FadeOutFraction: 0.35
+    FadeOutMaximum: 1.4
+  - MinPower: 3
+    Multiplier: 0.45
+    Duration: 3
+    FadeInFraction: 0.2
+    FadeInMaximum: 0.6
+    FadeOutFraction: 0.35
+    FadeOutMaximum: 1.4
