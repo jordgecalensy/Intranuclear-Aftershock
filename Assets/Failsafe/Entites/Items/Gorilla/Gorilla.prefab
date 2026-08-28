@@ -18,15 +18,15 @@ PrefabInstance:
       objectReference: {fileID: 11400000, guid: 91890bfe14dffaf43a42b5d1c0bbeab4, type: 2}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 37.20951
+      value: -61.868645
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -4.866267
+      value: -4.667
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 78.681076
+      value: 192.70914
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalRotation.w
@@ -56,6 +56,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4770426360797712477, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
+      propertyPath: _playerBlocks
+      value: -1
+      objectReference: {fileID: 0}
     - target: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_Name
       value: Gorilla
@@ -74,6 +78,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6926209734173709426}
+    - targetCorrespondingSourceObject: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 350221862598798066}
   m_SourcePrefab: {fileID: 100100000, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
 --- !u!4 &1424755238278620085 stripped
 Transform:
@@ -108,6 +115,22 @@ CapsuleCollider:
   m_Height: 0.54514647
   m_Direction: 1
   m_Center: {x: 0, y: 0.010248452, z: 0.012106837}
+--- !u!114 &350221862598798066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8348745235215179201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e20ac14d717c464d980692fcc0b4f72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _persistentId: prefab-template
+  _captureTransform: 1
+  _captureRigidbody: 1
+  _requiredOnRestore: 0
 --- !u!1001 &7418581923552543883
 PrefabInstance:
   m_ObjectHideFlags: 0
