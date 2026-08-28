@@ -198,6 +198,8 @@ namespace Failsafe.Player
             builder.RegisterEntryPoint<InventoryQuickSlotEquipService>(
                     Lifetime.Singleton)
                 .AsSelf();
+            builder.RegisterEntryPoint<SelectedEngineerStartingItemGranter>(
+                Lifetime.Scoped);
             builder.RegisterEntryPoint<InventoryRunSaveParticipant>(
                 Lifetime.Singleton);
         }

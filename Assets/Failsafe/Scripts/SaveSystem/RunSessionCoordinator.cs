@@ -62,6 +62,12 @@ namespace Failsafe.Scripts.SaveSystem
                 if (beginResult.Succeeded)
                     return beginResult;
 
+                RunSaveLog.Error(
+                    RunSaveLog.Menu,
+                    $"Failed to create the initial checkpoint after " +
+                    $"loading scene '{firstSceneName}': " +
+                    $"{beginResult.Error}");
+
                 return await ReturnToMainMenuAfterFailureAsync(beginResult.Error);
             }
             finally

@@ -291,6 +291,7 @@ namespace Failsafe.Inventory.Integration
             return TryAddWorldItem(
                 worldItem,
                 moveToStorage: false,
+                runtimeGenerated: false,
                 out instanceId,
                 out error);
         }
@@ -303,8 +304,67 @@ namespace Failsafe.Inventory.Integration
             return TryAddWorldItem(
                 worldItem,
                 moveToStorage: true,
+                runtimeGenerated: false,
                 out instanceId,
                 out error);
+        }
+
+        public InventoryOperationResult CreateAndStoreRuntimeItem(
+            ItemData itemData,
+            out string instanceId,
+            out string error)
+        {
+            instanceId = null;
+
+            if (!EnsureInitialized(out error))
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem);
+            }
+
+            if (itemData == null)
+            {
+                error = "Runtime inventory ItemData is not assigned.";
+
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem);
+            }
+
+            if (itemData.WorldItemPrefab == null)
+            {
+                error =
+                    $"ItemData '{itemData.name}' has no World Item Prefab.";
+
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem);
+            }
+
+            Item runtimeItem = Instantiate(itemData.WorldItemPrefab);
+            runtimeItem.name =
+                $"{itemData.WorldItemPrefab.name} (Starting Item)";
+
+            if (!HasMatchingDefinition(runtimeItem, itemData))
+            {
+                error =
+                    $"World Item Prefab '{itemData.WorldItemPrefab.name}' " +
+                    $"does not use ItemData '{itemData.name}'.";
+                DestroyUnityObject(runtimeItem.gameObject);
+
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidItem);
+            }
+
+            InventoryOperationResult result = TryAddWorldItem(
+                runtimeItem,
+                moveToStorage: true,
+                runtimeGenerated: true,
+                out instanceId,
+                out error);
+
+            if (!result.IsSuccess && runtimeItem != null)
+                DestroyUnityObject(runtimeItem.gameObject);
+
+            return result;
         }
 
         public bool TryGetWorldItem(
@@ -656,6 +716,7 @@ namespace Failsafe.Inventory.Integration
         private InventoryOperationResult TryAddWorldItem(
             Item worldItem,
             bool moveToStorage,
+            bool runtimeGenerated,
             out string instanceId,
             out string error)
         {
@@ -699,10 +760,10 @@ namespace Failsafe.Inventory.Integration
                 worldItem.GetComponent<RunPersistentObject>();
             ClaimWorldItem(
                 worldItem,
-                persistentObject != null
+                !runtimeGenerated && persistentObject != null
                     ? persistentObject.PersistentId
                     : null,
-                runtimeGenerated: false);
+                runtimeGenerated);
 
             if (moveToStorage)
             {

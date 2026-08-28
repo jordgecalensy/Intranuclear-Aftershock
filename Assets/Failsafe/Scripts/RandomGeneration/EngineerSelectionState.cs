@@ -4,6 +4,8 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
 {
     public sealed class EngineerSelectionState
     {
+        private bool _startingItemsGrantClaimed;
+
         public EngineerGenerationResult CurrentOffers { get; private set; }
         public EngineerBuild SelectedEngineer { get; private set; }
 
@@ -14,6 +16,7 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
             CurrentOffers = null;
             SelectedEngineer = selectedEngineer ??
                 throw new ArgumentNullException(nameof(selectedEngineer));
+            _startingItemsGrantClaimed = true;
         }
 
         public void SetOffers(EngineerGenerationResult offers)
@@ -21,6 +24,7 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
             CurrentOffers = offers ??
                 throw new ArgumentNullException(nameof(offers));
             SelectedEngineer = null;
+            _startingItemsGrantClaimed = false;
         }
 
         public bool TrySelectEngineer(int engineerIndex, out string error)
@@ -46,7 +50,17 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
                 return false;
             }
 
+            _startingItemsGrantClaimed = false;
             error = null;
+            return true;
+        }
+
+        public bool TryClaimStartingItemsGrant()
+        {
+            if (SelectedEngineer == null || _startingItemsGrantClaimed)
+                return false;
+
+            _startingItemsGrantClaimed = true;
             return true;
         }
 
@@ -54,6 +68,7 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
         {
             CurrentOffers = null;
             SelectedEngineer = null;
+            _startingItemsGrantClaimed = false;
         }
     }
 }

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Failsafe.Inventory.Presentation
 {
-    internal sealed class InventoryQuickBarPreviewStage3D : IDisposable
+    public sealed class InventoryQuickBarPreviewStage3D : IDisposable
     {
         private const float CameraDistance = 3f;
         private const float CameraNearPlane = 0.01f;

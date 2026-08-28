@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Assets.Failsafe.Scripts.RandomGeneration;
+using Failsafe.Inventory.Core;
+using Failsafe.Inventory.Integration;
+using Failsafe.Inventory.Presentation;
+using Failsafe.Scripts.EffectSystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -32,7 +36,18 @@ namespace Failsafe.UI.MainMenuNew
         [SerializeField, Min(1f)] private float _perkBadgeHeight = 38f;
         [SerializeField, Min(0f)] private float _perkBadgeSpacing = 8f;
 
+        [Header("Starting item preview")]
+        [SerializeField] private RectTransform _equipmentSlotsRoot;
+        [SerializeField, Range(64, 512)]
+        private int _equipmentPreviewTextureHeight = 256;
+        [SerializeField, Range(0f, 0.5f)]
+        private float _equipmentPreviewSlotPadding = 0.08f;
+        [SerializeField] private float _equipmentPreviewModelDepthOffset;
+        [SerializeField] private Color _equipmentQuantityColor = Color.white;
+
         private readonly List<PerkBadge> _perkBadges = new();
+        private readonly List<StartingItemPreviewSlot>
+            _startingItemPreviewSlots = new();
         private Action<int> _selectionRequested;
         private Action _confirmationRequested;
         private int _engineerIndex;
@@ -41,6 +56,8 @@ namespace Failsafe.UI.MainMenuNew
         private bool _selected;
         private bool _interactable;
         private bool _perkBadgeContainerConfigured;
+        private InventoryQuickBarPreviewStage3D _startingItemPreviewStage;
+        private GameObject _startingItemPresenterRoot;
 
         public void Bind(
             EngineerBuild engineer,
@@ -65,6 +82,7 @@ namespace Failsafe.UI.MainMenuNew
                 _nameText.text = engineer?.Name ?? $"Engineer {engineerIndex + 1}";
 
             RenderPerkBadges(engineer);
+            RenderStartingItems(engineer);
 
             if (_budgetText != null)
             {
@@ -117,6 +135,7 @@ namespace Failsafe.UI.MainMenuNew
             _confirmationRequested = null;
             SetSelected(false);
             SetVisiblePerkBadgeCount(0);
+            ClearStartingItemPreview();
             gameObject.SetActive(false);
         }
 
@@ -130,6 +149,7 @@ namespace Failsafe.UI.MainMenuNew
 
             _selectButtonSubscribed = false;
             _confirmButtonSubscribed = false;
+            ClearStartingItemPreview();
         }
 
         private void EnsureButtonsSubscribed()
@@ -291,6 +311,323 @@ namespace Failsafe.UI.MainMenuNew
                 : "Unknown perk";
         }
 
+        private void RenderStartingItems(EngineerBuild engineer)
+        {
+            ClearStartingItemPreview();
+
+            if (!TryEnsureStartingItemPreviewSlots(out string error))
+            {
+                if (!string.IsNullOrWhiteSpace(error))
+                {
+                    Debug.LogWarning(
+                        $"[EngineerSelection] Starting item preview is " +
+                        $"unavailable on '{name}': {error}",
+                        this);
+                }
+
+                return;
+            }
+
+            List<PerkStartingItemGrant> grants =
+                CollectStartingItemGrants(engineer);
+
+            if (grants.Count == 0)
+                return;
+
+            int visibleCount = Mathf.Min(
+                grants.Count,
+                _startingItemPreviewSlots.Count);
+
+            try
+            {
+                _startingItemPreviewStage =
+                    new InventoryQuickBarPreviewStage3D(
+                        GetInstanceID(),
+                        _startingItemPreviewSlots.Count,
+                        gameObject.layer,
+                        _equipmentPreviewTextureHeight,
+                        _equipmentPreviewSlotPadding);
+
+                _startingItemPresenterRoot = new GameObject(
+                    $"Starting Item Preview Models [{GetInstanceID()}]");
+                _startingItemPresenterRoot.hideFlags = HideFlags.DontSave;
+                _startingItemPresenterRoot.layer =
+                    _startingItemPreviewStage.ItemLayer;
+
+                _startingItemPreviewStage.AttachPresenterRoot(
+                    _startingItemPresenterRoot.transform);
+
+                ApplyStartingItemPreviewAtlas();
+
+                for (int slotIndex = 0;
+                     slotIndex < visibleCount;
+                     slotIndex++)
+                {
+                    RenderStartingItem(
+                        slotIndex,
+                        grants[slotIndex]);
+                }
+
+                _startingItemPreviewStage.SetVisible(true);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning(
+                    $"[EngineerSelection] Could not build starting item " +
+                    $"preview on '{name}': {exception.Message}",
+                    this);
+                ClearStartingItemPreview();
+                return;
+            }
+
+            if (grants.Count > _startingItemPreviewSlots.Count)
+            {
+                Debug.LogWarning(
+                    $"[EngineerSelection] Engineer '{engineer?.Name}' has " +
+                    $"{grants.Count} starting item entries, but the card " +
+                    $"contains only {_startingItemPreviewSlots.Count} slots.",
+                    this);
+            }
+        }
+
+        private static List<PerkStartingItemGrant>
+            CollectStartingItemGrants(EngineerBuild engineer)
+        {
+            var result = new List<PerkStartingItemGrant>();
+
+            if (engineer?.Perks == null)
+                return result;
+
+            for (int perkIndex = 0;
+                 perkIndex < engineer.Perks.Count;
+                 perkIndex++)
+            {
+                PerkStartingItemGrant[] grants =
+                    engineer.Perks[perkIndex]?.Definition?.StartingItems;
+
+                if (grants == null)
+                    continue;
+
+                for (int grantIndex = 0;
+                     grantIndex < grants.Length;
+                     grantIndex++)
+                {
+                    PerkStartingItemGrant grant = grants[grantIndex];
+
+                    if (grant?.Item != null)
+                        result.Add(grant);
+                }
+            }
+
+            return result;
+        }
+
+        private bool TryEnsureStartingItemPreviewSlots(out string error)
+        {
+            if (_startingItemPreviewSlots.Count > 0)
+            {
+                error = null;
+                return true;
+            }
+
+            if (_equipmentSlotsRoot == null)
+                _equipmentSlotsRoot = FindEquipmentSlotsRoot();
+
+            if (_equipmentSlotsRoot == null)
+            {
+                error = "EquipmentGrid was not found below the card.";
+                return false;
+            }
+
+            for (int childIndex = 0;
+                 childIndex < _equipmentSlotsRoot.childCount;
+                 childIndex++)
+            {
+                if (_equipmentSlotsRoot.GetChild(childIndex) is not
+                    RectTransform slotRoot)
+                {
+                    continue;
+                }
+
+                _startingItemPreviewSlots.Add(
+                    CreateStartingItemPreviewSlot(slotRoot, childIndex));
+            }
+
+            if (_startingItemPreviewSlots.Count == 0)
+            {
+                error = "EquipmentGrid contains no UI slots.";
+                return false;
+            }
+
+            error = null;
+            return true;
+        }
+
+        private RectTransform FindEquipmentSlotsRoot()
+        {
+            RectTransform[] descendants =
+                GetComponentsInChildren<RectTransform>(true);
+
+            for (int index = 0; index < descendants.Length; index++)
+            {
+                RectTransform candidate = descendants[index];
+
+                if (candidate != null &&
+                    candidate != transform &&
+                    candidate.name == "EquipmentGrid")
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        private StartingItemPreviewSlot CreateStartingItemPreviewSlot(
+            RectTransform slotRoot,
+            int slotIndex)
+        {
+            var previewObject = new GameObject(
+                $"StartingItemPreview {slotIndex + 1}",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(RawImage));
+            previewObject.layer = gameObject.layer;
+
+            RectTransform previewRect =
+                previewObject.GetComponent<RectTransform>();
+            previewRect.SetParent(slotRoot, false);
+            previewRect.anchorMin = Vector2.zero;
+            previewRect.anchorMax = Vector2.one;
+            previewRect.anchoredPosition = Vector2.zero;
+            previewRect.sizeDelta = new Vector2(-8f, -8f);
+
+            RawImage preview = previewObject.GetComponent<RawImage>();
+            preview.raycastTarget = false;
+            preview.color = Color.white;
+            preview.gameObject.SetActive(false);
+
+            var quantityObject = new GameObject(
+                "Quantity",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(TextMeshProUGUI));
+            quantityObject.layer = gameObject.layer;
+
+            RectTransform quantityRect =
+                quantityObject.GetComponent<RectTransform>();
+            quantityRect.SetParent(slotRoot, false);
+            quantityRect.anchorMin = Vector2.zero;
+            quantityRect.anchorMax = Vector2.one;
+            quantityRect.anchoredPosition = Vector2.zero;
+            quantityRect.sizeDelta = new Vector2(-6f, -4f);
+
+            TextMeshProUGUI quantity =
+                quantityObject.GetComponent<TextMeshProUGUI>();
+            quantity.font = _perksText != null ? _perksText.font : null;
+            quantity.fontSize = 18f;
+            quantity.alignment = TextAlignmentOptions.BottomRight;
+            quantity.color = _equipmentQuantityColor;
+            quantity.raycastTarget = false;
+            quantity.text = string.Empty;
+            quantity.gameObject.SetActive(false);
+
+            return new StartingItemPreviewSlot(preview, quantity);
+        }
+
+        private void ApplyStartingItemPreviewAtlas()
+        {
+            for (int slotIndex = 0;
+                 slotIndex < _startingItemPreviewSlots.Count;
+                 slotIndex++)
+            {
+                StartingItemPreviewSlot slot =
+                    _startingItemPreviewSlots[slotIndex];
+
+                slot.Preview.texture = _startingItemPreviewStage.Texture;
+                slot.Preview.material = null;
+                slot.Preview.uvRect =
+                    _startingItemPreviewStage.GetSlotUvRect(slotIndex);
+            }
+        }
+
+        private void RenderStartingItem(
+            int slotIndex,
+            PerkStartingItemGrant grant)
+        {
+            StartingItemPreviewSlot slot =
+                _startingItemPreviewSlots[slotIndex];
+
+            if (!ItemDataInventoryAdapter.TryCreateViewDefinition(
+                    grant.Item,
+                    out InventoryModelViewDefinition definition,
+                    out string error))
+            {
+                Debug.LogWarning(
+                    $"[EngineerSelection] Could not preview starting " +
+                    $"item '{grant.Item.name}': {error}",
+                    grant.Item);
+                return;
+            }
+
+            var viewObject = new GameObject(
+                $"Starting Item [{grant.Item.name}]");
+            viewObject.layer = _startingItemPreviewStage.ItemLayer;
+            viewObject.transform.SetParent(
+                _startingItemPresenterRoot.transform,
+                false);
+
+            InventoryItemView3D view =
+                viewObject.AddComponent<InventoryItemView3D>();
+            view.Initialize(
+                definition,
+                new InventoryGridSize(1, 1),
+                0.84f);
+
+            if (!_startingItemPreviewStage.TryApplySlotPose(
+                    slotIndex,
+                    view.transform,
+                    1f,
+                    _equipmentPreviewModelDepthOffset,
+                    out error))
+            {
+                throw new InvalidOperationException(error);
+            }
+
+            slot.Preview.gameObject.SetActive(true);
+            slot.Quantity.text = grant.Quantity > 1
+                ? grant.Quantity.ToString()
+                : string.Empty;
+            slot.Quantity.gameObject.SetActive(grant.Quantity > 1);
+        }
+
+        private void ClearStartingItemPreview()
+        {
+            for (int slotIndex = 0;
+                 slotIndex < _startingItemPreviewSlots.Count;
+                 slotIndex++)
+            {
+                StartingItemPreviewSlot slot =
+                    _startingItemPreviewSlots[slotIndex];
+
+                if (slot.Preview != null)
+                {
+                    slot.Preview.texture = null;
+                    slot.Preview.gameObject.SetActive(false);
+                }
+
+                if (slot.Quantity != null)
+                {
+                    slot.Quantity.text = string.Empty;
+                    slot.Quantity.gameObject.SetActive(false);
+                }
+            }
+
+            _startingItemPreviewStage?.Dispose();
+            _startingItemPreviewStage = null;
+            _startingItemPresenterRoot = null;
+        }
+
         private sealed class PerkBadge
         {
             public PerkBadge(
@@ -306,6 +643,20 @@ namespace Failsafe.UI.MainMenuNew
             public GameObject Root { get; }
             public Image Background { get; }
             public TMP_Text Label { get; }
+        }
+
+        private sealed class StartingItemPreviewSlot
+        {
+            public StartingItemPreviewSlot(
+                RawImage preview,
+                TMP_Text quantity)
+            {
+                Preview = preview;
+                Quantity = quantity;
+            }
+
+            public RawImage Preview { get; }
+            public TMP_Text Quantity { get; }
         }
     }
 }
