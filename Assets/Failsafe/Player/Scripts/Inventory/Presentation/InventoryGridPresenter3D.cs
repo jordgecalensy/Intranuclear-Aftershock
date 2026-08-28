@@ -20,6 +20,7 @@ namespace Failsafe.Inventory.Presentation
         private InventoryRobotPresentationLayout3D _manualGridLayout;
         private bool _highlightErrorLogged;
         private bool _footprintErrorLogged;
+        private bool _quantityTextErrorLogged;
         private string _selectedInstanceId;
 
         public void Initialize(
@@ -225,6 +226,7 @@ namespace Failsafe.Inventory.Presentation
             _manualGridLayout = layout;
             _highlightErrorLogged = false;
             _footprintErrorLogged = false;
+            _quantityTextErrorLogged = false;
 
             if (_manualGridLayout == null || _grid == null)
                 return;
@@ -268,6 +270,7 @@ namespace Failsafe.Inventory.Presentation
             _manualGridLayout = null;
             _highlightErrorLogged = false;
             _footprintErrorLogged = false;
+            _quantityTextErrorLogged = false;
             IsInitialized = false;
         }
 
@@ -280,6 +283,7 @@ namespace Failsafe.Inventory.Presentation
         {
             _grid.ItemPlaced += HandleItemPlaced;
             _grid.PlacementChanged += HandlePlacementChanged;
+            _grid.QuantityChanged += HandleQuantityChanged;
             _grid.ItemRemoved += HandleItemRemoved;
         }
 
@@ -287,6 +291,7 @@ namespace Failsafe.Inventory.Presentation
         {
             _grid.ItemPlaced -= HandleItemPlaced;
             _grid.PlacementChanged -= HandlePlacementChanged;
+            _grid.QuantityChanged -= HandleQuantityChanged;
             _grid.ItemRemoved -= HandleItemRemoved;
         }
 
@@ -317,6 +322,11 @@ namespace Failsafe.Inventory.Presentation
             }
 
             ApplyPlacement(view, placement);
+        }
+
+        private void HandleQuantityChanged(InventoryItemModel item)
+        {
+            TrySyncItemQuantity(item);
         }
 
         private void HandleItemRemoved(string instanceId)
@@ -475,7 +485,33 @@ namespace Failsafe.Inventory.Presentation
                     true);
             }
 
+            if (shown)
+                TrySyncItemQuantity(placement.Item);
+
             return shown;
+        }
+
+        private bool TrySyncItemQuantity(InventoryItemModel item)
+        {
+            if (_manualGridLayout == null || item == null)
+                return false;
+
+            bool updated = _manualGridLayout.SetItemFootprintQuantity(
+                item.InstanceId,
+                item.Quantity);
+
+            if (!updated && !_quantityTextErrorLogged)
+            {
+                Debug.LogWarning(
+                    "Inventory quantity text is unavailable. Add a " +
+                    "TextMeshPro component at the configured Quantity " +
+                    "path inside the item footprint visual template.",
+                    this);
+
+                _quantityTextErrorLogged = true;
+            }
+
+            return updated;
         }
 
         private void DestroyAllViews()

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Failsafe.Inventory.Core;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -372,6 +373,61 @@ namespace Failsafe.Inventory.Presentation.Tests
         }
 
         [Test]
+        public void ItemQuantityText_TracksStackQuantityAndHidesForOne()
+        {
+            InventoryGridModel grid = new InventoryGridModel();
+            InventoryItemModel item = CreateItem(
+                "quantity",
+                1,
+                1,
+                quantity: 1,
+                maxStack: 5);
+            FakeResolver resolver = new FakeResolver();
+            resolver.Register(item.InstanceId, CreateDefinition());
+
+            Assert.That(
+                grid.TryPlace(
+                    item,
+                    new InventoryGridPosition(0, 0)).IsSuccess,
+                Is.True);
+
+            InventoryGridPresenter3D presenter = CreatePresenter();
+            presenter.Initialize(
+                grid,
+                new InventoryGridSpace3D(6, 5, 1f),
+                resolver);
+
+            InventoryRobotPresentationLayout3D layout =
+                CreateFootprintLayout(6, 5);
+
+            presenter.SetManualGridLayout(layout);
+
+            Assert.That(
+                layout.TryGetItemFootprintVisual(
+                    item.InstanceId,
+                    out RectTransform visualRoot),
+                Is.True);
+
+            TMP_Text quantityText = visualRoot.Find("Quantity")
+                .GetComponent<TMP_Text>();
+
+            Assert.That(quantityText.gameObject.activeSelf, Is.False);
+            Assert.That(quantityText.text, Is.Empty);
+
+            Assert.That(
+                grid.TryAddQuantity(item.InstanceId, 2).IsSuccess,
+                Is.True);
+            Assert.That(quantityText.gameObject.activeSelf, Is.True);
+            Assert.That(quantityText.text, Is.EqualTo("3"));
+
+            Assert.That(
+                grid.TryRemoveQuantity(item.InstanceId, 2).IsSuccess,
+                Is.True);
+            Assert.That(quantityText.gameObject.activeSelf, Is.False);
+            Assert.That(quantityText.text, Is.Empty);
+        }
+
+        [Test]
         public void Initialize_CreatesSixByFivePrototypeGridVisual()
         {
             InventoryGridPresenter3D presenter = CreatePresenter();
@@ -598,6 +654,14 @@ namespace Failsafe.Inventory.Presentation.Tests
 
             selectedState.transform.SetParent(template, false);
             selectedState.SetActive(false);
+
+            GameObject quantityTextObject = new GameObject(
+                "Quantity",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(TextMeshProUGUI));
+
+            quantityTextObject.transform.SetParent(template, false);
             template.gameObject.SetActive(false);
 
             SetPrivateField(layout, "_gridCellsRoot", cellsRoot);
@@ -657,12 +721,16 @@ namespace Failsafe.Inventory.Presentation.Tests
         private static InventoryItemModel CreateItem(
             string instanceId,
             int width,
-            int height)
+            int height,
+            int quantity = 1,
+            int maxStack = 1)
         {
             return new InventoryItemModel(
                 instanceId,
                 $"definition-{instanceId}",
-                new InventoryGridSize(width, height));
+                new InventoryGridSize(width, height),
+                quantity,
+                maxStack);
         }
 
         private static void AssertVector(Vector3 actual, Vector3 expected)

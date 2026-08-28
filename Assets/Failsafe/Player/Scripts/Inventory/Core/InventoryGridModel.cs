@@ -311,39 +311,14 @@ namespace Failsafe.Inventory.Core
             if (!TryGetPlacementInternal(targetInstanceId, out InventoryPlacement target, out InventoryOperationResult targetFailure))
                 return targetFailure;
 
-            if (string.Equals(sourceInstanceId, targetInstanceId, StringComparison.Ordinal))
-            {
-                return InventoryOperationResult.Failure(
-                    InventoryFailureReason.IncompatibleItems,
-                    source.Item.Quantity);
-            }
+            InventoryOperationResult validation = ValidateMerge(
+                source,
+                target);
 
-            if (source.Item.MaxStack <= 1 || target.Item.MaxStack <= 1)
-            {
-                return InventoryOperationResult.Failure(
-                    InventoryFailureReason.StackingNotAllowed,
-                    source.Item.Quantity);
-            }
-
-            if (!string.Equals(
-                    source.Item.DefinitionId,
-                    target.Item.DefinitionId,
-                    StringComparison.Ordinal) ||
-                source.Item.MaxStack != target.Item.MaxStack)
-            {
-                return InventoryOperationResult.Failure(
-                    InventoryFailureReason.IncompatibleItems,
-                    source.Item.Quantity);
-            }
+            if (!validation.IsSuccess)
+                return validation;
 
             int capacity = target.Item.MaxStack - target.Item.Quantity;
-
-            if (capacity <= 0)
-            {
-                return InventoryOperationResult.Failure(
-                    InventoryFailureReason.StackFull,
-                    source.Item.Quantity);
-            }
 
             int transferred = Math.Min(capacity, source.Item.Quantity);
 
@@ -360,6 +335,79 @@ namespace Failsafe.Inventory.Core
                 QuantityChanged?.Invoke(source.Item);
 
             return InventoryOperationResult.Success(transferred, remaining);
+        }
+
+        public InventoryOperationResult ValidateMerge(
+            string sourceInstanceId,
+            string targetInstanceId)
+        {
+            if (!TryGetPlacementInternal(
+                    sourceInstanceId,
+                    out InventoryPlacement source,
+                    out InventoryOperationResult sourceFailure))
+            {
+                return sourceFailure;
+            }
+
+            if (!TryGetPlacementInternal(
+                    targetInstanceId,
+                    out InventoryPlacement target,
+                    out InventoryOperationResult targetFailure))
+            {
+                return targetFailure;
+            }
+
+            return ValidateMerge(source, target);
+        }
+
+        public InventoryOperationResult TryAddQuantity(
+            string instanceId,
+            int amount)
+        {
+            if (!TryGetPlacementInternal(
+                    instanceId,
+                    out InventoryPlacement placement,
+                    out InventoryOperationResult failure))
+            {
+                return failure;
+            }
+
+            if (amount <= 0)
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.InvalidQuantity,
+                    placement.Item.Quantity);
+            }
+
+            if (placement.Item.MaxStack <= 1)
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.StackingNotAllowed,
+                    placement.Item.Quantity);
+            }
+
+            int capacity = placement.Item.MaxStack - placement.Item.Quantity;
+
+            if (capacity <= 0)
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.StackFull,
+                    placement.Item.Quantity);
+            }
+
+            if (amount > capacity)
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.StackFull,
+                    placement.Item.Quantity);
+            }
+
+            placement.Item.AddQuantity(amount);
+            QuantityChanged?.Invoke(placement.Item);
+
+            return InventoryOperationResult.Success(
+                amount,
+                placement.Item.Quantity);
         }
 
         public InventoryOperationResult TryRemoveQuantity(
@@ -481,6 +529,49 @@ namespace Failsafe.Inventory.Core
 
             failure = InventoryOperationResult.Success();
             return true;
+        }
+
+        private static InventoryOperationResult ValidateMerge(
+            InventoryPlacement source,
+            InventoryPlacement target)
+        {
+            if (source == target || string.Equals(
+                    source.Item.InstanceId,
+                    target.Item.InstanceId,
+                    StringComparison.Ordinal))
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.IncompatibleItems,
+                    source.Item.Quantity);
+            }
+
+            if (source.Item.MaxStack <= 1 || target.Item.MaxStack <= 1)
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.StackingNotAllowed,
+                    source.Item.Quantity);
+            }
+
+            if (!string.Equals(
+                    source.Item.DefinitionId,
+                    target.Item.DefinitionId,
+                    StringComparison.Ordinal) ||
+                source.Item.MaxStack != target.Item.MaxStack)
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.IncompatibleItems,
+                    source.Item.Quantity);
+            }
+
+            if (target.Item.Quantity >= target.Item.MaxStack)
+            {
+                return InventoryOperationResult.Failure(
+                    InventoryFailureReason.StackFull,
+                    source.Item.Quantity);
+            }
+
+            return InventoryOperationResult.Success(
+                remainingQuantity: source.Item.Quantity);
         }
 
         private bool CanOccupy(

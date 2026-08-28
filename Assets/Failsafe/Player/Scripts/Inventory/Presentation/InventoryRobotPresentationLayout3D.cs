@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Failsafe.Inventory.Core;
+using TMPro;
 using UnityEngine;
 
 namespace Failsafe.Inventory.Presentation
@@ -24,6 +25,8 @@ namespace Failsafe.Inventory.Presentation
         [SerializeField] private RectTransform _itemFootprintVisualTemplate;
         [SerializeField] private string _itemSelectedStatePath =
             "Selected";
+        [SerializeField] private string _itemQuantityTextPath =
+            "Quantity";
 
         [Header("Open Quick Slots")]
         [SerializeField] private RectTransform _quickSlotsRoot;
@@ -420,6 +423,29 @@ namespace Failsafe.Inventory.Presentation
             return true;
         }
 
+        public bool SetItemFootprintQuantity(
+            string instanceId,
+            int quantity)
+        {
+            if (quantity <= 0 ||
+                string.IsNullOrWhiteSpace(instanceId) ||
+                !_itemFootprintVisuals.TryGetValue(
+                    instanceId,
+                    out ItemFootprintVisual visual) ||
+                visual.QuantityText == null)
+            {
+                return false;
+            }
+
+            bool showQuantity = quantity > 1;
+            visual.QuantityText.text = showQuantity
+                ? quantity.ToString()
+                : string.Empty;
+
+            visual.QuantityText.gameObject.SetActive(showQuantity);
+            return true;
+        }
+
         public bool SetItemFootprintVisible(
             string instanceId,
             bool visible)
@@ -586,9 +612,31 @@ namespace Failsafe.Inventory.Presentation
             }
 
             selectedState.gameObject.SetActive(false);
+
+            TMP_Text quantityText = null;
+
+            if (!string.IsNullOrWhiteSpace(_itemQuantityTextPath))
+            {
+                Transform quantityTextTransform = visualRoot.Find(
+                    _itemQuantityTextPath);
+
+                if (quantityTextTransform != null)
+                {
+                    quantityText = quantityTextTransform
+                        .GetComponent<TMP_Text>();
+                }
+            }
+
+            if (quantityText != null)
+            {
+                quantityText.text = string.Empty;
+                quantityText.gameObject.SetActive(false);
+            }
+
             visual = new ItemFootprintVisual(
                 visualRoot,
-                selectedState);
+                selectedState,
+                quantityText);
 
             _itemFootprintVisuals[instanceId] = visual;
             error = null;
@@ -971,13 +1019,16 @@ namespace Failsafe.Inventory.Presentation
         {
             public RectTransform Root { get; }
             public Transform SelectedState { get; }
+            public TMP_Text QuantityText { get; }
 
             public ItemFootprintVisual(
                 RectTransform root,
-                Transform selectedState)
+                Transform selectedState,
+                TMP_Text quantityText)
             {
                 Root = root;
                 SelectedState = selectedState;
+                QuantityText = quantityText;
             }
         }
     }
