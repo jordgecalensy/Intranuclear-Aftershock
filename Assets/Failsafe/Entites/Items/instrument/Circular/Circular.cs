@@ -6,47 +6,59 @@ using VContainer.Unity;
 
 public class Circular : IUsable, ITickable
 {
+    [Inject] Camera _playerCam;
+
     private Item _item;
     private CircularData _data;
-    private float _fireRateTimer = 0;
-    private IEffectApplicationService _effect;
+    private IEffectApplicationService _effects;
+    private InputHandler _inputHandler;
 
-    [Inject] Camera _playerCam;
-    public Circular(CircularData data, IEffectApplicationService effects)
+    private float _durationWork = 0;
+
+    public Circular(
+        CircularData data, 
+        IEffectApplicationService effects, 
+        InputHandler inputHandler)
     {
         _data = data;
-        _effect = effects;
+        _effects = effects;
+        _inputHandler = inputHandler;
     }
     public void Tick()
     {
-        if (_fireRateTimer < 0)
-            _fireRateTimer = 0;
-        if (_fireRateTimer > _data.CircularStages[_data.CircularStages.Count - 1].Duration)
-            _fireRateTimer = _data.CircularStages[_data.CircularStages.Count - 1].Duration;
+        if (_durationWork < 0)
+            _durationWork = 0;
+        if (_durationWork > _data.CircularStages[_data.CircularStages.Count - 1].StageDuration)
+            _durationWork = _data.CircularStages[_data.CircularStages.Count - 1].StageDuration;
 
-        if (Input.GetMouseButton(0) && _fireRateTimer < _data.CircularStages[_data.CircularStages.Count - 1].Duration)
+        if (_inputHandler.AttackTrigger.IsTriggered && _durationWork < _data.CircularStages[_data.CircularStages.Count - 1].StageDuration)
         {
-            _fireRateTimer += Time.deltaTime;
+            _durationWork += Time.deltaTime * _data.TimeChargeModifier;
         }
-        else if (!Input.GetMouseButton(0) && _fireRateTimer > 0)
+        else if (!_inputHandler.AttackTrigger.IsTriggered && _durationWork > 0)
         {
-            _fireRateTimer -= Time.deltaTime;
+            _durationWork -= Time.deltaTime / _data.TimeDischargeModifier;
         }
-        Debug.Log("[Circular]  _fireRateTimer " + (int)_fireRateTimer);
+        //Debug.Log("[Circular]  _fireRateTimer " + (int)_durationWork);
     }
     public ItemUseResult Use()
     {
-        Wrrr(Raycast());
+        TryDamageDealing(Raycast());
         return new ItemUseResult() { ItemStateAfterUse = ItemState.Hold, UsageType = UsageType.HoldToUse };
     }
-    private void Wrrr(RaycastHit hit)
+    private void TryDamageDealing(RaycastHit hit)
     {
         if (hit.collider == null) return;
+        if (_effects == null)
+        {
+            Debug.LogError("[Circular] IEffectApplicationService is null.");
+            return;
+        }
 
         EffectBundle bundle = new EffectBundle();
         foreach (var CircularStage in _data.CircularStages)
         {
-            if(_fireRateTimer <= CircularStage.Duration)
+            if(_durationWork <= CircularStage.StageDuration)
             {
                 if (CircularStage.EffectBundle == null)
                 {
@@ -70,7 +82,7 @@ public class Circular : IUsable, ITickable
                 hit.normal,
                 direction,
                 1f);
-        _effect.Apply(bundle, context);
+        _effects.Apply(bundle, context);
     }
     private RaycastHit Raycast()
     {
@@ -78,7 +90,7 @@ public class Circular : IUsable, ITickable
 
         LayerMask mask = _item.ItemData.UseMask;
         RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, _data.MaxDistance, mask))
+        if (Physics.Raycast(ray, out hit, _item.ItemData.UseRange, mask))
         {
             Debug.Log("Object ahead: " + hit.collider.name);
             return hit;

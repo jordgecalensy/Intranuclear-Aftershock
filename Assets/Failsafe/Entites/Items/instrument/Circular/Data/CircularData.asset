@@ -12,11 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ae2624c0a710c040b8ee6e93a17974a, type: 3}
   m_Name: CircularData
   m_EditorClassIdentifier: 
-  MaxDistance: 3
-  CircularStages:
-  - Duration: 2
+  _circularStages:
+  - StageDuration: 2
     EffectBundle: {fileID: 11400000, guid: ca544775ee7530c4788664f47e6defca, type: 2}
-  - Duration: 5
+  - StageDuration: 5
     EffectBundle: {fileID: 11400000, guid: 40ec21c0b0285024d9cb6c57a0210a65, type: 2}
-  - Duration: 6
+  - StageDuration: 6
     EffectBundle: {fileID: 11400000, guid: 801b23901513e394f91e092a46ab4db3, type: 2}
