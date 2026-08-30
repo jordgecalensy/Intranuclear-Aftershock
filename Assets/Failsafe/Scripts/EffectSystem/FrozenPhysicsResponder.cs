@@ -93,7 +93,7 @@ namespace Failsafe.Scripts.EffectSystem
             ApplyRigidbodyFrozenState();
 
             if (_log)
-                Debug.Log($"[FrozenPhysicsResponder] {name}: frozen physics ON", this);
+                EffectLog.Info(EffectLog.Physics, $"[FrozenPhysicsResponder] {name}: frozen physics ON", this);
         }
 
         public void ClearFrozen(GameObject source)
@@ -140,7 +140,7 @@ namespace Failsafe.Scripts.EffectSystem
             _clearRoutine = null;
 
             if (_log)
-                Debug.Log($"[FrozenPhysicsResponder] {name}: frozen physics OFF after upright recovery", this);
+                EffectLog.Info(EffectLog.Physics, $"[FrozenPhysicsResponder] {name}: frozen physics OFF after upright recovery", this);
         }
 
         private void ClearFrozenImmediate()
@@ -160,7 +160,7 @@ namespace Failsafe.Scripts.EffectSystem
             _clearRoutine = null;
 
             if (_log)
-                Debug.Log($"[FrozenPhysicsResponder] {name}: frozen physics OFF", this);
+                EffectLog.Info(EffectLog.Physics, $"[FrozenPhysicsResponder] {name}: frozen physics OFF", this);
         }
 
         private void CancelRecoveryAndRestoreBaseState()
@@ -226,7 +226,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Physics,
                     $"[FrozenPhysicsResponder] {name}: temporary CapsuleCollider created from CharacterController",
                     this);
             }
@@ -276,7 +276,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_rb == null)
             {
-                Debug.LogWarning($"[FrozenPhysicsResponder] {name}: Rigidbody not found and was not created.", this);
+                EffectLog.Warning(EffectLog.Physics, $"[FrozenPhysicsResponder] {name}: Rigidbody not found and was not created.", this);
                 return;
             }
 

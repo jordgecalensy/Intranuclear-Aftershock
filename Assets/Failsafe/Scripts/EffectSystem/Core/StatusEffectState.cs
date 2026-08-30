@@ -191,7 +191,7 @@ namespace Failsafe.Scripts.EffectSystem
         {
             if (string.IsNullOrWhiteSpace(sourceId))
             {
-                Debug.LogWarning($"[StatusEffectState] {name}: sourceId is empty. Runtime status modifier was not added.", this);
+                EffectLog.Warning(EffectLog.Status, $"[StatusEffectState] {name}: sourceId is empty. Runtime status modifier was not added.", this);
                 return;
             }
 
@@ -281,7 +281,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             _activeStatuses[statusType] = effect;
 
-            Debug.Log($"[StatusEffectState] {name}: registered {statusType}", this);
+            EffectLog.Info(EffectLog.Status, $"[StatusEffectState] {name}: registered {statusType}", this);
         }
 
         public void UnregisterStatus(StatusEffectType statusType, IRegisteredStatusEffect effect)
@@ -297,7 +297,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             _activeStatuses.Remove(statusType);
 
-            Debug.Log($"[StatusEffectState] {name}: unregistered {statusType}", this);
+            EffectLog.Info(EffectLog.Status, $"[StatusEffectState] {name}: unregistered {statusType}", this);
         }
 
         public void RemoveStatus(StatusEffectType statusType)
@@ -337,7 +337,7 @@ namespace Failsafe.Scripts.EffectSystem
             else
                 _immunityUntil.Add(statusType, until);
 
-            Debug.Log($"[StatusEffectState] {name}: temporary immunity {statusType} for {duration:0.00}s", this);
+            EffectLog.Info(EffectLog.Status, $"[StatusEffectState] {name}: temporary immunity {statusType} for {duration:0.00}s", this);
         }
 
         public void AddTemporaryImmunity(IEnumerable<StatusEffectType> statuses, float duration)

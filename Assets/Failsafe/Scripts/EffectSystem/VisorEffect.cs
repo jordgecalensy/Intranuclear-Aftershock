@@ -25,7 +25,7 @@ namespace Failsafe.Scripts.EffectSystem
         {
             _visorMaterial = Resources.Load<Material>("VisorShaderMaterial");
             if (_visorMaterial == null)
-                Debug.LogWarning("VisorEffect: не найден материал VisorShaderMaterial в Resources/");
+                EffectLog.Warning(EffectLog.Feedback, "VisorEffect: не найден материал VisorShaderMaterial в Resources/");
 
             _duration = Mathf.Infinity;
             IsUniqueEffect = true;
@@ -45,7 +45,7 @@ namespace Failsafe.Scripts.EffectSystem
         {
 
             _xrayObjects = Object.FindObjectsOfType<ObjectXRay>();
-            Debug.Log($"VisorEffect: найдено {_xrayObjects.Length} XRay-объектов.");
+            EffectLog.Info(EffectLog.Feedback, $"VisorEffect: найдено {_xrayObjects.Length} XRay-объектов.");
 
             var prefab = Resources.Load<GameObject>("ScannerVisorVFX");
 
@@ -57,7 +57,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (prefab != null)
                 Object.Instantiate(prefab, _visorEffectObject.transform);
             else
-                Debug.LogError("VisorEffect: ScannerVFX prefab not found!");
+                EffectLog.Error(EffectLog.Feedback, "VisorEffect: ScannerVFX prefab not found!");
 
             _customPassVolume = _visorEffectObject.AddComponent<CustomPassVolume>();
             _customPassVolume.isGlobal = true;
@@ -80,7 +80,7 @@ namespace Failsafe.Scripts.EffectSystem
             _visorOnEmitter.Play();
             _visorLoopEmitter.Play();
 
-            Debug.Log("VisorEffect активирован");
+            EffectLog.Info(EffectLog.Feedback, "VisorEffect активирован");
         }
 
         public override void Update()
@@ -120,7 +120,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (_customPassVolume != null)
                 Object.Destroy(_customPassVolume.gameObject);
 
-            Debug.Log("VisorEffect деактивирован");
+            EffectLog.Info(EffectLog.Feedback, "VisorEffect деактивирован");
         }
     }
 }

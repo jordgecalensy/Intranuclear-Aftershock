@@ -48,7 +48,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Resistance,
                     $"[StatusResistanceModifierEffect] {_state.name}: apply {_statusType}, duration x{_durationMultiplier:0.###}, buildUp x{_buildUpMultiplier:0.###} for {_baseDuration:0.###}s",
                     _state);
             }
@@ -65,7 +65,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Resistance,
                     $"[StatusResistanceModifierEffect] {_state.name}: clear {_statusType} modifier {_sourceId}",
                     _state);
             }
@@ -93,7 +93,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log && _state != null)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Resistance,
                     $"[StatusResistanceModifierEffect] {_state.name}: refresh {_statusType}, duration x{_durationMultiplier:0.###}, buildUp x{_buildUpMultiplier:0.###}",
                     _state);
             }

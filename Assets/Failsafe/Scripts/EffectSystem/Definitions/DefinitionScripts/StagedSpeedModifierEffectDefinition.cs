@@ -112,7 +112,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (target == null)
             {
                 if (_logResolveErrors)
-                    Debug.LogWarning("[StagedSpeedModifierEffectDefinition] Target object not found.");
+                    EffectLog.Warning(EffectLog.Movement, "[StagedSpeedModifierEffectDefinition] Target object not found.");
 
                 return null;
             }
@@ -123,7 +123,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Movement,
                         $"[StagedSpeedModifierEffectDefinition] LifetimeScope not found near target {target.name}.",
                         target);
                 }
@@ -135,7 +135,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Movement,
                         $"[StagedSpeedModifierEffectDefinition] LifetimeScope container is null on {scope.name}.",
                         scope);
                 }
@@ -151,7 +151,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Movement,
                         $"[StagedSpeedModifierEffectDefinition] Cannot resolve PlayerMovementController from scope {scope.name}. {e.Message}",
                         scope);
                 }

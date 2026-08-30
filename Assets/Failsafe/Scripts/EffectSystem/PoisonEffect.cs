@@ -82,7 +82,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (!_state.CanReceive(StatusEffectType.Poison))
             {
-                Debug.Log($"[PoisonEffect] {_state.name}: blocked by immunity Poison", _state);
+                EffectLog.Info(EffectLog.Status, $"[PoisonEffect] {_state.name}: blocked by immunity Poison", _state);
                 _duration = 0f;
                 return;
             }
@@ -95,7 +95,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             ResetDamageTimerForCurrentStage();
 
-            Debug.Log(
+            EffectLog.Info(EffectLog.Status,
                 $"[PoisonEffect] {_state.name}: apply Poison stage {_currentStage}, buildUp {_buildUpValue:0.00}, duration {_duration:0.00}s",
                 _state);
         }
@@ -124,7 +124,7 @@ namespace Failsafe.Scripts.EffectSystem
             _state.UnregisterStatus(StatusEffectType.Poison, this);
             _state.AddTemporaryImmunity(_immunityStatusesOnEnd, _immunityDurationOnEnd);
 
-            Debug.Log($"[PoisonEffect] {_state.name}: clear Poison", _state);
+            EffectLog.Info(EffectLog.Status, $"[PoisonEffect] {_state.name}: clear Poison", _state);
         }
 
         public void ForceClearFromStatusState()
@@ -150,13 +150,13 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 ResetDamageTimerForCurrentStage();
 
-                Debug.Log(
+                EffectLog.Info(EffectLog.Status,
                     $"[PoisonEffect] {_state.name}: Poison stage {oldStage} -> {_currentStage}, buildUp {_buildUpValue:0.00}",
                     _state);
             }
             else
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Status,
                     $"[PoisonEffect] {_state.name}: refresh Poison stage {_currentStage}, buildUp {_buildUpValue:0.00}",
                     _state);
             }
@@ -203,7 +203,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             _damageTimer = stage.DamageTickInterval;
 
-            Debug.Log(
+            EffectLog.Info(EffectLog.Status,
                 $"[PoisonEffect] {_state.name}: poison damage {stage.DamagePerTick:0.00} at stage {_currentStage}",
                 _state);
         }

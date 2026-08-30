@@ -34,7 +34,7 @@ namespace Failsafe.Scripts.EffectSystem
                 if (!_state.HasStatus(status))
                     continue;
 
-                Debug.Log($"[RemoveStatusesEffect] {_state.name}: remove {status}", _state);
+                EffectLog.Info(EffectLog.Status, $"[RemoveStatusesEffect] {_state.name}: remove {status}", _state);
                 _state.RemoveStatus(status);
             }
         }

@@ -62,7 +62,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (target == null)
             {
                 if (_logResolveErrors)
-                    Debug.LogWarning("[RestoreStaminaEffectDefinition] Target not found.");
+                    EffectLog.Warning(EffectLog.Parameters, "[RestoreStaminaEffectDefinition] Target not found.");
 
                 return null;
             }
@@ -73,7 +73,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Parameters,
                         $"[RestoreStaminaEffectDefinition] LifetimeScope not found near target {target.name}.",
                         target);
                 }
@@ -85,7 +85,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Parameters,
                         $"[RestoreStaminaEffectDefinition] LifetimeScope container is null on {scope.name}.",
                         scope);
                 }
@@ -101,7 +101,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Parameters,
                         $"[RestoreStaminaEffectDefinition] Cannot resolve IStamina from scope {scope.name}. {e.Message}",
                         scope);
                 }

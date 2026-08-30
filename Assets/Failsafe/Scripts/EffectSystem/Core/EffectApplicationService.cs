@@ -22,11 +22,35 @@ namespace Failsafe.Scripts.EffectSystem
         private readonly Dictionary<Effect, EffectKey> _effectKeys = new();
         private readonly Dictionary<Effect, EffectOrigin> _effectOrigins = new();
 
+        // Переиспользуемый буфер: Remove вызывается при каждом выходе цели
+        // из зоны действия эффектов, и новый HashSet на каждый такой вызов давал мусор в GC.
+        // Метод не реентерабельный, но реентерабельного пути и нет: изнутри системы
+        // эффектов Remove не вызывается (StatusReactionService дёргает только Apply).
+        private readonly HashSet<EffectDefinition> _removalDefinitions = new();
+
         private readonly IStatusReactionService _statusReactionService;
 
-        public event Action<EffectPresentation> EffectAdded;
-        public event Action<EffectPresentation> EffectRefreshed;
-        public event Action<EffectPresentation> EffectRemoved;
+        private readonly PresentationEvent _effectAdded = new();
+        private readonly PresentationEvent _effectRefreshed = new();
+        private readonly PresentationEvent _effectRemoved = new();
+
+        public event Action<EffectPresentation> EffectAdded
+        {
+            add => _effectAdded.Add(value);
+            remove => _effectAdded.Remove(value);
+        }
+
+        public event Action<EffectPresentation> EffectRefreshed
+        {
+            add => _effectRefreshed.Add(value);
+            remove => _effectRefreshed.Remove(value);
+        }
+
+        public event Action<EffectPresentation> EffectRemoved
+        {
+            add => _effectRemoved.Add(value);
+            remove => _effectRemoved.Remove(value);
+        }
 
         public EffectApplicationService(IStatusReactionService statusReactionService)
         {
@@ -80,15 +104,15 @@ namespace Failsafe.Scripts.EffectSystem
             if (target == null)
                 return;
 
-            var definitions = new HashSet<EffectDefinition>();
+            _removalDefinitions.Clear();
 
             foreach (EffectDefinition definition in bundle.Effects)
             {
                 if (definition != null)
-                    definitions.Add(definition);
+                    _removalDefinitions.Add(definition);
             }
 
-            if (definitions.Count == 0)
+            if (_removalDefinitions.Count == 0)
                 return;
 
             int targetId = target.GetInstanceID();
@@ -103,7 +127,7 @@ namespace Failsafe.Scripts.EffectSystem
                 if (origin.TargetId != targetId)
                     continue;
 
-                if (!definitions.Contains(origin.Definition))
+                if (!_removalDefinitions.Contains(origin.Definition))
                     continue;
 
                 RemoveEffectAt(i);
@@ -159,7 +183,7 @@ namespace Failsafe.Scripts.EffectSystem
                             Time.time,
                             GetRemainingDuration(existing));
 
-                        Notify(EffectRefreshed, origin.Presentation);
+                        _effectRefreshed.Raise(origin.Presentation);
                     }
                 }
 
@@ -184,7 +208,7 @@ namespace Failsafe.Scripts.EffectSystem
                     effect,
                     new EffectOrigin(definition, targetId, presentation));
 
-                Notify(EffectAdded, presentation);
+                _effectAdded.Raise(presentation);
             }
             else
             {
@@ -214,7 +238,7 @@ namespace Failsafe.Scripts.EffectSystem
                     effect,
                     new EffectOrigin(definition, targetId, presentation));
 
-                Notify(EffectAdded, presentation);
+                _effectAdded.Raise(presentation);
             }
             else
             {
@@ -253,7 +277,7 @@ namespace Failsafe.Scripts.EffectSystem
             Effect effect = _effects[index];
 
             if (_effectOrigins.TryGetValue(effect, out EffectOrigin origin))
-                Notify(EffectRemoved, origin.Presentation);
+                _effectRemoved.Raise(origin.Presentation);
 
             _effects.RemoveAt(index);
             RemoveTracking(effect);
@@ -268,26 +292,6 @@ namespace Failsafe.Scripts.EffectSystem
             return Mathf.Max(0f, effect.ElapsedAt - Time.time);
         }
 
-        private static void Notify(
-            Action<EffectPresentation> notification,
-            EffectPresentation presentation)
-        {
-            if (notification == null)
-                return;
-
-            foreach (Action<EffectPresentation> subscriber in notification.GetInvocationList())
-            {
-                try
-                {
-                    subscriber(presentation);
-                }
-                catch (Exception exception)
-                {
-                    Debug.LogException(exception);
-                }
-            }
-        }
-
         private void RemoveTracking(Effect effect)
         {
             _effectOrigins.Remove(effect);
@@ -297,6 +301,77 @@ namespace Failsafe.Scripts.EffectSystem
 
             _effectKeys.Remove(effect);
             _uniqueEffects.Remove(key);
+        }
+
+        /// <summary>
+        /// Событие с кэшированным списком подписчиков.
+        /// </summary>
+        /// <remarks>
+        /// Раньше рассылка шла через GetInvocationList() на каждый вызов — а это новый массив
+        /// делегатов при каждом добавлении, обновлении и снятии эффекта. Здесь массив
+        /// пересобирается только когда меняются подписки, поэтому в установившемся режиме
+        /// рассылка не аллоцирует ничего.
+        ///
+        /// Перед циклом массив читается в локальную переменную: если подписчик внутри
+        /// обработчика подпишется или отпишется, итерация пойдёт по снимку —
+        /// ровно та же семантика, что давал GetInvocationList().
+        /// </remarks>
+        private sealed class PresentationEvent
+        {
+            private Action<EffectPresentation> _handler;
+            private Action<EffectPresentation>[] _subscribers;
+
+            public void Add(Action<EffectPresentation> handler)
+            {
+                if (handler == null)
+                    return;
+
+                _handler += handler;
+                _subscribers = null;
+            }
+
+            public void Remove(Action<EffectPresentation> handler)
+            {
+                if (handler == null)
+                    return;
+
+                _handler -= handler;
+                _subscribers = null;
+            }
+
+            public void Raise(EffectPresentation presentation)
+            {
+                if (_handler == null)
+                {
+                    _subscribers = null;
+                    return;
+                }
+
+                if (_subscribers == null)
+                {
+                    Delegate[] invocationList = _handler.GetInvocationList();
+                    var subscribers = new Action<EffectPresentation>[invocationList.Length];
+
+                    for (int i = 0; i < invocationList.Length; i++)
+                        subscribers[i] = (Action<EffectPresentation>)invocationList[i];
+
+                    _subscribers = subscribers;
+                }
+
+                Action<EffectPresentation>[] snapshot = _subscribers;
+
+                for (int i = 0; i < snapshot.Length; i++)
+                {
+                    try
+                    {
+                        snapshot[i](presentation);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogException(exception);
+                    }
+                }
+            }
         }
 
         private readonly struct EffectOrigin

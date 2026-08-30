@@ -46,7 +46,7 @@ namespace Failsafe.Scripts.EffectSystem.Effects
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Resistance,
                     $"[DamageResistanceModifierEffect] {_resistanceComponent.name}: apply {_damageType} x{_multiplier:0.###} for {_baseDuration:0.###}s",
                     _resistanceComponent);
             }
@@ -63,7 +63,7 @@ namespace Failsafe.Scripts.EffectSystem.Effects
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Resistance,
                     $"[DamageResistanceModifierEffect] {_resistanceComponent.name}: clear {_damageType} modifier {_sourceId}",
                     _resistanceComponent);
             }
@@ -89,7 +89,7 @@ namespace Failsafe.Scripts.EffectSystem.Effects
 
             if (_log && _resistanceComponent != null)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Resistance,
                     $"[DamageResistanceModifierEffect] {_resistanceComponent.name}: refresh {_damageType} x{_multiplier:0.###} for {_baseDuration:0.###}s",
                     _resistanceComponent);
             }
