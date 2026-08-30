@@ -7,9 +7,11 @@ namespace Failsafe.Scripts.EffectSystem
         [Header("HUD")]
         [SerializeField] private bool _showInHud;
         [SerializeField] private Sprite _hudIcon;
+        [SerializeField] private Color _hudDurationColor = Color.white;
 
         public bool ShowInHud => _showInHud;
         public Sprite HudIcon => _hudIcon;
+        public Color HudDurationColor => _hudDurationColor;
 
         public abstract bool CanApply(EffectContext context);
 

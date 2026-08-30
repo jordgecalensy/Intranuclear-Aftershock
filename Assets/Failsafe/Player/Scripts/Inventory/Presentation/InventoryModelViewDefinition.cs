@@ -11,6 +11,7 @@ namespace Failsafe.Inventory.Presentation
         public float ScaleMultiplier { get; }
         public float FitPaddingRatio { get; }
         public float MaxDepthInCells { get; }
+        public Sprite Icon { get; }
 
         public InventoryModelViewDefinition(
             GameObject modelPrefab,
@@ -18,7 +19,8 @@ namespace Failsafe.Inventory.Presentation
             Vector3 offsetInCells,
             float scaleMultiplier = 1f,
             float fitPaddingRatio = 0.08f,
-            float maxDepthInCells = 0.75f)
+            float maxDepthInCells = 0.75f,
+            Sprite icon = null)
         {
             if (modelPrefab == null)
                 throw new ArgumentNullException(nameof(modelPrefab));
@@ -50,6 +52,7 @@ namespace Failsafe.Inventory.Presentation
             ScaleMultiplier = scaleMultiplier;
             FitPaddingRatio = fitPaddingRatio;
             MaxDepthInCells = maxDepthInCells;
+            Icon = icon;
         }
     }
 }

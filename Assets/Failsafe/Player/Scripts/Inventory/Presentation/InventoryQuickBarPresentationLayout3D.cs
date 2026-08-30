@@ -266,6 +266,35 @@ namespace Failsafe.Inventory.Presentation
             }
         }
 
+        public void SetSlotIcon(int slotIndex, Sprite icon)
+        {
+            if (_itemPreviewImages == null ||
+                slotIndex < 0 ||
+                slotIndex >= _itemPreviewImages.Length)
+            {
+                return;
+            }
+
+            RawImage previewImage = _itemPreviewImages[slotIndex];
+
+            if (icon == null)
+            {
+                InventoryIconRawImageUtility.Clear(previewImage);
+                return;
+            }
+
+            if (!InventoryIconRawImageUtility.TryApply(
+                    previewImage,
+                    icon,
+                    out string error))
+            {
+                Debug.LogWarning(
+                    $"Could not show icon in quick slot {slotIndex + 1}: " +
+                    error,
+                    this);
+            }
+        }
+
         private bool TryCacheSlots(
             int expectedSlotCount,
             out string error)

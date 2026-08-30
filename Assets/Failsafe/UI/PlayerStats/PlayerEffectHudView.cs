@@ -12,6 +12,8 @@ namespace Failsafe.Player.UI
         [Tooltip("Граница, за которую кубики уезжают вправо. Если не задана, используется их родитель.")]
         [SerializeField] private RectTransform _exitBoundary;
 
+        [SerializeField, Min(0f)] private float _enterSpeed = 900f;
+        [SerializeField, Min(0f)] private float _dropSpeed = 600f;
         [SerializeField, Min(0f)] private float _rearrangeSpeed = 600f;
         [SerializeField, Min(0f)] private float _exitSpeed = 900f;
         [SerializeField, Min(0f)] private float _exitPadding = 32f;
@@ -36,7 +38,12 @@ namespace Failsafe.Player.UI
             {
                 PlayerEffectHudEntryView entry = _visibleEntries[i];
 
-                if (!entry.Tick(Time.deltaTime, _rearrangeSpeed, _exitSpeed))
+                if (!entry.Tick(
+                        Time.deltaTime,
+                        _enterSpeed,
+                        _dropSpeed,
+                        _rearrangeSpeed,
+                        _exitSpeed))
                     continue;
 
                 EffectPresentation presentation = entry.Presentation;
@@ -79,7 +86,17 @@ namespace Failsafe.Player.UI
                 _visibleEntries.Count,
                 _slotPositions.Length - 1);
 
-            freeEntry.Bind(presentation, _slotPositions[slotIndex]);
+            Vector2 entryPosition =
+                _slotPositions[_slotPositions.Length - 1];
+            Vector2 startPosition = new(
+                CalculateRightOutsideX(freeEntry),
+                entryPosition.y);
+
+            freeEntry.Bind(
+                presentation,
+                startPosition,
+                entryPosition,
+                _slotPositions[slotIndex]);
             _visibleEntries.Add(freeEntry);
             _entriesByEffect.Add(presentation, freeEntry);
         }
@@ -102,7 +119,7 @@ namespace Failsafe.Player.UI
                 return;
             }
 
-            entry.BeginExit(CalculateExitX(entry));
+            entry.BeginExit(CalculateRightOutsideX(entry));
         }
 
         public void ClearImmediate()
@@ -128,6 +145,10 @@ namespace Failsafe.Player.UI
             _slotPositions = new Vector2[entryCount];
 
             Transform commonParent = null;
+            RectTransform layoutReference = null;
+            float? commonSlotX = null;
+            bool reportedDifferentSlotX = false;
+            bool reportedDifferentAnchors = false;
 
             for (int i = 0; i < entryCount; i++)
             {
@@ -147,13 +168,40 @@ namespace Failsafe.Player.UI
                 }
 
                 if (commonParent == null)
+                {
                     commonParent = entry.RectTransform.parent;
+                    layoutReference = entry.RectTransform;
+                }
                 else if (entry.RectTransform.parent != commonParent)
                     Debug.LogError(
                         "[PlayerEffectHudView] Все кубики должны иметь одного RectTransform-родителя.",
                         this);
 
+                if (layoutReference != null &&
+                    !reportedDifferentAnchors &&
+                    (entry.RectTransform.anchorMin != layoutReference.anchorMin ||
+                     entry.RectTransform.anchorMax != layoutReference.anchorMax ||
+                     entry.RectTransform.pivot != layoutReference.pivot))
+                {
+                    reportedDifferentAnchors = true;
+                    Debug.LogWarning(
+                        "[PlayerEffectHudView] Для корректной карусельной анимации у всех кубиков должны совпадать Anchors и Pivot.",
+                        this);
+                }
+
                 _slotPositions[i] = entry.RectTransform.anchoredPosition;
+
+                if (!commonSlotX.HasValue)
+                    commonSlotX = _slotPositions[i].x;
+                else if (!reportedDifferentSlotX &&
+                         !Mathf.Approximately(commonSlotX.Value, _slotPositions[i].x))
+                {
+                    reportedDifferentSlotX = true;
+                    Debug.LogWarning(
+                        "[PlayerEffectHudView] X-позиции слотов отличаются: падение новых иконок будет диагональным, а не вертикальным.",
+                        this);
+                }
+
                 entry.Release(_slotPositions[i]);
             }
         }
@@ -203,7 +251,7 @@ namespace Failsafe.Player.UI
             return Vector2.zero;
         }
 
-        private float CalculateExitX(PlayerEffectHudEntryView entry)
+        private float CalculateRightOutsideX(PlayerEffectHudEntryView entry)
         {
             RectTransform entryRect = entry.RectTransform;
             RectTransform parent = entryRect.parent as RectTransform;

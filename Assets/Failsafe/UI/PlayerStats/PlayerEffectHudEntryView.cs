@@ -14,13 +14,13 @@ namespace Failsafe.Player.UI
 
         private EffectPresentation _presentation;
         private Vector2 _targetPosition;
-        private bool _isExiting;
+        private Vector2 _slotPosition;
+        private AnimationState _animationState;
         private bool _initialized;
-        private Color _defaultDurationColor = Color.white;
 
         public RectTransform RectTransform => _rectTransform;
         public EffectPresentation Presentation => _presentation;
-        public bool IsExiting => _isExiting;
+        public bool IsExiting => _animationState == AnimationState.Exiting;
 
         public void Initialize()
         {
@@ -30,23 +30,23 @@ namespace Failsafe.Player.UI
             if (_rectTransform == null)
                 _rectTransform = transform as RectTransform;
 
-            if (_durationFillImage != null)
-                _defaultDurationColor = _durationFillImage.color;
-
             _initialized = true;
         }
 
         public void Bind(
             EffectPresentation presentation,
+            Vector2 startPosition,
+            Vector2 entryPosition,
             Vector2 slotPosition)
         {
             Initialize();
 
             _presentation = presentation;
-            _targetPosition = slotPosition;
-            _isExiting = false;
+            _targetPosition = entryPosition;
+            _slotPosition = slotPosition;
+            _animationState = AnimationState.Entering;
 
-            _rectTransform.anchoredPosition = slotPosition;
+            _rectTransform.anchoredPosition = startPosition;
             gameObject.SetActive(true);
 
             UpdateIconAndDurationColor();
@@ -63,16 +63,24 @@ namespace Failsafe.Player.UI
 
         public void SetTargetPosition(Vector2 targetPosition)
         {
-            if (!_isExiting)
+            if (IsExiting)
+                return;
+
+            _slotPosition = targetPosition;
+
+            if (_animationState == AnimationState.Dropping ||
+                _animationState == AnimationState.Active)
+            {
                 _targetPosition = targetPosition;
+            }
         }
 
         public void BeginExit(float targetX)
         {
-            if (_presentation == null || _isExiting)
+            if (_presentation == null || IsExiting)
                 return;
 
-            _isExiting = true;
+            _animationState = AnimationState.Exiting;
             _targetPosition = new Vector2(
                 targetX,
                 _rectTransform.anchoredPosition.y);
@@ -80,6 +88,8 @@ namespace Failsafe.Player.UI
 
         public bool Tick(
             float deltaTime,
+            float enterSpeed,
+            float dropSpeed,
             float rearrangeSpeed,
             float exitSpeed)
         {
@@ -88,25 +98,60 @@ namespace Failsafe.Player.UI
 
             UpdatePresentation();
 
-            float speed = _isExiting
-                ? exitSpeed
-                : rearrangeSpeed;
+            switch (_animationState)
+            {
+                case AnimationState.Entering:
+                    if (MoveTowardsTarget(deltaTime, enterSpeed))
+                    {
+                        _animationState = AnimationState.Dropping;
+                        _targetPosition = _slotPosition;
 
+                        if (HasReachedTarget())
+                            _animationState = AnimationState.Active;
+                    }
+
+                    return false;
+
+                case AnimationState.Dropping:
+                    if (MoveTowardsTarget(deltaTime, dropSpeed))
+                        _animationState = AnimationState.Active;
+
+                    return false;
+
+                case AnimationState.Active:
+                    MoveTowardsTarget(deltaTime, rearrangeSpeed);
+                    return false;
+
+                case AnimationState.Exiting:
+                    return MoveTowardsTarget(deltaTime, exitSpeed);
+
+                default:
+                    return false;
+            }
+        }
+
+        private bool MoveTowardsTarget(float deltaTime, float speed)
+        {
             _rectTransform.anchoredPosition = Vector2.MoveTowards(
                 _rectTransform.anchoredPosition,
                 _targetPosition,
                 Mathf.Max(0f, speed) * deltaTime);
 
-            return _isExiting &&
-                   Vector2.SqrMagnitude(
-                       _rectTransform.anchoredPosition - _targetPosition) <= 0.01f;
+            return HasReachedTarget();
+        }
+
+        private bool HasReachedTarget()
+        {
+            return Vector2.SqrMagnitude(
+                _rectTransform.anchoredPosition - _targetPosition) <= 0.01f;
         }
 
         public void Release(Vector2 restingPosition)
         {
             _presentation = null;
             _targetPosition = restingPosition;
-            _isExiting = false;
+            _slotPosition = restingPosition;
+            _animationState = AnimationState.Inactive;
 
             if (_rectTransform != null)
                 _rectTransform.anchoredPosition = restingPosition;
@@ -150,14 +195,17 @@ namespace Failsafe.Player.UI
             if (_durationFillImage == null)
                 return;
 
-            _durationFillImage.color = _defaultDurationColor;
+            _durationFillImage.color =
+                _presentation.Definition.HudDurationColor;
+        }
 
-            if (SpriteAccentColorUtility.TryGetBottomEdgeColor(
-                    icon,
-                    out Color accentColor))
-            {
-                _durationFillImage.color = accentColor;
-            }
+        private enum AnimationState
+        {
+            Inactive,
+            Entering,
+            Dropping,
+            Active,
+            Exiting
         }
 
 #if UNITY_EDITOR

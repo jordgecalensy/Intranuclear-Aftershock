@@ -134,6 +134,7 @@ namespace Failsafe.Inventory.Presentation
                 if (TryApplyExternalOpenLayout(out string error))
                 {
                     SetProceduralChromeVisible(false);
+                    SetItemModelsVisible(true);
                     return;
                 }
 
@@ -151,6 +152,7 @@ namespace Failsafe.Inventory.Presentation
                 if (TryApplyExternalClosedLayout(out string error))
                 {
                     SetProceduralChromeVisible(false);
+                    SetItemModelsVisible(false);
                     _externalClosedLayout.SetVisible(true);
                     return;
                 }
@@ -166,6 +168,7 @@ namespace Failsafe.Inventory.Presentation
 
             RestoreDefaultRootPose();
             SetProceduralChromeVisible(true);
+            SetItemModelsVisible(true);
 
             float cellSize = _gridSpace.CellSize;
 
@@ -205,6 +208,11 @@ namespace Failsafe.Inventory.Presentation
 
             _externalOpenLayout = layout;
 
+            for (int index = 0; index < _slots.Length; index++)
+            {
+                ApplySlotState(index);
+            }
+
             if (IsInventoryOpen)
                 SetInventoryOpen(true);
 
@@ -243,7 +251,10 @@ namespace Failsafe.Inventory.Presentation
             _externalClosedLayout = layout;
 
             for (int index = 0; index < _slots.Length; index++)
+            {
+                ApplySlotIcon(index);
                 ApplySlotState(index);
+            }
 
             SetInventoryOpen(IsInventoryOpen);
 
@@ -355,25 +366,17 @@ namespace Failsafe.Inventory.Presentation
 
         private bool TryApplyExternalClosedLayout(out string error)
         {
-            if (!_externalClosedLayout.TryAttachPresenterRoot(
-                    transform,
+            if (!_externalClosedLayout.TryValidate(
                     _slots.Length,
                     out error))
-            {
                 return false;
-            }
+
+            RestoreDefaultRootPose();
 
             for (int index = 0; index < _slots.Length; index++)
             {
-                if (!_externalClosedLayout.TryApplySlotPose(
-                        index,
-                        _slots[index].Root,
-                        _gridSpace.CellSize,
-                        out error))
-                {
-                    RestoreDefaultRootPose();
-                    return false;
-                }
+                ApplySlotIcon(index);
+                ApplySlotState(index);
             }
 
             error = null;
@@ -703,6 +706,7 @@ namespace Failsafe.Inventory.Presentation
             }
 
             slot.InstanceId = null;
+            slot.Icon = null;
             slot.QuantityLabel.text = string.Empty;
 
             if (string.IsNullOrWhiteSpace(instanceId) ||
@@ -710,6 +714,7 @@ namespace Failsafe.Inventory.Presentation
                     slotIndex,
                     out InventoryItemModel item))
             {
+                ApplySlotIcon(slotIndex);
                 ApplySlotState(slotIndex);
                 return;
             }
@@ -721,6 +726,16 @@ namespace Failsafe.Inventory.Presentation
                     out InventoryModelViewDefinition definition,
                     out string error))
             {
+                slot.Icon = definition.Icon;
+
+                if (slot.Icon == null)
+                {
+                    Debug.LogWarning(
+                        $"Quick slot {slotIndex + 1} cannot display item " +
+                        $"'{item.InstanceId}': InventoryIcon is not assigned.",
+                        this);
+                }
+
                 GameObject viewObject = new GameObject(
                     $"Quick Slot Item [{item.InstanceId}]");
 
@@ -754,7 +769,10 @@ namespace Failsafe.Inventory.Presentation
             }
 
             UpdateQuantityLabel(slot, item);
+            ApplySlotIcon(slotIndex);
             ApplySlotState(slotIndex);
+            SetItemModelsVisible(
+                IsInventoryOpen || _externalClosedLayout == null);
         }
 
         private void UpdateQuantityLabel(
@@ -802,6 +820,31 @@ namespace Failsafe.Inventory.Presentation
             _externalClosedLayout?.SetSlotState(
                 slotIndex,
                 isAssigned && isActive);
+        }
+
+        private void ApplySlotIcon(int slotIndex)
+        {
+            if (_slots == null ||
+                slotIndex < 0 ||
+                slotIndex >= _slots.Length)
+            {
+                return;
+            }
+
+            Sprite icon = _slots[slotIndex].Icon;
+            _externalClosedLayout?.SetSlotIcon(slotIndex, icon);
+        }
+
+        private void SetItemModelsVisible(bool visible)
+        {
+            if (_slots == null)
+                return;
+
+            foreach (SlotVisual slot in _slots)
+            {
+                if (slot?.ItemView != null)
+                    slot.ItemView.gameObject.SetActive(visible);
+            }
         }
 
         private Vector3 GetOpenSlotPosition(int slotIndex, float cellSize)
@@ -890,6 +933,7 @@ namespace Failsafe.Inventory.Presentation
             public TextMesh NumberLabel;
             public TextMesh QuantityLabel;
             public InventoryItemView3D ItemView;
+            public Sprite Icon;
             public string InstanceId;
         }
     }
