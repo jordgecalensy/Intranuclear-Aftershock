@@ -18,6 +18,8 @@ namespace Failsafe.PlayerMovements.Controllers
         private readonly PlayerNoiseSignal _noiseSignal;
         private readonly PlayerRuntimeParameters _runtimeParameters;
 
+        public float CurrentStrength => _noiseSignal.SignalStrength;
+
         public PlayerNoiseController(
             Transform playerTransform,
             PlayerNoiseParameters playerNoiseParametrs,

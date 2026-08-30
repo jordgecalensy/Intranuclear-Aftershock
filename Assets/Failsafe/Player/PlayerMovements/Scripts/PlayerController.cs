@@ -48,6 +48,7 @@ namespace Failsafe.PlayerMovements
         public BehaviorStateMachine StateMachine => _behaviorStateMachine;
         public PlayerMovementController PlayerMovementController => _movementController;
         public PlayerRotationController PlayerRotationController => _playerRotationController;
+        public float CurrentNoiseStrength => _noiseController?.CurrentStrength ?? 0f;
         public bool IsControlLocked => _controlLocks.Count > 0;
 
         public PlayerController(
