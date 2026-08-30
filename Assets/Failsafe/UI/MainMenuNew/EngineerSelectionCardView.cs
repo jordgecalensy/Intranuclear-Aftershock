@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Assets.Failsafe.Scripts.RandomGeneration;
-using Failsafe.Inventory.Core;
-using Failsafe.Inventory.Integration;
 using Failsafe.Inventory.Presentation;
 using Failsafe.Scripts.EffectSystem;
 using TMPro;
@@ -32,17 +30,14 @@ namespace Failsafe.UI.MainMenuNew
             new Color(0.15f, 0.85f, 0.35f, 1f);
         [SerializeField] private Color _negativePerkColor =
             new Color(0.9f, 0.2f, 0.15f, 1f);
+        [SerializeField] private Color _neutralPerkColor =
+            new Color(194f / 255f, 194f / 255f, 194f / 255f, 1f);
         [SerializeField] private Color _perkLabelColor = Color.black;
         [SerializeField, Min(1f)] private float _perkBadgeHeight = 38f;
         [SerializeField, Min(0f)] private float _perkBadgeSpacing = 8f;
 
         [Header("Starting item preview")]
         [SerializeField] private RectTransform _equipmentSlotsRoot;
-        [SerializeField, Range(64, 512)]
-        private int _equipmentPreviewTextureHeight = 256;
-        [SerializeField, Range(0f, 0.5f)]
-        private float _equipmentPreviewSlotPadding = 0.08f;
-        [SerializeField] private float _equipmentPreviewModelDepthOffset;
         [SerializeField] private Color _equipmentQuantityColor = Color.white;
 
         private readonly List<PerkBadge> _perkBadges = new();
@@ -56,8 +51,6 @@ namespace Failsafe.UI.MainMenuNew
         private bool _selected;
         private bool _interactable;
         private bool _perkBadgeContainerConfigured;
-        private InventoryQuickBarPreviewStage3D _startingItemPreviewStage;
-        private GameObject _startingItemPresenterRoot;
 
         public void Bind(
             EngineerBuild engineer,
@@ -206,9 +199,7 @@ namespace Failsafe.UI.MainMenuNew
                     EnsurePerkBadgeCount(visibleBadgeCount + 1);
                     PerkBadge badge = _perkBadges[visibleBadgeCount];
                     badge.Root.SetActive(true);
-                    badge.Background.color = perk.IsNegative
-                        ? _negativePerkColor
-                        : _positivePerkColor;
+                    badge.Background.color = ResolvePerkColor(perk);
                     badge.Label.text = ResolvePerkDisplayName(perk)
                         .ToUpperInvariant();
                     visibleBadgeCount++;
@@ -216,6 +207,17 @@ namespace Failsafe.UI.MainMenuNew
             }
 
             SetVisiblePerkBadgeCount(visibleBadgeCount);
+        }
+
+        private Color ResolvePerkColor(EngineerPerk perk)
+        {
+            if (perk.Cost < 0)
+                return _negativePerkColor;
+
+            if (perk.Cost > 0)
+                return _positivePerkColor;
+
+            return _neutralPerkColor;
         }
 
         private void ConfigurePerkBadgeContainer()
@@ -338,46 +340,13 @@ namespace Failsafe.UI.MainMenuNew
                 grants.Count,
                 _startingItemPreviewSlots.Count);
 
-            try
+            for (int slotIndex = 0;
+                 slotIndex < visibleCount;
+                 slotIndex++)
             {
-                _startingItemPreviewStage =
-                    new InventoryQuickBarPreviewStage3D(
-                        GetInstanceID(),
-                        _startingItemPreviewSlots.Count,
-                        gameObject.layer,
-                        _equipmentPreviewTextureHeight,
-                        _equipmentPreviewSlotPadding);
-
-                _startingItemPresenterRoot = new GameObject(
-                    $"Starting Item Preview Models [{GetInstanceID()}]");
-                _startingItemPresenterRoot.hideFlags = HideFlags.DontSave;
-                _startingItemPresenterRoot.layer =
-                    _startingItemPreviewStage.ItemLayer;
-
-                _startingItemPreviewStage.AttachPresenterRoot(
-                    _startingItemPresenterRoot.transform);
-
-                ApplyStartingItemPreviewAtlas();
-
-                for (int slotIndex = 0;
-                     slotIndex < visibleCount;
-                     slotIndex++)
-                {
-                    RenderStartingItem(
-                        slotIndex,
-                        grants[slotIndex]);
-                }
-
-                _startingItemPreviewStage.SetVisible(true);
-            }
-            catch (Exception exception)
-            {
-                Debug.LogWarning(
-                    $"[EngineerSelection] Could not build starting item " +
-                    $"preview on '{name}': {exception.Message}",
-                    this);
-                ClearStartingItemPreview();
-                return;
+                RenderStartingItem(
+                    slotIndex,
+                    grants[slotIndex]);
             }
 
             if (grants.Count > _startingItemPreviewSlots.Count)
@@ -505,6 +474,7 @@ namespace Failsafe.UI.MainMenuNew
             RawImage preview = previewObject.GetComponent<RawImage>();
             preview.raycastTarget = false;
             preview.color = Color.white;
+            preview.enabled = false;
             preview.gameObject.SetActive(false);
 
             var quantityObject = new GameObject(
@@ -535,22 +505,6 @@ namespace Failsafe.UI.MainMenuNew
             return new StartingItemPreviewSlot(preview, quantity);
         }
 
-        private void ApplyStartingItemPreviewAtlas()
-        {
-            for (int slotIndex = 0;
-                 slotIndex < _startingItemPreviewSlots.Count;
-                 slotIndex++)
-            {
-                StartingItemPreviewSlot slot =
-                    _startingItemPreviewSlots[slotIndex];
-
-                slot.Preview.texture = _startingItemPreviewStage.Texture;
-                slot.Preview.material = null;
-                slot.Preview.uvRect =
-                    _startingItemPreviewStage.GetSlotUvRect(slotIndex);
-            }
-        }
-
         private void RenderStartingItem(
             int slotIndex,
             PerkStartingItemGrant grant)
@@ -558,40 +512,16 @@ namespace Failsafe.UI.MainMenuNew
             StartingItemPreviewSlot slot =
                 _startingItemPreviewSlots[slotIndex];
 
-            if (!ItemDataInventoryAdapter.TryCreateViewDefinition(
-                    grant.Item,
-                    out InventoryModelViewDefinition definition,
+            if (!InventoryIconRawImageUtility.TryApply(
+                    slot.Preview,
+                    grant.Item.InventoryIcon,
                     out string error))
             {
                 Debug.LogWarning(
-                    $"[EngineerSelection] Could not preview starting " +
-                    $"item '{grant.Item.name}': {error}",
+                    $"[EngineerSelection] Could not show starting item " +
+                    $"'{grant.Item.name}': {error}",
                     grant.Item);
                 return;
-            }
-
-            var viewObject = new GameObject(
-                $"Starting Item [{grant.Item.name}]");
-            viewObject.layer = _startingItemPreviewStage.ItemLayer;
-            viewObject.transform.SetParent(
-                _startingItemPresenterRoot.transform,
-                false);
-
-            InventoryItemView3D view =
-                viewObject.AddComponent<InventoryItemView3D>();
-            view.Initialize(
-                definition,
-                new InventoryGridSize(1, 1),
-                0.84f);
-
-            if (!_startingItemPreviewStage.TryApplySlotPose(
-                    slotIndex,
-                    view.transform,
-                    1f,
-                    _equipmentPreviewModelDepthOffset,
-                    out error))
-            {
-                throw new InvalidOperationException(error);
             }
 
             slot.Preview.gameObject.SetActive(true);
@@ -612,7 +542,7 @@ namespace Failsafe.UI.MainMenuNew
 
                 if (slot.Preview != null)
                 {
-                    slot.Preview.texture = null;
+                    InventoryIconRawImageUtility.Clear(slot.Preview);
                     slot.Preview.gameObject.SetActive(false);
                 }
 
@@ -623,9 +553,6 @@ namespace Failsafe.UI.MainMenuNew
                 }
             }
 
-            _startingItemPreviewStage?.Dispose();
-            _startingItemPreviewStage = null;
-            _startingItemPresenterRoot = null;
         }
 
         private sealed class PerkBadge

@@ -74,7 +74,8 @@ namespace Failsafe.Inventory.Integration
                 itemData.InventoryModelOffsetInCells,
                 itemData.InventoryModelScaleMultiplier,
                 itemData.InventoryModelFitPadding,
-                itemData.InventoryModelMaxDepthInCells);
+                itemData.InventoryModelMaxDepthInCells,
+                itemData.InventoryIcon);
 
             return true;
         }

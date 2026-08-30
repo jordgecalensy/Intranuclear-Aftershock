@@ -12,9 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 206516b7cf36c924daf4f3ca7081841a, type: 3}
   m_Name: Wet
   m_EditorClassIdentifier: 
+  _showInHud: 1
+  _hudIcon: {fileID: 21300000, guid: ce4d538bb08484a41b6f0a652c52c07a, type: 3}
+  _hudDurationColor: {r: 0, g: 0.78431374, b: 1, a: 1}
   _statusType: 30
   _duration: 8
   _autoAddStatusState: 1
   _removeStatusesOnApply: 
   _immunityStatusesOnEnd: 
   _immunityDurationOnEnd: 0
+  _stopEffectBundleOnStatusReaction: 0

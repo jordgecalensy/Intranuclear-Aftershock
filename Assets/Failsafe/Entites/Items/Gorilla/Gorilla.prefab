@@ -8,6 +8,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 511034474928584053, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
+      propertyPath: ItemData
+      value: 
+      objectReference: {fileID: 11400000, guid: 98d0ad0079444a746b062135fe154370, type: 2}
+    - target: {fileID: 511034474928584053, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
+      propertyPath: PropData
+      value: 
+      objectReference: {fileID: 11400000, guid: 91890bfe14dffaf43a42b5d1c0bbeab4, type: 2}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalPosition.x
       value: -61.868645
@@ -53,14 +61,16 @@ PrefabInstance:
       value: Gorilla
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 7864926132223689547, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
+    - {fileID: 2535196243807676358, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8700000000000000021}
   m_SourcePrefab: {fileID: 100100000, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
---- !u!1 &8700000000000000022 stripped
+--- !u!1 &8348745235215179201 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
   m_PrefabInstance: {fileID: 2346345525181376913}
@@ -71,12 +81,12 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8700000000000000022}
+  m_GameObject: {fileID: 8348745235215179201}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f0819cade252ccc4a85b9f080d9ad7d6, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   _targetMode: 0
   _selfTargetRoot: {fileID: 0}
   _selfTargetCollider: {fileID: 0}

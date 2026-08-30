@@ -116,6 +116,15 @@ namespace Failsafe.Player
 
             builder.RegisterComponentInHierarchy<PlayerUIController>();
 
+            PlayerEffectHudView effectHudView =
+                GetComponentInChildren<PlayerEffectHudView>(true);
+
+            if (effectHudView != null)
+            {
+                builder.RegisterComponent(effectHudView);
+                builder.RegisterEntryPoint<PlayerEffectHudPresenter>();
+            }
+
             builder.RegisterComponentInHierarchy<PlayerCrosshairRaycaster>();
             builder.RegisterComponentInHierarchy<PhysicsInteraction>();
 
