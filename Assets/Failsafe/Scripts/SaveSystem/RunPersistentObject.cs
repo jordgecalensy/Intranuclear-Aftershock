@@ -15,6 +15,9 @@ namespace Failsafe.Scripts.SaveSystem
         private const string SpawnedIdPrefix = "spawned-object:";
         private const string PrefabTemplateId = "prefab-template";
 
+        internal static event Action<RunPersistentObject> BecameAvailable;
+        internal static event Action<RunPersistentObject> WasDestroyed;
+
         [SerializeField]
         [Tooltip("Stable identity of this object inside a run. Do not edit manually.")]
         private string _persistentId;
@@ -43,6 +46,17 @@ namespace Failsafe.Scripts.SaveSystem
         private void Awake()
         {
             CacheRigidbody();
+            BecameAvailable?.Invoke(this);
+        }
+
+        private void OnEnable()
+        {
+            BecameAvailable?.Invoke(this);
+        }
+
+        private void OnDestroy()
+        {
+            WasDestroyed?.Invoke(this);
         }
 
         private void Reset()
@@ -69,6 +83,8 @@ namespace Failsafe.Scripts.SaveSystem
             _persistentId = normalizedId.StartsWith(SpawnedIdPrefix, StringComparison.Ordinal)
                 ? normalizedId
                 : $"{SpawnedIdPrefix}{normalizedId}";
+
+            BecameAvailable?.Invoke(this);
         }
 
         internal PersistentObjectStateData CaptureState()
