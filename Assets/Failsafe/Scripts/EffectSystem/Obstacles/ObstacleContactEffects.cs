@@ -34,7 +34,8 @@ namespace Failsafe.Scripts.EffectSystem
             if (other == null)
                 return;
 
-            Transform targetTransform = GetRootTransform(other);
+            Transform targetTransform =
+                ColliderTargetResolver.ResolveRoot(other);
 
             if (targetTransform == null ||
                 !_isAllowedTarget(targetTransform.gameObject))
@@ -55,7 +56,8 @@ namespace Failsafe.Scripts.EffectSystem
 
         public void Exit(Collider other)
         {
-            Transform targetTransform = GetRootTransform(other);
+            Transform targetTransform =
+                ColliderTargetResolver.ResolveRoot(other);
 
             if (targetTransform == null ||
                 !_overlapCount.TryGetValue(targetTransform, out int count))
@@ -150,29 +152,10 @@ namespace Failsafe.Scripts.EffectSystem
             Transform targetTransform,
             Collider targetCollider)
         {
-            Vector3 direction =
-                targetTransform.position - _source.transform.position;
-
-            if (direction.sqrMagnitude < 0.0001f)
-            {
-                direction =
-                    targetCollider.bounds.center - _source.transform.position;
-            }
-
-            if (direction.sqrMagnitude < 0.0001f)
-                direction = _source.transform.forward;
-
-            direction.Normalize();
-
-            Vector3 point = targetCollider.ClosestPoint(
-                _source.transform.position);
-
-            var context = new EffectContext(
+            EffectContext context = ContactEffectContextFactory.Create(
                 _source,
                 targetCollider,
-                point,
-                Vector3.up,
-                direction,
+                targetTransform,
                 power);
 
             effects.Apply(bundle, context);
@@ -232,15 +215,5 @@ namespace Failsafe.Scripts.EffectSystem
             return null;
         }
 
-        private static Transform GetRootTransform(Collider collider)
-        {
-            if (collider == null)
-                return null;
-
-            if (collider.attachedRigidbody != null)
-                return collider.attachedRigidbody.transform;
-
-            return collider.transform.root;
-        }
     }
 }

@@ -72,7 +72,7 @@ public class Obstacle : MonoBehaviour
     private ObstacleActivityCycle _activityCycle;
     private ObstaclePassengerAttachment _passengerAttachment;
     private ObstacleTargetFilter _targetFilter;
-    private ObstacleEffectServiceResolver _effectResolver;
+    private EffectApplicationServiceResolver _effectResolver;
     private ObstacleStasis _stasis;
 
     [Inject]
@@ -98,7 +98,7 @@ public class Obstacle : MonoBehaviour
             enemyLayers,
             playerTag,
             enemyTag);
-        _effectResolver = new ObstacleEffectServiceResolver(
+        _effectResolver = new EffectApplicationServiceResolver(
             gameObject,
             _pendingEffectService);
         _stasis = new ObstacleStasis();

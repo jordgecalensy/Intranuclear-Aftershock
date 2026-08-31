@@ -8,7 +8,7 @@ namespace Failsafe.Scripts.EffectSystem
     /// <summary>
     /// Resolves the shared effect service without searching every frame.
     /// </summary>
-    public sealed class ObstacleEffectServiceResolver
+    public sealed class EffectApplicationServiceResolver
     {
         private const float RetryDelay = 1f;
 
@@ -17,7 +17,7 @@ namespace Failsafe.Scripts.EffectSystem
 
         public IEffectApplicationService Service { get; private set; }
 
-        public ObstacleEffectServiceResolver(
+        public EffectApplicationServiceResolver(
             GameObject owner,
             IEffectApplicationService initialService = null)
         {

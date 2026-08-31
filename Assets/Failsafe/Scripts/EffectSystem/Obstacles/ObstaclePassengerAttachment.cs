@@ -34,7 +34,7 @@ namespace Failsafe.Scripts.EffectSystem
             bool onlyPlayers,
             float topTolerance)
         {
-            Transform root = GetRootTransform(other);
+            Transform root = ColliderTargetResolver.ResolveRoot(other);
 
             if (root == null)
                 return;
@@ -64,7 +64,7 @@ namespace Failsafe.Scripts.EffectSystem
 
         public void Exit(Collider other)
         {
-            Transform root = GetRootTransform(other);
+            Transform root = ColliderTargetResolver.ResolveRoot(other);
 
             if (root == null ||
                 !_overlapCount.TryGetValue(root, out int count))
@@ -138,15 +138,5 @@ namespace Failsafe.Scripts.EffectSystem
             return bounds;
         }
 
-        private static Transform GetRootTransform(Collider collider)
-        {
-            if (collider == null)
-                return null;
-
-            if (collider.attachedRigidbody != null)
-                return collider.attachedRigidbody.transform;
-
-            return collider.transform.root;
-        }
     }
 }
