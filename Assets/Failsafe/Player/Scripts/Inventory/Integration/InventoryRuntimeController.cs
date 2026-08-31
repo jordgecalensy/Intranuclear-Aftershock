@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Failsafe.Inventory.Core;
 using Failsafe.Inventory.Presentation;
-using Failsafe.Scripts.SaveSystem;
 using UnityEngine;
 
 namespace Failsafe.Inventory.Integration
@@ -23,22 +22,22 @@ namespace Failsafe.Inventory.Integration
         public bool IsInitialized { get; private set; }
         public InventoryGridModel Grid { get; private set; }
         public InventoryQuickSlots QuickSlots { get; private set; }
-        public InventoryGridPresenter3D Presenter { get; private set; }
-        public InventoryQuickBarPresenter3D QuickBarPresenter { get; private set; }
-        public int RegisteredWorldItemCount => _worldItemsByInstanceId.Count;
+        public InventoryGridPresenter3D Presenter =>
+            _runtimePresentation.GridPresenter;
+        public InventoryQuickBarPresenter3D QuickBarPresenter =>
+            _runtimePresentation.QuickBarPresenter;
+        public int RegisteredWorldItemCount => _worldItems.Count;
         public bool IsPresentationVisible =>
-            _generatedPresentationRoot != null &&
-            _generatedPresentationRoot.activeSelf;
+            _runtimePresentation.IsVisible;
 
-        private readonly Dictionary<string, Item> _worldItemsByInstanceId =
-            new Dictionary<string, Item>(StringComparer.Ordinal);
-        private readonly Dictionary<string, ItemData> _itemDataByDefinitionId =
-            new Dictionary<string, ItemData>(StringComparer.Ordinal);
+        private readonly InventoryItemCatalog _catalog =
+            new InventoryItemCatalog();
+        private readonly InventoryRuntimePresentation _runtimePresentation =
+            new InventoryRuntimePresentation();
+        private readonly InventoryWorldItemRegistry _worldItems =
+            new InventoryWorldItemRegistry();
 
         private ItemDataInventoryViewResolver _viewResolver;
-        private GameObject _generatedPresentationRoot;
-        private GameObject _generatedQuickBarRoot;
-        private GameObject _storedWorldItemsRoot;
 
         private void Awake()
         {
@@ -78,62 +77,31 @@ namespace Failsafe.Inventory.Integration
             QuickSlots = new InventoryQuickSlots(Grid);
             _viewResolver = new ItemDataInventoryViewResolver();
 
-            if (!TryBuildItemCatalog(out error))
+            if (!_catalog.TryBuild(_itemCatalog, out error))
             {
                 DisposeRuntime();
                 return false;
             }
 
-            Transform parent = _presentationRoot != null
-                ? _presentationRoot
-                : transform;
-
-            _generatedPresentationRoot = new GameObject("Inventory 3D Views");
-            _generatedPresentationRoot.layer = inventoryLayer;
-            _generatedPresentationRoot.transform.SetParent(parent, false);
-
-            Presenter = _generatedPresentationRoot
-                .AddComponent<InventoryGridPresenter3D>();
-
-            _generatedQuickBarRoot = new GameObject(
-                "Inventory Quick Bar 3D");
-
-            _generatedQuickBarRoot.layer = inventoryLayer;
-            _generatedQuickBarRoot.transform.SetParent(parent, false);
-
-            QuickBarPresenter = _generatedQuickBarRoot
-                .AddComponent<InventoryQuickBarPresenter3D>();
-
-            InventoryGridSpace3D gridSpace = new InventoryGridSpace3D(
-                Grid.Columns,
-                Grid.Rows,
-                _cellSize);
-
-            try
-            {
-                Presenter.Initialize(
-                    Grid,
-                    gridSpace,
-                    _viewResolver);
-
-                QuickBarPresenter.Initialize(
+            if (!_runtimePresentation.TryInitialize(
+                    transform,
+                    _presentationRoot,
+                    inventoryLayer,
+                    _cellSize,
                     Grid,
                     QuickSlots,
-                    gridSpace,
-                    _viewResolver);
-            }
-            catch (Exception exception)
+                    _viewResolver,
+                    out error))
             {
                 DisposeRuntime();
-                error = exception.Message;
                 return false;
             }
 
-            _storedWorldItemsRoot = new GameObject(
-                "Inventory Stored World Items");
-
-            _storedWorldItemsRoot.transform.SetParent(transform, false);
-            _storedWorldItemsRoot.SetActive(false);
+            if (!_worldItems.TryInitialize(transform, out error))
+            {
+                DisposeRuntime();
+                return false;
+            }
 
             IsInitialized = true;
             error = null;
@@ -142,12 +110,8 @@ namespace Failsafe.Inventory.Integration
 
         public bool SetPresentationVisible(bool visible)
         {
-            if (!IsInitialized || _generatedPresentationRoot == null)
-                return false;
-
-            _generatedPresentationRoot.SetActive(visible);
-            QuickBarPresenter?.SetInventoryOpen(visible);
-            return true;
+            return IsInitialized &&
+                   _runtimePresentation.SetVisible(visible);
         }
 
         public bool TryBindRobotPresentationLayout(
@@ -157,42 +121,9 @@ namespace Failsafe.Inventory.Integration
             if (!EnsureInitialized(out error))
                 return false;
 
-            if (layout == null)
-            {
-                error = "Robot inventory presentation layout is null.";
-                return false;
-            }
-
-            if (!layout.TryValidate(
-                    Grid.Columns,
-                    Grid.Rows,
-                    QuickSlots.SlotCount,
-                    out error))
-            {
-                return false;
-            }
-
-            if (!layout.TryApplyGridPose(
-                    _generatedPresentationRoot.transform,
-                    Grid.Columns,
-                    Grid.Rows,
-                    _cellSize,
-                    out error))
-            {
-                return false;
-            }
-
-            if (!QuickBarPresenter.TrySetExternalOpenLayout(
-                    layout,
-                    out error))
-            {
-                return false;
-            }
-
-            Presenter.SetManualGridLayout(layout);
-            Presenter.SetPrototypeGridVisible(false);
-            error = null;
-            return true;
+            return _runtimePresentation.TryBindRobotLayout(
+                layout,
+                out error);
         }
 
         public bool TryBindClosedQuickBarLayout(
@@ -202,13 +133,7 @@ namespace Failsafe.Inventory.Integration
             if (!EnsureInitialized(out error))
                 return false;
 
-            if (layout == null)
-            {
-                error = "Closed quick-bar presentation layout is null.";
-                return false;
-            }
-
-            return QuickBarPresenter.TrySetExternalClosedLayout(
+            return _runtimePresentation.TryBindClosedQuickBarLayout(
                 layout,
                 out error);
         }
@@ -227,7 +152,7 @@ namespace Failsafe.Inventory.Integration
                     InventoryFailureReason.InvalidItem);
             }
 
-            if (!TryRegisterCatalogItem(itemData, out error))
+            if (!_catalog.TryRegister(itemData, out error))
             {
                 return InventoryOperationResult.Failure(
                     InventoryFailureReason.InvalidItem);
@@ -343,12 +268,14 @@ namespace Failsafe.Inventory.Integration
             runtimeItem.name =
                 $"{itemData.WorldItemPrefab.name} (Starting Item)";
 
-            if (!HasMatchingDefinition(runtimeItem, itemData))
+            if (!InventoryWorldItemRegistry.HasMatchingDefinition(
+                    runtimeItem,
+                    itemData))
             {
                 error =
                     $"World Item Prefab '{itemData.WorldItemPrefab.name}' " +
                     $"does not use ItemData '{itemData.name}'.";
-                DestroyUnityObject(runtimeItem.gameObject);
+                InventoryWorldItemRegistry.Destroy(runtimeItem);
 
                 return InventoryOperationResult.Failure(
                     InventoryFailureReason.InvalidItem);
@@ -362,7 +289,7 @@ namespace Failsafe.Inventory.Integration
                 out error);
 
             if (!result.IsSuccess && runtimeItem != null)
-                DestroyUnityObject(runtimeItem.gameObject);
+                InventoryWorldItemRegistry.Destroy(runtimeItem);
 
             return result;
         }
@@ -371,35 +298,16 @@ namespace Failsafe.Inventory.Integration
             string instanceId,
             out Item worldItem)
         {
-            worldItem = null;
-
-            return !string.IsNullOrWhiteSpace(instanceId) &&
-                   _worldItemsByInstanceId.TryGetValue(
-                       instanceId,
-                       out worldItem) &&
-                   worldItem != null;
+            return _worldItems.TryGet(instanceId, out worldItem);
         }
 
         public bool TryGetWorldItemInstanceId(
             Item worldItem,
             out string instanceId)
         {
-            instanceId = null;
-
-            if (worldItem == null)
-                return false;
-
-            foreach (KeyValuePair<string, Item> pair in
-                     _worldItemsByInstanceId)
-            {
-                if (pair.Value != worldItem)
-                    continue;
-
-                instanceId = pair.Key;
-                return true;
-            }
-
-            return false;
+            return _worldItems.TryGetInstanceId(
+                worldItem,
+                out instanceId);
         }
 
         public bool TryMoveRegisteredWorldItemToStorage(
@@ -409,28 +317,7 @@ namespace Failsafe.Inventory.Integration
             if (!EnsureInitialized(out error))
                 return false;
 
-            if (_storedWorldItemsRoot == null)
-            {
-                error = "Inventory world-item storage is not initialized.";
-                return false;
-            }
-
-            if (!TryGetWorldItem(instanceId, out Item worldItem))
-            {
-                error =
-                    $"No world item is registered for inventory item " +
-                    $"'{instanceId}'.";
-
-                return false;
-            }
-
-            worldItem.ToInventoryState();
-            worldItem.transform.SetParent(
-                _storedWorldItemsRoot.transform,
-                true);
-
-            error = null;
-            return true;
+            return _worldItems.TryMoveToStorage(instanceId, out error);
         }
 
         public bool TryAssignFirstAvailableQuickSlot(
@@ -537,7 +424,7 @@ namespace Failsafe.Inventory.Integration
 
             if (inventoryItem.Quantity > 1)
             {
-                if (!TryCreateStoredStackRepresentative(
+                if (!_worldItems.TryCreateStoredStackRepresentative(
                         worldItem.ItemData,
                         out Item replacement,
                         out error))
@@ -554,7 +441,7 @@ namespace Failsafe.Inventory.Integration
 
                 if (!quantityResult.IsSuccess)
                 {
-                    DestroyUnityObject(replacement.gameObject);
+                    InventoryWorldItemRegistry.Destroy(replacement);
                     worldItem = null;
                     error =
                         $"Inventory quantity removal failed: " +
@@ -563,16 +450,8 @@ namespace Failsafe.Inventory.Integration
                     return quantityResult;
                 }
 
-                _worldItemsByInstanceId[instanceId] = replacement;
-                ReleaseWorldItem(worldItem);
-
-                if (_storedWorldItemsRoot != null &&
-                    worldItem.transform.IsChildOf(
-                        _storedWorldItemsRoot.transform))
-                {
-                    worldItem.transform.SetParent(null, true);
-                    worldItem.ToWorldState();
-                }
+                _worldItems.Replace(instanceId, replacement);
+                _worldItems.ReleaseToWorldIfStored(worldItem);
 
                 error = null;
                 return quantityResult;
@@ -590,17 +469,8 @@ namespace Failsafe.Inventory.Integration
                 return result;
             }
 
-            _worldItemsByInstanceId.Remove(instanceId);
-
-            ReleaseWorldItem(worldItem);
-
-            if (_storedWorldItemsRoot != null &&
-                worldItem.transform.IsChildOf(
-                    _storedWorldItemsRoot.transform))
-            {
-                worldItem.transform.SetParent(null, true);
-                worldItem.ToWorldState();
-            }
+            _worldItems.Remove(instanceId, out _);
+            _worldItems.ReleaseToWorldIfStored(worldItem);
 
             error = null;
             return result;
@@ -638,11 +508,8 @@ namespace Failsafe.Inventory.Integration
 
             if (inventoryItem.Quantity > 1)
             {
-                if (_storedWorldItemsRoot == null)
+                if (!_worldItems.TryEnsureStorage(out error))
                 {
-                    error =
-                        "Inventory world-item storage is not initialized.";
-
                     return InventoryOperationResult.Failure(
                         InventoryFailureReason.InvalidItem,
                         inventoryItem.Quantity);
@@ -661,10 +528,7 @@ namespace Failsafe.Inventory.Integration
                     return quantityResult;
                 }
 
-                worldItem.ToInventoryState();
-                worldItem.transform.SetParent(
-                    _storedWorldItemsRoot.transform,
-                    true);
+                _worldItems.Store(worldItem);
 
                 error = null;
                 return quantityResult;
@@ -743,11 +607,11 @@ namespace Failsafe.Inventory.Integration
             int sourceQuickSlot = FindAssignedQuickSlot(sourceInstanceId);
             int targetQuickSlot = FindAssignedQuickSlot(targetInstanceId);
 
-            _worldItemsByInstanceId.TryGetValue(
+            _worldItems.TryGet(
                 sourceInstanceId,
                 out Item sourceWorldItem);
 
-            _worldItemsByInstanceId.TryGetValue(
+            _worldItems.TryGet(
                 targetInstanceId,
                 out Item targetWorldItem);
 
@@ -759,7 +623,7 @@ namespace Failsafe.Inventory.Integration
                 return result;
 
             _viewResolver.Unregister(sourceInstanceId);
-            _worldItemsByInstanceId.Remove(sourceInstanceId);
+            _worldItems.Remove(sourceInstanceId, out _);
 
             bool useSourceWorldItem =
                 sourceWorldItem != null &&
@@ -767,18 +631,18 @@ namespace Failsafe.Inventory.Integration
 
             if (useSourceWorldItem)
             {
-                _worldItemsByInstanceId[targetInstanceId] = sourceWorldItem;
+                _worldItems.Replace(targetInstanceId, sourceWorldItem);
 
                 if (targetWorldItem != null &&
                     targetWorldItem != sourceWorldItem)
                 {
-                    RetireMergedWorldItem(targetWorldItem);
+                    _worldItems.RetireMerged(targetWorldItem);
                 }
             }
             else if (sourceWorldItem != null &&
                      sourceWorldItem != targetWorldItem)
             {
-                RetireMergedWorldItem(sourceWorldItem);
+                _worldItems.RetireMerged(sourceWorldItem);
             }
 
             if (sourceQuickSlot >= 0 && targetQuickSlot < 0)
@@ -799,12 +663,9 @@ namespace Failsafe.Inventory.Integration
                 RemoveInventoryEntry(instanceId);
 
             if (result.IsSuccess &&
-                _worldItemsByInstanceId.TryGetValue(
-                    instanceId,
-                    out Item worldItem))
+                _worldItems.Remove(instanceId, out Item worldItem))
             {
-                _worldItemsByInstanceId.Remove(instanceId);
-                DestroyUnityObject(worldItem.gameObject);
+                InventoryWorldItemRegistry.Destroy(worldItem);
             }
 
             return result;
@@ -870,7 +731,7 @@ namespace Failsafe.Inventory.Integration
                     InventoryFailureReason.DuplicateInstanceId);
             }
 
-            if (!TryRegisterCatalogItem(worldItem.ItemData, out error))
+            if (!_catalog.TryRegister(worldItem.ItemData, out error))
             {
                 return InventoryOperationResult.Failure(
                     InventoryFailureReason.InvalidItem);
@@ -899,35 +760,27 @@ namespace Failsafe.Inventory.Integration
 
                 if (!moveToStorage || existingWorldItem == null)
                 {
-                    RegisterWorldItem(
+                    _worldItems.Register(
                         availableStack.InstanceId,
                         worldItem,
                         runtimeGenerated);
 
                     if (moveToStorage)
-                    {
-                        worldItem.ToInventoryState();
-                        worldItem.transform.SetParent(
-                            _storedWorldItemsRoot.transform,
-                            true);
-                    }
+                        _worldItems.Store(worldItem);
 
                     if (existingWorldItem != null &&
                         existingWorldItem != worldItem)
                     {
-                        RetireMergedWorldItem(existingWorldItem);
+                        _worldItems.RetireMerged(existingWorldItem);
                     }
                 }
                 else
                 {
-                    ClaimWorldItem(
+                    InventoryWorldItemRegistry.Claim(
                         worldItem,
-                        GetSourcePersistentId(
-                            worldItem,
-                            runtimeGenerated),
                         runtimeGenerated);
 
-                    RetireMergedWorldItem(worldItem);
+                    _worldItems.RetireMerged(worldItem);
                 }
 
                 instanceId = availableStack.InstanceId;
@@ -944,18 +797,13 @@ namespace Failsafe.Inventory.Integration
             if (!result.IsSuccess)
                 return result;
 
-            RegisterWorldItem(
+            _worldItems.Register(
                 addedInstanceId,
                 worldItem,
                 runtimeGenerated);
 
             if (moveToStorage)
-            {
-                worldItem.ToInventoryState();
-                worldItem.transform.SetParent(
-                    _storedWorldItemsRoot.transform,
-                    true);
-            }
+                _worldItems.Store(worldItem);
 
             instanceId = addedInstanceId;
             error = null;
@@ -999,119 +847,6 @@ namespace Failsafe.Inventory.Integration
             return false;
         }
 
-        private bool TryCreateStoredStackRepresentative(
-            ItemData itemData,
-            out Item worldItem,
-            out string error)
-        {
-            worldItem = null;
-
-            if (_storedWorldItemsRoot == null)
-            {
-                error = "Inventory world-item storage is not initialized.";
-                return false;
-            }
-
-            if (itemData == null || itemData.WorldItemPrefab == null)
-            {
-                error = "Stacked inventory item has no World Item Prefab.";
-                return false;
-            }
-
-            worldItem = Instantiate(itemData.WorldItemPrefab);
-            worldItem.name =
-                $"{itemData.WorldItemPrefab.name} (Stack Representative)";
-
-            if (!HasMatchingDefinition(worldItem, itemData))
-            {
-                error =
-                    $"World Item Prefab '{itemData.WorldItemPrefab.name}' " +
-                    $"does not use ItemData '{itemData.name}'.";
-
-                DestroyUnityObject(worldItem.gameObject);
-                worldItem = null;
-                return false;
-            }
-
-            ClaimWorldItem(
-                worldItem,
-                sourcePersistentId: null,
-                runtimeGenerated: true);
-
-            worldItem.ToInventoryState();
-            worldItem.transform.SetParent(
-                _storedWorldItemsRoot.transform,
-                true);
-
-            error = null;
-            return true;
-        }
-
-        private void RegisterWorldItem(
-            string instanceId,
-            Item worldItem,
-            bool runtimeGenerated)
-        {
-            _worldItemsByInstanceId[instanceId] = worldItem;
-
-            ClaimWorldItem(
-                worldItem,
-                GetSourcePersistentId(worldItem, runtimeGenerated),
-                runtimeGenerated);
-        }
-
-        private static string GetSourcePersistentId(
-            Item worldItem,
-            bool runtimeGenerated)
-        {
-            if (runtimeGenerated || worldItem == null)
-                return null;
-
-            RunPersistentObject persistentObject =
-                worldItem.GetComponent<RunPersistentObject>();
-
-            return persistentObject != null
-                ? persistentObject.PersistentId
-                : null;
-        }
-
-        private static void ReleaseWorldItem(Item worldItem)
-        {
-            if (worldItem == null)
-                return;
-
-            InventoryWorldItemOwnership ownership =
-                worldItem.GetComponent<InventoryWorldItemOwnership>();
-
-            ownership?.Release();
-        }
-
-        private static void RetireMergedWorldItem(Item worldItem)
-        {
-            if (worldItem == null)
-                return;
-
-            InventoryWorldItemOwnership ownership =
-                worldItem.GetComponent<InventoryWorldItemOwnership>();
-
-            bool preservePersistentSource =
-                ownership != null &&
-                !ownership.IsRuntimeGenerated &&
-                !string.IsNullOrWhiteSpace(
-                    ownership.SourcePersistentId);
-
-            if (!preservePersistentSource)
-            {
-                DestroyUnityObject(worldItem.gameObject);
-                return;
-            }
-
-            ownership.Release();
-            worldItem.transform.SetParent(null, true);
-            worldItem.ToWorldState();
-            worldItem.gameObject.SetActive(false);
-        }
-
         private int FindAssignedQuickSlot(string instanceId)
         {
             if (QuickSlots == null || string.IsNullOrWhiteSpace(instanceId))
@@ -1131,126 +866,21 @@ namespace Failsafe.Inventory.Integration
             return -1;
         }
 
-        private bool TryBuildItemCatalog(out string error)
-        {
-            _itemDataByDefinitionId.Clear();
-
-            if (_itemCatalog == null)
-            {
-                error = null;
-                return true;
-            }
-
-            for (int i = 0; i < _itemCatalog.Length; i++)
-            {
-                if (!TryRegisterCatalogItem(_itemCatalog[i], out error))
-                {
-                    error = $"Item catalog entry {i}: {error}";
-                    return false;
-                }
-            }
-
-            error = null;
-            return true;
-        }
-
-        private bool TryRegisterCatalogItem(
-            ItemData itemData,
-            out string error)
-        {
-            if (!ItemDataInventoryAdapter.TryValidateView(
-                    itemData,
-                    out error))
-            {
-                return false;
-            }
-
-            string definitionId = itemData.InventoryDefinitionId.Trim();
-
-            if (_itemDataByDefinitionId.TryGetValue(
-                    definitionId,
-                    out ItemData registeredItemData))
-            {
-                if (registeredItemData == itemData)
-                {
-                    error = null;
-                    return true;
-                }
-
-                error =
-                    $"Inventory definition ID '{definitionId}' is used by " +
-                    $"both '{registeredItemData.name}' and '{itemData.name}'.";
-
-                return false;
-            }
-
-            _itemDataByDefinitionId.Add(definitionId, itemData);
-            error = null;
-            return true;
-        }
-
-        private static bool HasMatchingDefinition(
-            Item worldItem,
-            ItemData itemData)
-        {
-            return worldItem != null &&
-                   worldItem.ItemData != null &&
-                   itemData != null &&
-                   string.Equals(
-                       worldItem.ItemData.InventoryDefinitionId?.Trim(),
-                       itemData.InventoryDefinitionId?.Trim(),
-                       StringComparison.Ordinal);
-        }
-
-        private static void ClaimWorldItem(
-            Item worldItem,
-            string sourcePersistentId,
-            bool runtimeGenerated)
-        {
-            InventoryWorldItemOwnership ownership =
-                worldItem.GetComponent<InventoryWorldItemOwnership>();
-
-            if (ownership == null)
-            {
-                ownership = worldItem.gameObject
-                    .AddComponent<InventoryWorldItemOwnership>();
-            }
-
-            ownership.Claim(sourcePersistentId, runtimeGenerated);
-        }
-
         public bool TryResolveItemData(
             string definitionId,
             out ItemData itemData,
             out string error)
         {
-            itemData = null;
-
             if (!EnsureInitialized(out error))
-                return false;
-
-            string normalizedId = definitionId?.Trim();
-
-            if (string.IsNullOrWhiteSpace(normalizedId))
             {
-                error = "Inventory definition ID cannot be empty.";
+                itemData = null;
                 return false;
             }
 
-            if (!_itemDataByDefinitionId.TryGetValue(
-                    normalizedId,
-                    out itemData) ||
-                itemData == null)
-            {
-                error =
-                    $"Inventory ItemData catalog has no definition " +
-                    $"'{normalizedId}'.";
-
-                return false;
-            }
-
-            error = null;
-            return true;
+            return _catalog.TryResolve(
+                definitionId,
+                out itemData,
+                out error);
         }
 
         public bool TryGetItemDataForInstance(
@@ -1281,7 +911,7 @@ namespace Failsafe.Inventory.Integration
                     InventoryFailureReason.InvalidItem);
             }
 
-            if (!TryRegisterCatalogItem(itemData, out error) ||
+            if (!_catalog.TryRegister(itemData, out error) ||
                 !ItemDataInventoryAdapter.TryCreateModel(
                     itemData,
                     instanceId,
@@ -1294,7 +924,9 @@ namespace Failsafe.Inventory.Integration
             }
 
             if (worldItem != null &&
-                !HasMatchingDefinition(worldItem, itemData))
+                !InventoryWorldItemRegistry.HasMatchingDefinition(
+                    worldItem,
+                    itemData))
             {
                 error =
                     $"World item '{worldItem.name}' does not match " +
@@ -1342,16 +974,11 @@ namespace Failsafe.Inventory.Integration
 
             if (worldItem != null)
             {
-                _worldItemsByInstanceId.Add(instanceId, worldItem);
-                ClaimWorldItem(
+                _worldItems.AddRestored(
+                    instanceId,
                     worldItem,
                     sourcePersistentId,
                     runtimeGeneratedWorldItem);
-                worldItem.gameObject.SetActive(true);
-                worldItem.ToInventoryState();
-                worldItem.transform.SetParent(
-                    _storedWorldItemsRoot.transform,
-                    true);
             }
 
             error = null;
@@ -1372,29 +999,11 @@ namespace Failsafe.Inventory.Integration
             {
                 string instanceId = instanceIds[i];
 
-                if (_worldItemsByInstanceId.TryGetValue(
+                if (_worldItems.Remove(
                         instanceId,
-                        out Item worldItem) &&
-                    worldItem != null)
+                        out Item worldItem))
                 {
-                    _worldItemsByInstanceId.Remove(instanceId);
-                    InventoryWorldItemOwnership ownership =
-                        worldItem.GetComponent<InventoryWorldItemOwnership>();
-
-                    if (ownership != null &&
-                        !ownership.IsRuntimeGenerated &&
-                        !string.IsNullOrWhiteSpace(
-                            ownership.SourcePersistentId))
-                    {
-                        ownership.Release();
-                        worldItem.transform.SetParent(null, true);
-                        worldItem.gameObject.SetActive(true);
-                        worldItem.ToWorldState();
-                    }
-                    else
-                    {
-                        DestroyUnityObject(worldItem.gameObject);
-                    }
+                    _worldItems.ReleaseOrDestroyForRestore(worldItem);
                 }
 
                 InventoryOperationResult removeResult =
@@ -1432,11 +1041,7 @@ namespace Failsafe.Inventory.Integration
 
         private void DisposeRuntime()
         {
-            if (QuickBarPresenter != null)
-                QuickBarPresenter.Dispose();
-
-            if (Presenter != null)
-                Presenter.Dispose();
+            _runtimePresentation.Dispose();
 
             if (QuickSlots != null)
                 QuickSlots.Dispose();
@@ -1444,38 +1049,12 @@ namespace Failsafe.Inventory.Integration
             if (_viewResolver != null)
                 _viewResolver.Clear();
 
-            _worldItemsByInstanceId.Clear();
-            _itemDataByDefinitionId.Clear();
-
-            if (_generatedPresentationRoot != null)
-                DestroyUnityObject(_generatedPresentationRoot);
-
-            if (_generatedQuickBarRoot != null)
-                DestroyUnityObject(_generatedQuickBarRoot);
-
-            if (_storedWorldItemsRoot != null)
-                DestroyUnityObject(_storedWorldItemsRoot);
-
-            Presenter = null;
-            QuickBarPresenter = null;
+            _worldItems.Dispose();
+            _catalog.Clear();
             QuickSlots = null;
             Grid = null;
             _viewResolver = null;
-            _generatedPresentationRoot = null;
-            _generatedQuickBarRoot = null;
-            _storedWorldItemsRoot = null;
             IsInitialized = false;
-        }
-
-        private static void DestroyUnityObject(UnityEngine.Object target)
-        {
-            if (target == null)
-                return;
-
-            if (Application.isPlaying)
-                Destroy(target);
-            else
-                DestroyImmediate(target);
         }
     }
 }
