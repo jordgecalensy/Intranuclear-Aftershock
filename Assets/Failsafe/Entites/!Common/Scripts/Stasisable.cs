@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Failsafe.PlayerMovements;
+using Failsafe.Scripts.EffectSystem;
 using FMODUnity;
 using UnityEngine;
 using UnityEngine.Serialization;

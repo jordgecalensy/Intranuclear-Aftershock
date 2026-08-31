@@ -75,44 +75,47 @@ namespace Failsafe.Scripts.EffectSystem.Tests
             propagation.Initialize(10f, 2f);
 
             bool beforeInterval = propagation.Tick(
-                11.9f,
-                true,
-                2f,
-                1f,
-                1,
-                Vector3.zero,
-                Vector3.forward,
-                1f,
-                2f,
-                0,
-                0f,
-                0f);
+                new SpatialPropagationRequest(
+                    currentTime: 11.9f,
+                    enabled: true,
+                    interval: 2f,
+                    chance: 1f,
+                    maxChildren: 1,
+                    origin: Vector3.zero,
+                    fallbackDirection: Vector3.forward,
+                    sourceRadius: 1f,
+                    distance: 2f,
+                    surfaceMask: 0,
+                    surfaceSearchHeight: 0f,
+                    surfaceSearchDistance: 0f));
             bool firstAttempt = propagation.Tick(
-                12f,
-                true,
-                2f,
-                1f,
-                1,
-                Vector3.zero,
-                Vector3.forward,
-                1f,
-                2f,
-                0,
-                0f,
-                0f);
+                new SpatialPropagationRequest(
+                    currentTime: 12f,
+                    enabled: true,
+                    interval: 2f,
+                    chance: 1f,
+                    maxChildren: 1,
+                    origin: Vector3.zero,
+                    fallbackDirection: Vector3.forward,
+                    sourceRadius: 1f,
+                    distance: 2f,
+                    surfaceMask: 0,
+                    surfaceSearchHeight: 0f,
+                    surfaceSearchDistance: 0f));
             bool afterLimit = propagation.Tick(
-                20f,
-                true,
-                2f,
-                1f,
-                1,
-                Vector3.zero,
-                Vector3.forward,
-                1f,
-                2f,
-                0,
-                0f,
-                0f);
+                new SpatialPropagationRequest(
+                    currentTime: 20f,
+                    enabled: true,
+                    interval: 2f,
+                    chance: 1f,
+                    maxChildren: 1,
+                    origin: Vector3.zero,
+                    fallbackDirection: Vector3.forward,
+                    sourceRadius: 1f,
+                    distance: 2f,
+                    surfaceMask: 0,
+                    surfaceSearchHeight: 0f,
+                    surfaceSearchDistance: 0f));
 
             Assert.That(beforeInterval, Is.False);
             Assert.That(firstAttempt, Is.True);

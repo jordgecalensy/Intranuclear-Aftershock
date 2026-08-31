@@ -1,7 +1,8 @@
-using Failsafe.Scripts.EffectSystem;
 using UnityEngine;
 using VContainer;
 
+namespace Failsafe.Scripts.EffectSystem
+{
 [RequireComponent(typeof(SphereCollider))]
 public sealed class FireAreaAdvanced : MonoBehaviour
 {
@@ -298,19 +299,21 @@ public sealed class FireAreaAdvanced : MonoBehaviour
 
     private void TickPropagation()
     {
-        _propagation.Tick(
-            Time.time,
-            enableSpreading && firePrefab != null,
-            spreadEvery,
-            spreadChance,
-            maxChildren,
-            transform.position,
-            transform.forward,
-            _lifecycle.Radius,
-            spreadDistance,
-            ~0,
-            5f,
-            15f);
+        var request = new SpatialPropagationRequest(
+            currentTime: Time.time,
+            enabled: enableSpreading && firePrefab != null,
+            interval: spreadEvery,
+            chance: spreadChance,
+            maxChildren: maxChildren,
+            origin: transform.position,
+            fallbackDirection: transform.forward,
+            sourceRadius: _lifecycle.Radius,
+            distance: spreadDistance,
+            surfaceMask: ~0,
+            surfaceSearchHeight: 5f,
+            surfaceSearchDistance: 15f);
+
+        _propagation.Tick(in request);
     }
 
     private void BeginExtinguishing()
@@ -350,4 +353,5 @@ public sealed class FireAreaAdvanced : MonoBehaviour
             0.8f);
         Gizmos.DrawWireSphere(transform.position, radius);
     }
+}
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Failsafe.Scripts.EffectSystem;
 using UnityEngine;
 
 public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsertable

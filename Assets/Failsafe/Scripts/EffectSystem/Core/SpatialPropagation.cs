@@ -28,41 +28,30 @@ namespace Failsafe.Scripts.EffectSystem
             _nextAttemptAt = currentTime + NormalizeInterval(interval);
         }
 
-        public bool Tick(
-            float currentTime,
-            bool enabled,
-            float interval,
-            float chance,
-            int maxChildren,
-            Vector3 origin,
-            Vector3 fallbackDirection,
-            float sourceRadius,
-            float distance,
-            LayerMask surfaceMask,
-            float surfaceSearchHeight,
-            float surfaceSearchDistance)
+        public bool Tick(in SpatialPropagationRequest request)
         {
-            if (!enabled ||
-                maxChildren <= 0 ||
-                _spawnedCount >= maxChildren ||
-                currentTime < _nextAttemptAt)
+            if (!request.Enabled ||
+                request.MaxChildren <= 0 ||
+                _spawnedCount >= request.MaxChildren ||
+                request.CurrentTime < _nextAttemptAt)
             {
                 return false;
             }
 
-            _nextAttemptAt = currentTime + NormalizeInterval(interval);
+            _nextAttemptAt = request.CurrentTime +
+                NormalizeInterval(request.Interval);
 
-            if (UnityEngine.Random.value > Mathf.Clamp01(chance))
+            if (UnityEngine.Random.value > Mathf.Clamp01(request.Chance))
                 return false;
 
             Vector3 spawnPosition = FindSpawnPosition(
-                origin,
-                fallbackDirection,
-                sourceRadius,
-                distance,
-                surfaceMask,
-                surfaceSearchHeight,
-                surfaceSearchDistance);
+                request.Origin,
+                request.FallbackDirection,
+                request.SourceRadius,
+                request.Distance,
+                request.SurfaceMask,
+                request.SurfaceSearchHeight,
+                request.SurfaceSearchDistance);
 
             if (!_trySpawn(spawnPosition))
                 return false;

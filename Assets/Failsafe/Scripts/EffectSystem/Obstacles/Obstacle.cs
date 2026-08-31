@@ -1,9 +1,10 @@
 using System.Collections.Generic;
-using Failsafe.Scripts.EffectSystem;
 using UnityEngine;
 using UnityEngine.Serialization;
 using VContainer;
 
+namespace Failsafe.Scripts.EffectSystem
+{
 [RequireComponent(typeof(Rigidbody))]
 public class Obstacle : MonoBehaviour
 {
@@ -256,4 +257,5 @@ public class Obstacle : MonoBehaviour
     {
         SetStasis(false);
     }
+}
 }
