@@ -1,9 +1,11 @@
 using System;
+using DG.Tweening;
 using Failsafe.Scripts.Damage;
 using Failsafe.Scripts.Damage.Implementation;
 using Failsafe.Scripts.Health;
 using FMODUnity;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Failsafe.Scripts.Destruction
 {
@@ -24,6 +26,11 @@ namespace Failsafe.Scripts.Destruction
         [SerializeField, Min(0f)] private float _fragmentImpulse = 2f;
         [SerializeField] private bool _destroyAfterLifetime = true;
         [SerializeField, Min(0f)] private float _debrisLifetime = 10f;
+        [FormerlySerializedAs("_fadeDebris")]
+        [SerializeField] private bool _decayDebris = true;
+        [FormerlySerializedAs("_debrisFadeStartFraction")]
+        [SerializeField, Range(0f, 1f)]
+        private float _debrisDecayStartFraction = 0.5f;
 
         [Header("FMOD")]
         [SerializeField] private EventReference _damageSound;
@@ -35,6 +42,7 @@ namespace Failsafe.Scripts.Destruction
         private SimpleHealth _health;
         private DamageInfo _lastDamage;
         private bool _hasDamageContext;
+        private Sequence _debrisCleanupSequence;
 
         public float MaxHealth => Mathf.Max(0.01f, _maxHealth);
         public float CurrentHealth => _health?.CurrentHealth ?? MaxHealth;
@@ -47,11 +55,14 @@ namespace Failsafe.Scripts.Destruction
 
         private void OnDestroy()
         {
-            if (_health == null)
-                return;
+            if (_health != null)
+            {
+                _health.OnHealthChanged -= HandleHealthChanged;
+                _health.OnDeath -= HandleDeath;
+            }
 
-            _health.OnHealthChanged -= HandleHealthChanged;
-            _health.OnDeath -= HandleDeath;
+            _debrisCleanupSequence?.Kill();
+            _debrisCleanupSequence = null;
         }
 
         public void TakeDamage(IDamage damage)
@@ -191,9 +202,61 @@ namespace Failsafe.Scripts.Destruction
             float lifetime = Mathf.Max(0f, _debrisLifetime);
 
             if (lifetime <= 0f)
+            {
                 Destroy(gameObject);
-            else
+                return;
+            }
+
+            if (!_decayDebris || _fragmentsRoot == null)
+            {
                 Destroy(gameObject, lifetime);
+                return;
+            }
+
+            float decayStart = lifetime * _debrisDecayStartFraction;
+            float decayDuration = lifetime - decayStart;
+            Transform fragmentsTransform = _fragmentsRoot.transform;
+
+            _debrisCleanupSequence = DOTween.Sequence();
+            _debrisCleanupSequence.AppendInterval(lifetime);
+            _debrisCleanupSequence.InsertCallback(
+                decayStart,
+                StopDebrisPhysics);
+
+            for (int i = 0; i < fragmentsTransform.childCount; i++)
+            {
+                Transform fragment = fragmentsTransform.GetChild(i);
+
+                _debrisCleanupSequence.Insert(
+                    decayStart,
+                    fragment.DOScale(Vector3.zero, decayDuration)
+                        .SetEase(Ease.InQuad));
+            }
+
+            _debrisCleanupSequence.OnComplete(() =>
+            {
+                _debrisCleanupSequence = null;
+                Destroy(gameObject);
+            });
+        }
+
+        private void StopDebrisPhysics()
+        {
+            Rigidbody[] rigidbodies =
+                _fragmentsRoot.GetComponentsInChildren<Rigidbody>(true);
+
+            for (int i = 0; i < rigidbodies.Length; i++)
+            {
+                Rigidbody rigidbody = rigidbodies[i];
+                rigidbody.detectCollisions = false;
+                rigidbody.isKinematic = true;
+            }
+
+            Collider[] colliders =
+                _fragmentsRoot.GetComponentsInChildren<Collider>(true);
+
+            for (int i = 0; i < colliders.Length; i++)
+                colliders[i].enabled = false;
         }
 
         private Vector3 ResolveSoundPosition()
@@ -253,6 +316,8 @@ namespace Failsafe.Scripts.Destruction
             _maxHealth = Mathf.Max(0.01f, _maxHealth);
             _fragmentImpulse = Mathf.Max(0f, _fragmentImpulse);
             _debrisLifetime = Mathf.Max(0f, _debrisLifetime);
+            _debrisDecayStartFraction =
+                Mathf.Clamp01(_debrisDecayStartFraction);
 
             if (_intactRoot == gameObject)
             {
