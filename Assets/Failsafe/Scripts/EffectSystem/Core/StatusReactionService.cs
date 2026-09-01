@@ -46,14 +46,14 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (state.IsImmune(incomingStatus))
             {
-                Debug.Log($"[StatusReactionService] {state.name}: {incomingStatus} blocked by immunity.", state);
+                EffectLog.Info(EffectLog.Status, $"[StatusReactionService] {state.name}: {incomingStatus} blocked by immunity.", state);
                 return true;
             }
 
             if (incomingStatus == StatusEffectType.Shock &&
                 state.HasStatus(StatusEffectType.Frozen))
             {
-                Debug.Log($"[StatusReactionService] {state.name}: Shock blocked by Frozen.", state);
+                EffectLog.Info(EffectLog.Status, $"[StatusReactionService] {state.name}: Shock blocked by Frozen.", state);
                 return true;
             }
 
@@ -117,7 +117,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (coldStage < minColdStage)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Status,
                     $"[StatusReactionService] {state.name}: Wet + Cold ignored, Cold stage {coldStage} < {minColdStage}",
                     state);
 
@@ -126,11 +126,11 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_profile == null || _profile.FrozenReactionBundle == null)
             {
-                Debug.LogWarning("[StatusReactionService] FrozenReactionBundle is not assigned. Reaction skipped.", state);
+                EffectLog.Warning(EffectLog.Status, "[StatusReactionService] FrozenReactionBundle is not assigned. Reaction skipped.", state);
                 return false;
             }
 
-            Debug.Log(
+            EffectLog.Info(EffectLog.Status,
                 $"[StatusReactionService] {state.name}: Wet + Cold stage {coldStage} => Frozen",
                 state);
 
@@ -178,11 +178,11 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_profile == null || _profile.StunReactionBundle == null)
             {
-                Debug.LogWarning("[StatusReactionService] StunReactionBundle is not assigned. Reaction skipped.", state);
+                EffectLog.Warning(EffectLog.Status, "[StatusReactionService] StunReactionBundle is not assigned. Reaction skipped.", state);
                 return false;
             }
 
-            Debug.Log($"[StatusReactionService] {state.name}: Wet + Shock => Stun", state);
+            EffectLog.Info(EffectLog.Status, $"[StatusReactionService] {state.name}: Wet + Shock => Stun", state);
 
             state.RemoveStatus(StatusEffectType.Shock);
 
@@ -210,7 +210,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_reactionDepth > 8)
             {
-                Debug.LogError("[StatusReactionService] Reaction recursion limit reached.");
+                EffectLog.Error(EffectLog.Status, "[StatusReactionService] Reaction recursion limit reached.");
                 return;
             }
 

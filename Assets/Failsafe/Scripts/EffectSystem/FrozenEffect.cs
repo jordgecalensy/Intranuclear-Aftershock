@@ -49,7 +49,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (!_state.CanReceive(StatusEffectType.Frozen))
             {
-                Debug.Log($"[FrozenEffect] {_state.name}: blocked by immunity Frozen", _state);
+                EffectLog.Info(EffectLog.Status, $"[FrozenEffect] {_state.name}: blocked by immunity Frozen", _state);
                 _duration = 0f;
                 return;
             }
@@ -69,7 +69,7 @@ namespace Failsafe.Scripts.EffectSystem
                     source: _source);
             }
 
-            Debug.Log($"[FrozenEffect] {_state.name}: apply Frozen for {_duration:0.00}s", _state);
+            EffectLog.Info(EffectLog.Status, $"[FrozenEffect] {_state.name}: apply Frozen for {_duration:0.00}s", _state);
         }
 
         public override void ClearEffect()
@@ -95,7 +95,7 @@ namespace Failsafe.Scripts.EffectSystem
                 _state.UnregisterStatus(StatusEffectType.Frozen, this);
                 _state.AddTemporaryImmunity(_immunityStatusesOnEnd, _immunityDurationOnEnd);
 
-                Debug.Log($"[FrozenEffect] {_state.name}: clear Frozen", _state);
+                EffectLog.Info(EffectLog.Status, $"[FrozenEffect] {_state.name}: clear Frozen", _state);
             }
         }
 
@@ -115,7 +115,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (_physicsResponder != null)
                 _physicsResponder.ApplyFrozen(reapplied._duration, _source);
 
-            Debug.Log($"[FrozenEffect] {_state.name}: refresh Frozen for {reapplied._duration:0.00}s", _state);
+            EffectLog.Info(EffectLog.Status, $"[FrozenEffect] {_state.name}: refresh Frozen for {reapplied._duration:0.00}s", _state);
         }
     }
 }

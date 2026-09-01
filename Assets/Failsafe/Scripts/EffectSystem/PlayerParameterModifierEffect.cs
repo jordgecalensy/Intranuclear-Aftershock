@@ -90,7 +90,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Parameters,
                     $"[PlayerParameterModifierEffect] Applied {_appliedModifiers.Count} modifiers. Operation: {_operation}, value: {_modifierValue:0.###}, duration: {_duration:0.##}s.");
             }
         }
@@ -105,7 +105,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log && _appliedModifiers.Count > 0)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Parameters,
                     $"[PlayerParameterModifierEffect] Cleared {_appliedModifiers.Count} modifiers.");
             }
 

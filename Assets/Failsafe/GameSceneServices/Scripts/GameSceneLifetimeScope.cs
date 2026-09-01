@@ -35,6 +35,9 @@ namespace Failsafe.GameSceneServices
                 .As<IEnemySpawnSystem>()
                 .AsSelf();
 
+            builder.Register<RunPersistentObjectRegistry>(Lifetime.Singleton)
+                .AsSelf();
+
             builder.RegisterEntryPoint<WorldRunSaveParticipant>(Lifetime.Singleton);
             builder.RegisterEntryPoint<EnemyRunSaveParticipant>(Lifetime.Singleton);
 

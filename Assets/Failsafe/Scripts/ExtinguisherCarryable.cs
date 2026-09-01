@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Failsafe.Scripts.EffectSystem;
 using UnityEngine;
 
 public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsertable
@@ -21,6 +23,7 @@ public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsert
 
     // runtime
     private readonly Collider[] _hits = new Collider[64];
+    private readonly HashSet<FireAreaAdvanced> _affectedFires = new();
     private Transform _cam;
     private bool _using;
     private float _chargeLeft;
@@ -79,6 +82,7 @@ public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsert
             QueryTriggerInteraction.Collide);
 
         float cosLimit = Mathf.Cos(coneAngleDeg * Mathf.Deg2Rad);
+        _affectedFires.Clear();
 
         for (int i = 0; i < count; i++)
         {
@@ -89,15 +93,9 @@ public sealed class ExtinguisherCarryable : MonoBehaviour, ICarryUsable, IInsert
             if (Vector3.Dot(fwd, dir) < cosLimit) continue;
 
             var fire = col.GetComponentInParent<FireAreaAdvanced>();
-            if (fire == null) continue;
+            if (fire == null || !_affectedFires.Add(fire)) continue;
 
-            fire.intensity = Mathf.Max(0f, fire.intensity - extinguishPerSec * dt);
-
-            if (fire.intensity < 0.5f)
-                fire.maxRadius = Mathf.Max(fire.initialRadius, fire.maxRadius - (extinguishPerSec * 0.5f) * dt);
-
-            if (fire.intensity <= 0.01f)
-                Destroy(fire.gameObject);
+            fire.AddExtinguishImpulse(extinguishPerSec * dt);
         }
     }
 

@@ -50,7 +50,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (_strength <= 0f)
             {
                 if (_log)
-                    Debug.LogWarning("[NoiseEffect] Noise strength <= 0. Noise was not created.");
+                    EffectLog.Warning(EffectLog.Feedback, "[NoiseEffect] Noise strength <= 0. Noise was not created.");
 
                 return;
             }
@@ -63,7 +63,7 @@ namespace Failsafe.Scripts.EffectSystem
 
                 if (_log)
                 {
-                    Debug.Log(
+                    EffectLog.Info(EffectLog.Feedback,
                         $"[NoiseEffect] Create noise through PlayerNoiseController. Strength: {_strength:0.00}, duration: {_noiseDuration:0.00}s");
                 }
 
@@ -79,7 +79,7 @@ namespace Failsafe.Scripts.EffectSystem
 
                 if (_log)
                 {
-                    Debug.Log(
+                    EffectLog.Info(EffectLog.Feedback,
                         $"[NoiseEffect] Create noise through SignalManager fallback at {_sourceTransform.position}. Strength: {_strength:0.00}, duration: {_noiseDuration:0.00}s",
                         _sourceTransform);
                 }
@@ -88,7 +88,7 @@ namespace Failsafe.Scripts.EffectSystem
             }
 
             if (_log)
-                Debug.LogWarning("[NoiseEffect] Noise was not created: no PlayerNoiseController or SignalManager fallback.");
+                EffectLog.Warning(EffectLog.Feedback, "[NoiseEffect] Noise was not created: no PlayerNoiseController or SignalManager fallback.");
         }
 
         public override void ClearEffect()

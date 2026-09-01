@@ -24,7 +24,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (_material == null)
             {
                 if (_log)
-                    Debug.LogWarning("[CustomPassVisualEffectDefinition] Material is null.", this);
+                    EffectLog.Warning(EffectLog.Feedback, "[CustomPassVisualEffectDefinition] Material is null.", this);
 
                 return false;
             }

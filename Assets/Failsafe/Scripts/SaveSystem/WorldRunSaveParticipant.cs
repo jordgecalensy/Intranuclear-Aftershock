@@ -17,17 +17,23 @@ namespace Failsafe.Scripts.SaveSystem
         private const int WorldRestoreOrder = 300;
 
         private readonly RunSaveParticipantRegistry _participantRegistry;
+        private readonly RunPersistentObjectRegistry _persistentObjectRegistry;
+        private readonly List<RunPersistentObject> _runtimeObjects = new();
         private IDisposable _registration;
 
         public string ParticipantId => Id;
         public int RestoreOrder => WorldRestoreOrder;
 
         public WorldRunSaveParticipant(
-            RunSaveParticipantRegistry participantRegistry)
+            RunSaveParticipantRegistry participantRegistry,
+            RunPersistentObjectRegistry persistentObjectRegistry)
         {
             _participantRegistry =
                 participantRegistry ??
                 throw new ArgumentNullException(nameof(participantRegistry));
+            _persistentObjectRegistry =
+                persistentObjectRegistry ??
+                throw new ArgumentNullException(nameof(persistentObjectRegistry));
         }
 
         public void Initialize()
@@ -42,6 +48,7 @@ namespace Failsafe.Scripts.SaveSystem
         {
             _registration?.Dispose();
             _registration = null;
+            _runtimeObjects.Clear();
         }
 
         public void Capture(RunCheckpointData checkpoint)
@@ -52,16 +59,16 @@ namespace Failsafe.Scripts.SaveSystem
             if (checkpoint.floor == null)
                 checkpoint.floor = new FloorStateData();
 
-            RunPersistentObject[] runtimeObjects =
-                FindRuntimeObjects(includeInventoryOwned: false);
+            CollectRuntimeObjects(includeInventoryOwned: false);
             List<PersistentObjectStateData> states =
-                new List<PersistentObjectStateData>(runtimeObjects.Length);
+                new List<PersistentObjectStateData>(_runtimeObjects.Count);
             HashSet<string> persistentIds =
                 new HashSet<string>(StringComparer.Ordinal);
 
-            for (int i = 0; i < runtimeObjects.Length; i++)
+            for (int i = 0; i < _runtimeObjects.Count; i++)
             {
-                PersistentObjectStateData state = runtimeObjects[i].CaptureState();
+                PersistentObjectStateData state =
+                    _runtimeObjects[i].CaptureState();
 
                 if (!persistentIds.Add(state.persistentId))
                 {
@@ -180,46 +187,35 @@ namespace Failsafe.Scripts.SaveSystem
                 $"Restored {restorePairs.Count} persistent world objects.");
         }
 
-        private static RunPersistentObject[] FindRuntimeObjects(
+        private void CollectRuntimeObjects(
             bool includeInventoryOwned)
         {
-            RunPersistentObject[] runtimeObjects =
-                UnityEngine.Object.FindObjectsByType<RunPersistentObject>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
+            _persistentObjectRegistry.GetObjects(_runtimeObjects);
 
             if (includeInventoryOwned)
-                return runtimeObjects;
+                return;
 
-            List<RunPersistentObject> worldOwnedObjects =
-                new List<RunPersistentObject>(runtimeObjects.Length);
-
-            for (int i = 0; i < runtimeObjects.Length; i++)
+            for (int i = _runtimeObjects.Count - 1; i >= 0; i--)
             {
                 InventoryWorldItemOwnership ownership =
-                    runtimeObjects[i]
+                    _runtimeObjects[i]
                         .GetComponentInChildren<
                             InventoryWorldItemOwnership>(true);
 
                 if (ownership != null && ownership.IsInventoryOwned)
-                    continue;
-
-                worldOwnedObjects.Add(runtimeObjects[i]);
+                    _runtimeObjects.RemoveAt(i);
             }
-
-            return worldOwnedObjects.ToArray();
         }
 
-        private static Dictionary<string, RunPersistentObject> IndexRuntimeObjects()
+        private Dictionary<string, RunPersistentObject> IndexRuntimeObjects()
         {
-            RunPersistentObject[] runtimeObjects =
-                FindRuntimeObjects(includeInventoryOwned: true);
+            CollectRuntimeObjects(includeInventoryOwned: true);
             Dictionary<string, RunPersistentObject> objectsById =
                 new Dictionary<string, RunPersistentObject>(StringComparer.Ordinal);
 
-            for (int i = 0; i < runtimeObjects.Length; i++)
+            for (int i = 0; i < _runtimeObjects.Count; i++)
             {
-                RunPersistentObject runtimeObject = runtimeObjects[i];
+                RunPersistentObject runtimeObject = _runtimeObjects[i];
                 string persistentId = runtimeObject.PersistentId?.Trim();
 
                 if (string.IsNullOrWhiteSpace(persistentId))

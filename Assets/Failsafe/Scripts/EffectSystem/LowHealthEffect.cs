@@ -18,7 +18,7 @@ namespace Failsafe.Scripts.EffectSystem
         {
             _lowHpMaterial = Resources.Load<Material>("LowHealthEffect");
             if (_lowHpMaterial == null)
-                Debug.LogWarning("PlayerController: не найден материал LowHealthEffect в Resources/");
+                EffectLog.Warning(EffectLog.Feedback, "PlayerController: не найден материал LowHealthEffect в Resources/");
 
             _duration = Mathf.Infinity;
             IsUniqueEffect = true;
@@ -49,7 +49,7 @@ namespace Failsafe.Scripts.EffectSystem
             _lowHealthEmitter.EventReference = _lowHealthEvent;
             _lowHealthEmitter.Play();
 
-            Debug.Log("Low Health HDRP effect applied");
+            EffectLog.Info(EffectLog.Feedback, "Low Health HDRP effect applied");
         }
 
         public override void ClearEffect()
@@ -61,7 +61,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (_customPassVolume != null)
             {
                 Object.Destroy(_customPassVolume.gameObject);
-                Debug.Log("Low Health HDRP effect cleared");
+                EffectLog.Info(EffectLog.Feedback, "Low Health HDRP effect cleared");
             }
         }
     }

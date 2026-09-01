@@ -51,7 +51,7 @@ namespace Failsafe.Scripts.EffectSystem
 
                     if (grant?.Item == null)
                     {
-                        Debug.LogError(
+                        EffectLog.Error(EffectLog.Bundle,
                             $"[StartingItems] Perk '{perk.Id}' has an " +
                             $"empty starting item at index {grantIndex}.",
                             perk);
@@ -74,7 +74,7 @@ namespace Failsafe.Scripts.EffectSystem
                             continue;
                         }
 
-                        Debug.LogError(
+                        EffectLog.Error(EffectLog.Bundle,
                             $"[StartingItems] Could not grant " +
                             $"'{grant.Item.name}' from perk '{perk.Id}': " +
                             $"{error}",
@@ -85,7 +85,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (grantedCount > 0)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Bundle,
                     $"[StartingItems] Granted {grantedCount} item(s) " +
                     $"to engineer '{selectedEngineer.Name}'.",
                     _inventory);

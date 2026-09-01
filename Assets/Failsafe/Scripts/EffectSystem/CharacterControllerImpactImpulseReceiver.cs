@@ -62,7 +62,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Physics,
                     $"[CharacterControllerImpactImpulseReceiver] {name}: impulse {impulse}, velocity {_velocity}",
                     this);
             }

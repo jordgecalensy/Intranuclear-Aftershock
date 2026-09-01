@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using Failsafe.PlayerMovements;
+using Failsafe.Scripts.EffectSystem;
 using FMODUnity;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VContainer;
 using VContainer.Unity;
 
@@ -19,8 +21,9 @@ public class Stasisable : MonoBehaviour
     [Tooltip("Отключать Enemy через Enemy.DisableState(duration), если Enemy найден.")]
     [SerializeField] private bool _disableEnemyState = true;
 
-    [Tooltip("Останавливать DamageObstacle через DamageObstacle.SetStasis.")]
-    [SerializeField] private bool _freezeDamageObstacle = true;
+    [FormerlySerializedAs("_freezeDamageObstacle")]
+    [Tooltip("Останавливать Obstacle через Obstacle.SetStasis.")]
+    [SerializeField] private bool _freezeObstacle = true;
 
     [Tooltip("Если объект находится в PlayerLifetimeScope, блокировать управление игроком через PlayerControlBlocker.")]
     [SerializeField] private bool _blockPlayerControls = true;
@@ -41,7 +44,7 @@ public class Stasisable : MonoBehaviour
     private Rigidbody _rb;
     private Renderer[] _renderers;
     private Enemy _enemy;
-    private DamageObstacle _damageObstacle;
+    private Obstacle _obstacle;
     private PlayerControlBlocker _playerControlBlocker;
 
     private bool _isInStasis;
@@ -85,7 +88,7 @@ public class Stasisable : MonoBehaviour
 
         ApplyStasisMaterial();
         ApplyRigidbodyStasis();
-        ApplyDamageObstacleStasis();
+        ApplyObstacleStasis();
         ApplyPlayerControlBlocks();
     }
 
@@ -103,7 +106,7 @@ public class Stasisable : MonoBehaviour
         PlayStasisEndSound();
 
         ClearPlayerControlBlocks();
-        ClearDamageObstacleStasis();
+        ClearObstacleStasis();
         ClearRigidbodyStasis(shouldRestoreVelocity);
         RemoveStasisMaterial();
     }
@@ -150,11 +153,11 @@ public class Stasisable : MonoBehaviour
                      GetComponentInChildren<Enemy>(true);
         }
 
-        if (_damageObstacle == null)
+        if (_obstacle == null)
         {
-            _damageObstacle = GetComponent<DamageObstacle>() ??
-                              GetComponentInParent<DamageObstacle>() ??
-                              GetComponentInChildren<DamageObstacle>(true);
+            _obstacle = GetComponent<Obstacle>() ??
+                        GetComponentInParent<Obstacle>() ??
+                        GetComponentInChildren<Obstacle>(true);
         }
 
         if (_playerControlBlocker == null)
@@ -232,26 +235,26 @@ public class Stasisable : MonoBehaviour
         }
     }
 
-    private void ApplyDamageObstacleStasis()
+    private void ApplyObstacleStasis()
     {
-        if (!_freezeDamageObstacle)
+        if (!_freezeObstacle)
             return;
 
-        if (_damageObstacle == null)
+        if (_obstacle == null)
             return;
 
-        _damageObstacle.SetStasis(true);
+        _obstacle.SetStasis(true);
     }
 
-    private void ClearDamageObstacleStasis()
+    private void ClearObstacleStasis()
     {
-        if (!_freezeDamageObstacle)
+        if (!_freezeObstacle)
             return;
 
-        if (_damageObstacle == null)
+        if (_obstacle == null)
             return;
 
-        _damageObstacle.SetStasis(false);
+        _obstacle.SetStasis(false);
     }
 
     private void ApplyPlayerControlBlocks()
@@ -341,7 +344,7 @@ public class Stasisable : MonoBehaviour
         _isInStasis = false;
 
         ClearPlayerControlBlocks();
-        ClearDamageObstacleStasis();
+        ClearObstacleStasis();
         ClearRigidbodyStasis(false);
         RemoveStasisMaterial();
     }

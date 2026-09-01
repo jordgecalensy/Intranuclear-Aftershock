@@ -40,7 +40,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (!_state.CanReceive(_statusType))
             {
-                Debug.Log($"[TimedStatusEffect] {_state.name}: blocked by immunity {_statusType}", _state);
+                EffectLog.Info(EffectLog.Status, $"[TimedStatusEffect] {_state.name}: blocked by immunity {_statusType}", _state);
                 _duration = 0f;
                 return;
             }
@@ -48,7 +48,7 @@ namespace Failsafe.Scripts.EffectSystem
             _state.RemoveStatuses(_removeStatusesOnApply);
             _state.RegisterStatus(_statusType, this);
 
-            Debug.Log($"[TimedStatusEffect] {_state.name}: apply {_statusType} for {_duration:0.00}s", _state);
+            EffectLog.Info(EffectLog.Status, $"[TimedStatusEffect] {_state.name}: apply {_statusType} for {_duration:0.00}s", _state);
         }
 
         public override void ClearEffect()
@@ -64,7 +64,7 @@ namespace Failsafe.Scripts.EffectSystem
             _state.UnregisterStatus(_statusType, this);
             _state.AddTemporaryImmunity(_immunityStatusesOnEnd, _immunityDurationOnEnd);
 
-            Debug.Log($"[TimedStatusEffect] {_state.name}: clear {_statusType}", _state);
+            EffectLog.Info(EffectLog.Status, $"[TimedStatusEffect] {_state.name}: clear {_statusType}", _state);
         }
 
         public void ForceClearFromStatusState()
@@ -80,7 +80,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             _duration = (Time.time - StarteAt) + reapplied._duration;
 
-            Debug.Log($"[TimedStatusEffect] {_state.name}: refresh {_statusType} for {reapplied._duration:0.00}s", _state);
+            EffectLog.Info(EffectLog.Status, $"[TimedStatusEffect] {_state.name}: refresh {_statusType} for {reapplied._duration:0.00}s", _state);
         }
     }
 }

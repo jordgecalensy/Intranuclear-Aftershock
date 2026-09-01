@@ -88,7 +88,7 @@ public class EffectBundleTester : MonoBehaviour
 
         if (scope == null)
         {
-            Debug.LogError(
+            EffectLog.Error(EffectLog.Bundle,
                 "[EffectBundleTester] LifetimeScope не найден. Укажи GameSceneLifetimeScope в поле Scope Override.",
                 this);
 
@@ -105,7 +105,7 @@ public class EffectBundleTester : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError(
+            EffectLog.Error(EffectLog.Bundle,
                 $"[EffectBundleTester] Не удалось Resolve<IEffectApplicationService>. Проверь регистрацию EffectApplicationService в GameSceneLifetimeScope. {e.Message}",
                 this);
         }
@@ -132,13 +132,13 @@ public class EffectBundleTester : MonoBehaviour
     {
         if (bundle == null)
         {
-            Debug.LogWarning($"[EffectBundleTester] {label} is not assigned.", this);
+            EffectLog.Warning(EffectLog.Bundle, $"[EffectBundleTester] {label} is not assigned.", this);
             return;
         }
 
         if (_effectApplicationService == null)
         {
-            Debug.LogError(
+            EffectLog.Error(EffectLog.Bundle,
                 "[EffectBundleTester] IEffectApplicationService ещё не найден. Проверь Scope Override / GameSceneLifetimeScope.",
                 this);
 
@@ -156,7 +156,7 @@ public class EffectBundleTester : MonoBehaviour
                 break;
 
             default:
-                Debug.LogError($"[EffectBundleTester] Unknown target mode: {_targetMode}", this);
+                EffectLog.Error(EffectLog.Bundle, $"[EffectBundleTester] Unknown target mode: {_targetMode}", this);
                 break;
         }
     }
@@ -165,7 +165,7 @@ public class EffectBundleTester : MonoBehaviour
     {
         if (_camera == null)
         {
-            Debug.LogError("[EffectBundleTester] Camera is not assigned.", this);
+            EffectLog.Error(EffectLog.Bundle, "[EffectBundleTester] Camera is not assigned.", this);
             return;
         }
 
@@ -173,7 +173,7 @@ public class EffectBundleTester : MonoBehaviour
 
         if (!Physics.Raycast(ray, out RaycastHit hit, _range, _hitMask))
         {
-            Debug.Log($"[EffectBundleTester] {label}: no hit.", this);
+            EffectLog.Info(EffectLog.Bundle, $"[EffectBundleTester] {label}: no hit.", this);
             return;
         }
 
@@ -196,7 +196,7 @@ public class EffectBundleTester : MonoBehaviour
 
         if (_logHit)
         {
-            Debug.Log(
+            EffectLog.Info(EffectLog.Bundle,
                 $"[EffectBundleTester] Applied {label} by raycast to {hit.collider.name} at {hit.point}",
                 hit.collider);
         }
@@ -208,7 +208,7 @@ public class EffectBundleTester : MonoBehaviour
 
         if (targetCollider == null)
         {
-            Debug.LogError(
+            EffectLog.Error(EffectLog.Bundle,
                 "[EffectBundleTester] Direct Target Collider не найден. Укажи Direct Target Root игрока или конкретный collider игрока.",
                 this);
 
@@ -240,7 +240,7 @@ public class EffectBundleTester : MonoBehaviour
 
         if (_logHit)
         {
-            Debug.Log(
+            EffectLog.Info(EffectLog.Bundle,
                 $"[EffectBundleTester] Applied {label} directly to {targetCollider.name}",
                 targetCollider);
         }
