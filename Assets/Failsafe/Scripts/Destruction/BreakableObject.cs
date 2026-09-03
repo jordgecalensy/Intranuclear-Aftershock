@@ -20,6 +20,8 @@ namespace Failsafe.Scripts.Destruction
         [SerializeField] private GameObject _intactRoot;
         [Tooltip("Separate child object containing the pre-fractured pieces.")]
         [SerializeField] private GameObject _fragmentsRoot;
+        [Tooltip("Separate child object containing the persistent broken model.")]
+        [SerializeField] private GameObject _brokenRemainsRoot;
 
         [Header("Debris")]
         [SerializeField] private bool _releaseFragmentRigidbodies = true;
@@ -117,6 +119,12 @@ namespace Failsafe.Scripts.Destruction
 
             if (_fragmentsRoot != null && _fragmentsRoot != gameObject)
                 _fragmentsRoot.SetActive(false);
+
+            if (_brokenRemainsRoot != null &&
+                _brokenRemainsRoot != gameObject)
+            {
+                _brokenRemainsRoot.SetActive(false);
+            }
         }
 
         private void HandleHealthChanged(float currentHealth)
@@ -144,6 +152,12 @@ namespace Failsafe.Scripts.Destruction
             {
                 _fragmentsRoot.SetActive(true);
                 ReleaseFragments();
+            }
+
+            if (_brokenRemainsRoot != null &&
+                _brokenRemainsRoot != gameObject)
+            {
+                _brokenRemainsRoot.SetActive(true);
             }
 
             PlayOneShot(_breakSound, soundPosition);
@@ -203,13 +217,13 @@ namespace Failsafe.Scripts.Destruction
 
             if (lifetime <= 0f)
             {
-                Destroy(gameObject);
+                DestroyDebris();
                 return;
             }
 
             if (!_decayDebris || _fragmentsRoot == null)
             {
-                Destroy(gameObject, lifetime);
+                DestroyDebris(lifetime);
                 return;
             }
 
@@ -236,8 +250,28 @@ namespace Failsafe.Scripts.Destruction
             _debrisCleanupSequence.OnComplete(() =>
             {
                 _debrisCleanupSequence = null;
-                Destroy(gameObject);
+                DestroyDebris();
             });
+        }
+
+        private void DestroyDebris(float delay = 0f)
+        {
+            bool keepBrokenRemains =
+                _brokenRemainsRoot != null &&
+                _brokenRemainsRoot != gameObject;
+
+            if (keepBrokenRemains)
+            {
+                if (_fragmentsRoot != null &&
+                    _fragmentsRoot != gameObject)
+                {
+                    Destroy(_fragmentsRoot, delay);
+                }
+
+                return;
+            }
+
+            Destroy(gameObject, delay);
         }
 
         private void StopDebrisPhysics()
@@ -333,12 +367,36 @@ namespace Failsafe.Scripts.Destruction
                     this);
             }
 
+            if (_brokenRemainsRoot == gameObject)
+            {
+                Debug.LogWarning(
+                    $"[{nameof(BreakableObject)}] Broken Remains Root must be a child object, not the component owner.",
+                    this);
+            }
+
             if (_intactRoot != null &&
                 _fragmentsRoot != null &&
                 _fragmentsRoot.transform.IsChildOf(_intactRoot.transform))
             {
                 Debug.LogWarning(
                     $"[{nameof(BreakableObject)}] Fragments Root cannot be a child of Intact Root because it would stay disabled after breaking.",
+                    this);
+            }
+
+            if (_brokenRemainsRoot != null &&
+                ((_intactRoot != null &&
+                  (_brokenRemainsRoot.transform.IsChildOf(
+                       _intactRoot.transform) ||
+                   _intactRoot.transform.IsChildOf(
+                       _brokenRemainsRoot.transform))) ||
+                 (_fragmentsRoot != null &&
+                  (_brokenRemainsRoot.transform.IsChildOf(
+                       _fragmentsRoot.transform) ||
+                   _fragmentsRoot.transform.IsChildOf(
+                       _brokenRemainsRoot.transform)))))
+            {
+                Debug.LogWarning(
+                    $"[{nameof(BreakableObject)}] Broken Remains Root must be separate from Intact Root and Fragments Root.",
                     this);
             }
         }
