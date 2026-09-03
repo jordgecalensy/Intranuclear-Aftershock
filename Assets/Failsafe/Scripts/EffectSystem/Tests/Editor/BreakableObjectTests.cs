@@ -14,6 +14,7 @@ namespace Failsafe.Scripts.EffectSystem.Tests
         private GameObject _owner;
         private GameObject _intactRoot;
         private GameObject _fragmentsRoot;
+        private GameObject _brokenRemainsRoot;
         private BreakableObject _breakable;
 
         [TearDown]
@@ -35,6 +36,7 @@ namespace Failsafe.Scripts.EffectSystem.Tests
             Assert.That(_breakable.IsBroken, Is.False);
             Assert.That(_intactRoot.activeSelf, Is.True);
             Assert.That(_fragmentsRoot.activeSelf, Is.False);
+            Assert.That(_brokenRemainsRoot.activeSelf, Is.False);
 
             _breakable.TakeDamage(new DamageInfo(6f, DamageType.Physical));
 
@@ -42,6 +44,7 @@ namespace Failsafe.Scripts.EffectSystem.Tests
             Assert.That(_breakable.IsBroken, Is.True);
             Assert.That(_intactRoot.activeSelf, Is.False);
             Assert.That(_fragmentsRoot.activeSelf, Is.True);
+            Assert.That(_brokenRemainsRoot.activeSelf, Is.True);
             Assert.That(fragment.isKinematic, Is.False);
         }
 
@@ -104,10 +107,14 @@ namespace Failsafe.Scripts.EffectSystem.Tests
             _fragmentsRoot = new GameObject("Fragments Root");
             _fragmentsRoot.transform.SetParent(_owner.transform);
 
+            _brokenRemainsRoot = new GameObject("Broken Remains Root");
+            _brokenRemainsRoot.transform.SetParent(_owner.transform);
+
             _breakable = _owner.AddComponent<BreakableObject>();
             SetField("_maxHealth", maxHealth);
             SetField("_intactRoot", _intactRoot);
             SetField("_fragmentsRoot", _fragmentsRoot);
+            SetField("_brokenRemainsRoot", _brokenRemainsRoot);
             SetField("_destroyAfterLifetime", false);
 
             _owner.SetActive(true);
