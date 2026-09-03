@@ -32,15 +32,16 @@ public class Enemy : MonoBehaviour
     [SerializeField] private Transform[] _manualPatrolPoints;
     // Свойства
     public BehaviorState currentState;
+    public BehaviorState CurrentState => _stateMachine?.CurrentState;
     public IHealth Health => _health;
     public EnemyMovement Movement => _enemyMovement;
     public Enemy_ScriptableObject EnemyConfig => _enemyConfig;
     public bool IsEngagedWithPlayer =>
-        currentState is CheckState ||
-        currentState is AlertState ||
-        currentState is ChasingState ||
-        currentState is AttackState ||
-        currentState is SearchingState;
+        CurrentState is CheckState ||
+        CurrentState is AlertState ||
+        CurrentState is ChasingState ||
+        CurrentState is AttackState ||
+        CurrentState is SearchingState;
 
     [Inject]
     public void Construct(IHealth health) => _health = health;
@@ -149,26 +150,21 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
-        _stateMachine.Update();
-        _enemyMovement.HandleRotationAndMovement();
-        
-        // Теперь обновляем компонент
-        _enemyAnimator.ManualUpdate();
-        
-        _awarenessMeter.Update();
-        currentState = _stateMachine.CurrentState;
-        
         if (_linkTraverser != null)
-        {
             _linkTraverser.CheckAndTraverseLink();
-        }
 
-// Заблокируй мотор, если мы в прыжке
-        if (_linkTraverser == null || !_linkTraverser.IsTraversing)
+        bool isTraversing =
+            _linkTraverser != null && _linkTraverser.IsTraversing;
+
+        if (!isTraversing)
         {
             _stateMachine.Update();
             _enemyMovement.HandleRotationAndMovement();
+            _enemyAnimator.ManualUpdate();
         }
+
+        _awarenessMeter.Update();
+        currentState = _stateMachine.CurrentState;
     }
 
     void OnAnimatorMove()

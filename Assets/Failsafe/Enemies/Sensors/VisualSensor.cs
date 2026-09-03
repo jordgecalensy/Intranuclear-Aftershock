@@ -1,7 +1,12 @@
 ﻿using UnityEngine;
 
+using System.Collections.Generic;
+using Failsafe.Player.View;
+
 public class VisualSensor : Sensor
 {
+    private const float TargetResolveRetrySeconds = 0.5f;
+
     public bool SeenPlayer => IsActivated() && Target != null;
 
     [SerializeField] private float _viewAngle = 45f;
@@ -18,25 +23,31 @@ public class VisualSensor : Sensor
     private float _rayWidth = 0.15f;
     private float _rayHeight = 0.2f;
     private float _nearDistance;
+    private PlayerView _playerView;
+    private Transform _chestTarget;
+    private float _nextTargetResolveAt;
+    private bool _reportedMissingPlayerTargets;
 
     public override Vector3? SignalSourcePosition => IsActivated() ? GetBestVisiblePointWithChestOverride()?.position : null;
 
     public Transform GetBestVisiblePointWithChestOverride()
     {
+        ResolvePlayerTargets();
+
         if (_targets == null || _targets.Length == 0)
             return null;
 
         // 1. Сначала — грудь
-        if (_chestIndex >= 0 && _chestIndex < _targets.Length)
-        {
-            Transform chest = _targets[_chestIndex];
-            if (IsPointVisible(chest))
-                return chest;
-        }
+        Transform chest = ResolveChestTarget();
+        if (IsPointVisible(chest))
+            return chest;
 
-        // 2. Если грудь не видно — ищем любую другую
+        // 2. Если грудь не видно — ищем любую другую видимую точку
         foreach (var point in _targets)
         {
+            if (point == null || point == chest)
+                continue;
+
             if (IsPointVisible(point))
                 return point;
         }
@@ -46,6 +57,9 @@ public class VisualSensor : Sensor
 
     private bool IsPointVisible(Transform point)
     {
+        if (point == null || Target == null)
+            return false;
+
         Vector3 dirToPoint = point.position - EyePosition;
         float angle = Vector3.Angle(transform.forward, dirToPoint);
         if (angle > _viewAngle)
@@ -96,8 +110,121 @@ public class VisualSensor : Sensor
         return 0;
     }
 
+    protected override void Update()
+    {
+        ResolvePlayerTargets();
+        base.Update();
+    }
+
+    private void ResolvePlayerTargets()
+    {
+        if (HasValidBoundPlayerTargets())
+            return;
+
+        if (Time.unscaledTime < _nextTargetResolveAt)
+        {
+            ResolveChestTarget();
+            return;
+        }
+
+        _nextTargetResolveAt =
+            Time.unscaledTime + TargetResolveRetrySeconds;
+
+        if (_playerView == null)
+            _playerView = FindFirstObjectByType<PlayerView>();
+
+        if (_playerView == null || TryBindPlayerTargets(_playerView))
+            return;
+
+        ResolveChestTarget();
+    }
+
+    private bool HasValidBoundPlayerTargets()
+    {
+        if (_playerView == null ||
+            Target == null ||
+            _targets == null ||
+            _targets.Length == 0)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < _targets.Length; i++)
+        {
+            if (_targets[i] == null)
+                return false;
+        }
+
+        return true;
+    }
+
+    private bool TryBindPlayerTargets(PlayerView playerView)
+    {
+        if (playerView == null ||
+            !playerView.TryGetEnemySensorTargets(
+                out Transform targetRoot,
+                out Transform chestTarget,
+                out IReadOnlyList<Transform> sensorTargets))
+        {
+            if (playerView != null && !_reportedMissingPlayerTargets)
+            {
+                Debug.LogWarning(
+                    $"[{nameof(VisualSensor)}] PlayerView '{playerView.name}' " +
+                    "does not contain any Sensor_Point_* transforms. " +
+                    "Serialized targets will be used as a fallback.",
+                    playerView);
+                _reportedMissingPlayerTargets = true;
+            }
+
+            return false;
+        }
+
+        var validTargets = new List<Transform>(sensorTargets.Count);
+
+        if (chestTarget != null)
+            validTargets.Add(chestTarget);
+
+        for (int i = 0; i < sensorTargets.Count; i++)
+        {
+            Transform sensorTarget = sensorTargets[i];
+            if (sensorTarget == null || sensorTarget == chestTarget)
+                continue;
+
+            validTargets.Add(sensorTarget);
+        }
+
+        if (validTargets.Count == 0)
+            return false;
+
+        _playerView = playerView;
+        Target = targetRoot;
+        _targets = validTargets.ToArray();
+        _chestTarget = chestTarget;
+        _chestIndex = chestTarget != null ? 0 : -1;
+        _reportedMissingPlayerTargets = false;
+        return true;
+    }
+
+    private Transform ResolveChestTarget()
+    {
+        if (_chestTarget != null)
+            return _chestTarget;
+
+        if (_targets != null &&
+            _chestIndex >= 0 &&
+            _chestIndex < _targets.Length)
+        {
+            _chestTarget = _targets[_chestIndex];
+        }
+
+        return _chestTarget;
+    }
+
     public override bool SignalInAttackRay(Vector3 targetPosition)
     {
+        if (Target == null)
+            return false;
+
         Vector3 direction = (targetPosition - EyePosition).normalized;
         _attackRaySize = new Vector3(_rayWidth / 2, _rayHeight / 2, 1);
 
