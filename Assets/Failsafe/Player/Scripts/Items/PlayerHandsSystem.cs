@@ -130,28 +130,34 @@ public class PlayerHandsSystem : ITickable
 
         HandleItemStateAfterUse(useResult);
 
-        if (useResult.UsageType == UsageType.ClickToUse)
+        switch(useResult.UsageType)
         {
-            _skipStartDelay = false;
+            case UsageType.ClickToUse:
+                _skipStartDelay = false;
 
-            _inputHandler.AttackTrigger.ReleaseTrigger();
+                _inputHandler.AttackTrigger.ReleaseTrigger();
 
-            _usingState = UsingState.OnDelay;
+                _usingState = UsingState.OnDelay;
 
-            await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseDelay));
+                await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseDelay));
 
-            _usingState = UsingState.None;
-        }
-        else if (useResult.UsageType == UsageType.HoldToUse)
-        {
-            _skipStartDelay = true;
+                _usingState = UsingState.None;
+                break;
 
-            _usingState = UsingState.OnDelay;
+            case UsageType.HoldToUse:
+                _skipStartDelay = true;
 
-            float useDelay = Mathf.Max(0.02f, _playerHandsContainer.ItemUseDelay);
-            await UniTask.Delay(TimeSpan.FromSeconds(useDelay));
+                _usingState = UsingState.OnDelay;
 
-            _usingState = UsingState.None;
+                float useDelay = Mathf.Max(0.02f, _playerHandsContainer.ItemUseDelay);
+                await UniTask.Delay(TimeSpan.FromSeconds(useDelay));
+
+                _usingState = UsingState.None;
+                break;
+
+            case UsageType.UseAfterHold:
+
+                break;
         }
 
         return useResult;

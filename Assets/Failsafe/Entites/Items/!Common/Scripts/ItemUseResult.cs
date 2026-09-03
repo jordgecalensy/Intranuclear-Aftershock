@@ -1,6 +1,6 @@
-namespace Failsafe.Items
+﻿namespace Failsafe.Items
 {
-    public enum UsageType { ClickToUse, HoldToUse }
+    public enum UsageType { ClickToUse, HoldToUse, UseAfterHold}
     public enum ItemState { Consume, Drop, Hold, Throw }
     /// <summary>
     /// Результат от использования предмета
