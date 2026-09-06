@@ -1,4 +1,6 @@
 using UnityEngine;
+using Failsafe.Inventory.Integration;
+
 
 namespace Assets.Failsafe.Scripts.interaction_System
 {
@@ -8,6 +10,7 @@ namespace Assets.Failsafe.Scripts.interaction_System
         [SerializeField] private Transform _placePoint;
         [SerializeField] private DoorScript _doorScript;
         [SerializeField] private CarryObjectPlaceArea[] _linkedPlaceAreas;
+
 
         private Item _placedItem;
         private BoxCollider _boxCollider;
@@ -23,7 +26,6 @@ namespace Assets.Failsafe.Scripts.interaction_System
                 _placePoint = transform;
             }
         }
-
         public Transform TryGetItemPlace(Item item)
         {
             if (_doorScript != null && !_doorScript.IsPowered)
@@ -39,7 +41,9 @@ namespace Assets.Failsafe.Scripts.interaction_System
                 return null;
         }
 
-        public void PutItemInside(Item item)
+        public void PutItemInside(
+            Item item,
+            IInventoryHeldItemLifecycle inventoryItemLifecycle)
         {
             _placedItem = item;
 
@@ -59,6 +63,25 @@ namespace Assets.Failsafe.Scripts.interaction_System
             }
 
             SetSlotColliderEnabled(false);
+
+            if (inventoryItemLifecycle == null)
+            {
+                Debug.LogError(
+                    "Held item inventory cleanup failed before release: inventory lifecycle service is not assigned.",
+                    item);
+
+                return;
+            }
+
+            if (inventoryItemLifecycle.TryReleaseToWorld(item, out string error))
+            {
+                return;
+            }
+
+            Debug.LogError(
+                $"Held item inventory cleanup failed before release: " +
+                error,
+                item);
         }
 
         public void SetSlotColliderEnabled(bool isEnabled)
@@ -78,6 +101,8 @@ namespace Assets.Failsafe.Scripts.interaction_System
                 }
             }
         }
+
+        
 
         private void SetOwnSlotColliderEnabled(bool isEnabled)
         {

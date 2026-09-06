@@ -5,8 +5,8 @@ using Assets.Failsafe.Scripts.interaction_System;
 
 public class DoorScript : MonoBehaviour, IRunPersistentStateProvider
 {
-    private const string PersistentStateTypeId = "door";
-    private const int PersistentStateVersion = 1;
+    private readonly string PersistentStateTypeId = "door";
+    private readonly int PersistentStateVersion = 1;
 
     private Animator _animator;
     private string _enemyTag = "Enemy";
