@@ -2,6 +2,7 @@
 using VContainer;
 using UnityEngine;
 using Assets.Failsafe.Scripts.interaction_System;
+using Failsafe.Inventory.Integration;
 
 public class PlayerInteraction : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class PlayerInteraction : MonoBehaviour
 
     [Inject] private InputHandler _inputHandler;
     [Inject] private PlayerHandsContainer _handsContainer;
+    [Inject] private IInventoryHeldItemLifecycle _inventoryItemLifecycle;
 
     private ItemPlaceArea _itemArea;
     private ScrollbarInteractable _activeScrollbar;
@@ -70,7 +72,9 @@ public class PlayerInteraction : MonoBehaviour
                                 Transform itemPlace = carryObjectPlaceArea.TryGetItemPlace(_handsContainer.ItemInHand.ItemObject);
                                 if (itemPlace != null)
                                 {
-                                    carryObjectPlaceArea.PutItemInside(_handsContainer.PlaceItem(itemPlace));
+                                    carryObjectPlaceArea.PutItemInside(
+                                        _handsContainer.PlaceItem(itemPlace),
+                                        _inventoryItemLifecycle);
                                 }
                             }
                         }
