@@ -1,4 +1,4 @@
-using Failsafe.Items;
+﻿using Failsafe.Items;
 using UnityEngine;
 
 public class GunUsable : IUsable
@@ -8,6 +8,8 @@ public class GunUsable : IUsable
     // Кэшируем задержки
     private float _startDelay;
     private float _useDelay;
+    private float _altStartDelay;
+    private float _altUseDelay;
 
     public GunUsable(WeaponController weaponController)
     {
@@ -63,14 +65,17 @@ public class GunUsable : IUsable
         _weaponController.StartReload();
     }
 
-    public void AltMode() 
-    { 
+    public ItemUseResult AltMode()
+    {
         // Логика прицеливания (ADS) будет здесь
+        return new ItemUseResult() { ItemStateAfterUse = ItemState.Hold, UsageType = UsageType.ClickToUse };
     }
 
-    public void GetItemUseDelays(out float start, out float delay)
+    public void GetItemUseDelays(out float start, out float delay, out float altStart, out float altDelay)
     {
         start = _startDelay;
         delay = _useDelay;
+        altStart = _altStartDelay;
+        altDelay = _altUseDelay;
     }
 }
