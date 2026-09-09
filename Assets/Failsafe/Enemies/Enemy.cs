@@ -59,8 +59,17 @@ public class Enemy : MonoBehaviour
         _audioManager = GetComponent<EnemyAudioManagerBase>();
 
         // 1. Инициализируем МОТОР
-        _enemyMovement = new EnemyMovement(transform, _navMeshAgent, _rb, this, useRootMotion);
-        _enemyNavMeshActions = new EnemyNavMeshActions(_navMeshAgent, transform);
+        _enemyMovement = new EnemyMovement(
+            transform,
+            _navMeshAgent,
+            _rb,
+            this,
+            useRootMotion,
+            _linkTraverser);
+        _enemyNavMeshActions = new EnemyNavMeshActions(
+            _navMeshAgent,
+            transform,
+            _linkTraverser);
 
         // 2. Инициализируем ВИЗУАЛ (Просто передаем зависимость)
         // Больше никаких new EnemyAnimator(...)
@@ -84,7 +93,7 @@ public class Enemy : MonoBehaviour
         
         if (_linkTraverser != null)
         {
-            _linkTraverser.Initialize(_navMeshAgent, _enemyAnimator);
+            _linkTraverser.Initialize(_navMeshAgent, _enemyAnimator, _enemyMovement);
         }
     }
 
@@ -101,13 +110,15 @@ public class Enemy : MonoBehaviour
             _enemyMemory, 
             _enemyConfig, 
             _enemyAnimator, 
-            _audioManager
+            _audioManager,
+            _linkTraverser
         );
         
         var patrolState = new PatrolState(
             _sensors, transform, _enemyMovePatterns, _enemyMovement, 
             _enemyGetData, _navMeshAgent, _enemyConfig,
-            _manualPatrolPoints 
+            _manualPatrolPoints,
+            _linkTraverser
         );
         
         var attackState = new AttackState(_sensors, transform, _enemyMovement, _enemyAnimator, _enemyConfig);
@@ -130,6 +141,7 @@ public class Enemy : MonoBehaviour
         defaultState.AddTransition(alertState, _awarenessMeter.IsChasing);
         patrolState.AddTransition(alertState, _awarenessMeter.IsChasing);
         checkState.AddTransition(alertState, _awarenessMeter.IsChasing);
+        checkState.AddTransition(patrolState, checkState.CheckEnd);
         alertState.AddTransition(chasingState, alertState.IsAnimationFinished);
         patrolState.AddTransition(checkState, _awarenessMeter.IsAlerted);
         defaultState.AddTransition(patrolState, defaultState.IsPatroling);
@@ -173,12 +185,23 @@ public class Enemy : MonoBehaviour
     }
 
     // Остальные методы (Jump, LinkTester, DisabledState и т.д.) без изменений
-    public void DeathState() => _stateMachine.ForseChangeState<EnemyDeathState>();
-    public void DisableState(float? duration = null) => _stateMachine.ForseChangeState<DisabledState>(duration);
+    public void DeathState()
+    {
+        _linkTraverser?.CancelTraversal();
+        _stateMachine.ForseChangeState<EnemyDeathState>();
+    }
+
+    public void DisableState(float? duration = null)
+    {
+        _linkTraverser?.CancelTraversal();
+        _stateMachine.ForseChangeState<DisabledState>(duration);
+    }
+
     public void StunnedState(Vector3 direction, float? duration = null)
     {
         if (!(_stateMachine.CurrentState is StunnedState))
         {
+            _linkTraverser?.CancelTraversal();
             _stateMachine.GetForcedState<StunnedState>().SetDirection(direction);
             _stateMachine.ForseChangeState<StunnedState>(duration);
         }
