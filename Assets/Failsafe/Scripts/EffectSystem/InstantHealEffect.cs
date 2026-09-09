@@ -32,7 +32,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Parameters,
                     $"[InstantHealEffect] Heal {_amount:0.##}. Health: {before:0.##} -> {_health.CurrentHealth:0.##}/{_health.MaxHealth:0.##}");
             }
         }

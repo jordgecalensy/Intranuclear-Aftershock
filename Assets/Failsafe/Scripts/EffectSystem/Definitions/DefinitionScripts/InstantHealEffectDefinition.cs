@@ -62,7 +62,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (target == null)
             {
                 if (_logResolveErrors)
-                    Debug.LogWarning("[InstantHealEffectDefinition] Target not found.");
+                    EffectLog.Warning(EffectLog.Parameters, "[InstantHealEffectDefinition] Target not found.");
 
                 return null;
             }
@@ -73,7 +73,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Parameters,
                         $"[InstantHealEffectDefinition] LifetimeScope not found near target {target.name}.",
                         target);
                 }
@@ -85,7 +85,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Parameters,
                         $"[InstantHealEffectDefinition] LifetimeScope container is null on {scope.name}.",
                         scope);
                 }
@@ -101,7 +101,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Parameters,
                         $"[InstantHealEffectDefinition] Cannot resolve IHealth from scope {scope.name}. {e.Message}",
                         scope);
                 }

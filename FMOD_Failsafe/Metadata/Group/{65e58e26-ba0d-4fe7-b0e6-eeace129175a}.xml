@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="MixerGroup" id="{65e58e26-ba0d-4fe7-b0e6-eeace129175a}">
+		<property name="name">
+			<value>Angle_tool_Spin</value>
+		</property>
+		<relationship name="effectChain">
+			<destination>{f4cb9f54-dc81-475b-9b2e-8b8c5e49c0ee}</destination>
+		</relationship>
+		<relationship name="panner">
+			<destination>{752f81c7-862b-4575-b1eb-24d40f42f842}</destination>
+		</relationship>
+		<relationship name="output">
+			<destination>{41d6bfba-bec7-4379-800e-62d2b37610b9}</destination>
+		</relationship>
+	</object>
+	<object class="MixerBusEffectChain" id="{f4cb9f54-dc81-475b-9b2e-8b8c5e49c0ee}">
+		<relationship name="effects">
+			<destination>{126c8036-2f38-437d-a2ee-ea31b6146ac6}</destination>
+			<destination>{640a950c-67b6-4f10-8319-1e4ab08719a5}</destination>
+		</relationship>
+	</object>
+	<object class="MixerBusPanner" id="{752f81c7-862b-4575-b1eb-24d40f42f842}" />
+	<object class="CompressorEffect" id="{126c8036-2f38-437d-a2ee-ea31b6146ac6}">
+		<property name="threshold">
+			<value>-22</value>
+		</property>
+		<relationship name="sidechains">
+			<destination>{1ae5299c-3dd3-49b0-9fea-45018cf9fafe}</destination>
+		</relationship>
+	</object>
+	<object class="MixerBusFader" id="{640a950c-67b6-4f10-8319-1e4ab08719a5}" />
+</objects>

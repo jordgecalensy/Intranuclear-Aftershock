@@ -30,7 +30,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Resistance,
                     $"[DamageResistanceComponent] {name}: {damageType} multiplier = base {baseMultiplier:0.###} * runtime {runtimeMultiplier:0.###} = {finalMultiplier:0.###}",
                     this);
             }
@@ -76,7 +76,7 @@ namespace Failsafe.Scripts.EffectSystem
         {
             if (string.IsNullOrWhiteSpace(sourceId))
             {
-                Debug.LogWarning(
+                EffectLog.Warning(EffectLog.Resistance,
                     $"[DamageResistanceComponent] {name}: sourceId is empty. Runtime modifier was not added.",
                     this);
 
@@ -102,7 +102,7 @@ namespace Failsafe.Scripts.EffectSystem
 
                 if (_log)
                 {
-                    Debug.Log(
+                    EffectLog.Info(EffectLog.Resistance,
                         $"[DamageResistanceComponent] {name}: updated runtime modifier {sourceId}, {damageType} x{multiplier:0.###}",
                         this);
                 }
@@ -118,7 +118,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Resistance,
                     $"[DamageResistanceComponent] {name}: added runtime modifier {sourceId}, {damageType} x{multiplier:0.###}",
                     this);
             }
@@ -145,7 +145,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Resistance,
                     $"[DamageResistanceComponent] {name}: removed runtime modifiers from {sourceId}",
                     this);
             }
@@ -177,7 +177,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Resistance,
                     $"[DamageResistanceComponent] {name}: removed runtime modifier {sourceId}, {damageType}",
                     this);
             }
@@ -189,7 +189,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Resistance,
                     $"[DamageResistanceComponent] {name}: cleared all runtime modifiers",
                     this);
             }

@@ -39,6 +39,9 @@ namespace Failsafe.Scripts.SaveSystem
 
         public void Initialize()
         {
+            if (_registration != null)
+                return;
+
             _registration = _participantRegistry.Register(this);
         }
 

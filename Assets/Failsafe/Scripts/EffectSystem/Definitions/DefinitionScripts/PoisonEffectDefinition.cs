@@ -222,7 +222,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Status,
                         $"[PoisonEffectDefinition] LifetimeScope not found near target {target.name}. Poison applies only to player.",
                         target);
                 }
@@ -234,7 +234,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Status,
                         $"[PoisonEffectDefinition] LifetimeScope container is null on {scope.name}.",
                         scope);
                 }
@@ -250,7 +250,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Status,
                         $"[PoisonEffectDefinition] Cannot resolve IStamina from scope {scope.name}. {e.Message}",
                         scope);
                 }

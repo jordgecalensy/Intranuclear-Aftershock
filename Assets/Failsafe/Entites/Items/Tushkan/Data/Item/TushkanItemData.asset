@@ -12,10 +12,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55443d5422772514c80a38543eaeb7b5, type: 3}
   m_Name: TushkanItemData
   m_EditorClassIdentifier: 
-  Description: 
+  Description: 'USE IS PERMITTED ONLY WITH THE PERMISSION OF YOUR WAREHOUSE SUPERVISOR 
+    Pharmacological action: the drug has a neuromuscular effect on the body, has
+    a stimulating effect on the leg muscles, and synthesizes phosphocreatine. Contraindications:
+    Magnesium deficiency, leg injuries, bone fractures. Administration: Inject the
+    drug into the neck or into the veins of the arms and press the button to deliver
+    the fluid into the body.'
   Type: 0
-  StartUseDelay: 0
-  UseDelay: 0.2
+  InventoryDefinitionId: 47648bb82d384efe92ee20a6c20c8e3e
+  DisplayName: Jumper stimulant
+  InventoryIcon: {fileID: 21300000, guid: 83ae1d6287b336c46b66abc2b95c7f36, type: 3}
+  WorldItemPrefab: {fileID: 3981945503598745200, guid: 50f502078ae99ed459fbd88c2ece7925, type: 3}
+  InventoryModelPrefab: {fileID: 919132149155446097, guid: 27bba077453474b4584723105e1f6d60, type: 3}
+  InventoryBaseEulerAngles: {x: 45, y: 45, z: 90}
+  InventoryModelOffsetInCells: {x: 0, y: 0, z: 0}
+  InventoryModelScaleMultiplier: 1.2
+  InventoryModelFitPadding: 0.08
+  InventoryModelMaxDepthInCells: 0.75
+  InventoryWidth: 1
+  InventoryHeight: 1
+  InventoryMaxStack: 3
+  CanRotateInInventory: 1
+  CanAssignQuickSlot: 1
+  StartUseDelay: 1.8
+  UseDelay: 1.8
   UsesEnergy: 0
   EnergyAmountMax: 0
   EnergyCostPerUse: 1
@@ -23,7 +43,7 @@ MonoBehaviour:
   UseMask:
     serializedVersion: 2
     m_Bits: 1892343
-  DefaultModeEffects: {fileID: 11400000, guid: a63869b65a8573b4c9397178d81b8887, type: 2}
+  DefaultModeEffects: {fileID: 11400000, guid: 1f340c87861d4a438a8b62ed8911c024, type: 2}
   AlternativeModeEffects: {fileID: 0}
   UseSFX:
     Guid:

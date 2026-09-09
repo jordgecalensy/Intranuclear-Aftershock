@@ -32,7 +32,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Parameters,
                     $"[RestoreStaminaEffect] Restore {_amount:0.##}. Stamina: {before:0.##} -> {_stamina.CurrentStamina:0.##}/{_stamina.MaxStamina:0.##}");
             }
         }

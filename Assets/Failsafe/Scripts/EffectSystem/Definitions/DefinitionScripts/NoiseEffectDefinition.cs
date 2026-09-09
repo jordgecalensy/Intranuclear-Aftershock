@@ -36,7 +36,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (target == null)
             {
                 if (_log)
-                    Debug.LogWarning("[NoiseEffectDefinition] CanApply false: target not found.");
+                    EffectLog.Warning(EffectLog.Feedback, "[NoiseEffectDefinition] CanApply false: target not found.");
 
                 return false;
             }
@@ -49,7 +49,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.LogWarning(
+                EffectLog.Warning(EffectLog.Feedback,
                     $"[NoiseEffectDefinition] CanApply false: PlayerNoiseController and SignalManager not found for {target.name}.",
                     target);
             }
@@ -64,7 +64,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (target == null)
             {
                 if (_log)
-                    Debug.LogWarning("[NoiseEffectDefinition] CreateEffect failed: target not found.");
+                    EffectLog.Warning(EffectLog.Feedback, "[NoiseEffectDefinition] CreateEffect failed: target not found.");
 
                 return null;
             }
@@ -76,7 +76,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (TryResolvePlayerNoiseController(target, out PlayerNoiseController noiseController))
             {
                 if (_log)
-                    Debug.Log($"[NoiseEffectDefinition] Using PlayerNoiseController on target {target.name}.", target);
+                    EffectLog.Info(EffectLog.Feedback, $"[NoiseEffectDefinition] Using PlayerNoiseController on target {target.name}.", target);
 
                 return new NoiseEffect(
                     noiseController,
@@ -92,7 +92,7 @@ namespace Failsafe.Scripts.EffectSystem
 
                 if (_log)
                 {
-                    Debug.Log(
+                    EffectLog.Info(EffectLog.Feedback,
                         $"[NoiseEffectDefinition] PlayerNoiseController not found. Using SignalManager fallback for {target.name}.",
                         target);
                 }
@@ -107,7 +107,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.LogWarning(
+                EffectLog.Warning(EffectLog.Feedback,
                     $"[NoiseEffectDefinition] CreateEffect failed: no noise target resolved for {target.name}.",
                     target);
             }
@@ -186,7 +186,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_log)
                 {
-                    Debug.Log(
+                    EffectLog.Info(EffectLog.Feedback,
                         $"[NoiseEffectDefinition] LifetimeScope not found near {target.name}. Will try fallback.",
                         target);
                 }
@@ -198,7 +198,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_log)
                 {
-                    Debug.Log(
+                    EffectLog.Info(EffectLog.Feedback,
                         $"[NoiseEffectDefinition] LifetimeScope container is null on {scope.name}. Will try fallback.",
                         scope);
                 }
@@ -215,7 +215,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_log)
                 {
-                    Debug.Log(
+                    EffectLog.Info(EffectLog.Feedback,
                         $"[NoiseEffectDefinition] Cannot resolve PlayerNoiseController from scope {scope.name}. Will try fallback. {e.Message}",
                         scope);
                 }
@@ -247,7 +247,7 @@ namespace Failsafe.Scripts.EffectSystem
                 return true;
 
             if (_log)
-                Debug.LogWarning("[NoiseEffectDefinition] SignalManager not found in scene.");
+                EffectLog.Warning(EffectLog.Feedback, "[NoiseEffectDefinition] SignalManager not found in scene.");
 
             return false;
         }

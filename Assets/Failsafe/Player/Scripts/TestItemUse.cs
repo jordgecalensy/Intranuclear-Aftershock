@@ -1,5 +1,4 @@
 using Failsafe.Items;
-using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -17,7 +16,6 @@ namespace Failsafe.Player
         [Inject] private IEnumerable<IUsable> _items;
         [Inject] private InputHandler _inputHandler;
 
-        [ValueDropdown("_itemNames")]
         public string ItemName;
         public GameObject ItemPrefab;
         public string UseOnKey = "E";

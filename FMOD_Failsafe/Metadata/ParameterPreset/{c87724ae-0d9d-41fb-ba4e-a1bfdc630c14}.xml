@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="ParameterPreset" id="{c87724ae-0d9d-41fb-ba4e-a1bfdc630c14}">
+		<property name="name">
+			<value>Surface_collision</value>
+		</property>
+		<relationship name="folder">
+			<destination>{4339851d-be36-4c78-a9bf-6ddb9a1c114a}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{d371e9b1-967f-4ca2-8984-509881088957}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{d371e9b1-967f-4ca2-8984-509881088957}">
+		<property name="parameterType">
+			<value>2</value>
+		</property>
+		<property name="maximum">
+			<value>2</value>
+		</property>
+		<property name="enumerationLabels">
+			<value>Concrete</value>
+			<value>Metal</value>
+		</property>
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+	</object>
+</objects>

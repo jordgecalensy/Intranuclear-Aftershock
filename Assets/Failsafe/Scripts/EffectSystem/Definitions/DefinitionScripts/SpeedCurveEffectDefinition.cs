@@ -85,7 +85,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (target == null)
             {
                 if (_logResolveErrors)
-                    Debug.LogWarning("[SpeedCurveEffectDefinition] Target object not found.");
+                    EffectLog.Warning(EffectLog.Movement, "[SpeedCurveEffectDefinition] Target object not found.");
 
                 return null;
             }
@@ -96,7 +96,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Movement,
                         $"[SpeedCurveEffectDefinition] LifetimeScope not found near target {target.name}. " +
                         "Для игрока нужен PlayerLifetimeScope на root или в родителях/детях.",
                         target);
@@ -109,7 +109,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Movement,
                         $"[SpeedCurveEffectDefinition] LifetimeScope container is null on {scope.name}.",
                         scope);
                 }
@@ -125,7 +125,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Movement,
                         $"[SpeedCurveEffectDefinition] Cannot resolve PlayerMovementController from scope {scope.name}. {e.Message}",
                         scope);
                 }

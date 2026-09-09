@@ -1,7 +1,6 @@
 using Failsafe.PlayerMovements.Controllers;
 using Failsafe.Scripts.Damage;
 using Failsafe.Scripts.EffectSystem;
-using Failsafe.Scripts.EffectSystem.Effects;
 using Failsafe.Scripts.Health;
 using UnityEngine;
 
@@ -14,7 +13,8 @@ namespace Failsafe.PlayerMovements.States
         private readonly PlayerMovementController _pmc;
         private readonly PlayerMovementParameters _p;
         private readonly PlayerNoiseController _noise;
-        private readonly IEffectManager _effects;
+        private readonly IEffectApplicationService _effects;
+        private readonly GameplayEffectCatalog _effectCatalog;
         private readonly IHealth _health;
 
         private float _fallProgress;
@@ -44,7 +44,8 @@ namespace Failsafe.PlayerMovements.States
             PlayerMovementController movementController,
             PlayerMovementParameters movementParameters,
             PlayerNoiseController noiseController,
-            IEffectManager effectManager,
+            IEffectApplicationService effects,
+            GameplayEffectCatalog effectCatalog,
             IHealth health)
         {
             _input = input;
@@ -52,7 +53,8 @@ namespace Failsafe.PlayerMovements.States
             _pmc = movementController;
             _p = movementParameters;
             _noise = noiseController;
-            _effects = effectManager;
+            _effects = effects;
+            _effectCatalog = effectCatalog;
             _health = health;
         }
 
@@ -141,13 +143,17 @@ namespace Failsafe.PlayerMovements.States
 
                 if (_landingDecision == LandingKind.MinorSlow)
                 {
-                    var minorSlow = new SpeedMultiplierEffect(
-                        _pmc,
-                        _p.MinorSlowDuration,
+                    var context = new EffectContext(
+                        _cc.gameObject,
+                        _cc,
+                        _cc.bounds.center,
+                        Vector3.up,
+                        _cc.transform.forward,
                         _p.MinorSlowMultiplier,
-                        SpeedStackPolicy.Strongest);
+                        _cc.gameObject,
+                        _p.MinorSlowDuration);
 
-                    _effects.ApplyEffect(minorSlow);
+                    _effects.Apply(_effectCatalog.LandingSlow, context);
                 }
 
                 _noise.CreateNoise(height, 2);

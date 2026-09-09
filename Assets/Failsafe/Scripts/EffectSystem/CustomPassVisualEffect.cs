@@ -46,7 +46,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Feedback,
                     $"[CustomPassVisualEffect] Applied {_material.name} for {_duration:0.##}s.",
                     _customPassVolume);
             }
@@ -60,7 +60,7 @@ namespace Failsafe.Scripts.EffectSystem
             Object.Destroy(_customPassVolume.gameObject);
 
             if (_log)
-                Debug.Log($"[CustomPassVisualEffect] Cleared {_runtimeObjectName}.");
+                EffectLog.Info(EffectLog.Feedback, $"[CustomPassVisualEffect] Cleared {_runtimeObjectName}.");
 
             _customPassVolume = null;
         }

@@ -17,6 +17,8 @@ namespace Failsafe.GameSceneServices
         private EnemySpawnSystemBuilder _enemySpawnSystemBuilder;
         [SerializeField]
         private StatusReactionProfile _statusReactionProfile;
+        [SerializeField]
+        private GameplayEffectCatalog _gameplayEffectCatalog;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -33,18 +35,27 @@ namespace Failsafe.GameSceneServices
                 .As<IEnemySpawnSystem>()
                 .AsSelf();
 
-            builder.RegisterEntryPoint<WorldRunSaveParticipant>(Lifetime.Scoped);
-            builder.RegisterEntryPoint<EnemyRunSaveParticipant>(Lifetime.Scoped);
+            builder.Register<RunPersistentObjectRegistry>(Lifetime.Singleton)
+                .AsSelf();
+
+            builder.RegisterEntryPoint<WorldRunSaveParticipant>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<EnemyRunSaveParticipant>(Lifetime.Singleton);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             builder.RegisterEntryPoint<RunSaveDebugHotkey>(Lifetime.Scoped);
 #endif
 
-            builder.RegisterEntryPoint<EffectManager>()
-                .As<IEffectManager>()
-                .AsSelf();
-
             builder.RegisterInstance(_statusReactionProfile);
+
+            GameplayEffectCatalog gameplayEffectCatalog =
+                _gameplayEffectCatalog != null
+                    ? _gameplayEffectCatalog
+                    : Resources.Load<GameplayEffectCatalog>("GameplayEffectCatalog");
+
+            if (gameplayEffectCatalog != null)
+                builder.RegisterInstance(gameplayEffectCatalog);
+            else
+                Debug.LogError("[GameSceneLifetimeScope] GameplayEffectCatalog is not configured.", this);
 
             builder.Register<StatusReactionService>(Lifetime.Scoped)
                 .As<IStatusReactionService>()
@@ -52,6 +63,7 @@ namespace Failsafe.GameSceneServices
 
             builder.RegisterEntryPoint<EffectApplicationService>(Lifetime.Scoped)
                 .As<IEffectApplicationService>()
+                .As<IEffectPresentationSource>()
                 .AsSelf();
             
             builder.RegisterEntryPoint<EarthquakeEnvironmentController>().AsSelf();

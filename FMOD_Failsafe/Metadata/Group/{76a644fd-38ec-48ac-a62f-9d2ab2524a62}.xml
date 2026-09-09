@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="MixerGroup" id="{76a644fd-38ec-48ac-a62f-9d2ab2524a62}">
+		<property name="name">
+			<value>Angle_tool_grind</value>
+		</property>
+		<relationship name="effectChain">
+			<destination>{56dd8d28-d968-4f9c-8fe3-e76e228d3de4}</destination>
+		</relationship>
+		<relationship name="panner">
+			<destination>{87ed1196-6125-4929-84ed-4740b643108e}</destination>
+		</relationship>
+		<relationship name="output">
+			<destination>{41d6bfba-bec7-4379-800e-62d2b37610b9}</destination>
+		</relationship>
+	</object>
+	<object class="MixerBusEffectChain" id="{56dd8d28-d968-4f9c-8fe3-e76e228d3de4}">
+		<relationship name="effects">
+			<destination>{1ae5299c-3dd3-49b0-9fea-45018cf9fafe}</destination>
+			<destination>{50e607ab-f959-4591-a96c-9e20306c55bd}</destination>
+		</relationship>
+	</object>
+	<object class="MixerBusPanner" id="{87ed1196-6125-4929-84ed-4740b643108e}" />
+	<object class="Sidechain" id="{1ae5299c-3dd3-49b0-9fea-45018cf9fafe}" />
+	<object class="MixerBusFader" id="{50e607ab-f959-4591-a96c-9e20306c55bd}" />
+</objects>

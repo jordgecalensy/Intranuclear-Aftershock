@@ -12,6 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18fa2a351218d1042945914b3e1ab8b8, type: 3}
   m_Name: StagedStatusEffectDdddefinition_Cold
   m_EditorClassIdentifier: 
+  _showInHud: 1
+  _hudIcon: {fileID: 21300000, guid: cba9a11cf9c701244bd85e5287d645b2, type: 3}
+  _hudDurationColor: {r: 0.5137255, g: 1, b: 0.9607843, a: 1}
   _statusType: 20
   _duration: 5
   _buildUpPerApplication: 1
@@ -28,3 +31,4 @@ MonoBehaviour:
   _removeStatusesOnApply: 
   _immunityStatusesOnEnd: 
   _immunityDurationOnEnd: 0
+  _stopEffectBundleOnStatusReaction: 0

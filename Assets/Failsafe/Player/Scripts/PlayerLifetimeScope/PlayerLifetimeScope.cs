@@ -1,5 +1,6 @@
 ﻿using Failsafe.Items;
 using Failsafe.Player.Model;
+using Failsafe.Inventory.Integration;
 using Failsafe.Player.Scripts;
 using Failsafe.Player.Scripts.Interaction;
 using Failsafe.Player.UI;
@@ -71,6 +72,7 @@ namespace Failsafe.Player
             builder.RegisterInstance(camera);
 
             builder.Register<InputHandler>(Lifetime.Scoped);
+            RegisterInventory(builder);
 
             builder.Register<PlayerHealth>(Lifetime.Singleton)
                 .As<IHealth>()
@@ -114,6 +116,15 @@ namespace Failsafe.Player
 
             builder.RegisterComponentInHierarchy<PlayerUIController>();
 
+            PlayerEffectHudView effectHudView =
+                GetComponentInChildren<PlayerEffectHudView>(true);
+
+            if (effectHudView != null)
+            {
+                builder.RegisterComponent(effectHudView);
+                builder.RegisterEntryPoint<PlayerEffectHudPresenter>();
+            }
+
             builder.RegisterComponentInHierarchy<PlayerCrosshairRaycaster>();
             builder.RegisterComponentInHierarchy<PhysicsInteraction>();
 
@@ -124,7 +135,7 @@ namespace Failsafe.Player
 
             builder.Register<PlayerMovementController>(Lifetime.Scoped);
 
-            builder.RegisterEntryPoint<PlayerRunSaveParticipant>(Lifetime.Scoped);
+            builder.RegisterEntryPoint<PlayerRunSaveParticipant>(Lifetime.Singleton);
             builder.RegisterEntryPoint<PlayerRunTerminationHandler>(Lifetime.Scoped);
 
             DeathScreenView deathScreenView =
@@ -150,10 +161,6 @@ namespace Failsafe.Player
 
             builder.RegisterEntryPoint<RunAutosaveController>(Lifetime.Scoped);
 
-            builder.RegisterEntryPoint<EffectManager>(Lifetime.Scoped)
-                .As<IEffectManager>()
-                .AsSelf();
-
             builder.RegisterEntryPoint<SelectedEngineerPerkApplier>(Lifetime.Scoped);
 
             builder.Register<PlayerNoiseSignal>(Lifetime.Scoped)
@@ -162,6 +169,44 @@ namespace Failsafe.Player
             builder.RegisterEntryPoint<PlayerSignalConnector>(Lifetime.Scoped);
             
             RegisterItems(builder);
+        }
+
+        private void RegisterInventory(IContainerBuilder builder)
+        {
+            InventoryRuntimeController inventoryRuntime =
+                GetComponentInChildren<InventoryRuntimeController>(true);
+            InventoryInputController3D inventoryInput =
+                GetComponentInChildren<InventoryInputController3D>(true);
+            InventoryItemContextMenuController3D itemContextMenu =
+                GetComponentInChildren<
+                    InventoryItemContextMenuController3D>(true);
+
+            if (inventoryRuntime == null || inventoryInput == null)
+            {
+                builder.Register<
+                        PassthroughInventoryHeldItemLifecycleService>(
+                        Lifetime.Scoped)
+                    .As<IInventoryHeldItemLifecycle>();
+
+                return;
+            }
+
+            builder.RegisterComponent(inventoryRuntime);
+            builder.RegisterComponent(inventoryInput);
+
+            if (itemContextMenu != null)
+                builder.RegisterComponent(itemContextMenu);
+
+            builder.Register<InventoryHeldItemLifecycleService>(
+                    Lifetime.Scoped)
+                .As<IInventoryHeldItemLifecycle>();
+            builder.RegisterEntryPoint<InventoryQuickSlotEquipService>(
+                    Lifetime.Singleton)
+                .AsSelf();
+            builder.RegisterEntryPoint<SelectedEngineerStartingItemGranter>(
+                Lifetime.Scoped);
+            builder.RegisterEntryPoint<InventoryRunSaveParticipant>(
+                Lifetime.Singleton);
         }
 
         private void RegisterItems(IContainerBuilder builder)
@@ -173,23 +218,7 @@ namespace Failsafe.Player
                 .AsImplementedInterfaces()
                 .AsSelf();
 
-            builder.Register<Stimpack>(Lifetime.Scoped)
-                .AsImplementedInterfaces()
-                .AsSelf();
-
             builder.Register<StasisGun>(Lifetime.Scoped)
-                .AsImplementedInterfaces()
-                .AsSelf();
-
-            builder.Register<Adrenaline>(Lifetime.Scoped)
-                .AsImplementedInterfaces()
-                .AsSelf();
-
-            builder.Register<Tushkan>(Lifetime.Scoped)
-                .AsImplementedInterfaces()
-                .AsSelf();
-
-            builder.Register<Gorilla>(Lifetime.Scoped)
                 .AsImplementedInterfaces()
                 .AsSelf();
 

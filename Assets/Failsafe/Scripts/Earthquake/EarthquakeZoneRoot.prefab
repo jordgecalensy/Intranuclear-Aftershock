@@ -86,6 +86,7 @@ GameObject:
   - component: {fileID: 2970617494074396705}
   - component: {fileID: 2635543833282863863}
   - component: {fileID: 8292225915297086802}
+  - component: {fileID: 990610817563812162}
   m_Layer: 0
   m_Name: EarthquakeZoneRoot
   m_TagString: Untagged
@@ -159,11 +160,11 @@ MonoBehaviour:
   CollisionTag: 
   EventReference:
     Guid:
-      Data1: 26212894
-      Data2: 1189237206
-      Data3: -369201234
-      Data4: -231850088
-    Path: event:/UI/VISOR/visorLoop
+      Data1: 898215481
+      Data2: 1268743084
+      Data3: 2055770814
+      Data4: -1970309760
+    Path: event:/SFX/Ambience/Earhquake
   Event: 
   EventPlayTrigger: 0
   EventStopTrigger: 0
@@ -175,3 +176,23 @@ MonoBehaviour:
   OverrideAttenuation: 0
   OverrideMinDistance: 1
   OverrideMaxDistance: 20
+--- !u!114 &990610817563812162
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7944065921070868848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6f527e94334fe14ab8a7f875e879791, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _triggerKey: 109
+  _strength: 10
+  _duration: 50
+  _earthquakeZone: {fileID: 2970617494074396705}
+  _autoTriggerOnZoneEnter: 0
+  _triggeringTag: Player
+  _randomRollRange: {x: 0, y: 100}
+  _triggerSuccessRange: {x: 0, y: 100}

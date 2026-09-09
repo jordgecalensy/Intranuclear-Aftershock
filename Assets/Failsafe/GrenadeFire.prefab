@@ -8,9 +8,33 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 619633842068393331, guid: 7c66916875205ff4da5fb2ec27a3e046, type: 3}
+      propertyPath: spreadChance
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 619633842068393331, guid: 7c66916875205ff4da5fb2ec27a3e046, type: 3}
+      propertyPath: weakContactDps
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 619633842068393331, guid: 7c66916875205ff4da5fb2ec27a3e046, type: 3}
+      propertyPath: _burnDotEffects
+      value: 
+      objectReference: {fileID: 11400000, guid: 438f62f84078f184f907ccefa8866f42, type: 2}
+    - target: {fileID: 619633842068393331, guid: 7c66916875205ff4da5fb2ec27a3e046, type: 3}
+      propertyPath: mediumContactDps
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 619633842068393331, guid: 7c66916875205ff4da5fb2ec27a3e046, type: 3}
+      propertyPath: strongContactDps
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 619633842068393331, guid: 7c66916875205ff4da5fb2ec27a3e046, type: 3}
+      propertyPath: _contactDamageEffects
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 1038033941714168738, guid: 7c66916875205ff4da5fb2ec27a3e046, type: 3}
       propertyPath: m_Name
-      value: Fire_test
+      value: GrenadeFire
       objectReference: {fileID: 0}
     - target: {fileID: 6036416342203293477, guid: 7c66916875205ff4da5fb2ec27a3e046, type: 3}
       propertyPath: m_LocalPosition.x

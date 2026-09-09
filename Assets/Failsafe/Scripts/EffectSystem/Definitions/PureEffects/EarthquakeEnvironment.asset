@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b50c236b2d4624b15f7d3bb984b537, type: 3}
+  m_Name: EarthquakeEnvironment
+  m_EditorClassIdentifier:
+  _stages:
+  - MinPower: 0.0001
+    HorizontalForce: 2
+    VerticalForce: 0.35
+    Duration: 2
+    TickInterval: 0.15
+    DestroyObjects: 1
+    DestroyStartTime: 1
+    DestroyEndTime: 5
+  - MinPower: 1
+    HorizontalForce: 3.5
+    VerticalForce: 0.8
+    Duration: 2.5
+    TickInterval: 0.12
+    DestroyObjects: 1
+    DestroyStartTime: 2
+    DestroyEndTime: 5
+  - MinPower: 2
+    HorizontalForce: 5.5
+    VerticalForce: 1.3
+    Duration: 3
+    TickInterval: 0.1
+    DestroyObjects: 1
+    DestroyStartTime: 1
+    DestroyEndTime: 1.8
+  - MinPower: 3
+    HorizontalForce: 8
+    VerticalForce: 2
+    Duration: 3.5
+    TickInterval: 0.08
+    DestroyObjects: 1
+    DestroyStartTime: 0.8
+    DestroyEndTime: 1.6
+  _forceMode: 1

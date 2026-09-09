@@ -1,24 +1,29 @@
 using UnityEngine;
 using Failsafe.Scripts.EffectSystem;
 using VContainer.Unity;
-using Failsafe.PlayerMovements.Controllers;
 
 public class MovementCameraShakeProvider : ITickable
 {
     private readonly InputHandler _input;
-    private readonly IEffectManager _effects;
-    private readonly PlayerRotationController _rotation;
+    private readonly IEffectApplicationService _effects;
+    private readonly GameplayEffectCatalog _effectCatalog;
+    private readonly GameObject _target;
+    private readonly Collider _targetCollider;
 
     private float _nextShakeTime;
 
     public MovementCameraShakeProvider(
         InputHandler input,
-        IEffectManager effects,
-        PlayerRotationController rotation)
+        IEffectApplicationService effects,
+        GameplayEffectCatalog effectCatalog,
+        GameObject target,
+        Collider targetCollider)
     {
         _input = input;
         _effects = effects;
-        _rotation = rotation;
+        _effectCatalog = effectCatalog;
+        _target = target;
+        _targetCollider = targetCollider;
     }
 
     public void Tick()
@@ -29,29 +34,36 @@ public class MovementCameraShakeProvider : ITickable
         if (Time.time < _nextShakeTime)
             return;
 
-        float intensity = 0f;
-        float frequency = 0f;
+        float power;
         float interval = 0f;
 
         if (_input.SprintTriggered)
         {
-            intensity = 0.6f;
-            frequency = 10f;
+            power = 1f;
             interval = 0.5f;
         }
         else
         {
-            intensity = 0.18f;
-            frequency = 5.25f;
+            power = 0f;
             interval = 1.17f;
         }
 
-        _effects.ApplyEffect(
-            new CameraShakeEffect(
-                _rotation,
-                intensity,
-                1.10f,
-                frequency));
+        Vector3 point = _targetCollider != null
+            ? _targetCollider.bounds.center
+            : _target.transform.position;
+
+        var context = new EffectContext(
+            _target,
+            _targetCollider,
+            point,
+            Vector3.up,
+            _target.transform.forward,
+            power,
+            _target);
+
+        _effects.Apply(
+            _effectCatalog.MovementCameraShake,
+            context);
 
         _nextShakeTime = Time.time + interval;
     }

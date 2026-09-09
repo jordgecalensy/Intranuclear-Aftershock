@@ -63,7 +63,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (!_state.CanReceive(StatusEffectType.Stun))
             {
-                Debug.Log($"[StunEffect] {_state.name}: blocked by immunity Stun", _state);
+                EffectLog.Info(EffectLog.Status, $"[StunEffect] {_state.name}: blocked by immunity Stun", _state);
                 _duration = 0f;
                 return;
             }
@@ -74,7 +74,7 @@ namespace Failsafe.Scripts.EffectSystem
             ApplyEnemyStun();
             ApplyPlayerStun();
 
-            Debug.Log($"[StunEffect] {_state.name}: apply Stun for {_duration:0.00}s", _state);
+            EffectLog.Info(EffectLog.Status, $"[StunEffect] {_state.name}: apply Stun for {_duration:0.00}s", _state);
         }
 
         public override void ClearEffect()
@@ -91,7 +91,7 @@ namespace Failsafe.Scripts.EffectSystem
                 _state.UnregisterStatus(StatusEffectType.Stun, this);
                 _state.AddTemporaryImmunity(_immunityStatusesOnEnd, _immunityDurationOnEnd);
 
-                Debug.Log($"[StunEffect] {_state.name}: clear Stun", _state);
+                EffectLog.Info(EffectLog.Status, $"[StunEffect] {_state.name}: clear Stun", _state);
             }
         }
 
@@ -118,7 +118,7 @@ namespace Failsafe.Scripts.EffectSystem
                     _playerBlocks);
             }
 
-            Debug.Log($"[StunEffect] {_state.name}: refresh Stun for {reapplied._duration:0.00}s", _state);
+            EffectLog.Info(EffectLog.Status, $"[StunEffect] {_state.name}: refresh Stun for {reapplied._duration:0.00}s", _state);
         }
 
         private void ApplyEnemyStun()

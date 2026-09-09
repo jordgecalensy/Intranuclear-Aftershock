@@ -12,9 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 206516b7cf36c924daf4f3ca7081841a, type: 3}
   m_Name: Burning
   m_EditorClassIdentifier: 
+  _showInHud: 1
+  _hudIcon: {fileID: 21300000, guid: 2961fd9c6d0cd764aa035202587f0fc6, type: 3}
+  _hudDurationColor: {r: 1, g: 0.11764706, b: 0, a: 1}
   _statusType: 10
-  _duration: 6
+  _duration: 2.5
   _autoAddStatusState: 1
   _removeStatusesOnApply: 1e00000028000000
-  _immunityStatusesOnEnd: 
-  _immunityDurationOnEnd: 0
+  _immunityStatusesOnEnd: 0a000000
+  _immunityDurationOnEnd: 0.8
+  _stopEffectBundleOnStatusReaction: 0

@@ -12,6 +12,8 @@ namespace Failsafe.Scripts.EffectSystem
         private float _startedAt;
         public float StarteAt => _startedAt;
 
+        public float Duration => _duration;
+
         public float ElapsedAt => _startedAt + _duration;
 
         /// <summary>
@@ -23,7 +25,7 @@ namespace Failsafe.Scripts.EffectSystem
         /// Применить эффект
         /// </summary>
         /// <remarks>
-        /// Вызывается когда применяется эффект через менеджер <see cref="IEffectManager.ApplyEffect(Effect)"/>
+        /// Вызывается сервисом применения эффектов после создания runtime-эффекта из EffectDefinition.
         /// </remarks>
         public abstract void ApplyEffect();
         /// <summary>

@@ -29,7 +29,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Resistance,
                     $"[DamageResistanceUtility] {target.GameObject.name}: {damage.Type} damage {baseAmount:0.###} x {multiplier:0.###} = {finalAmount:0.###}",
                     target.GameObject);
             }
@@ -63,7 +63,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (log && target.GameObject != null)
                 {
-                    Debug.Log(
+                    EffectLog.Info(EffectLog.Resistance,
                         $"[DamageResistanceUtility] {target.GameObject.name}: {finalDamage.Type} damage blocked.",
                         target.GameObject);
                 }

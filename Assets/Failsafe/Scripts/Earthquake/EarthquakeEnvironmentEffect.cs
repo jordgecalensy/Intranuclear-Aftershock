@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Failsafe.Scripts.EffectSystem;
+using Failsafe.Scripts.Destruction;
 
 public class EarthquakeEnvironmentEffect : Effect, IReapplicableEffect
 {
@@ -90,7 +91,16 @@ public class EarthquakeEnvironmentEffect : Effect, IReapplicableEffect
                     continue;
 
                 _destroyedObjects.Add(go);
-                //Debug.Log($"[EarthquakeEnvironmentEffect] Destroying object due to earthquake: {go.name}");
+
+                IBreakable breakable = ResolveBreakable(go);
+
+                if (breakable != null)
+                {
+                    breakable.Break();
+                    continue;
+                }
+
+                // Старые объекты без IBreakable сохраняют прежнее поведение.
                 Object.Destroy(go);
             }
         }
@@ -133,5 +143,15 @@ public class EarthquakeEnvironmentEffect : Effect, IReapplicableEffect
         {
             _duration = reapplied._duration + (Time.time - StarteAt);
         }
+    }
+
+    private static IBreakable ResolveBreakable(GameObject target)
+    {
+        if (target == null)
+            return null;
+
+        return target.GetComponent<IBreakable>() ??
+               target.GetComponentInParent<IBreakable>() ??
+               target.GetComponentInChildren<IBreakable>(true);
     }
 }

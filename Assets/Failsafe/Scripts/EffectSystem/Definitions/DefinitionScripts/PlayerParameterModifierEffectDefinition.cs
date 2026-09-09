@@ -123,7 +123,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (target == null)
             {
                 if (_logResolveErrors)
-                    Debug.LogWarning("[PlayerParameterModifierEffectDefinition] Target not found.");
+                    EffectLog.Warning(EffectLog.Parameters, "[PlayerParameterModifierEffectDefinition] Target not found.");
 
                 return false;
             }
@@ -134,7 +134,7 @@ namespace Failsafe.Scripts.EffectSystem
             {
                 if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Parameters,
                         $"[PlayerParameterModifierEffectDefinition] LifetimeScope not found near target {target.name}.",
                         target);
                 }
@@ -211,7 +211,7 @@ namespace Failsafe.Scripts.EffectSystem
                 }
                 else if (_logResolveErrors)
                 {
-                    Debug.LogWarning(
+                    EffectLog.Warning(EffectLog.Parameters,
                         $"[PlayerParameterModifierEffectDefinition] Cannot resolve player parameter {parameter} near target {target.name}.",
                         target);
                 }

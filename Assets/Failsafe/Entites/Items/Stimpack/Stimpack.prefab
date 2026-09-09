@@ -149,15 +149,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.8175813
+      value: -61.569073
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.474
+      value: -4.701
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 8.9488735
+      value: 192.28806
       objectReference: {fileID: 0}
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalRotation.w
@@ -186,6 +186,10 @@ PrefabInstance:
     - target: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4770426360797712477, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
+      propertyPath: _playerBlocks
+      value: -1
       objectReference: {fileID: 0}
     - target: {fileID: 5564784521578391519, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       propertyPath: m_Layer
@@ -234,6 +238,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8794300228156334011}
+    - targetCorrespondingSourceObject: {fileID: 6004238781098439760, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4161944050935841290}
   m_SourcePrefab: {fileID: 100100000, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}
 --- !u!1 &1971230809139740364 stripped
 GameObject:
@@ -317,6 +324,22 @@ MonoBehaviour:
   _consumeConsumableOnSuccessfulUse: 1
   _allowUseWithoutRaycastHit: 0
   _log: 1
+--- !u!114 &4161944050935841290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1971230809139740364}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e20ac14d717c464d980692fcc0b4f72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _persistentId: prefab-template
+  _captureTransform: 1
+  _captureRigidbody: 1
+  _requiredOnRestore: 0
 --- !u!4 &8881726440552349880 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3695867075055192612, guid: fbc04dcdb3219f441896bff913d85e53, type: 3}

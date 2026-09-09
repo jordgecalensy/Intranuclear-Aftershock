@@ -44,6 +44,9 @@ namespace Failsafe.Player.Scripts
 
         public void Initialize()
         {
+            if (_registration != null)
+                return;
+
             _registration = _participantRegistry.Register(this);
         }
 

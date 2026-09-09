@@ -1,5 +1,7 @@
 using System;
+using System.Globalization;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
 
@@ -11,11 +13,16 @@ namespace Failsafe.Scripts.SaveSystem
         private const string SaveFileName = "run.json";
         private const string BackupFileName = "run.json.bak";
         private const string TemporaryFileName = "run.json.tmp";
+        private const string IntegrityFileSuffix = ".integrity";
+        private const string IntegrityFormatVersion = "1";
         private const string RunEndMarkerFileName = "run.ended.json";
         private const string RunEndMarkerTemporaryFileName = "run.ended.json.tmp";
 
         private readonly string _saveDirectory;
         private readonly string _temporaryPath;
+        private readonly string _saveIntegrityPath;
+        private readonly string _backupIntegrityPath;
+        private readonly string _temporaryIntegrityPath;
         private readonly string _runEndMarkerPath;
         private readonly string _runEndMarkerTemporaryPath;
 
@@ -37,6 +44,9 @@ namespace Failsafe.Scripts.SaveSystem
             SavePath = Path.Combine(_saveDirectory, SaveFileName);
             BackupPath = Path.Combine(_saveDirectory, BackupFileName);
             _temporaryPath = Path.Combine(_saveDirectory, TemporaryFileName);
+            _saveIntegrityPath = SavePath + IntegrityFileSuffix;
+            _backupIntegrityPath = BackupPath + IntegrityFileSuffix;
+            _temporaryIntegrityPath = _temporaryPath + IntegrityFileSuffix;
             _runEndMarkerPath = Path.Combine(_saveDirectory, RunEndMarkerFileName);
             _runEndMarkerTemporaryPath =
                 Path.Combine(_saveDirectory, RunEndMarkerTemporaryFileName);
@@ -99,16 +109,20 @@ namespace Failsafe.Scripts.SaveSystem
                 if (!File.Exists(SavePath))
                 {
                     File.Move(_temporaryPath, SavePath);
+                    ReplaceFile(_temporaryIntegrityPath, _saveIntegrityPath);
                 }
-                else if (TryReadFile(SavePath, out _, out _))
+                else if (IsPrimarySafeForBackup())
                 {
                     ReplacePrimaryWithBackup();
+                    RotateIntegrityFiles();
                 }
                 else
                 {
                     // Preserve the last valid backup instead of replacing it with a corrupt primary.
                     File.Delete(SavePath);
+                    DeleteIfExists(_saveIntegrityPath);
                     File.Move(_temporaryPath, SavePath);
+                    ReplaceFile(_temporaryIntegrityPath, _saveIntegrityPath);
                 }
 
                 error = null;
@@ -185,6 +199,9 @@ namespace Failsafe.Scripts.SaveSystem
                 DeleteIfExists(SavePath);
                 DeleteIfExists(BackupPath);
                 DeleteIfExists(_temporaryPath);
+                DeleteIfExists(_saveIntegrityPath);
+                DeleteIfExists(_backupIntegrityPath);
+                DeleteIfExists(_temporaryIntegrityPath);
                 DeleteIfExists(_runEndMarkerPath);
                 DeleteIfExists(_runEndMarkerTemporaryPath);
                 error = null;
@@ -294,13 +311,23 @@ namespace Failsafe.Scripts.SaveSystem
 
         private void WriteTemporaryFile(string json)
         {
-            WriteFileWithDurability(_temporaryPath, json);
+            byte[] bytes = new UTF8Encoding(false).GetBytes(json);
+            WriteFileWithDurability(_temporaryPath, bytes);
+
+            FileIntegrity integrity = CalculateIntegrity(bytes);
+            WriteFileWithDurability(
+                _temporaryIntegrityPath,
+                integrity.Serialize());
         }
 
         private static void WriteFileWithDurability(string path, string json)
         {
             byte[] bytes = new UTF8Encoding(false).GetBytes(json);
+            WriteFileWithDurability(path, bytes);
+        }
 
+        private static void WriteFileWithDurability(string path, byte[] bytes)
+        {
             using (FileStream stream = new FileStream(
                        path,
                        FileMode.Create,
@@ -347,16 +374,112 @@ namespace Failsafe.Scripts.SaveSystem
             }
         }
 
-        private void TryDeleteTemporaryFile()
+        private bool IsPrimarySafeForBackup()
         {
+            if (TryReadIntegrity(_saveIntegrityPath, out FileIntegrity expected))
+            {
+                return TryCalculateIntegrity(SavePath, out FileIntegrity actual) &&
+                       expected.Equals(actual);
+            }
+
+            // Saves created before integrity receipts existed still use the
+            // original, slower validation path once.
+            return TryReadFile(SavePath, out _, out _);
+        }
+
+        private void RotateIntegrityFiles()
+        {
+            if (File.Exists(_saveIntegrityPath))
+                ReplaceFile(_saveIntegrityPath, _backupIntegrityPath);
+            else
+                DeleteIfExists(_backupIntegrityPath);
+
+            ReplaceFile(_temporaryIntegrityPath, _saveIntegrityPath);
+        }
+
+        private static FileIntegrity CalculateIntegrity(byte[] bytes)
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] hash = sha256.ComputeHash(bytes);
+                return new FileIntegrity(
+                    bytes.LongLength,
+                    Convert.ToBase64String(hash));
+            }
+        }
+
+        private static bool TryCalculateIntegrity(
+            string path,
+            out FileIntegrity integrity)
+        {
+            integrity = default;
+
             try
             {
-                DeleteIfExists(_temporaryPath);
+                using (FileStream stream = new FileStream(
+                           path,
+                           FileMode.Open,
+                           FileAccess.Read,
+                           FileShare.Read,
+                           4096,
+                           FileOptions.SequentialScan))
+                using (SHA256 sha256 = SHA256.Create())
+                {
+                    byte[] hash = sha256.ComputeHash(stream);
+                    integrity = new FileIntegrity(
+                        stream.Length,
+                        Convert.ToBase64String(hash));
+                    return true;
+                }
             }
             catch (Exception)
             {
-                // A stale temp file is ignored and overwritten by the next save attempt.
+                return false;
             }
+        }
+
+        private static bool TryReadIntegrity(
+            string path,
+            out FileIntegrity integrity)
+        {
+            integrity = default;
+
+            if (!File.Exists(path))
+                return false;
+
+            try
+            {
+                string[] lines = File.ReadAllLines(path, Encoding.UTF8);
+
+                if (lines.Length != 3 ||
+                    !string.Equals(
+                        lines[0],
+                        IntegrityFormatVersion,
+                        StringComparison.Ordinal) ||
+                    !long.TryParse(
+                        lines[1],
+                        NumberStyles.None,
+                        CultureInfo.InvariantCulture,
+                        out long length) ||
+                    length < 0 ||
+                    string.IsNullOrWhiteSpace(lines[2]))
+                {
+                    return false;
+                }
+
+                integrity = new FileIntegrity(length, lines[2].Trim());
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private void TryDeleteTemporaryFile()
+        {
+            TryDeleteFile(_temporaryPath);
+            TryDeleteFile(_temporaryIntegrityPath);
         }
 
         private bool TryApplyRunEndMarker(RunSaveFile saveFile, out string error)
@@ -420,6 +543,31 @@ namespace Failsafe.Scripts.SaveSystem
         {
             if (File.Exists(path))
                 File.Delete(path);
+        }
+
+        private readonly struct FileIntegrity : IEquatable<FileIntegrity>
+        {
+            private readonly long _length;
+            private readonly string _hash;
+
+            public FileIntegrity(long length, string hash)
+            {
+                _length = length;
+                _hash = hash;
+            }
+
+            public bool Equals(FileIntegrity other)
+            {
+                return _length == other._length &&
+                       string.Equals(_hash, other._hash, StringComparison.Ordinal);
+            }
+
+            public string Serialize()
+            {
+                return IntegrityFormatVersion + "\n" +
+                       _length.ToString(CultureInfo.InvariantCulture) + "\n" +
+                       _hash;
+            }
         }
 
         [Serializable]

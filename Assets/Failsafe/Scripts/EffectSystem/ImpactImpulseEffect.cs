@@ -47,7 +47,7 @@ namespace Failsafe.Scripts.EffectSystem
                     _source);
 
                 if (_log)
-                    Debug.Log($"[ImpactImpulseEffect] Applied receiver impulse {_impulse}");
+                    EffectLog.Info(EffectLog.Physics, $"[ImpactImpulseEffect] Applied receiver impulse {_impulse}");
 
                 return;
             }
@@ -73,7 +73,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             if (_log)
             {
-                Debug.Log(
+                EffectLog.Info(EffectLog.Physics,
                     $"[ImpactImpulseEffect] Applied Rigidbody impulse {_impulse} at {_impactPoint}",
                     _rigidbody);
             }

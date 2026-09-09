@@ -62,7 +62,7 @@ namespace Failsafe.Scripts.EffectSystem
 
             _damageHitMaterial = Object.Instantiate(Resources.Load<Material>("TakingDamage"));
             if (_damageHitMaterial == null)
-                Debug.LogWarning("DamageHitEffect: material TakingDamage not found!");
+                EffectLog.Warning(EffectLog.Damage, "DamageHitEffect: material TakingDamage not found!");
 
         }
 
