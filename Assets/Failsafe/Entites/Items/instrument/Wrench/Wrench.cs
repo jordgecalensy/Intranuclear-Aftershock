@@ -9,12 +9,10 @@ public class Wrench : IUsable
     [Inject] Camera _playerCam;
 
     private Item _item;
-    private WrenchData _data;
     private IEffectApplicationService _effects;
 
-    public Wrench(WrenchData data, IEffectApplicationService effects)
+    public Wrench(IEffectApplicationService effects)
     {
-        _data = data;
         _effects = effects;
     }
     public ItemUseResult Use()
