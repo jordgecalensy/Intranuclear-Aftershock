@@ -7,7 +7,7 @@ using FMODUnity;
 public class Grenade : IUsable
 {
     public ThrowGrenadeData Data;
-    protected Item GranadeItem;
+    protected Item Item;
     protected bool ItsMineState = false;
 
     protected Grenade(ThrowGrenadeData data)
@@ -16,27 +16,39 @@ public class Grenade : IUsable
     }
     public void ParseItem(Item item_object)
     {
-        GranadeItem = item_object;
+        Item = item_object;
     }
     public ItemUseResult Use()
     {
-        GranadeItem.gameObject.GetComponent<BaseGrеnadeObject>().ActivesionGranade(Data, ItsMineState);
+        Item.gameObject.GetComponent<BaseGrеnadeObject>().ActivesionGranade(Data, ItsMineState);
         Debug.Log("Use");
-        SoundUtils3D.Play(GranadeItem.gameObject, Data.ThrowGrendeSfx);
+        SoundUtils3D.Play(Item.gameObject, Data.ThrowGrendeSfx);
         return new ItemUseResult { ItemStateAfterUse = ItemState.Throw, UsageType = UsageType.HoldToUse };
     }
-    public void AltMode()
+    public ItemUseResult AltMode()
     {
         ItsMineState = !ItsMineState;
         if (ItsMineState)
-            SoundUtils3D.Play(GranadeItem.gameObject, Data.MineStateOnSfx);
+            SoundUtils3D.Play(Item.gameObject, Data.MineStateOnSfx);
         else
-            SoundUtils3D.Play(GranadeItem.gameObject, Data.MineStateOffSfx);
+            SoundUtils3D.Play(Item.gameObject, Data.MineStateOffSfx);
         Debug.Log("ItsMineState " + ItsMineState);
+        return new ItemUseResult() { ItemStateAfterUse = ItemState.Hold, UsageType = UsageType.ClickToUse };
     }
-    public void GetItemUseDelays(out float startUseDelay, out float useDelay)
+    public void GetItemUseDelays(out float startDelay, out float useDelay, out float startAltUseDelay, out float altUseDelay)
     {
-        startUseDelay = Data.StartUseDelay;
-        useDelay = Data.UseDelay;
+        if (Item == null || Item.ItemData == null)
+        {
+            startDelay = 0f;
+            useDelay = 0f;
+            startAltUseDelay = 0f;
+            altUseDelay = 0f;
+            return;
+        }
+
+        startDelay = Mathf.Max(0f, Item.ItemData.StartUseDelay);
+        useDelay = Mathf.Max(0f, Item.ItemData.UseDelay);
+        startAltUseDelay = Mathf.Max(0f, Item.ItemData.StartAltUseDelay);
+        altUseDelay = Mathf.Max(0f, Item.ItemData.UseAltDelay);
     }
 }

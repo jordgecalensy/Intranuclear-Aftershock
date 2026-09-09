@@ -1,4 +1,4 @@
-using Failsafe.Items;
+﻿using Failsafe.Items;
 using Failsafe.Player.View;
 using System;
 using System.Collections.Generic;
@@ -41,6 +41,11 @@ public class PlayerHandsContainer
     private float _itemUseStartDelay = 0f;
     public float ItemUseStartDelay => _itemUseStartDelay;
 
+    private float _itemAltUseDelay = 0f;
+    public float ItemAltUseDelay => _itemAltUseDelay;
+
+    private float _itemAltUseStartDelay = 0f;
+    public float ItemAltUseStartDelay => _itemAltUseStartDelay;
     public PlayerHandsContainer(IEnumerable<IUsable> items, PlayerView playerView)
     {
         _items = items;
@@ -105,7 +110,9 @@ public class PlayerHandsContainer
 
         _itemInHand.ItemUsable.GetItemUseDelays(
             out _itemUseStartDelay,
-            out _itemUseDelay);
+            out _itemUseDelay,
+            out _itemAltUseStartDelay,
+            out _itemAltUseDelay);
 
         OnItemTaken?.Invoke(_itemInHand.ItemObject.ItemData.Type);
 
@@ -175,8 +182,13 @@ public class PlayerHandsContainer
             };
         }
 
-        public void AltMode()
+        public ItemUseResult AltMode()
         {
+            return new ItemUseResult
+            {
+                UsageType = UsageType.ClickToUse,
+                ItemStateAfterUse = ItemState.Hold
+            };
         }
 
         public void ParseItem(Item item_object)
@@ -185,16 +197,21 @@ public class PlayerHandsContainer
                 _item = item_object;
         }
 
-        public void GetItemUseDelays(out float startDelay, out float useDelay)
+        public void GetItemUseDelays(out float startDelay, out float useDelay, out float startAltUseDelay, out float altUseDelay)
         {
-            startDelay = 0f;
-            useDelay = 0.2f;
-
-            if (_item?.ItemData == null)
+            if (_item == null || _item.ItemData == null)
+            {
+                startDelay = 0f;
+                useDelay = 0f;
+                startAltUseDelay = 0f;
+                altUseDelay = 0f;
                 return;
+            }
 
             startDelay = Mathf.Max(0f, _item.ItemData.StartUseDelay);
             useDelay = Mathf.Max(0f, _item.ItemData.UseDelay);
+            startAltUseDelay = Mathf.Max(0f, _item.ItemData.StartAltUseDelay);
+            altUseDelay = Mathf.Max(0f, _item.ItemData.UseAltDelay);
         }
     }
 

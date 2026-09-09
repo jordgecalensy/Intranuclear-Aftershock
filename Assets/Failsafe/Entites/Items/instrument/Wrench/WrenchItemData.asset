@@ -10,12 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 55443d5422772514c80a38543eaeb7b5, type: 3}
-  m_Name: ItemData
+  m_Name: WrenchItemData
   m_EditorClassIdentifier: 
   Description: 
   Type: 5
   StartUseDelay: 0
   UseDelay: 1
+  StartAltUseDelay: 0
+  UseAltDelay: 2
   UsesEnergy: 0
   EnergyAmountMax: 0
   EnergyCostPerUse: 1
@@ -24,7 +26,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1892343
   DefaultModeEffects: {fileID: 11400000, guid: 40010e8ec2536954ebd9c7bfedcb6231, type: 2}
-  AlternativeModeEffects: {fileID: 0}
+  AlternativeModeEffects: {fileID: 11400000, guid: d711c312d05f5544d848bb7c1a4816f9, type: 2}
   UseSFX:
     Guid:
       Data1: 0

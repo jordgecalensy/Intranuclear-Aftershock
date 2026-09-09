@@ -47,6 +47,10 @@ public class ItemData : ScriptableObject
     public float StartUseDelay = 0f;
     public float UseDelay = 0.2f;
 
+    [Header("Alternative Use Timings")]
+    public float StartAltUseDelay = 0f;
+    public float UseAltDelay = 0.2f;
+
     [Header("Energy / Charges")]
     [Tooltip("Если false, поля энергии игнорируются.")]
     public bool UsesEnergy = false;

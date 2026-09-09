@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Failsafe.Items
 {
@@ -15,13 +15,13 @@ namespace Failsafe.Items
         /// <summary>
         /// Переключить режим
         /// </summary>
-        public void AltMode();
+        public ItemUseResult AltMode();
 
         /// <summary>
         /// Передать конкретный gameobject item в скрипты
         /// </summary>
         public void ParseItem(Item item_object);
 
-        public void GetItemUseDelays(out float startDelay, out float useDelay);
+        public void GetItemUseDelays(out float startDelay, out float useDelay, out float startAltUseDelay, out float altUseDelay);
     }
 }

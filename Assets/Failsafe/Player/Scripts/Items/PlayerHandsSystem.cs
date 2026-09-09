@@ -50,15 +50,10 @@ public class PlayerHandsSystem : ITickable
     public void Tick()
     {
         if (_inputHandler.AttackTrigger.IsTriggered && CanUseItemInHand())
-            UseItemInHand().Forget();
+            UseItemInHand(true).Forget();
 
-        if (_inputHandler.AltModeTrigger.IsTriggered)
-        {
-            _inputHandler.AltModeTrigger.ReleaseTrigger();
-
-            if (CanAltUseItemInHand())
-                _playerHandsContainer.ItemInHand.ItemUsable.AltMode();
-        }
+        if (_inputHandler.AltModeTrigger.IsTriggered && CanUseItemInHand())
+            UseItemInHand(false).Forget();
 
         if (!_inputHandler.AttackTrigger.IsPressed)
             _skipStartDelay = false;
@@ -84,24 +79,7 @@ public class PlayerHandsSystem : ITickable
         return true;
     }
 
-    private bool CanAltUseItemInHand()
-    {
-        if (_playerHandsContainer.State == PlayerHandsContainer.HandState.EmptyHands)
-            return false;
-
-        if (_controlBlocker != null)
-        {
-            if (_controlBlocker.IsBlocked(PlayerControlBlock.ItemUse))
-                return false;
-
-            if (_controlBlocker.IsBlocked(PlayerControlBlock.Shooting))
-                return false;
-        }
-
-        return true;
-    }
-
-    private async UniTask<ItemUseResult> UseItemInHand()
+    private async UniTask<ItemUseResult> UseItemInHand(bool ItsDefaultUse)
     {
         ItemInHand itemInHand = _playerHandsContainer.ItemInHand;
 
@@ -120,13 +98,19 @@ public class PlayerHandsSystem : ITickable
             OnItemStartUsing?.Invoke(itemInHand.ItemObject.ItemData.Type);
 
             _usingState = UsingState.Start;
-
-            await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseStartDelay));
+            if (ItsDefaultUse)
+                await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseStartDelay));
+            else
+                await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemAltUseStartDelay));
         }
 
         _usingState = UsingState.Using;
 
-        ItemUseResult useResult = itemInHand.ItemUsable.Use();
+        ItemUseResult useResult;
+        if (ItsDefaultUse)
+            useResult = itemInHand.ItemUsable.Use();
+        else 
+            useResult = itemInHand.ItemUsable.AltMode();
 
         HandleItemStateAfterUse(useResult);
 
@@ -139,7 +123,10 @@ public class PlayerHandsSystem : ITickable
 
                 _usingState = UsingState.OnDelay;
 
-                await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseDelay));
+                if (ItsDefaultUse)
+                    await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemUseDelay));
+                else
+                    await UniTask.Delay(TimeSpan.FromSeconds(_playerHandsContainer.ItemAltUseDelay));
 
                 _usingState = UsingState.None;
                 break;
@@ -149,7 +136,12 @@ public class PlayerHandsSystem : ITickable
 
                 _usingState = UsingState.OnDelay;
 
-                float useDelay = Mathf.Max(0.02f, _playerHandsContainer.ItemUseDelay);
+                float useDelay;
+                if (ItsDefaultUse) 
+                    useDelay = Mathf.Max(0.02f, _playerHandsContainer.ItemUseDelay);
+                else
+                    useDelay = Mathf.Max(0.02f, _playerHandsContainer.ItemAltUseDelay);
+
                 await UniTask.Delay(TimeSpan.FromSeconds(useDelay));
 
                 _usingState = UsingState.None;

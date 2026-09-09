@@ -1,4 +1,4 @@
-using Failsafe.Scripts.EffectSystem;
+﻿using Failsafe.Scripts.EffectSystem;
 using FMODUnity;
 using UnityEngine;
 using VContainer;
@@ -129,19 +129,23 @@ namespace Failsafe.Items
             return SuccessfulResult();
         }
 
-        public void AltMode()
+        public ItemUseResult AltMode()
         {
             _alternativeModeActive = !_alternativeModeActive;
 
             if (ResolveItem() && _item.ItemData != null)
                 PlayOneShot(_item.ItemData.ModeSwitchSFX);
 
+            return new ItemUseResult() { ItemStateAfterUse = ItemState.Hold, UsageType = UsageType.ClickToUse };
         }
 
-        public void GetItemUseDelays(out float startDelay, out float useDelay)
+        public void GetItemUseDelays(out float startDelay, out float useDelay, out float startAltUseDelay, out float altUseDelay)
         {
             startDelay = 0f;
             useDelay = 0.2f;
+            startAltUseDelay = 0f;
+            altUseDelay = 0.2f;
+
 
             if (!ResolveItem())
                 return;
@@ -151,6 +155,8 @@ namespace Failsafe.Items
 
             startDelay = Mathf.Max(0f, _item.ItemData.StartUseDelay);
             useDelay = Mathf.Max(0f, _item.ItemData.UseDelay);
+            startAltUseDelay = Mathf.Max(0f, _item.ItemData.StartAltUseDelay);
+            altUseDelay = Mathf.Max(0f, _item.ItemData.UseAltDelay);
         }
 
         private bool ResolveItem()

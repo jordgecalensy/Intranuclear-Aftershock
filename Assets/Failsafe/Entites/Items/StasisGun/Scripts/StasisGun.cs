@@ -1,4 +1,4 @@
-using Failsafe.Scripts.EffectSystem;
+﻿using Failsafe.Scripts.EffectSystem;
 using UnityEngine;
 using VContainer.Unity;
 
@@ -37,10 +37,10 @@ namespace Failsafe.Items
             return HoldClickResult();
         }
 
-        public void AltMode()
+        public ItemUseResult AltMode()
         {
             if (_item == null || _item.ItemData == null)
-                return;
+                return HoldClickResult();
 
             _isDefaultMode = !_isDefaultMode;
 
@@ -48,6 +48,7 @@ namespace Failsafe.Items
                 SoundUtils3D.Play(_item.gameObject, _item.ItemData.ModeSwitchSFX);
 
             Debug.Log($"[StasisGun] Default mode = {_isDefaultMode}", _item);
+            return HoldClickResult();
         }
 
         public void ParseItem(Item item_object)
@@ -69,17 +70,21 @@ namespace Failsafe.Items
                 Debug.LogWarning($"[StasisGun] Item type is {_item.ItemData.Type}, expected StasisGun.", _item);
         }
 
-        public void GetItemUseDelays(out float startDelay, out float useDelay)
+        public void GetItemUseDelays(out float startDelay, out float useDelay, out float startAltUseDelay, out float altUseDelay)
         {
             if (_item == null || _item.ItemData == null)
             {
                 startDelay = 0f;
                 useDelay = 0f;
+                startAltUseDelay = 0f;
+                altUseDelay = 0f;
                 return;
             }
 
             startDelay = Mathf.Max(0f, _item.ItemData.StartUseDelay);
             useDelay = Mathf.Max(0f, _item.ItemData.UseDelay);
+            startAltUseDelay = Mathf.Max(0f, _item.ItemData.StartAltUseDelay);
+            altUseDelay = Mathf.Max(0f, _item.ItemData.UseAltDelay);
         }
 
         private void TryShoot()

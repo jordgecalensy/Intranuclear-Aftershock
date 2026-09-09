@@ -19,10 +19,15 @@ public class Wrench : IUsable
     }
     public ItemUseResult Use()
     {
-        Banch(Raycast());
+        TryDamageDeal(Raycast(), true);
         return new ItemUseResult() { ItemStateAfterUse = ItemState.Hold, UsageType = UsageType.ClickToUse };
     }
-    private void Banch(RaycastHit hit)
+    public ItemUseResult AltMode()
+    {
+        TryDamageDeal(Raycast(), false);
+        return new ItemUseResult() { ItemStateAfterUse = ItemState.Hold, UsageType = UsageType.ClickToUse };
+    }
+    private void TryDamageDeal(RaycastHit hit, bool ItsDefaultUse)
     {
         if (hit.collider == null) return;
         if (_effects == null)
@@ -31,7 +36,12 @@ public class Wrench : IUsable
             return;
         }
 
-        EffectBundle bundle = _item.ItemData.DefaultModeEffects;
+        EffectBundle bundle;
+        if (ItsDefaultUse)
+            bundle = _item.ItemData.DefaultModeEffects;
+        else
+            bundle = _item.ItemData.AlternativeModeEffects;
+
         if (bundle == null)
         {
             Debug.LogWarning("[Wrench] EffectBundle is not assigned.", _item);
@@ -66,24 +76,24 @@ public class Wrench : IUsable
         Debug.Log("No Object!");
         return hit;
     }
-    public void AltMode()
-    {
-
-    }
     public void ParseItem(Item item_object)
     {
         _item = item_object;
     }
-    public void GetItemUseDelays(out float startDelay, out float useDelay)
+    public void GetItemUseDelays(out float startDelay, out float useDelay, out float startAltUseDelay, out float altUseDelay)
     {
         if (_item == null || _item.ItemData == null)
         {
             startDelay = 0f;
             useDelay = 0f;
+            startAltUseDelay = 0f;
+            altUseDelay = 0f;
             return;
         }
 
         startDelay = Mathf.Max(0f, _item.ItemData.StartUseDelay);
         useDelay = Mathf.Max(0f, _item.ItemData.UseDelay);
+        startAltUseDelay = Mathf.Max(0f, _item.ItemData.StartAltUseDelay);
+        altUseDelay = Mathf.Max(0f, _item.ItemData.UseAltDelay);
     }
 }
