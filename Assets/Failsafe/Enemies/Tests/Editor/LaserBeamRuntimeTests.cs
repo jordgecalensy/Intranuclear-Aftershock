@@ -66,41 +66,22 @@ namespace Failsafe.Enemies.Tests
         }
 
         [Test]
-        public void ClosestPointOnSegment_ClampsToVisibleBeam()
-        {
-            Vector3 start = Vector3.zero;
-            Vector3 end = Vector3.forward * 10f;
-
-            Assert.That(
-                Projectiles.LaserBeamStrategy.ClosestPointOnSegment(
-                    start,
-                    end,
-                    new Vector3(2f, 0f, 4f)),
-                Is.EqualTo(new Vector3(0f, 0f, 4f)));
-
-            Assert.That(
-                Projectiles.LaserBeamStrategy.ClosestPointOnSegment(
-                    start,
-                    end,
-                    Vector3.forward * 12f),
-                Is.EqualTo(end));
-        }
-
-        [Test]
-        public void CalculateBeamFieldFalloff_DecreasesTowardRadiusEdge()
+        public void CalculateBeamFieldImpulse_UsesBeamDirectionAndTickForce()
         {
             Assert.That(
-                Projectiles.LaserBeamStrategy.CalculateBeamFieldFalloff(0f, 1.25f, 1f),
-                Is.EqualTo(1f).Within(0.0001f));
+                Projectiles.LaserBeamStrategy.CalculateBeamFieldImpulse(
+                    Vector3.forward * 2f,
+                    forcePerSecond: 5f,
+                    tickInterval: 0.1f),
+                Is.EqualTo(Vector3.forward * 0.5f));
+
             Assert.That(
-                Projectiles.LaserBeamStrategy.CalculateBeamFieldFalloff(0.625f, 1.25f, 1f),
-                Is.EqualTo(0.5f).Within(0.0001f));
-            Assert.That(
-                Projectiles.LaserBeamStrategy.CalculateBeamFieldFalloff(1.25f, 1.25f, 1f),
-                Is.Zero);
-            Assert.That(
-                Projectiles.LaserBeamStrategy.CalculateBeamFieldFalloff(0f, 0f, 1f),
-                Is.Zero);
+                Projectiles.LaserBeamStrategy.CalculateBeamFieldImpulse(
+                    Vector3.zero,
+                    forcePerSecond: 5f,
+                    tickInterval: 0.1f),
+                Is.EqualTo(Vector3.zero));
         }
+
     }
 }

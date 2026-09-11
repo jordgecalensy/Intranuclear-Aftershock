@@ -11,9 +11,7 @@ namespace Failsafe.Enemies.Projectiles
         private const string BeamTargetKey = "beam_target";
         private const string NextEffectTickKey = "beam_next_effect_tick";
         private const string NextContactTickKey = "beam_next_contact_tick";
-        private const int BeamFieldColliderCapacity = 64;
-        private const int BeamFieldOcclusionCapacity = 32;
-        private const float BeamFieldOcclusionOriginOffset = 0.02f;
+        private const string NextBeamFieldTickKey = "beam_next_field_tick";
 
         public GameObject laserVfxPrefab;
 
@@ -21,22 +19,17 @@ namespace Failsafe.Enemies.Projectiles
 
         [Header("Continuous Contact")]
         [SerializeField] private EffectBundle _contactDamageEffects;
-        [SerializeField] private EffectBundle _contactPhysicsEffects;
         [SerializeField, Min(0.01f)] private float _contactTickInterval = 0.1f;
 
         [Header("Beam Physics Field")]
+        [SerializeField, Min(0.01f)] private float _beamFieldTickInterval = 0.1f;
         [SerializeField, Min(0f)] private float _beamFieldRadius = 1.25f;
-        [SerializeField, Min(0.01f)] private float _beamFieldFalloffExponent = 1f;
+        [Tooltip("Сила отталкивания Rigidbody вдоль луча за одну секунду.")]
+        [SerializeField, Min(0f)] private float _beamFieldForce = 20f;
         [SerializeField] private LayerMask _beamFieldMask = ~0;
 
-        private readonly Collider[] _beamFieldColliders =
-            new Collider[BeamFieldColliderCapacity];
-
-        private readonly RaycastHit[] _beamFieldOcclusionHits =
-            new RaycastHit[BeamFieldOcclusionCapacity];
-
-        private readonly Dictionary<Rigidbody, BeamFieldCandidate> _beamFieldCandidates =
-            new Dictionary<Rigidbody, BeamFieldCandidate>();
+        private readonly HashSet<Rigidbody> _beamFieldBodies =
+            new HashSet<Rigidbody>();
 
         public override bool Fire(WeaponController controller, Vector3 targetPoint)
         {
@@ -95,6 +88,10 @@ namespace Failsafe.Enemies.Projectiles
             UpdateCollisionAudio(controller, hasHit, hit);
             TryApplyEffects(controller, beam, hasHit, hit);
             TryApplyContactEffects(controller, beam, hasHit, hit);
+            TryApplyBeamFieldEffects(
+                controller,
+                beam,
+                hasHit ? hit.collider : null);
 
             return true;
         }
@@ -118,6 +115,7 @@ namespace Failsafe.Enemies.Projectiles
             controller.ClearRuntimeObject(BeamTargetKey);
             controller.ClearRuntimeObject(NextEffectTickKey);
             controller.ClearRuntimeObject(NextContactTickKey);
+            controller.ClearRuntimeObject(NextBeamFieldTickKey);
         }
 
         private void TryApplyEffects(
@@ -161,7 +159,10 @@ namespace Failsafe.Enemies.Projectiles
                 NextContactTickKey,
                 Time.time + tickInterval);
 
-            if (hasHit && _contactDamageEffects != null)
+            if (!hasHit)
+                return;
+
+            if (_contactDamageEffects != null)
             {
                 EffectContext damageContext = CreateContext(
                     controller,
@@ -172,41 +173,28 @@ namespace Failsafe.Enemies.Projectiles
                 controller.Effects?.Apply(_contactDamageEffects, damageContext);
             }
 
-            if (hasHit && _contactPhysicsEffects != null)
-            {
-                EffectContext physicsContext = CreateContext(
-                    controller,
-                    beam,
-                    hit,
-                    CalculateTickPower(stats.hitForce, tickInterval));
-
-                controller.Effects?.Apply(_contactPhysicsEffects, physicsContext);
-            }
-
-            Rigidbody primaryHitBody = hasHit
-                ? ResolveRigidbody(hit.collider)
-                : null;
-
-            TryApplyBeamFieldEffects(
-                controller,
-                beam,
-                primaryHitBody,
-                tickInterval);
         }
 
         private void TryApplyBeamFieldEffects(
             WeaponController controller,
             LaserBeamController beam,
-            Rigidbody primaryHitBody,
-            float tickInterval)
+            Collider directlyHitCollider)
         {
-            if (controller.Effects == null ||
-                _contactPhysicsEffects == null ||
-                _beamFieldRadius <= 0f ||
+            if (_beamFieldRadius <= 0f ||
                 _beamFieldMask.value == 0)
             {
                 return;
             }
+
+            float tickInterval = Mathf.Max(0.01f, _beamFieldTickInterval);
+            float nextTick = controller.GetRuntimeValue<float>(NextBeamFieldTickKey);
+
+            if (Time.time < nextTick)
+                return;
+
+            controller.SetRuntimeObject(
+                NextBeamFieldTickKey,
+                Time.time + tickInterval);
 
             Vector3 beamDirection = beam.CurrentDirection;
 
@@ -219,136 +207,49 @@ namespace Failsafe.Enemies.Projectiles
             if ((end - start).sqrMagnitude <= 0.0001f)
                 return;
 
-            int colliderCount = Physics.OverlapCapsuleNonAlloc(
+            Collider[] colliders = Physics.OverlapCapsule(
                 start,
                 end,
                 _beamFieldRadius,
-                _beamFieldColliders,
                 _beamFieldMask,
                 QueryTriggerInteraction.Ignore);
 
-            _beamFieldCandidates.Clear();
+            _beamFieldBodies.Clear();
             Transform ownerRoot = controller.transform.root;
+            Vector3 impulse = CalculateBeamFieldImpulse(
+                beamDirection,
+                _beamFieldForce,
+                tickInterval);
 
-            for (int index = 0; index < colliderCount; index++)
-            {
-                Collider collider = _beamFieldColliders[index];
-                Rigidbody body = ResolveRigidbody(collider);
+            if (impulse.sqrMagnitude <= 0.0001f)
+                return;
 
-                if (collider == null ||
-                    body == null ||
-                    body.isKinematic ||
-                    body == primaryHitBody ||
-                    IsInHierarchy(collider.transform, ownerRoot))
-                {
-                    continue;
-                }
+            TryApplyBeamFieldImpulse(
+                directlyHitCollider,
+                ownerRoot,
+                impulse);
 
-                Vector3 axisPoint = ClosestPointOnSegment(
-                    start,
-                    end,
-                    body.worldCenterOfMass);
-
-                Vector3 surfacePoint = collider.ClosestPoint(axisPoint);
-                float distance = Vector3.Distance(axisPoint, surfacePoint);
-                float falloff = CalculateBeamFieldFalloff(
-                    distance,
-                    _beamFieldRadius,
-                    _beamFieldFalloffExponent);
-
-                if (falloff <= 0f ||
-                    !IsBeamFieldPathClear(
-                        axisPoint,
-                        surfacePoint,
-                        beamDirection,
-                        collider,
-                        body,
-                        ownerRoot))
-                {
-                    continue;
-                }
-
-                var candidate = new BeamFieldCandidate(
-                    collider,
-                    axisPoint,
-                    surfacePoint,
-                    falloff);
-
-                if (!_beamFieldCandidates.TryGetValue(body, out BeamFieldCandidate existing) ||
-                    candidate.Falloff > existing.Falloff)
-                {
-                    _beamFieldCandidates[body] = candidate;
-                }
-            }
-
-            float basePower = CalculateTickPower(stats.hitForce, tickInterval);
-
-            foreach (KeyValuePair<Rigidbody, BeamFieldCandidate> pair in _beamFieldCandidates)
-            {
-                Rigidbody body = pair.Key;
-                BeamFieldCandidate candidate = pair.Value;
-                Vector3 radialDirection = body.worldCenterOfMass - candidate.AxisPoint;
-
-                if (radialDirection.sqrMagnitude <= 0.0001f)
-                    radialDirection = Vector3.Cross(beamDirection, Vector3.up);
-
-                if (radialDirection.sqrMagnitude <= 0.0001f)
-                    radialDirection = Vector3.Cross(beamDirection, Vector3.right);
-
-                radialDirection.Normalize();
-
-                var context = new EffectContext(
-                    controller.gameObject,
-                    candidate.Collider,
-                    candidate.SurfacePoint,
-                    -radialDirection,
-                    radialDirection,
-                    basePower * candidate.Falloff);
-
-                controller.Effects.Apply(_contactPhysicsEffects, context);
-            }
+            for (int index = 0; index < colliders.Length; index++)
+                TryApplyBeamFieldImpulse(colliders[index], ownerRoot, impulse);
         }
 
-        private bool IsBeamFieldPathClear(
-            Vector3 axisPoint,
-            Vector3 surfacePoint,
-            Vector3 beamDirection,
-            Collider targetCollider,
-            Rigidbody targetBody,
-            Transform ownerRoot)
+        private void TryApplyBeamFieldImpulse(
+            Collider collider,
+            Transform ownerRoot,
+            Vector3 impulse)
         {
-            Vector3 origin = axisPoint -
-                             beamDirection.normalized * BeamFieldOcclusionOriginOffset;
-            Vector3 toTarget = surfacePoint - origin;
-            float distance = toTarget.magnitude;
+            Rigidbody body = ResolveRigidbody(collider);
 
-            if (distance <= 0.0001f)
-                return true;
-
-            int hitCount = Physics.RaycastNonAlloc(
-                origin,
-                toTarget / distance,
-                _beamFieldOcclusionHits,
-                distance + BeamFieldOcclusionOriginOffset,
-                ~0,
-                QueryTriggerInteraction.Ignore);
-
-            for (int index = 0; index < hitCount; index++)
+            if (body == null ||
+                body.isKinematic ||
+                IsInHierarchy(body.transform, ownerRoot) ||
+                !_beamFieldBodies.Add(body))
             {
-                Collider collider = _beamFieldOcclusionHits[index].collider;
-
-                if (collider == null ||
-                    collider == targetCollider ||
-                    ResolveRigidbody(collider) == targetBody ||
-                    IsInHierarchy(collider.transform, ownerRoot))
-                {
-                    continue;
-                }
-
-                return false;
+                return;
             }
 
-            return true;
+            body.WakeUp();
+            body.AddForce(impulse, ForceMode.Impulse);
         }
 
         private static Rigidbody ResolveRigidbody(Collider collider)
@@ -407,61 +308,25 @@ namespace Failsafe.Enemies.Projectiles
             return Mathf.Max(0f, valuePerSecond) * Mathf.Max(0.01f, tickInterval);
         }
 
-        public static Vector3 ClosestPointOnSegment(
-            Vector3 start,
-            Vector3 end,
-            Vector3 point)
+        public static Vector3 CalculateBeamFieldImpulse(
+            Vector3 direction,
+            float forcePerSecond,
+            float tickInterval)
         {
-            Vector3 segment = end - start;
-            float lengthSquared = segment.sqrMagnitude;
+            if (direction.sqrMagnitude <= 0.0001f)
+                return Vector3.zero;
 
-            if (lengthSquared <= 0.0001f)
-                return start;
-
-            float t = Vector3.Dot(point - start, segment) / lengthSquared;
-            return start + segment * Mathf.Clamp01(t);
-        }
-
-        public static float CalculateBeamFieldFalloff(
-            float distance,
-            float radius,
-            float exponent)
-        {
-            if (radius <= 0f)
-                return 0f;
-
-            float normalizedDistance = Mathf.Clamp01(Mathf.Max(0f, distance) / radius);
-            return Mathf.Pow(
-                1f - normalizedDistance,
-                Mathf.Max(0.01f, exponent));
+            return direction.normalized *
+                   CalculateTickPower(forcePerSecond, tickInterval);
         }
 
         private void OnValidate()
         {
             _effectTickInterval = Mathf.Max(0.01f, _effectTickInterval);
             _contactTickInterval = Mathf.Max(0.01f, _contactTickInterval);
+            _beamFieldTickInterval = Mathf.Max(0.01f, _beamFieldTickInterval);
             _beamFieldRadius = Mathf.Max(0f, _beamFieldRadius);
-            _beamFieldFalloffExponent = Mathf.Max(0.01f, _beamFieldFalloffExponent);
-        }
-
-        private readonly struct BeamFieldCandidate
-        {
-            public readonly Collider Collider;
-            public readonly Vector3 AxisPoint;
-            public readonly Vector3 SurfacePoint;
-            public readonly float Falloff;
-
-            public BeamFieldCandidate(
-                Collider collider,
-                Vector3 axisPoint,
-                Vector3 surfacePoint,
-                float falloff)
-            {
-                Collider = collider;
-                AxisPoint = axisPoint;
-                SurfacePoint = surfacePoint;
-                Falloff = falloff;
-            }
+            _beamFieldForce = Mathf.Max(0f, _beamFieldForce);
         }
     }
 }
