@@ -1,9 +1,21 @@
+using Failsafe.Scripts.EffectSystem;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Combat/Strategies/Projectile")]
 public class ProjectileStrategy : WeaponStrategy
 {
     public GameObject projectilePrefab;
+
+    [Header("Projectile Impact Physics")]
+    [Tooltip("Отдельный пакет физических эффектов попадания. Его сила масштабируется через WeaponStats Hit Force.")]
+    [SerializeField] private EffectBundle _impactPhysicsEffects;
+
+    [Header("Projectile Flight Physics Field")]
+    [Tooltip("Радиус движущейся сферы, которая ищет Rigidbody вокруг траектории снаряда.")]
+    [SerializeField, Min(0f)] private float _flightFieldRadius;
+
+    [Tooltip("Однократный импульс, расталкивающий каждый Rigidbody от траектории снаряда.")]
+    [SerializeField, Min(0f)] private float _flightFieldImpulse;
 
     public override bool Fire(WeaponController controller, Vector3 targetPoint)
     {
@@ -51,10 +63,20 @@ public class ProjectileStrategy : WeaponStrategy
             stats.range,
             stats.hitMask,
             stats.damage,
+            stats.hitForce,
+            _flightFieldRadius,
+            _flightFieldImpulse,
             controller.gameObject,
             impactEffects,
+            _impactPhysicsEffects,
             controller.Effects);
 
         return true;
+    }
+
+    private void OnValidate()
+    {
+        _flightFieldRadius = Mathf.Max(0f, _flightFieldRadius);
+        _flightFieldImpulse = Mathf.Max(0f, _flightFieldImpulse);
     }
 }
