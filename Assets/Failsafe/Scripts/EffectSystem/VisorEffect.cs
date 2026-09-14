@@ -8,6 +8,7 @@ namespace Failsafe.Scripts.EffectSystem
     {
         private Material _visorMaterial;
         private ObjectXRay[] _xrayObjects;
+        private SimpleXRay[] _simpleXrayObjects;
         private Transform _player;
         private float _xrayRadius = 30f;
         private GameObject _visorEffectObject;
@@ -45,7 +46,8 @@ namespace Failsafe.Scripts.EffectSystem
         {
 
             _xrayObjects = Object.FindObjectsOfType<ObjectXRay>();
-            EffectLog.Info(EffectLog.Feedback, $"VisorEffect: найдено {_xrayObjects.Length} XRay-объектов.");
+            _simpleXrayObjects = Object.FindObjectsOfType<SimpleXRay>();
+            EffectLog.Info(EffectLog.Feedback, $"VisorEffect: найдено {_xrayObjects.Length} ObjectXRay + {_simpleXrayObjects.Length} SimpleXRay объектов.");
 
             var prefab = Resources.Load<GameObject>("ScannerVisorVFX");
 
@@ -85,14 +87,26 @@ namespace Failsafe.Scripts.EffectSystem
 
         public override void Update()
         {
-            if (_player == null || _xrayObjects == null) return;
+            if (_player == null) return;
 
-            foreach (var obj in _xrayObjects)
+            if (_xrayObjects != null)
             {
-                if (obj == null) continue;
+                foreach (var obj in _xrayObjects)
+                {
+                    if (obj == null) continue;
+                    float distance = Vector3.Distance(_player.position, obj.transform.position);
+                    obj.SetXRay(distance <= _xrayRadius);
+                }
+            }
 
-                float distance = Vector3.Distance(_player.position, obj.transform.position);
-                obj.SetXRay(distance <= _xrayRadius);
+            if (_simpleXrayObjects != null)
+            {
+                foreach (var obj in _simpleXrayObjects)
+                {
+                    if (obj == null) continue;
+                    float distance = Vector3.Distance(_player.position, obj.transform.position);
+                    obj.SetXRay(distance <= _xrayRadius);
+                }
             }
         }
 
@@ -110,6 +124,15 @@ namespace Failsafe.Scripts.EffectSystem
             if (_xrayObjects != null)
             {
                 foreach (var obj in _xrayObjects)
+                {
+                    if (obj != null)
+                        obj.SetXRay(false);
+                }
+            }
+
+            if (_simpleXrayObjects != null)
+            {
+                foreach (var obj in _simpleXrayObjects)
                 {
                     if (obj != null)
                         obj.SetXRay(false);
