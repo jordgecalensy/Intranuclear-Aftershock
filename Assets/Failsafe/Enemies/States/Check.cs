@@ -70,10 +70,12 @@ public class CheckState : BehaviorState
                 _movement.Stop();
                 _hasReachedOrigin = true;
                 _isWaiting = true;
-                _waitTimer = _config.PatrollingWaitTime;
+                _waitTimer = _config.CheckInterval;
             }
             return;
         }
+
+        _checkTimer += Time.deltaTime;
 
         // 2. Ждем на точке
         if (_isWaiting)
@@ -91,9 +93,8 @@ public class CheckState : BehaviorState
         if (_movement.IsPointReached(1.0f))
         {
             _movement.Stop();
-            _checkTimer += Time.deltaTime;
             _isWaiting = true;
-            _waitTimer = _config.changePointInterval;
+            _waitTimer = _config.CheckInterval;
         }
     }
 

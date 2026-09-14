@@ -20,6 +20,13 @@ namespace Failsafe.Scripts.EffectSystem
         [Tooltip("Максимальная итоговая сила импульса. 0 = без ограничения.")]
         [SerializeField] private float _maxImpulseMagnitude = 30f;
 
+        [Header("Context")]
+        [Tooltip("Использовать EffectContext.Direction вместо направления от точки удара к центру цели.")]
+        [SerializeField] private bool _useContextDirection;
+
+        [Tooltip("Использовать EffectContext.Point как точку приложения импульса.")]
+        [SerializeField] private bool _useContextPoint;
+
         [Header("Rigidbody")]
         [SerializeField] private ForceMode _forceMode = ForceMode.Impulse;
 
@@ -121,7 +128,9 @@ namespace Failsafe.Scripts.EffectSystem
             Vector3 targetCenter,
             Vector3 impactPoint)
         {
-            Vector3 direction = targetCenter - impactPoint;
+            Vector3 direction = _useContextDirection
+                ? context.Direction
+                : targetCenter - impactPoint;
 
             if (direction.sqrMagnitude <= 0.0001f && context.Source != null)
                 direction = targetCenter - context.Source.transform.position;
@@ -142,10 +151,13 @@ namespace Failsafe.Scripts.EffectSystem
             return direction;
         }
 
-        private static Vector3 ResolveImpactPoint(
+        private Vector3 ResolveImpactPoint(
             EffectContext context,
             Vector3 targetCenter)
         {
+            if (_useContextPoint)
+                return context.Point;
+
             if (context.HitCollider != null && context.Source != null)
                 return context.HitCollider.ClosestPoint(context.Source.transform.position);
 

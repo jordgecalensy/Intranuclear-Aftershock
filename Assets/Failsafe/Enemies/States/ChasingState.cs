@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.AI;
 
 public class ChasingState : BehaviorState
 {
@@ -11,19 +10,18 @@ public class ChasingState : BehaviorState
     private EnemyAnimator _enemyAnimator;
     private EnemyMemory _enemyMemory;
     private EnemyAudioManagerBase _audio;
+    private EnemyLinkTraverser _linkTraverser;
     
     // Переменные состояния
     private float _distanceToPlayer;
     private bool _playerInSight;
-    
-    // Параметры для прыжков (если используете AreaCost)
-    private readonly int _jumpAreaIndex = 3; 
-    private readonly float _jumpActivationDistance = 15f; 
+    private Transform _navigationTargetRoot;
 
     // Конструктор
     public ChasingState(Sensor[] sensors, Transform currentTransform, EnemyNavMeshActions navActions, 
                         EnemyMemory enemyMemory, Enemy_ScriptableObject enemyConfig, 
-                        EnemyAnimator enemyAnimator, EnemyAudioManagerBase audio)
+                        EnemyAnimator enemyAnimator, EnemyAudioManagerBase audio,
+                        EnemyLinkTraverser linkTraverser = null)
     {
         _sensors = sensors;
         _transform = currentTransform;
@@ -32,9 +30,13 @@ public class ChasingState : BehaviorState
         _enemyAnimator = enemyAnimator;
         _enemyMemory = enemyMemory;
         _audio = audio;
+        _linkTraverser = linkTraverser;
     }
 
-    public bool PlayerInAttackRange() => _playerInSight && (_distanceToPlayer <= _enemyConfig.AttackRangeMin);
+    public bool PlayerInAttackRange() =>
+        _playerInSight &&
+        (_linkTraverser == null || !_linkTraverser.HasCommittedTraversal) &&
+        _distanceToPlayer <= _enemyConfig.AttackRangeMin;
 
     public override void Enter()
     {
@@ -49,6 +51,7 @@ public class ChasingState : BehaviorState
     {
         _playerInSight = false;
         _distanceToPlayer = float.MaxValue;
+        _navigationTargetRoot = null;
 
         foreach (var sensor in _sensors)
         {
@@ -60,18 +63,25 @@ public class ChasingState : BehaviorState
             if (!signalPosition.HasValue)
                 continue;
 
-            Vector3 targetPosition = signalPosition.Value;
+            Vector3 sensedPosition = signalPosition.Value;
+            Vector3 navigationPosition = sensedPosition;
 
-            if (sensor is VisualSensor)
+            if (sensor is VisualSensor visual)
             {
                 _playerInSight = true;
+                _navigationTargetRoot = visual.Target;
+
+                // Для навигации нужна опора игрока на NavMesh, а не грудь.
+                // Точка груди по-прежнему используется сенсором и оружием.
+                if (_navigationTargetRoot != null)
+                    navigationPosition = _navigationTargetRoot.position;
             }
 
-            _distanceToPlayer = Vector3.Distance(_transform.position, targetPosition);
+            _distanceToPlayer = Vector3.Distance(_transform.position, sensedPosition);
 
             _enemyMemory.SetLastKnownPlayerPosition(
-                targetPosition,
-                (targetPosition - _transform.position).normalized
+                navigationPosition,
+                (navigationPosition - _transform.position).normalized
             );
 
             if (_playerInSight)
@@ -89,21 +99,9 @@ public class ChasingState : BehaviorState
 
         Vector3 targetDest = _enemyMemory.LastKnownPlayerPosition;
 
-        _navMeshActions.MoveToPoint(targetDest, _enemyConfig.ChaseSpeed);
-
-        UpdateJumpAreaCost();
-    }
-
-    private void UpdateJumpAreaCost()
-    {
-        // Используем публичное свойство Agent из вашего скрипта
-        var agent = _navMeshActions.Agent; 
-        
-        if (agent == null) return;
-
-        if (_playerInSight && _distanceToPlayer > _jumpActivationDistance)
-            agent.SetAreaCost(_jumpAreaIndex, 1f);
-        else
-            agent.SetAreaCost(_jumpAreaIndex, 100f);
+        _navMeshActions.MoveToPoint(
+            targetDest,
+            _enemyConfig.ChaseSpeed,
+            _playerInSight ? _navigationTargetRoot : null);
     }
 }

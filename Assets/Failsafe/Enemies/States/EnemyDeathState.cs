@@ -7,7 +7,7 @@ public class EnemyDeathState : BehaviorForcedState
     private Animator _animator;
     private Enemy_ScriptableObject _enemyConfig; // Добавили конфиг, чтобы брать оттуда префаб
     
-    private readonly int _deathStateHash = Animator.StringToHash("Die");
+    private readonly int _deathStateHash = Animator.StringToHash("Death");
     private bool _isReplaced; // Предохранитель от мульти-спавна
 
     // Обновленный конструктор: теперь мы передаем сюда еще и конфиг врага
@@ -39,7 +39,7 @@ public class EnemyDeathState : BehaviorForcedState
         AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
 
         // Проверяем, что сейчас играет именно анимация смерти
-        if (stateInfo.fullPathHash == _deathStateHash)
+        if (stateInfo.shortNameHash == _deathStateHash)
         {
             // normalizedTime = 1.0f это самый конец анимации. Мы берем 0.95f для надежности
             if (stateInfo.normalizedTime >= 0.95f)
