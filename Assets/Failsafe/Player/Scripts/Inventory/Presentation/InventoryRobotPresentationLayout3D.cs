@@ -60,6 +60,52 @@ namespace Failsafe.Inventory.Presentation
             int quickSlotCount,
             out string error)
         {
+            if (!TryValidateGrid(columns, rows, out error))
+                return false;
+
+            if (_quickSlotsRoot == null)
+            {
+                error = "Quick-slots root is not assigned.";
+                return false;
+            }
+
+            if (_quickSlotItemsRoot == null)
+            {
+                error = "Quick-slot items root is not assigned.";
+                return false;
+            }
+
+            if (_quickSlotsRoot.childCount < quickSlotCount)
+            {
+                error = $"Quick-slots root must have at least " +
+                        $"{quickSlotCount} direct children, but it has " +
+                        $"{_quickSlotsRoot.childCount}.";
+                return false;
+            }
+
+            for (int index = 0; index < quickSlotCount; index++)
+            {
+                if (!TryGetRectPose(
+                        _quickSlotsRoot.GetChild(index) as RectTransform,
+                        out _,
+                        out _,
+                        out _,
+                        out error))
+                {
+                    error = $"Quick slot {index + 1} is invalid: {error}";
+                    return false;
+                }
+            }
+
+            error = null;
+            return true;
+        }
+
+        public bool TryValidateGrid(
+            int columns,
+            int rows,
+            out string error)
+        {
             if (_gridCellsRoot == null)
             {
                 error = "Inventory grid cells root is not assigned.";
@@ -93,53 +139,13 @@ namespace Failsafe.Inventory.Presentation
                 return false;
             }
 
-            if (_quickSlotsRoot == null)
-            {
-                error = "Quick-slots root is not assigned.";
-                return false;
-            }
-
-            if (_quickSlotItemsRoot == null)
-            {
-                error = "Quick-slot items root is not assigned.";
-                return false;
-            }
-
-            if (!TryGetGridPose(
-                    columns,
-                    rows,
-                    out _,
-                    out _,
-                    out _,
-                    out error))
-            {
-                return false;
-            }
-
-            if (_quickSlotsRoot.childCount < quickSlotCount)
-            {
-                error = $"Quick-slots root must have at least " +
-                        $"{quickSlotCount} direct children, but it has " +
-                        $"{_quickSlotsRoot.childCount}.";
-                return false;
-            }
-
-            for (int index = 0; index < quickSlotCount; index++)
-            {
-                if (!TryGetRectPose(
-                        _quickSlotsRoot.GetChild(index) as RectTransform,
-                        out _,
-                        out _,
-                        out _,
-                        out error))
-                {
-                    error = $"Quick slot {index + 1} is invalid: {error}";
-                    return false;
-                }
-            }
-
-            error = null;
-            return true;
+            return TryGetGridPose(
+                columns,
+                rows,
+                out _,
+                out _,
+                out _,
+                out error);
         }
 
         public bool TryApplyGridPose(

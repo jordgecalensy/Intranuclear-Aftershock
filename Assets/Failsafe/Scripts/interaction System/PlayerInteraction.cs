@@ -3,6 +3,7 @@ using VContainer;
 using UnityEngine;
 using Assets.Failsafe.Scripts.interaction_System;
 using Failsafe.Inventory.Integration;
+using Failsafe.PlayerMovements;
 
 public class PlayerInteraction : MonoBehaviour
 {
@@ -13,6 +14,7 @@ public class PlayerInteraction : MonoBehaviour
     [Inject] private InputHandler _inputHandler;
     [Inject] private PlayerHandsContainer _handsContainer;
     [Inject] private IInventoryHeldItemLifecycle _inventoryItemLifecycle;
+    [Inject] private PlayerControlBlocker _controlBlocker;
 
     private ItemPlaceArea _itemArea;
     private ScrollbarInteractable _activeScrollbar;
@@ -20,6 +22,13 @@ public class PlayerInteraction : MonoBehaviour
 
     private void Update()
     {
+        if (_controlBlocker != null &&
+            _controlBlocker.IsBlocked(PlayerControlBlock.Interaction))
+        {
+            ClearBlockedInteractionState();
+            return;
+        }
+
         Ray ray = new Ray(_playerCam.transform.position, _playerCam.transform.forward);
         Debug.DrawRay(ray.origin, ray.direction * _distance);
 
@@ -95,6 +104,21 @@ public class PlayerInteraction : MonoBehaviour
         }
 
         HandleNoHit();
+    }
+
+    private void ClearBlockedInteractionState()
+    {
+        if (_activeScrollbar != null)
+        {
+            _activeScrollbar.StopDrag();
+            _activeScrollbar = null;
+        }
+
+        if (_lastHoveredObject != null)
+        {
+            _lastHoveredObject.OnHoverExit();
+            _lastHoveredObject = null;
+        }
     }
 
     private void HandleHover(Interactable interactable)

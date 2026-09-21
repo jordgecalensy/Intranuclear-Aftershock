@@ -541,6 +541,29 @@ namespace Failsafe.Inventory.Presentation.Tests
             Assert.That(presenter.ViewCount, Is.Zero);
         }
 
+        [Test]
+        public void TryValidateGrid_DoesNotRequireQuickSlotReferences()
+        {
+            InventoryRobotPresentationLayout3D layout =
+                CreateFootprintLayout(2, 1);
+            Transform itemsRoot = new GameObject("Grid-only Items Root").transform;
+            _createdObjects.Add(itemsRoot.gameObject);
+            SetPrivateField(layout, "_inventoryItemsRoot", itemsRoot);
+
+            Assert.That(
+                layout.TryValidateGrid(2, 1, out string gridError),
+                Is.True,
+                gridError);
+            Assert.That(
+                layout.TryValidate(
+                    2,
+                    1,
+                    quickSlotCount: 1,
+                    out string fullLayoutError),
+                Is.False);
+            Assert.That(fullLayoutError, Does.Contain("Quick-slots root"));
+        }
+
         private InventoryGridPresenter3D CreatePresenter()
         {
             GameObject presenterObject = new GameObject("Inventory Presenter Test");

@@ -1,4 +1,5 @@
 ﻿using Failsafe.Items;
+using Failsafe.Chests;
 using Failsafe.Player.Model;
 using Failsafe.Inventory.Integration;
 using Failsafe.Player.Scripts;
@@ -112,6 +113,7 @@ namespace Failsafe.Player
 
             builder.RegisterEntryPoint<PlayerAnimationController>(Lifetime.Scoped);
 
+            builder.Register<PlayerCameraPoseOverride>(Lifetime.Scoped);
             builder.RegisterEntryPoint<PlayerCameraController>(Lifetime.Scoped);
 
             builder.RegisterComponentInHierarchy<PlayerUIController>();
@@ -203,6 +205,8 @@ namespace Failsafe.Player
             builder.RegisterEntryPoint<InventoryQuickSlotEquipService>(
                     Lifetime.Singleton)
                 .AsSelf();
+            builder.Register<ChestTransferService>(Lifetime.Scoped);
+            builder.Register<ChestInteractionSession>(Lifetime.Scoped);
             builder.RegisterEntryPoint<SelectedEngineerStartingItemGranter>(
                 Lifetime.Scoped);
             builder.RegisterEntryPoint<InventoryRunSaveParticipant>(

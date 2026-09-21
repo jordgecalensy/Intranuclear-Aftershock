@@ -31,6 +31,7 @@ namespace Failsafe.PlayerMovements
         public const int Cutscene = 1004;
         public const int Dialogue = 1005;
         public const int PauseMenu = 1006;
+        public const int ChestOpened = 1007;
     }
 
     public class PlayerControlBlocker : MonoBehaviour
