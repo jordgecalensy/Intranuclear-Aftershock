@@ -18,6 +18,9 @@ namespace Failsafe.Chests
         [SerializeField] private string _inventoryLayerName = "Inventory";
 
         private GameObject _runtimeRoot;
+        private RectTransform _fittedGridFrame;
+        private Vector2 _originalFrameSizeDelta;
+        private Vector2 _originalFramePosition;
 
         public ChestInventoryController Inventory => _inventory;
         public InventoryGridPresenter3D Presenter { get; private set; }
@@ -179,6 +182,7 @@ namespace Failsafe.Chests
 
             Presenter = null;
             _runtimeRoot = null;
+            RestoreGridFrame();
 
             if (_visualRoot != null)
                 _visualRoot.SetActive(false);
@@ -216,7 +220,13 @@ namespace Failsafe.Chests
                     return false;
                 }
 
+                RestoreGridFrame();
                 Canvas.ForceUpdateCanvases();
+
+                if (!TrySynchronizeGridCells(out error))
+                    return false;
+
+                FitGridFrame();
 
                 if (_layout.GridCellsRoot != null)
                 {
@@ -235,6 +245,115 @@ namespace Failsafe.Chests
                 if (restoreHiddenState && _visualRoot != null)
                     _visualRoot.SetActive(false);
             }
+        }
+
+        private bool TrySynchronizeGridCells(out string error)
+        {
+            RectTransform root = _layout.GridCellsRoot;
+            GridLayoutGroup grid = root != null ? root.GetComponent<GridLayoutGroup>() : null;
+            if (root == null || grid == null || root.childCount == 0)
+            {
+                error = "Chest grid requires a GridLayoutGroup and at least one template cell.";
+                return false;
+            }
+
+            int columns = _inventory.Columns;
+            int rows = _inventory.Rows;
+            if (columns <= 0 || rows <= 0 || (long)columns * rows > int.MaxValue)
+            {
+                error = "Chest grid dimensions are invalid.";
+                return false;
+            }
+
+            float width = root.rect.width - grid.padding.horizontal;
+            float height = root.rect.height - grid.padding.vertical;
+            float size = Mathf.Min(width / columns, height / rows);
+            if (size <= Mathf.Epsilon || float.IsNaN(size) || float.IsInfinity(size))
+            {
+                error = "Chest grid panel must have a non-zero available size.";
+                return false;
+            }
+
+            for (int index = 0; index < root.childCount; index++)
+            {
+                if (!(root.GetChild(index) is RectTransform))
+                {
+                    error = "Chest grid cells must use RectTransform.";
+                    return false;
+                }
+            }
+
+            int requiredCount = columns * rows;
+            RectTransform template = (RectTransform)root.GetChild(0);
+            while (root.childCount < requiredCount)
+            {
+                RectTransform cell = Instantiate(template, root, false);
+                cell.name = $"Cell {root.childCount - 1}";
+            }
+
+            for (int index = 0; index < root.childCount; index++)
+            {
+                GameObject cell = root.GetChild(index).gameObject;
+                bool visible = index < requiredCount;
+                if (visible && cell.TryGetComponent(out LayoutElement element))
+                    element.ignoreLayout = false;
+                cell.SetActive(visible);
+            }
+
+            // GridSpace3D uses a contiguous, row-major grid of square cells.
+            grid.enabled = true;
+            grid.startCorner = GridLayoutGroup.Corner.UpperLeft;
+            grid.startAxis = GridLayoutGroup.Axis.Horizontal;
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = columns;
+            grid.childAlignment = TextAnchor.MiddleCenter;
+            grid.spacing = Vector2.zero;
+            grid.cellSize = new Vector2(size, size);
+            error = null;
+            return true;
+        }
+
+        private void FitGridFrame()
+        {
+            RectTransform cells = _layout.GridCellsRoot;
+            RectTransform panel = cells.parent as RectTransform;
+            RectTransform frame = panel != null ? panel.parent as RectTransform : null;
+            // The existing chest UI nests stretched cells inside its background and frame.
+            // Other layouts may have no decorative frame and need no resizing.
+            if (panel == null || frame == null || panel.name != "GridPanel" ||
+                frame.name != "GridFrame" || !IsStretched(cells) || !IsStretched(panel))
+                return;
+
+            GridLayoutGroup grid = cells.GetComponent<GridLayoutGroup>();
+            Vector2 occupiedSize = new Vector2(
+                _inventory.Columns * grid.cellSize.x + grid.padding.horizontal,
+                _inventory.Rows * grid.cellSize.y + grid.padding.vertical);
+            Vector2 sizeChange = occupiedSize - cells.rect.size;
+            _fittedGridFrame = frame;
+            _originalFrameSizeDelta = frame.sizeDelta;
+            _originalFramePosition = frame.anchoredPosition;
+            frame.sizeDelta += sizeChange;
+            // Preserve the grid center even when the frame pivot is not centered.
+            frame.anchoredPosition += Vector2.Scale(sizeChange, frame.pivot - Vector2.one * 0.5f);
+            frame.ForceUpdateRectTransforms();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
+        }
+
+        private static bool IsStretched(RectTransform rect)
+        {
+            return rect.anchorMin == Vector2.zero && rect.anchorMax == Vector2.one &&
+                   rect.localScale == Vector3.one && rect.localRotation == Quaternion.identity;
+        }
+
+        private void RestoreGridFrame()
+        {
+            if (_fittedGridFrame == null)
+                return;
+
+            _fittedGridFrame.sizeDelta = _originalFrameSizeDelta;
+            _fittedGridFrame.anchoredPosition = _originalFramePosition;
+            _fittedGridFrame.ForceUpdateRectTransforms();
+            _fittedGridFrame = null;
         }
 
         private bool IsVisualRootSafe()

@@ -127,6 +127,21 @@ namespace Failsafe.Chests
             _rows = Mathf.Max(1, _rows);
         }
 
+        public InventoryOperationResult Relocate(
+            string instanceId,
+            InventoryGridPosition origin,
+            InventoryItemRotation rotation)
+        {
+            if (!IsGenerated || Grid == null ||
+                string.IsNullOrWhiteSpace(instanceId) || !_storedItems.ContainsKey(instanceId))
+                return InventoryOperationResult.Failure(InventoryFailureReason.InvalidItem);
+
+            InventoryOperationResult result = Grid.TryRelocate(instanceId, origin, rotation);
+            if (result.IsSuccess)
+                NotifyContentsChanged();
+            return result;
+        }
+
         public bool TryEnsureGenerated(out string error)
         {
             return TryEnsureGenerated(seed: null, out error);

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Assets.Failsafe.Scripts.RandomGeneration;
+using Failsafe.Inventory.Core;
 using Failsafe.Scripts.SaveSystem;
 using NUnit.Framework;
 using UnityEngine;
@@ -498,6 +499,36 @@ namespace Failsafe.Chests.Tests
                 chest.TryCommitDetached(detachedItem, out string commitError),
                 Is.True,
                 commitError);
+        }
+
+        [Test]
+        public void Relocate_RotatesAndPersistsWithoutChangingLootWeight()
+        {
+            ChestLootTable table = CreateTable(false,
+                CreateEntry("movable", weight: 1, width: 2, height: 1));
+            ChestInventoryController chest = CreateChest(table, 1, 3, 3);
+            Assert.That(chest.TryEnsureGenerated(71, out string error), Is.True, error);
+            string id = chest.StoredItems.Single().InstanceId;
+            int notifications = 0;
+            chest.ContentsChanged += () => notifications++;
+
+            Assert.That(chest.Relocate(id, new InventoryGridPosition(2, 1),
+                InventoryItemRotation.Clockwise90).IsSuccess, Is.True);
+            Assert.That(notifications, Is.EqualTo(1));
+            Assert.That(chest.RemainingWeight, Is.EqualTo(1));
+            Assert.That(chest.ItemCount, Is.EqualTo(1));
+
+            string saved = chest.CapturePersistentState();
+            ChestInventoryController restored = CreateChest(table, 1, 3, 3);
+            restored.RestorePersistentState(saved, chest.StateVersion);
+            Assert.That(restored.Grid.TryGetPlacement(id, out InventoryPlacement placement), Is.True);
+            Assert.That(placement.Origin, Is.EqualTo(new InventoryGridPosition(2, 1)));
+            Assert.That(placement.Item.Rotation, Is.EqualTo(InventoryItemRotation.Clockwise90));
+
+            Assert.That(chest.Relocate(id, new InventoryGridPosition(3, 2),
+                InventoryItemRotation.Default).IsSuccess, Is.False);
+            Assert.That(chest.CapturePersistentState(), Is.EqualTo(saved));
+            Assert.That(notifications, Is.EqualTo(1));
         }
 
         private ChestInventoryController CreateChest(
