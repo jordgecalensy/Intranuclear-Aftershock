@@ -22,6 +22,12 @@ namespace Failsafe.Chests
         [SerializeField] private ChestInventoryPresenter3D _presentation;
         [SerializeField] private ChestItemContextMenuController3D _contextMenu;
 
+        [Header("Animation")]
+        [SerializeField] private Animator _chestAnimator;
+
+        private static readonly int OpenAnimation = Animator.StringToHash("Base Layer.Open");
+        private static readonly int CloseAnimation = Animator.StringToHash("Base Layer.Close");
+
         [Header("Camera")]
         [SerializeField] private Transform _cameraAnchor;
 
@@ -41,6 +47,7 @@ namespace Failsafe.Chests
             ResolveReferences();
             _presentation?.SetVisible(false);
             _contextMenu?.SetInteractionActive(false);
+            SetChestAnimation(false, immediate: true);
         }
 
         private void Update()
@@ -230,6 +237,7 @@ namespace Failsafe.Chests
 
             _contextMenu?.SetInteractionActive(false);
             _presentation?.SetVisible(false);
+            SetChestAnimation(false);
 
             error = null;
             bool closed = _session == null ||
@@ -264,9 +272,40 @@ namespace Failsafe.Chests
             }
 
             State = ChestInteractionState.Open;
+            SetChestAnimation(true);
             _contextMenu.SetInteractionActive(true);
             error = null;
             return true;
+        }
+
+        private void SetChestAnimation(bool open, bool immediate = false)
+        {
+            if (_chestAnimator == null || !_chestAnimator.isActiveAndEnabled ||
+                _chestAnimator.runtimeAnimatorController == null)
+                return;
+
+            if (!_chestAnimator.isInitialized)
+                _chestAnimator.Rebind();
+
+            int target = open ? OpenAnimation : CloseAnimation;
+            if (!_chestAnimator.HasState(0, target))
+            {
+                Debug.LogWarning("Chest Animator requires Base Layer.Open and Base Layer.Close states.", this);
+                return;
+            }
+
+            AnimatorStateInfo current = _chestAnimator.GetCurrentAnimatorStateInfo(0);
+            if (!immediate && current.fullPathHash == target)
+                return;
+
+            // The two clips are mirrored curves. Starting the opposite clip at
+            // the complementary time preserves the pose when interrupted.
+            int opposite = open ? CloseAnimation : OpenAnimation;
+            float time = immediate ? 1f : current.fullPathHash == opposite
+                ? 1f - Mathf.Clamp01(current.normalizedTime)
+                : 0f;
+            _chestAnimator.Play(target, 0, time);
+            _chestAnimator.Update(0f);
         }
 
         private void HandleRequirementCompleted(
@@ -365,6 +404,7 @@ namespace Failsafe.Chests
 
         private void ResetLocalState()
         {
+            SetChestAnimation(false);
             _requestToken++;
 
             if (State == ChestInteractionState.CheckingRequirement &&

@@ -18,6 +18,10 @@ namespace Failsafe.Chests
         [SerializeField] private Button _takeButton;
         [SerializeField] private Button _infoButton;
 
+        [Header("Screen Menu")]
+        [SerializeField, Min(40f)] private float _menuScreenWidth = 260f;
+        [SerializeField, Min(0f)] private float _menuCursorOffset = 16f;
+
         [Header("Info")]
         [SerializeField] private InventoryItemInfoPanel3D _infoPanel;
 
@@ -42,6 +46,9 @@ namespace Failsafe.Chests
         private string _lastClickedInstanceId;
         private float _lastClickTime = float.NegativeInfinity;
         private bool _hasValidTarget;
+        private Canvas _screenMenuCanvas;
+        private RectTransformState _originalMenuTransform;
+        private Vector2 _menuDesignSize;
 
         public bool IsDragging { get; private set; }
 
@@ -84,8 +91,7 @@ namespace Failsafe.Chests
 
             if (IsMenuOpen)
             {
-                if (RectTransformUtility.RectangleContainsScreenPoint(
-                        _menuRoot, pointerPosition, _playerCamera))
+                if (IsPointerInsideMenu(pointerPosition))
                     return;
 
                 if (mouse.leftButton.wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame)
@@ -150,6 +156,7 @@ namespace Failsafe.Chests
             }
 
             ConfigureCanvasCameras();
+            EnsureScreenMenu();
             BindViews();
             _infoPanel.Initialize(_playerCamera);
             IsInitialized = true;
@@ -379,31 +386,87 @@ namespace Failsafe.Chests
             if (_menuRoot == null)
                 return;
 
-            RectTransform clampRoot = _menuClampRoot != null
-                ? _menuClampRoot
-                : _menuRoot.parent as RectTransform;
+            EnsureScreenMenu();
+            Canvas.ForceUpdateCanvases();
+            RectTransform clampRoot = (RectTransform)_screenMenuCanvas.transform;
 
-            if (clampRoot == null ||
-                !RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     clampRoot,
                     pointerPosition,
-                    _playerCamera,
+                    null,
                     out Vector2 localPoint))
             {
                 return;
             }
 
             Rect bounds = clampRoot.rect;
-            Rect menuRect = _menuRoot.rect;
-            Vector2 pivot = _menuRoot.pivot;
-            float minimumX = bounds.xMin + menuRect.width * pivot.x;
-            float maximumX = bounds.xMax - menuRect.width * (1f - pivot.x);
-            float minimumY = bounds.yMin + menuRect.height * pivot.y;
-            float maximumY = bounds.yMax - menuRect.height * (1f - pivot.y);
+            float margin = Mathf.Min(8f, Mathf.Min(bounds.width, bounds.height) * 0.1f);
+            float scale = Mathf.Min(
+                Mathf.Max(40f, _menuScreenWidth) / _menuDesignSize.x,
+                (bounds.width - margin * 2f) / _menuDesignSize.x,
+                (bounds.height - margin * 2f) / _menuDesignSize.y);
+            _menuRoot.localScale = Vector3.one * Mathf.Max(0.001f, scale);
+            Vector2 size = _menuDesignSize * _menuRoot.localScale.x;
+            float gap = Mathf.Max(0f, _menuCursorOffset);
+            float x = localPoint.x + gap;
+            float y = localPoint.y - gap;
+            if (x + size.x > bounds.xMax - margin)
+                x = localPoint.x - gap - size.x;
+            if (y - size.y < bounds.yMin + margin)
+                y = localPoint.y + gap + size.y;
 
-            _menuRoot.anchoredPosition = new Vector2(
-                Mathf.Clamp(localPoint.x, minimumX, maximumX),
-                Mathf.Clamp(localPoint.y, minimumY, maximumY));
+            // The menu pivot is its upper-left corner; local coordinates belong
+            // to the screen canvas, not the rotated world-space chest panel.
+            _menuRoot.localPosition = new Vector3(
+                Mathf.Clamp(x, bounds.xMin + margin, bounds.xMax - margin - size.x),
+                Mathf.Clamp(y, bounds.yMin + margin + size.y, bounds.yMax - margin), 0f);
+        }
+
+        private void EnsureScreenMenu()
+        {
+            if (_screenMenuCanvas != null)
+                return;
+
+            _originalMenuTransform = new RectTransformState(_menuRoot);
+            _menuDesignSize = _menuRoot.rect.size;
+            GameObject root = new GameObject("Chest Context Menu Screen Canvas",
+                typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster));
+            root.layer = LayerMask.NameToLayer("UI");
+            _screenMenuCanvas = root.GetComponent<Canvas>();
+            _screenMenuCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _screenMenuCanvas.sortingOrder = 1000;
+            _screenMenuCanvas.targetDisplay = _playerCamera != null ? _playerCamera.targetDisplay : 0;
+            _menuRoot.SetParent(root.transform, false);
+            _menuRoot.anchorMin = _menuRoot.anchorMax = Vector2.one * 0.5f;
+            _menuRoot.pivot = new Vector2(0f, 1f);
+            _menuRoot.sizeDelta = _menuDesignSize;
+            _menuRoot.localRotation = Quaternion.identity;
+            _menuRoot.localPosition = Vector3.zero;
+            _menuRoot.localScale = Vector3.one;
+            SetMenuVisible(false);
+        }
+
+        private bool IsPointerInsideMenu(Vector2 pointerPosition)
+        {
+            return IsMenuOpen && RectTransformUtility.RectangleContainsScreenPoint(
+                _menuRoot, pointerPosition, _screenMenuCanvas != null ? null : _playerCamera);
+        }
+
+        private void ReleaseScreenMenu()
+        {
+            if (_screenMenuCanvas == null)
+                return;
+
+            SetMenuVisible(false);
+            if (_menuRoot != null && _originalMenuTransform.Parent != null)
+                _originalMenuTransform.Restore(_menuRoot);
+
+            GameObject root = _screenMenuCanvas.gameObject;
+            _screenMenuCanvas = null;
+            if (Application.isPlaying)
+                Destroy(root);
+            else
+                DestroyImmediate(root);
         }
 
         private void HandleEquipClicked()
@@ -562,6 +625,12 @@ namespace Failsafe.Chests
                 return false;
             }
 
+            if (_menuRoot.rect.width <= 0f || _menuRoot.rect.height <= 0f)
+            {
+                error = "Chest context menu must have a non-zero width and height.";
+                return false;
+            }
+
             error = null;
             return true;
         }
@@ -584,6 +653,42 @@ namespace Failsafe.Chests
         private void OnDestroy()
         {
             UnbindViews();
+            ReleaseScreenMenu();
+        }
+
+        private readonly struct RectTransformState
+        {
+            public readonly Transform Parent;
+            private readonly int _siblingIndex;
+            private readonly Vector2 _anchorMin, _anchorMax, _pivot, _sizeDelta;
+            private readonly Vector3 _anchoredPosition, _scale;
+            private readonly Quaternion _rotation;
+
+            public RectTransformState(RectTransform rect)
+            {
+                Parent = rect.parent;
+                _siblingIndex = rect.GetSiblingIndex();
+                _anchorMin = rect.anchorMin;
+                _anchorMax = rect.anchorMax;
+                _pivot = rect.pivot;
+                _sizeDelta = rect.sizeDelta;
+                _anchoredPosition = rect.anchoredPosition3D;
+                _scale = rect.localScale;
+                _rotation = rect.localRotation;
+            }
+
+            public void Restore(RectTransform rect)
+            {
+                rect.SetParent(Parent, false);
+                rect.SetSiblingIndex(_siblingIndex);
+                rect.anchorMin = _anchorMin;
+                rect.anchorMax = _anchorMax;
+                rect.pivot = _pivot;
+                rect.sizeDelta = _sizeDelta;
+                rect.anchoredPosition3D = _anchoredPosition;
+                rect.localScale = _scale;
+                rect.localRotation = _rotation;
+            }
         }
     }
 }

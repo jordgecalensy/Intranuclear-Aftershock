@@ -7,6 +7,7 @@ using Failsafe.Inventory.Presentation;
 using Failsafe.Items;
 using NUnit.Framework;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -264,6 +265,145 @@ namespace Failsafe.Chests.Tests
             Assert.That(canvas.worldCamera, Is.SameAs(camera));
             Assert.That(infoCanvas.worldCamera, Is.SameAs(camera));
             Assert.That(infoCanvas.gameObject.activeSelf, Is.False);
+        }
+
+        [TestCase(0.5f, 0.5f)]
+        [TestCase(0f, 0f)]
+        [TestCase(0f, 1f)]
+        [TestCase(1f, 0f)]
+        [TestCase(1f, 1f)]
+        public void ScreenMenu_IsUprightClampedAndRestoresOriginalHierarchy(float x, float y)
+        {
+            GameObject root = Track(new GameObject("Chest menu controller"));
+            ChestItemContextMenuController3D controller = root.AddComponent<ChestItemContextMenuController3D>();
+            RectTransform worldRoot = new GameObject("World canvas", typeof(RectTransform), typeof(Canvas))
+                .GetComponent<RectTransform>();
+            worldRoot.SetParent(root.transform, false);
+            worldRoot.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+            worldRoot.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            worldRoot.localScale = Vector3.one * 0.0001f;
+            RectTransform menu = new GameObject("Menu", typeof(RectTransform)).GetComponent<RectTransform>();
+            menu.SetParent(worldRoot, false);
+            menu.sizeDelta = new Vector2(700f, 460f);
+            menu.anchoredPosition3D = new Vector3(-256.5f, -47.9f, 2f);
+            Vector3 originalPosition = menu.anchoredPosition3D;
+            Vector2 originalPivot = menu.pivot;
+            menu.gameObject.SetActive(false);
+            SetPrivateField(controller, "_menuRoot", menu);
+            SetPrivateField(controller, "_menuClampRoot", worldRoot);
+
+            Invoke(controller, "EnsureScreenMenu");
+            Canvas canvas = menu.GetComponentInParent<Canvas>();
+            Assert.That(canvas.renderMode, Is.EqualTo(RenderMode.ScreenSpaceOverlay));
+            Assert.That(canvas.transform.parent, Is.Null);
+            Assert.That(canvas.GetComponent<GraphicRaycaster>(), Is.Not.Null);
+            Assert.That(menu.gameObject.activeSelf, Is.False);
+            Vector2 pointer = new Vector2(Screen.width * x, Screen.height * y);
+            Invoke(controller, "PositionMenu", pointer);
+            Invoke(controller, "SetMenuVisible", true);
+            Canvas.ForceUpdateCanvases();
+            Assert.That(Quaternion.Angle(menu.rotation, Quaternion.identity), Is.LessThan(0.001f));
+
+            Vector3[] corners = new Vector3[4];
+            menu.GetWorldCorners(corners);
+            foreach (Vector3 corner in corners)
+            {
+                Vector2 screen = RectTransformUtility.WorldToScreenPoint(null, corner);
+                Assert.That(screen.x, Is.InRange(0f, (float)Screen.width));
+                Assert.That(screen.y, Is.InRange(0f, (float)Screen.height));
+            }
+            Vector2 center = RectTransformUtility.WorldToScreenPoint(null, menu.TransformPoint(menu.rect.center));
+            Assert.That(Invoke(controller, "IsPointerInsideMenu", center), Is.True);
+            Assert.That(Invoke(controller, "IsPointerInsideMenu", pointer), Is.False);
+            Assert.That(Invoke(controller, "IsPointerInsideMenu", new Vector2(-1000f, -1000f)), Is.False);
+
+            controller.CloseAll();
+            Assert.That(controller.IsMenuOpen, Is.False);
+            Invoke(controller, "EnsureScreenMenu");
+            Assert.That(menu.GetComponentInParent<Canvas>(), Is.SameAs(canvas));
+            Invoke(controller, "PositionMenu", pointer);
+            Invoke(controller, "SetMenuVisible", true);
+            root.SetActive(false);
+            Assert.That(controller.IsMenuOpen, Is.False);
+            root.SetActive(true);
+            UnityEngine.Object.DestroyImmediate(controller);
+            Assert.That(canvas == null, Is.True);
+            Assert.That(menu.parent, Is.SameAs(worldRoot));
+            Assert.That(menu.sizeDelta, Is.EqualTo(new Vector2(700f, 460f)));
+            Assert.That(menu.anchoredPosition3D, Is.EqualTo(originalPosition));
+            Assert.That(menu.pivot, Is.EqualTo(originalPivot));
+            Assert.That(menu.localScale, Is.EqualTo(Vector3.one));
+        }
+
+        [Test]
+        public void ChestAnimation_ClipsAreNonLoopingAndReverseEveryAnimatedProperty()
+        {
+            const string folder = "Assets/Failsafe/Scenes_New/Games_Scenes/Office/";
+            AnimationClip open = AssetDatabase.LoadAssetAtPath<AnimationClip>(folder + "Open.anim");
+            AnimationClip close = AssetDatabase.LoadAssetAtPath<AnimationClip>(folder + "Close.anim");
+            Assert.That(open, Is.Not.Null);
+            Assert.That(close, Is.Not.Null);
+            Assert.That(open.isLooping, Is.False);
+            Assert.That(close.isLooping, Is.False);
+            EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(open);
+            Assert.That(bindings.Length, Is.EqualTo(6));
+            Assert.That(AnimationUtility.GetCurveBindings(close).Length, Is.EqualTo(bindings.Length));
+            foreach (EditorCurveBinding binding in bindings)
+            {
+                AnimationCurve opening = AnimationUtility.GetEditorCurve(open, binding);
+                AnimationCurve closing = AnimationUtility.GetEditorCurve(close, binding);
+                Assert.That(closing, Is.Not.Null, binding.path + ": " + binding.propertyName);
+                for (int step = 0; step <= 10; step++)
+                {
+                    float t = step / 10f;
+                    Assert.That(opening.Evaluate(open.length * t),
+                        Is.EqualTo(closing.Evaluate(close.length * (1f - t))).Within(0.001f));
+                }
+            }
+        }
+
+        [Test]
+        public void ChestAnimation_StartsClosedAndReversesWithoutPoseJump()
+        {
+            GameObject model = Track(new GameObject("Animated chest"));
+            Transform visual = new GameObject("Chest_Visual").transform;
+            visual.SetParent(model.transform, false);
+            Transform door = new GameObject("Pivot_door").transform;
+            door.SetParent(visual, false);
+            Transform movingPart = new GameObject("Cube").transform;
+            movingPart.SetParent(visual, false);
+            Animator animator = model.AddComponent<Animator>();
+            animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
+                "Assets/Failsafe/Scenes_New/Games_Scenes/Office/Chest.controller");
+            Assert.That(animator.runtimeAnimatorController, Is.Not.Null);
+            GameObject interactionRoot = Track(new GameObject("Interaction"));
+            interactionRoot.SetActive(false);
+            ChestInteractable interaction = interactionRoot.AddComponent<ChestInteractable>();
+            SetPrivateField(interaction, "_chestAnimator", animator);
+            Invoke(interaction, "SetChestAnimation", false, true);
+            Assert.That(Quaternion.Angle(door.localRotation, Quaternion.Euler(86.74f, 0f, 0f)), Is.LessThan(0.02f));
+            Assert.That(movingPart.localPosition.y, Is.EqualTo(1.315173f).Within(0.001f));
+
+            Invoke(interaction, "SetChestAnimation", true, false);
+            animator.Update(0.5f);
+            Quaternion rotation = door.localRotation;
+            Vector3 position = movingPart.localPosition;
+            Invoke(interaction, "SetChestAnimation", false, false);
+            Assert.That(Quaternion.Angle(door.localRotation, rotation), Is.LessThan(0.02f));
+            Assert.That(Vector3.Distance(movingPart.localPosition, position), Is.LessThan(0.001f));
+            animator.Update(0.1f);
+            rotation = door.localRotation;
+            position = movingPart.localPosition;
+            Invoke(interaction, "SetChestAnimation", true, false);
+            Assert.That(Quaternion.Angle(door.localRotation, rotation), Is.LessThan(0.02f));
+            Assert.That(Vector3.Distance(movingPart.localPosition, position), Is.LessThan(0.001f));
+            animator.Update(2f);
+            Assert.That(Quaternion.Angle(door.localRotation, Quaternion.identity), Is.LessThan(0.02f));
+            Assert.That(movingPart.localPosition.y, Is.EqualTo(0.991f).Within(0.001f));
+            Invoke(interaction, "SetChestAnimation", false, false);
+            animator.Update(2f);
+            Assert.That(Quaternion.Angle(door.localRotation, Quaternion.Euler(86.74f, 0f, 0f)), Is.LessThan(0.02f));
+            Assert.That(movingPart.localPosition.y, Is.EqualTo(1.315173f).Within(0.001f));
         }
 
         private void VerifyPointerInteraction(ChestInventoryController chest,
