@@ -26,7 +26,6 @@ public class ElevatorController : MonoBehaviour
 
     void FixedUpdate()
     {
-        Debug.Log(_isPowered);
         if (!_isPowered) return;
         if (_isMoving && Vector3.Distance(transform.position, _points[_pointIndex].position) < 0.01f)
         {

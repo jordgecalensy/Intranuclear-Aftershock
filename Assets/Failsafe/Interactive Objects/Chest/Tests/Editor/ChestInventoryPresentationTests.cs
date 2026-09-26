@@ -338,7 +338,7 @@ namespace Failsafe.Chests.Tests
         [Test]
         public void ChestAnimation_ClipsAreNonLoopingAndReverseEveryAnimatedProperty()
         {
-            const string folder = "Assets/Failsafe/Scenes_New/Games_Scenes/Office/";
+            const string folder = "Assets/Failsafe/Interactive Objects/Chest/Animations/";
             AnimationClip open = AssetDatabase.LoadAssetAtPath<AnimationClip>(folder + "Open.anim");
             AnimationClip close = AssetDatabase.LoadAssetAtPath<AnimationClip>(folder + "Close.anim");
             Assert.That(open, Is.Not.Null);
@@ -374,7 +374,7 @@ namespace Failsafe.Chests.Tests
             movingPart.SetParent(visual, false);
             Animator animator = model.AddComponent<Animator>();
             animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
-                "Assets/Failsafe/Scenes_New/Games_Scenes/Office/Chest.controller");
+                "Assets/Failsafe/Interactive Objects/Chest/Animations/Chest.controller");
             Assert.That(animator.runtimeAnimatorController, Is.Not.Null);
             GameObject interactionRoot = Track(new GameObject("Interaction"));
             interactionRoot.SetActive(false);
