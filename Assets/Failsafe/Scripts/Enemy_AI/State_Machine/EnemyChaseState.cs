@@ -90,6 +90,6 @@ public class EnemyChaseState : EnemyBaseState
 
     private void AttackStateSwitch(EnemyStateMachine enemy)
     {
-        UnityEngine.Debug.Log("Switching to Attack State");
+        global::Failsafe.Debugging.GameplayLog.Trace("Switching to Attack State");
     }
 }

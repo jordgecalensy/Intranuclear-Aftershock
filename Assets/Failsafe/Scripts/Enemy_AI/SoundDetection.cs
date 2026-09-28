@@ -23,17 +23,17 @@ public class SoundDetection : MonoBehaviour
                 if (distance <= baseDetectionRadiusNear)
                 {
                     // Логика для ближней зоны (например, мгновенная реакция)
-                    Debug.Log($"Противник {col.name} в БЛИЖНЕЙ зоне! (Расстояние: {distance})");
+                    global::Failsafe.Debugging.GameplayLog.Trace($"Противник {col.name} в БЛИЖНЕЙ зоне! (Расстояние: {distance})");
                 }
                 else if (distance <= baseDetectionRadiusMedium)
                 {
                     // Логика для средней зоны (например, подозрение)
-                    Debug.Log($"Противник {col.name} в СРЕДНЕЙ зоне. (Расстояние: {distance})");
+                    global::Failsafe.Debugging.GameplayLog.Trace($"Противник {col.name} в СРЕДНЕЙ зоне. (Расстояние: {distance})");
                 }
                 else if (distance <= baseDetectionRadiusFar)
                 {
                     // Логика для дальней зоны (например, минимальная реакция)
-                    Debug.Log($"Противник {col.name} в ДАЛЬНЕЙ зоне. (Расстояние: {distance})");
+                    global::Failsafe.Debugging.GameplayLog.Trace($"Противник {col.name} в ДАЛЬНЕЙ зоне. (Расстояние: {distance})");
                 }
             }
         }

@@ -24,7 +24,7 @@ public class CameraManager : MonoBehaviour
     private void Start()
     {
         playerScreenModalScript = FindAnyObjectByType<PlayerScreenScript>();
-        Debug.Log(playerScreenModalScript); 
+        global::Failsafe.Debugging.GameplayLog.Trace(playerScreenModalScript);
         renderTexture = new RenderTexture(screenWidth, screenHeight, 16);
         cameraDisplay.texture = renderTexture;
         if (cameraScript.Length > 0)

@@ -9,7 +9,7 @@ namespace Failsafe.PlayerMovements.States
     {
         public override void Enter()
         {
-            Debug.Log("Enter " + nameof(InventoryState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(InventoryState));
         }
         // TODO вызывается когда игрок взаимодействует с объектами окружения
         // в этом состоянии игрок не должен двигаться, состояние прекращается после определенного времени

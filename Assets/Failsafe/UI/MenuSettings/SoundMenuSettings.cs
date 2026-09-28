@@ -13,7 +13,7 @@ public class SoundMenuSettings : MonoBehaviour
     public void OnMasterVolumeChange()
     {
 
-        Debug.Log(masterVolume.value);
+        global::Failsafe.Debugging.GameplayLog.Trace(masterVolume.value);
 
 
 
@@ -22,7 +22,7 @@ public class SoundMenuSettings : MonoBehaviour
     public void OnMusicVolumeChange()
     {
 
-        Debug.Log(musicVolume.value);
+        global::Failsafe.Debugging.GameplayLog.Trace(musicVolume.value);
 
 
 
@@ -30,21 +30,21 @@ public class SoundMenuSettings : MonoBehaviour
     public void OnSFXVolumeChange()
     {
 
-        Debug.Log(sfxVolume.value);
+        global::Failsafe.Debugging.GameplayLog.Trace(sfxVolume.value);
 
 
 
     }
     public void  OnSaveButtonClick()
     {   
-        Debug.Log("Settings button pressed");
+        global::Failsafe.Debugging.GameplayLog.Trace("Settings button pressed");
         
 
     }
 
     public void  OnDefaultButtonClick()
     {   
-        Debug.Log("Settings button pressed");
+        global::Failsafe.Debugging.GameplayLog.Trace("Settings button pressed");
 
 
     }

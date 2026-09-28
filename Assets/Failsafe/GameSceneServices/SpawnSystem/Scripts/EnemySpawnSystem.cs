@@ -286,7 +286,7 @@ namespace Failsafe.GameSceneServices.SpawnSystem
 
         private void SpawnEnemy(SpawnCandidate candidate, SpawnPoint spawnPoint)
         {
-            Debug.Log($"[{nameof(EnemySpawnSystem)}] Try spawn enemy {candidate?.Name} at position {spawnPoint?.Position}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"[{nameof(EnemySpawnSystem)}] Try spawn enemy {candidate?.Name} at position {spawnPoint?.Position}");
             if (spawnPoint == null)
                 return;
             GameObject enemyObject =

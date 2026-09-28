@@ -12,7 +12,7 @@ public class GameplayMenuSettings : MonoBehaviour
     public void OnSensetivityLevelChange()
     {
 
-        Debug.Log(sensetivityLevel.value);
+        global::Failsafe.Debugging.GameplayLog.Trace(sensetivityLevel.value);
 
 
 
@@ -21,21 +21,21 @@ public class GameplayMenuSettings : MonoBehaviour
     public void OnCamerShakeChange()
     {
 
-        Debug.Log(cameraShakeLevel.value);
+        global::Failsafe.Debugging.GameplayLog.Trace(cameraShakeLevel.value);
 
 
 
     }
     public void  OnSaveButtonClick()
     {   
-        Debug.Log("Settings button pressed");
+        global::Failsafe.Debugging.GameplayLog.Trace("Settings button pressed");
         
 
     }
 
     public void  OnDefaultButtonClick()
     {   
-        Debug.Log("Settings button pressed");
+        global::Failsafe.Debugging.GameplayLog.Trace("Settings button pressed");
 
 
     }

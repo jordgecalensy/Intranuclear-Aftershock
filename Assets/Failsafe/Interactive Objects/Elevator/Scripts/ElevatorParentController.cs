@@ -17,14 +17,14 @@ public class ElevatorParentController : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         // if (other.GetComponent<Player>() == null) return;
-        Debug.Log($"Elevator other enter: {other}");
+        global::Failsafe.Debugging.GameplayLog.Trace($"Elevator other enter: {other}");
         other.transform.SetParent(transform);
     }
 
     void OnTriggerExit(Collider other)
     {
         // if (other.GetComponent<Player>() == null) return;
-        Debug.Log($"Elevator other exit: {other}");
+        global::Failsafe.Debugging.GameplayLog.Trace($"Elevator other exit: {other}");
         other.transform.SetParent(null);
     }
 }

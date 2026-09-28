@@ -24,7 +24,7 @@ namespace Assets.Failsafe.Scripts.RandomGeneration
         {
             _rndSeed = seed ?? (int)DateTime.Now.Ticks;
             _rnd = new System.Random(_rndSeed);
-            Debug.Log("Seed: " + _rndSeed);
+            global::Failsafe.Debugging.GameplayLog.Trace("Seed: " + _rndSeed);
             //save seed here
         }
 

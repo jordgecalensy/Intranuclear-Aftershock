@@ -45,7 +45,7 @@ public class ElevatorController : MonoBehaviour
         if (_canMove) return;
         if (_pointIndex == _points.Length - 1) return;
 
-        Debug.Log("Elevator moving up");
+        global::Failsafe.Debugging.GameplayLog.Trace("Elevator moving up");
         _pointIndex++;
         StartMovement();
     }
@@ -55,7 +55,7 @@ public class ElevatorController : MonoBehaviour
         if (_canMove) return;
         if (_pointIndex == 0) return;
 
-        Debug.Log("Elevator moving down");
+        global::Failsafe.Debugging.GameplayLog.Trace("Elevator moving down");
         _pointIndex--;
         StartMovement();
     }
@@ -65,7 +65,7 @@ public class ElevatorController : MonoBehaviour
         if (_canMove) return;
         if (_pointIndex == floorNumber) return;
 
-        Debug.Log("Elevator calling");
+        global::Failsafe.Debugging.GameplayLog.Trace("Elevator calling");
         _pointIndex = floorNumber;
         StartMovement();
 
@@ -84,12 +84,12 @@ public class ElevatorController : MonoBehaviour
     }
     public void OnPowered()
     {
-        Debug.Log($"{gameObject} power on");
+        global::Failsafe.Debugging.GameplayLog.Trace($"{gameObject} power on");
         _isPowered = true;
     }
     public void OffPowered()
     {
-        Debug.Log($"{gameObject} power off");
+        global::Failsafe.Debugging.GameplayLog.Trace($"{gameObject} power off");
         _isPowered = false;
 
          // если отключили во время движения — корректно останавливаем и даём стоп

@@ -116,7 +116,7 @@ namespace Failsafe.Items
             if (!_item.TryUseEnergy())
             {
                 if (_log)
-                    Debug.Log($"[EffectItemUsable] {name}: not enough energy.", this);
+                    global::Failsafe.Debugging.GameplayLog.Trace($"[EffectItemUsable] {name}: not enough energy.", this);
 
                 PlayOneShot(_item.ItemData.EmptyUseSFX);
                 return FailedResult();

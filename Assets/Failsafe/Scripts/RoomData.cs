@@ -84,7 +84,7 @@ namespace DMDungeonGenerator {
             box.center = localCenter;
             box.size = localSize;
 
-            Debug.Log($"[RoomData] '{name}' → BoxCollider fitted. Size = {box.size}, Center = {box.center}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"[RoomData] '{name}' → BoxCollider fitted. Size = {box.size}, Center = {box.center}");
         }
         private void AutoCollectPatrolPoints()
         {
@@ -92,7 +92,7 @@ namespace DMDungeonGenerator {
                 .Where(t => t.CompareTag("PatrolPoints") && t != transform)
                 .ToList();
 
-            Debug.Log($"[{name}] Patrol Points found: {PatrolPoints.Count}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"[{name}] Patrol Points found: {PatrolPoints.Count}");
         }
 
         /// <summary>

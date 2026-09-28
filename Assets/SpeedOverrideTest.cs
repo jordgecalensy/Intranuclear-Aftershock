@@ -21,7 +21,7 @@ public class SpeedOverrideTest : MonoBehaviour
             _pmc.RemoveSpeedModifier(TestId);
 
         if (Time.frameCount % 30 == 0)
-            Debug.Log($"[SpeedOverrideTest] mul={_pmc.CurrentSpeedMultiplier:0.00}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"[SpeedOverrideTest] mul={_pmc.CurrentSpeedMultiplier:0.00}");
     }
 
     void OnDisable()

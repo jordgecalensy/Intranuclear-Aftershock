@@ -364,7 +364,7 @@ namespace Failsafe.PlayerMovements
     {
         if (!_isVisorEffectActive)
         {
-            Debug.Log("Visor включен");
+            global::Failsafe.Debugging.GameplayLog.Trace("Visor включен");
             _effectApplicationService.Apply(
                 _effectCatalog.Visor,
                 CreatePlayerEffectContext());
@@ -372,7 +372,7 @@ namespace Failsafe.PlayerMovements
         }
         else
         {
-            Debug.Log("Visor выключен");
+            global::Failsafe.Debugging.GameplayLog.Trace("Visor выключен");
             _effectApplicationService.Remove(
                 _effectCatalog.Visor,
                 CreatePlayerEffectContext());

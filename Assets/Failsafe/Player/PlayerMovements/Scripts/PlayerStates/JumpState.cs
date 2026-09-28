@@ -40,7 +40,7 @@ namespace Failsafe.PlayerMovements.States
         public override void Enter()
         {
             base.Enter();
-            Debug.Log("Enter " + nameof(JumpState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(JumpState));
             _jumpProgress = 0;
             _initialVelocity = new Vector3(_movementController.Velocity.x, 0, _movementController.Velocity.z);
             _targetHeight = _characterController.transform.position.y + _movementParameters.JumpMaxHeight;

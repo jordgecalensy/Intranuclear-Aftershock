@@ -29,7 +29,7 @@ namespace Failsafe.PlayerMovements.States
             var collide = Physics.SphereCast(capsuleBottomPoint, 0.5f, Vector3.up, out var hitInfo, 1);
             if (collide)
             {
-                Debug.Log("Cant Climb " + hitInfo.point);
+                global::Failsafe.Debugging.GameplayLog.Trace("Cant Climb " + hitInfo.point);
                 Debug.DrawLine(LedgeGrabPoint.Position, hitInfo.point, Color.black);
             }
             return !collide;
@@ -53,7 +53,7 @@ namespace Failsafe.PlayerMovements.States
 
         public override void Enter()
         {
-            Debug.Log("Enter " + nameof(ClimbingUpState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(ClimbingUpState));
             _climbingProgress = 0;
             _targetPosition = LedgeGrabPoint.Position;
             _movementController.SetGravity(Vector3.zero);

@@ -41,7 +41,7 @@ namespace Failsafe.PlayerMovements.States
 
         public override void Enter()
         {
-            Debug.Log("Enter " + nameof(GrabLedgeState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(GrabLedgeState));
             _stateProgress = 0;
             _playerLedgeController.AttachedLedgeGrabPoint = _playerLedgeController.LedgeGrabPointInView;
             _ledge = _playerLedgeController.AttachedLedgeGrabPoint.Ledge;

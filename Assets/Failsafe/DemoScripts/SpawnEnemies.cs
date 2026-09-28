@@ -26,7 +26,7 @@ public class SpawnEnemiesCallback : MonoBehaviour
     {
         if (generator != null)
         {
-            Debug.Log("Registered post generation callback");
+            global::Failsafe.Debugging.GameplayLog.Trace("Registered post generation callback");
             generator.OnComplete += GeneratorComplete;
         }
     }

@@ -36,7 +36,7 @@ namespace Failsafe.PlayerMovements.States
 
         public override void Enter()
         {
-            Debug.Log("Enter " + nameof(LedgeJumpState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(LedgeJumpState));
             _jumpProgress = 0;
             _initialVelocity = _headTransform.forward * 5f;
         }

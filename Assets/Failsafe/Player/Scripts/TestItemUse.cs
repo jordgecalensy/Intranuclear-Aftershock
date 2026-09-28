@@ -34,16 +34,16 @@ namespace Failsafe.Player
 
             if (string.IsNullOrEmpty(itemName))
             {
-                Debug.Log($"({nameof(TestItemUse)}) Не задан предмет для теста");
+                Debug.LogWarning($"({nameof(TestItemUse)}) Не задан предмет для теста");
                 return;
             }
             var item = _items.FirstOrDefault(x => x.GetType().Name == itemName);
             if (item == null)
             {
-                Debug.Log($"({nameof(TestItemUse)}) Не найдена реализация для {itemName}");
+                Debug.LogWarning($"({nameof(TestItemUse)}) Не найдена реализация для {itemName}");
                 return;
             }
-            Debug.Log($"({nameof(TestItemUse)}) был использован {itemName}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"({nameof(TestItemUse)}) был использован {itemName}");
 
             item.Use();
 

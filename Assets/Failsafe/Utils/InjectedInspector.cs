@@ -90,7 +90,7 @@ public class InjectedInspector : MonoBehaviour
             {
                 var instance = _resolver.Resolve(type);
                 InjectedInstances.Add(instance);
-                Debug.Log($"Injected {type.Name}: {instance != null}");
+                global::Failsafe.Debugging.GameplayLog.Trace($"Injected {type.Name}: {instance != null}");
             }
             catch (Exception exception)
             {

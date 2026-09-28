@@ -150,7 +150,7 @@ public class PowerNetworkManager :
                 poweredEndPointCount++;
         }
 
-        Debug.Log(
+        global::Failsafe.Debugging.GameplayLog.Trace(
             $"[POWER-NET] Refresh complete. " +
             $"Nodes: {_allNodes.Length}, " +
             $"sources: {sourceCount}, " +

@@ -31,7 +31,7 @@ public class DisabledState : BehaviorForcedState
         
         _disableProgress = 0;
         _transitionToPreviousState = new Transition(this, PreviousState, IsStateFinished);
-        Debug.Log("Enter DisabledState");
+        global::Failsafe.Debugging.GameplayLog.Trace("Enter DisabledState");
     }
 
     public override void Update()

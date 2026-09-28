@@ -30,6 +30,6 @@ public class DefaultState : BehaviorState
         if (_movement != null) 
             _movement.Stop();
             
-        Debug.Log("Enter DefaultState");
+        global::Failsafe.Debugging.GameplayLog.Trace("Enter DefaultState");
     }
 }

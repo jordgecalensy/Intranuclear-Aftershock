@@ -39,21 +39,21 @@ public class ChargeStation : Interactable
 
         if (!context.TryGetItemInHand(out Item item))
         {
-            Debug.Log("[ChargeStation] В руке нет предмета.", this);
+            global::Failsafe.Debugging.GameplayLog.Trace("[ChargeStation] В руке нет предмета.", this);
             UpdateUI(null);
             return;
         }
 
         if (!item.HasEnergySystem())
         {
-            Debug.Log($"[ChargeStation] У предмета {item.name} нет системы заряда.", item);
+            global::Failsafe.Debugging.GameplayLog.Trace($"[ChargeStation] У предмета {item.name} нет системы заряда.", item);
             UpdateUI(item);
             return;
         }
 
         if (item.IsEnergyFull())
         {
-            Debug.Log($"[ChargeStation] Предмет {item.name} уже полностью заряжен: {item.EnergyAmountCurrent}/{item.EnergyAmountMax}", item);
+            global::Failsafe.Debugging.GameplayLog.Trace($"[ChargeStation] Предмет {item.name} уже полностью заряжен: {item.EnergyAmountCurrent}/{item.EnergyAmountMax}", item);
             UpdateUI(item);
             return;
         }
@@ -80,11 +80,11 @@ public class ChargeStation : Interactable
             else
                 item.ReloadEnergy(_chargeAmountPerCycle);
 
-            Debug.Log($"[ChargeStation] Заряжен предмет {item.name}: {item.EnergyAmountCurrent}/{item.EnergyAmountMax}", item);
+            global::Failsafe.Debugging.GameplayLog.Trace($"[ChargeStation] Заряжен предмет {item.name}: {item.EnergyAmountCurrent}/{item.EnergyAmountMax}", item);
         }
         else
         {
-            Debug.Log("[ChargeStation] Зарядка отменена: предмет уже не в руке.", this);
+            global::Failsafe.Debugging.GameplayLog.Trace("[ChargeStation] Зарядка отменена: предмет уже не в руке.", this);
         }
 
         PlayAnimation(_lidOpenAnimationName);
@@ -196,21 +196,21 @@ public class ChargeStation : Interactable
 
         if (!context.TryGetItemInHand(out Item item))
         {
-            Debug.Log("[ChargeStation] В руке нет предмета.", this);
+            global::Failsafe.Debugging.GameplayLog.Trace("[ChargeStation] В руке нет предмета.", this);
             UpdateUI(null);
             return;
         }
 
         if (!item.HasEnergySystem())
         {
-            Debug.Log($"[ChargeStation] У предмета {item.name} нет системы заряда.", item);
+            global::Failsafe.Debugging.GameplayLog.Trace($"[ChargeStation] У предмета {item.name} нет системы заряда.", item);
             UpdateUI(item);
             return;
         }
 
         if (item.IsEnergyFull())
         {
-            Debug.Log($"[ChargeStation] Предмет {item.name} уже полностью заряжен: {item.EnergyAmountCurrent}/{item.EnergyAmountMax}", item);
+            global::Failsafe.Debugging.GameplayLog.Trace($"[ChargeStation] Предмет {item.name} уже полностью заряжен: {item.EnergyAmountCurrent}/{item.EnergyAmountMax}", item);
             UpdateUI(item);
             return;
         }

@@ -21,7 +21,7 @@ public class CreateNoiseOnImpact : MonoBehaviour
         {
             var impact = CalculateNoise(collision, contact);
             if (impact < MinImpactValue) continue;
-            Debug.Log("Impact = " + impact);
+            global::Failsafe.Debugging.GameplayLog.Trace("Impact = " + impact);
             _noiseChanel.Add(contact.point, impact, 5);
         }
     }

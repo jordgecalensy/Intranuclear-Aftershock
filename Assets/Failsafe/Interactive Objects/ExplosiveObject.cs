@@ -65,7 +65,7 @@ public abstract class ExplosiveObject : MonoBehaviour
             if (hitInfo.name != hit.collider.name)
             {
                 if (hitInfo.tag == "Player" || hitInfo.tag == "Enemy")
-                    Debug.Log($"{hitInfo.gameObject.name} за препядствием {hit.collider.name}");
+                    global::Failsafe.Debugging.GameplayLog.Trace($"{hitInfo.gameObject.name} за препядствием {hit.collider.name}");
                 return true;
             }
             return false;
@@ -76,7 +76,7 @@ public abstract class ExplosiveObject : MonoBehaviour
             {
                 return true;
             }
-            Debug.Log($"{hitInfo.gameObject.name}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"{hitInfo.gameObject.name}");
             return false; 
         }
     }
@@ -85,13 +85,13 @@ public abstract class ExplosiveObject : MonoBehaviour
         DamageableComponent damageableComponent = hitInfo.GetComponentInParent<DamageableComponent>();
         if (damageableComponent == null || DamagedObjects.Contains(damageableComponent.gameObject)) return;
         damageableComponent.TakeDamage(new FlatDamage(Data.ExplosionDamage));
-        Debug.Log($"{hitInfo.name} Take {Data.ExplosionDamage} Damage");
+        global::Failsafe.Debugging.GameplayLog.Trace($"{hitInfo.name} Take {Data.ExplosionDamage} Damage");
         DamagedObjects.Add(damageableComponent.gameObject);
     }
     protected virtual void PhysicsExplosionEffect(Collider hitInfo, Vector3 directionToEnemy)
     {
         if (hitInfo.GetComponent<Rigidbody>() == null) return;
-        Debug.Log($"Rigidbody: {hitInfo.name}");
+        global::Failsafe.Debugging.GameplayLog.Trace($"Rigidbody: {hitInfo.name}");
         hitInfo.GetComponent<Rigidbody>().AddForce(directionToEnemy * Data.ExplosionForce, ForceMode.Impulse);
     }
 

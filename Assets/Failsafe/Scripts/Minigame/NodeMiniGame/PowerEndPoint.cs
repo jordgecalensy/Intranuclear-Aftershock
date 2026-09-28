@@ -9,7 +9,7 @@ public class PowerEndPoint : PowerNode
     protected override void OnPowered()
     {
         base.OnPowered();
-        Debug.Log(
+        global::Failsafe.Debugging.GameplayLog.Trace(
             $"[POWER-NET] Endpoint '{name}' received power.");
         onPowered?.Invoke();
     }

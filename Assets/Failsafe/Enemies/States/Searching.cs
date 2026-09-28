@@ -55,7 +55,7 @@ public class SearchingState : BehaviorState
         
         // Команда Мотору: Иди в точку
         _movement.MoveTo(_searchOrigin, _enemyConfig.SearchingSpeed);
-        Debug.Log("Enter SearchingState: going to last known player position");
+        global::Failsafe.Debugging.GameplayLog.Trace("Enter SearchingState: going to last known player position");
     }
 
     public override void Update()
@@ -72,7 +72,7 @@ public class SearchingState : BehaviorState
                 _hasReachedOrigin = true;
                 _isWaiting = true;
                 _waitTimer = _enemyConfig.PatrollingWaitTime;
-                Debug.Log("Reached last known player position, starting search phase");
+                global::Failsafe.Debugging.GameplayLog.Trace("Reached last known player position, starting search phase");
             }
             return;
         }

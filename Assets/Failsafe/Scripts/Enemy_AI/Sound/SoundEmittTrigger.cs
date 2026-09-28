@@ -48,7 +48,7 @@ public class SoundEmittTrigger : MonoBehaviour
         };
 
         _isInitialized = true;
-        Debug.Log($"Sound data initialized: {_cachedSoundData.soundName}", this);
+        global::Failsafe.Debugging.GameplayLog.Trace($"Sound data initialized: {_cachedSoundData.soundName}", this);
     }
 
     public void Emit()
@@ -65,7 +65,7 @@ public class SoundEmittTrigger : MonoBehaviour
             return;
         }
 
-        Debug.Log($"Emitting sound: {_cachedSoundData.soundName} at {transform.position}", this);
+        global::Failsafe.Debugging.GameplayLog.Trace($"Emitting sound: {_cachedSoundData.soundName} at {transform.position}", this);
         SoundManager.Instance.EmitSound(transform.position, _cachedSoundData);
     }
 
@@ -77,7 +77,7 @@ public class SoundEmittTrigger : MonoBehaviour
             return;
         }
 
-        Debug.Log($"Emitting overridden sound: {overrideData.soundName}", this);
+        global::Failsafe.Debugging.GameplayLog.Trace($"Emitting overridden sound: {overrideData.soundName}", this);
         SoundManager.Instance.EmitSound(transform.position, overrideData);
     }
 

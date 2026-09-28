@@ -18,7 +18,7 @@ namespace Failsafe.PlayerMovements.States
 
         public override void Enter()
         {
-            Debug.Log("Enter " + nameof(StandingState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(StandingState));
             _movementController.Move(Vector3.zero);
             _playerRotationController.RotateBodyToDirection(_playerRotationController.HeadDirection);
             base.Enter();

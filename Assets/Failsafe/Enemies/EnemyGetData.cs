@@ -38,16 +38,16 @@ public class EnemyGetData
     {
         // Ищем все коллайдеры рядом с врагом
         Collider[] hits = Physics.OverlapSphere(_transform.position, 5f); 
-        Debug.Log($"[Enemy] Обнаружено коллайдеров: {hits.Length}");
+        global::Failsafe.Debugging.GameplayLog.Trace($"[Enemy] Обнаружено коллайдеров: {hits.Length}");
 
         foreach (var hit in hits)
         {
-            Debug.Log($"[Enemy] Hit: {hit.name}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"[Enemy] Hit: {hit.name}");
 
             RoomData room = hit.GetComponentInChildren<RoomData>();
             if (room != null)
             {
-                Debug.Log($"[Enemy] НАШЁЛ КОМНАТУ через OverlapSphere: {room.name}");
+                global::Failsafe.Debugging.GameplayLog.Trace($"[Enemy] НАШЁЛ КОМНАТУ через OverlapSphere: {room.name}");
                 SetCurrentRoom(room);
                 break;
             }
@@ -55,6 +55,6 @@ public class EnemyGetData
 
         // Получаем патрульные точки из установленной комнаты
         var points = GetRoomPatrolPoints();
-        Debug.Log($"[Enemy] Получено точек патруля: {points.Count}");
+        global::Failsafe.Debugging.GameplayLog.Trace($"[Enemy] Получено точек патруля: {points.Count}");
     }
 }

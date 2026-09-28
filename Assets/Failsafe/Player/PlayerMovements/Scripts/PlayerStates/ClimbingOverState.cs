@@ -40,7 +40,7 @@ namespace Failsafe.PlayerMovements.States
 
         public override void Enter()
         {
-            Debug.Log("Enter " + nameof(ClimbingOverState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(ClimbingOverState));
             _climbingProgress = 0;
             _ledgeGrabPoint = _playerLedgeController.LedgeGrabPointInFrontBottom;
             _targetPosition = _ledgeGrabPoint.Position + (_ledgeGrabPoint.Width + 0.5f) * -_ledgeGrabPoint.Normal;

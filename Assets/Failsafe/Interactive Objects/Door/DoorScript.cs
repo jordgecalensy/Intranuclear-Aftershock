@@ -44,19 +44,19 @@ public class DoorScript : MonoBehaviour, IRunPersistentStateProvider
     }
     public void OnPowered()
     {
-        Debug.Log("Door power on");
+        global::Failsafe.Debugging.GameplayLog.Trace("Door power on");
         _isPowered = true;
         UpdateStatusVisuals();
         if (_enemyBlockDoor)
         {
             _isOpen = true;
             _animator.SetBool("isOpen", true);
-            Debug.Log("Active Door");
+            global::Failsafe.Debugging.GameplayLog.Trace("Active Door");
         }
     }
     public void OffPowered()
     {
-        Debug.Log("Door power off");
+        global::Failsafe.Debugging.GameplayLog.Trace("Door power off");
         _isPowered = false;
         UpdateStatusVisuals();
     }
@@ -67,7 +67,7 @@ public class DoorScript : MonoBehaviour, IRunPersistentStateProvider
         if (_enemyBlockDoor) return;
         _isOpen = open;
         _animator.SetBool("isOpen", open);
-        Debug.Log("Active Door");
+        global::Failsafe.Debugging.GameplayLog.Trace("Active Door");
     }
     public void InteractDoor()
     {

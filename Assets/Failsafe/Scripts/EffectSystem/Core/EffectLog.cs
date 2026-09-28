@@ -6,8 +6,8 @@ namespace Failsafe.Scripts.EffectSystem
     /// Единая точка логирования для системы эффектов.
     /// </summary>
     /// <remarks>
-    /// Info помечен атрибутом Conditional, поэтому в сборке компилятор вырезает не только сам вызов,
-    /// но и вычисление аргументов — интерполяция строки и бокс enum'ов в билде не выполняются вообще.
+    /// Info помечен атрибутом Conditional: без EFFECT_VERBOSE компилятор вырезает вызов
+    /// и вычисление аргументов как в редакторе, так и в сборке.
     /// Чтобы вернуть информационные логи в собранную игру, добавьте символ EFFECT_VERBOSE
     /// в Player Settings -> Other Settings -> Scripting Define Symbols.
     ///
@@ -36,7 +36,6 @@ namespace Failsafe.Scripts.EffectSystem
             return $"{prefix} {message ?? string.Empty}";
         }
 
-        [System.Diagnostics.Conditional("UNITY_EDITOR")]
         [System.Diagnostics.Conditional("EFFECT_VERBOSE")]
         public static void Info(
             string category,

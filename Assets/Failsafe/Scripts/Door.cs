@@ -89,10 +89,10 @@ namespace DMDungeonGenerator {
             Vector3 b = new Vector3(v.z, v.y, -v.x);  //[ 3, -1]  (b -> 90 clockwise)
             Vector3 c = new Vector3(-v.x, v.y, -v.z); //[-1, -3]
             Vector3 d = new Vector3(-v.z, v.y, v.x);  //[-3 , 1]
-            Debug.Log(a.ToString());
-            Debug.Log(b.ToString());
-            Debug.Log(c.ToString());
-            Debug.Log(d.ToString());
+            global::Failsafe.Debugging.GameplayLog.Trace(a.ToString());
+            global::Failsafe.Debugging.GameplayLog.Trace(b.ToString());
+            global::Failsafe.Debugging.GameplayLog.Trace(c.ToString());
+            global::Failsafe.Debugging.GameplayLog.Trace(d.ToString());
 
         }
     }

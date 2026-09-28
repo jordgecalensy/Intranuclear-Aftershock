@@ -38,7 +38,7 @@ namespace Failsafe.PlayerMovements.States
 
         public override void Enter()
         {
-            Debug.Log("Enter " + nameof(SlideState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(SlideState));
             _slideProgress = 0f;
             _playerBodyController.Slide();
             _playerRotationController.RotateBodyToDirection(_movementController.GetRelativeMovement(Vector2.up));

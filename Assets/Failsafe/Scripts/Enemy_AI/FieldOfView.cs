@@ -40,13 +40,13 @@ public class FieldOfView : MonoBehaviour
         if (CheckVisibility(radiusNear, angleNear))
         {
             canSeePlayerNear = true;
-            Debug.Log("Player detected in NEAR range");
+            global::Failsafe.Debugging.GameplayLog.Trace("Player detected in NEAR range");
         }
         // Проверяем дальнюю зону только если не обнаружено в ближней
         else if (CheckVisibility(radiusFar, angleFar))
         {
             canSeePlayerFar = true;
-            Debug.Log("Player detected in FAR range");
+            global::Failsafe.Debugging.GameplayLog.Trace("Player detected in FAR range");
         }
 
         // Возвращаем true если обнаружен в любой зоне
@@ -81,7 +81,7 @@ public class FieldOfView : MonoBehaviour
                 {
                     this.GetComponent<EnemyStateMachine>().SwitchState<EnemyChaseState>();
                 }
-                Debug.Log("Player is in sight");
+                global::Failsafe.Debugging.GameplayLog.Trace("Player is in sight");
                 return true;
             }
         }

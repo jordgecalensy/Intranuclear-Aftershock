@@ -15,7 +15,7 @@ public static class EnemyStateFactory
     {
         if (Debug.isDebugBuild)
         {
-            Debug.Log("EnemyStateFactory: Инициализировано!");
+            global::Failsafe.Debugging.GameplayLog.Trace("EnemyStateFactory: Инициализировано!");
         }
     }
 
@@ -35,7 +35,7 @@ public static class EnemyStateFactory
             _statePools[stateType] = new Queue<EnemyBaseState>();
             if (Debug.isDebugBuild)
             {
-                Debug.Log($"[EnemyStateFactory] Зарегистрировано состояние: {stateType.Name}");
+                global::Failsafe.Debugging.GameplayLog.Trace($"[EnemyStateFactory] Зарегистрировано состояние: {stateType.Name}");
             }
         }
     }
@@ -61,7 +61,7 @@ public static class EnemyStateFactory
 
         if (Debug.isDebugBuild)
         {
-            Debug.Log($"[EnemyStateFactory] Для противника {enemyId} зарегистрированы состояния: " +
+            global::Failsafe.Debugging.GameplayLog.Trace($"[EnemyStateFactory] Для противника {enemyId} зарегистрированы состояния: " +
                       $"{string.Join(", ", _enemyStates[enemyId])}");
         }
     }
@@ -82,13 +82,13 @@ public static class EnemyStateFactory
         if (_statePools.TryGetValue(stateType, out var pool) && pool.Count > 0)
         {
             if (Debug.isDebugBuild)
-                Debug.Log($"[EnemyStateFactory] Взято из пула: {stateType.Name}");
+                global::Failsafe.Debugging.GameplayLog.Trace($"[EnemyStateFactory] Взято из пула: {stateType.Name}");
 
             return pool.Dequeue();
         }
 
         if (Debug.isDebugBuild)
-            Debug.Log($"[EnemyStateFactory] Создано новое состояние: {stateType.Name}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"[EnemyStateFactory] Создано новое состояние: {stateType.Name}");
 
         return Activator.CreateInstance(stateType) as EnemyBaseState;
     }
@@ -107,7 +107,7 @@ public static class EnemyStateFactory
         }
 
         if (Debug.isDebugBuild)
-            Debug.Log($"[EnemyStateFactory] Возвращено в пул: {type.Name}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"[EnemyStateFactory] Возвращено в пул: {type.Name}");
 
         _statePools[type].Enqueue(state);
     }

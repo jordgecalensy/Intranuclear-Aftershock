@@ -60,7 +60,7 @@ namespace Failsafe.PlayerMovements
 
             _locks[lockId] = blocks;
 
-            Debug.Log($"[PlayerControlBlocker] AddLock id={lockId}, blocks={blocks}, current={CurrentBlocks}", this);
+            global::Failsafe.Debugging.GameplayLog.Trace($"[PlayerControlBlocker] AddLock id={lockId}, blocks={blocks}, current={CurrentBlocks}", this);
         }
 
         public void RemoveLock(int lockId)
@@ -68,14 +68,14 @@ namespace Failsafe.PlayerMovements
             if (!_locks.Remove(lockId))
                 return;
 
-            Debug.Log($"[PlayerControlBlocker] RemoveLock id={lockId}, current={CurrentBlocks}", this);
+            global::Failsafe.Debugging.GameplayLog.Trace($"[PlayerControlBlocker] RemoveLock id={lockId}, current={CurrentBlocks}", this);
         }
 
         public void ClearAllLocks()
         {
             _locks.Clear();
 
-            Debug.Log("[PlayerControlBlocker] ClearAllLocks", this);
+            global::Failsafe.Debugging.GameplayLog.Trace("[PlayerControlBlocker] ClearAllLocks", this);
         }
 
         public bool IsBlocked(PlayerControlBlock block)

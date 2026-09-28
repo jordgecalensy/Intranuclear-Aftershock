@@ -21,7 +21,7 @@ public class EnergyContainer
     {
         _energyAmountCurrent -= 1;
         _energyAmountCurrent = Mathf.Clamp(_energyAmountCurrent, 0, _data.ChargeAmountMax);
-        Debug.Log("energy amount = " + _energyAmountCurrent);
+        global::Failsafe.Debugging.GameplayLog.Trace("energy amount = " + _energyAmountCurrent);
     }
 
     public bool IsFull()
