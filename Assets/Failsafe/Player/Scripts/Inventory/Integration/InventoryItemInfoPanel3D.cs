@@ -15,6 +15,7 @@ namespace Failsafe.Inventory.Integration
 
         [Header("Visual Roots")]
         [SerializeField] private GameObject _visualRoot;
+        [SerializeField] private GameObject _textVisualRoot;
         [SerializeField] private Transform _modelAnchor;
         [SerializeField] private RectTransform _rotationArea;
 
@@ -272,6 +273,12 @@ namespace Failsafe.Inventory.Integration
 
         private void SetVisible(bool visible)
         {
+            if (_textVisualRoot != null &&
+                _textVisualRoot.activeSelf != visible)
+            {
+                _textVisualRoot.SetActive(visible);
+            }
+
             if (_visualRoot != null &&
                 _visualRoot.activeSelf != visible)
             {
