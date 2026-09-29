@@ -13,6 +13,7 @@ public class EnemyMovement
     private readonly Rigidbody _rb;
     private readonly MonoBehaviour _coroutineRunner; // Ссылка на Enemy.cs для запуска корутин
     private readonly bool _useRootMotion;
+    private readonly EnemyLinkTraverser _linkTraverser;
 
     // Настройки (можно вынести в ScriptableObject)
     private const float TurnThreshold = 45f; // Угол, при котором начинаем разворот на месте
@@ -25,13 +26,20 @@ public class EnemyMovement
     public float CurrentSpeed => _agent.velocity.magnitude;
     public Vector3 DesiredVelocity => _agent.desiredVelocity;
 
-    public EnemyMovement(Transform transform, NavMeshAgent agent, Rigidbody rb, MonoBehaviour runner, bool useRootMotion)
+    public EnemyMovement(
+        Transform transform,
+        NavMeshAgent agent,
+        Rigidbody rb,
+        MonoBehaviour runner,
+        bool useRootMotion,
+        EnemyLinkTraverser linkTraverser = null)
     {
         _transform = transform;
         _agent = agent;
         _rb = rb;
         _coroutineRunner = runner;
         _useRootMotion = useRootMotion;
+        _linkTraverser = linkTraverser;
 
         // Полный контроль над вращением и позицией
         _agent.updateRotation = false; 
@@ -92,6 +100,12 @@ public class EnemyMovement
     {
         if (!_agent.isOnNavMesh || IsBusy) return;
 
+        if (_linkTraverser != null)
+        {
+            _linkTraverser.SetDestination(destination, speed);
+            return;
+        }
+
         _agent.speed = speed;
         _agent.SetDestination(destination);
     }
@@ -101,6 +115,8 @@ public class EnemyMovement
     /// </summary>
     public void Stop()
     {
+        _linkTraverser?.ClearDestination();
+
         if (_agent.isOnNavMesh) 
         {
             _agent.isStopped = true;
@@ -123,8 +139,18 @@ public class EnemyMovement
     /// </summary>
     public bool IsPointReached(float stoppingDistance = 0.5f)
     {
+        if (_linkTraverser != null && _linkTraverser.HasCommittedTraversal)
+            return false;
+
         if (_agent.pathPending || !_agent.isOnNavMesh) return false;
         return _agent.remainingDistance <= stoppingDistance; // Упрощенная проверка
+    }
+
+    public void SetTraversalBusy(bool isBusy)
+    {
+        IsBusy = isBusy;
+        if (isBusy)
+            IsRotatingInPlace = false;
     }
 
     /// <summary>

@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 6524276097571085698}
   - component: {fileID: 3502386750450034051}
   - component: {fileID: 2295770697225116739}
+  - component: {fileID: 1116753847194828743}
   m_Layer: 19
   m_Name: Card
   m_TagString: Untagged
@@ -93,7 +94,7 @@ MonoBehaviour:
   _stasisMaterial: {fileID: 0}
   _freezeRigidbody: 1
   _disableEnemyState: 1
-  _freezeDamageObstacle: 1
+  _freezeObstacle: 1
   _blockPlayerControls: 1
   _playerBlocks: -1
 --- !u!54 &5572433315692890955
@@ -195,6 +196,19 @@ MonoBehaviour:
   _captureTransform: 1
   _captureRigidbody: 1
   _requiredOnRestore: 0
+--- !u!114 &1116753847194828743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 460296773807546381}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1ff937f4eae1714a9f694654f995f6b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  xRayMaterial: {fileID: 2100000, guid: 867b055787b79f04e992ed004334dad3, type: 2}
 --- !u!1 &7172207126010247775
 GameObject:
   m_ObjectHideFlags: 0

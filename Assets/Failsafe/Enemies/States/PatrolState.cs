@@ -83,10 +83,9 @@ public class PatrolState : BehaviorState
         Vector3 targetPosition = _enemyTransform.position;
 
         // ПРИОРИТЕТ 1: Ручные точки из инспектора
-        if (HasManualPoints())
+        if (TryGetNextManualPoint(out Transform manualPoint))
         {
-            targetPosition = _manualPatrolPoints[_currentManualIndex].position;
-            _currentManualIndex = (_currentManualIndex + 1) % _manualPatrolPoints.Length;
+            targetPosition = manualPoint.position;
         }
         else
         {
@@ -147,8 +146,26 @@ public class PatrolState : BehaviorState
         }
     }
 
-    private bool HasManualPoints()
+    private bool TryGetNextManualPoint(out Transform point)
     {
-        return _manualPatrolPoints != null && _manualPatrolPoints.Length > 0;
+        point = null;
+
+        if (_manualPatrolPoints == null || _manualPatrolPoints.Length == 0)
+            return false;
+
+        for (int i = 0; i < _manualPatrolPoints.Length; i++)
+        {
+            int index = _currentManualIndex % _manualPatrolPoints.Length;
+            _currentManualIndex = (index + 1) % _manualPatrolPoints.Length;
+
+            Transform candidate = _manualPatrolPoints[index];
+            if (candidate == null)
+                continue;
+
+            point = candidate;
+            return true;
+        }
+
+        return false;
     }
 }

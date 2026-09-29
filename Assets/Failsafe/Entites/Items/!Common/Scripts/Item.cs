@@ -208,6 +208,11 @@ public class Item : Prop
 
         if (_collider != null)
             _collider.enabled = false;
+
+        // Подавляем XRay при попадании в инвентарь
+        var simpleXRay = GetComponent<SimpleXRay>();
+        if (simpleXRay != null)
+            simpleXRay.SetSuppressed(true);
     }
 
     /// <summary>

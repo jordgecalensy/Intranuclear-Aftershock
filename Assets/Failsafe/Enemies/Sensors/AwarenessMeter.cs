@@ -60,7 +60,7 @@ namespace Failsafe.Enemies.Sensors
 
         public bool IsPlayerLost()
         {
-            if (_hasEverChased && !_hasLostPlayer && Mathf.Approximately(_alertness, _chaseExitThreshold))
+            if (_hasEverChased && !_hasLostPlayer && _alertness <= _chaseExitThreshold)
             {
                 _hasLostPlayer = true;
                 return true;
