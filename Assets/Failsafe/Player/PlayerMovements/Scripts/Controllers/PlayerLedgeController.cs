@@ -110,14 +110,14 @@ namespace Failsafe.PlayerMovements.Controllers
             {
                 if (viewHitInfo.collider.gameObject != ledgeHitInfo.collider.gameObject)
                 {
-                    Debug.Log($"Not same objects viewHitInfo: {viewHitInfo.collider.gameObject.name} ledgeHitInfo: {ledgeHitInfo.collider.gameObject.name}");
+                    global::Failsafe.Debugging.GameplayLog.Trace($"Not same objects viewHitInfo: {viewHitInfo.collider.gameObject.name} ledgeHitInfo: {ledgeHitInfo.collider.gameObject.name}");
                     distance = -1;
                     return LedgeGrabPoint.Empty;
                 }
             }
             if (!viewHitInfo.transform.gameObject.TryGetComponent<Ledge>(out var ledge))
             {
-                Debug.Log("Ledge component not exists");
+                global::Failsafe.Debugging.GameplayLog.Trace("Ledge component not exists");
                 distance = -1;
                 return LedgeGrabPoint.Empty;
             }

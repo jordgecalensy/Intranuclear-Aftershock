@@ -23,7 +23,7 @@ public class DemoKeyPickup : MonoBehaviour
     }
 
     private void OnTriggerEnter(Collider other) {
-        Debug.Log("Added key: " + keyID);
+        global::Failsafe.Debugging.GameplayLog.Trace("Added key: " + keyID);
         if(other.gameObject.tag == "Player") {
             if(!DemoPlayer.HasKey(keyID)) {
                 DemoPlayer.AddKey(keyID);

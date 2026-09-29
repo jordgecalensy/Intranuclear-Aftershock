@@ -34,7 +34,7 @@ namespace Failsafe.PlayerMovements.States
             if (_animationController != null)
                 _animationController.SetBool(_deadId, true);
 
-			Debug.Log("You are dead");
+			global::Failsafe.Debugging.GameplayLog.Trace("You are dead");
 		}
 	}
 }

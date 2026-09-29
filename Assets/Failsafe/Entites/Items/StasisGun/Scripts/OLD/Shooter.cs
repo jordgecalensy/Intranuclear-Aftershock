@@ -20,13 +20,13 @@ public class Shooter : MonoBehaviour
         if (Physics.Raycast(transform.position, transform.up, out hit))
         {
             Debug.DrawRay(transform.position, transform.up * hit.distance, Color.green);
-            Debug.Log("Object ahead: " + hit.collider.name);
+            global::Failsafe.Debugging.GameplayLog.Trace("Object ahead: " + hit.collider.name);
             OnShoot?.Invoke(hit);
         }
         else
         {
             Debug.DrawRay(transform.position, transform.up, Color.red);
-            Debug.Log("No Object!" );
+            global::Failsafe.Debugging.GameplayLog.Trace("No Object!" );
         }
         
     }

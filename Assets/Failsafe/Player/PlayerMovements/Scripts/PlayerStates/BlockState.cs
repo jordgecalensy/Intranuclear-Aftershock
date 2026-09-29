@@ -20,7 +20,7 @@ namespace Failsafe.PlayerMovements.States
         public override void Enter()
         {
             base.Enter();
-            Debug.Log("Enter " + nameof(BlockState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(BlockState));
         }
 
         public override void Update()

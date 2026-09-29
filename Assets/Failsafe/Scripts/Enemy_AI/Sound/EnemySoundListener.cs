@@ -14,32 +14,32 @@ public class EnemySoundListener : MonoBehaviour, IHearSound
             case SoundType.Footstep:
                 if (distance < data.maxRadius * 0.3f)
                 {
-                    Debug.Log($"{name} услышал шаги и насторожился.");
+                    global::Failsafe.Debugging.GameplayLog.Trace($"{name} услышал шаги и насторожился.");
                     // Переход в state Alert, например
                 }
                 break;
 
             case SoundType.Explosion:
-                Debug.Log($"{name} услышал упавший предмет и идет проверять.");
+                global::Failsafe.Debugging.GameplayLog.Trace($"{name} услышал упавший предмет и идет проверять.");
                 // Перейти в состояние Search
                 break;
 
             case SoundType.Distract:
-                Debug.Log($"{name} услышал громкий звук — тревога!");
+                global::Failsafe.Debugging.GameplayLog.Trace($"{name} услышал громкий звук — тревога!");
                 // Немедленный переход в агрессивное состояние
                 break;
 
             case SoundType.Impact:
-                Debug.Log($"{name} отвлекся на шум.");
+                global::Failsafe.Debugging.GameplayLog.Trace($"{name} отвлекся на шум.");
                 Investigate(soundPosition);
                 // Перейти к точке звука
                 break;
         }
     }
-    private void SuspiciousLook(Vector3 pos) => Debug.Log($"{name} is suspicious near {pos}");
+    private void SuspiciousLook(Vector3 pos) => global::Failsafe.Debugging.GameplayLog.Trace($"{name} is suspicious near {pos}");
     private void Investigate(Vector3 pos)
     {
-        Debug.Log($"{name} отвлекся на шум.");
+        global::Failsafe.Debugging.GameplayLog.Trace($"{name} отвлекся на шум.");
         var stateMachine = GetComponent<EnemyStateMachine>();
 
         if (stateMachine.CurrentState is not EnemyChaseState)
@@ -48,8 +48,8 @@ public class EnemySoundListener : MonoBehaviour, IHearSound
             stateMachine.SwitchState<EnemySearchState>();
         }
     }
-    private void MoveToDistractPoint(Vector3 pos) => Debug.Log($"{name} is distracted and moves to {pos}");
-    private void Alert(Vector3 pos) => Debug.Log($"{name} is alert and running to {pos}");
+    private void MoveToDistractPoint(Vector3 pos) => global::Failsafe.Debugging.GameplayLog.Trace($"{name} is distracted and moves to {pos}");
+    private void Alert(Vector3 pos) => global::Failsafe.Debugging.GameplayLog.Trace($"{name} is alert and running to {pos}");
 
    
 }

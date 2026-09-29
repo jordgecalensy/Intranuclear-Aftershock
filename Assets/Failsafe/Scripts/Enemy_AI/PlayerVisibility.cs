@@ -45,7 +45,7 @@ public class PlayerVisibility : MonoBehaviour
             _currentStatus = newStatus;
             displayStatus = _currentStatus.ToString();
             ApplyModifier(_currentStatus);
-            Debug.Log($"Status changed to {_currentStatus}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"Status changed to {_currentStatus}");
         }
     }
 

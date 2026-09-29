@@ -12,7 +12,7 @@ public class EnemyAttackState : EnemyBaseState
         InicializeComponents(enemy);
         _navMeshAgent.SetDestination(enemy.transform.position);
         StartAttack(enemy);
-        Debug.Log("Entering Attack State");
+        global::Failsafe.Debugging.GameplayLog.Trace("Entering Attack State");
     }
 
     public override void ExitState(EnemyStateMachine enemy)
@@ -33,7 +33,7 @@ public class EnemyAttackState : EnemyBaseState
             _animator.ResetTrigger("isAttacking");
         }
 
-        Debug.Log("Exiting Attack State");
+        global::Failsafe.Debugging.GameplayLog.Trace("Exiting Attack State");
     }
 
     public override void UpdateState(EnemyStateMachine enemy)

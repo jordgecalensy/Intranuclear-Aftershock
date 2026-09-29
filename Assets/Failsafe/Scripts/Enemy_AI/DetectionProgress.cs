@@ -121,6 +121,6 @@ public class DetectionProgress : MonoBehaviour
 
         _currentFastSpeed = _baseFastZoneSpeed * multiplier;
         _currentSlowSpeed = _baseSlowZoneSpeed * multiplier;
-        Debug.Log($"Detection speed modified: Fast = {_currentFastSpeed}, Slow = {_currentSlowSpeed}");
+        global::Failsafe.Debugging.GameplayLog.Trace($"Detection speed modified: Fast = {_currentFastSpeed}, Slow = {_currentSlowSpeed}");
     }
 }

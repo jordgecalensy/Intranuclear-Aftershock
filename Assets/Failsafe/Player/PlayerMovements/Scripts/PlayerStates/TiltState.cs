@@ -9,7 +9,7 @@ namespace Failsafe.PlayerMovements.States
     {
         public override void Enter()
         {
-            Debug.Log("Enter " + nameof(TiltState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(TiltState));
         }
     }
 }

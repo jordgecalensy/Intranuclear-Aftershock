@@ -129,7 +129,7 @@ public class ItemDamageComponent : MonoBehaviour
         if (!IsDamagingObjectAllowed(sourceCollider))
         {
             if (_debugLogs)
-                Debug.Log($"[ItemDamageComponent] Source ignored by mask: {sourceCollider.name}", sourceCollider);
+                global::Failsafe.Debugging.GameplayLog.Trace($"[ItemDamageComponent] Source ignored by mask: {sourceCollider.name}", sourceCollider);
 
             return;
         }
@@ -177,7 +177,7 @@ public class ItemDamageComponent : MonoBehaviour
 
         if (_debugLogs)
         {
-            Debug.Log(
+            global::Failsafe.Debugging.GameplayLog.Trace(
                 $"[ItemDamageComponent] Impact effects applied TO SELF. Source: {sourceCollider.name}. Target: {ownHitCollider.name}. Power: {damageAmount}",
                 ownHitCollider);
         }

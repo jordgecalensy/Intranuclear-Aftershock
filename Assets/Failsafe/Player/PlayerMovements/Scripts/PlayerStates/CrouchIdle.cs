@@ -25,7 +25,7 @@ namespace Failsafe.PlayerMovements.States
 
         public override void Enter()
         {
-            Debug.Log("Enter " + nameof(CrouchIdle));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(CrouchIdle));
             _playerBodyController.Crouch();
             _playerNoiseController.SetNoiseStrength(PlayerNoiseVolume.Minimum);
             _stepController.Disable();

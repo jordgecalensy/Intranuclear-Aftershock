@@ -21,7 +21,7 @@ public class BaseGrеnadeObject : ExplosiveObject
         else
         {
             StartCoroutine(ExplosionGranadeTimer());
-            Debug.Log("Tik tak");
+            global::Failsafe.Debugging.GameplayLog.Trace("Tik tak");
         }
     }
     protected IEnumerator ExplosionGranadeTimer()
@@ -33,7 +33,7 @@ public class BaseGrеnadeObject : ExplosiveObject
     {
         if (!ItsMineState) return;
         if (collision.gameObject.tag == "Player") return;
-        Debug.Log("collide " + gameObject + " With " + collision.gameObject.name);
+        global::Failsafe.Debugging.GameplayLog.Trace("collide " + gameObject + " With " + collision.gameObject.name);
         transform.SetParent(collision.transform);
         gameObject.GetComponent<Rigidbody>().isKinematic = true;
         gameObject.GetComponent<Collider>().enabled = false;

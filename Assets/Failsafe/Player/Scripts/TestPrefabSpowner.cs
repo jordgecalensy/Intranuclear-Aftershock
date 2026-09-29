@@ -18,7 +18,7 @@ namespace Failsafe.Player
             {
                 var position = _playerView.transform.position + _playerView.transform.forward + Vector3.up;
                 var testObject = _objectResolver.Instantiate(_testPrefab, position, Quaternion.identity);
-                Debug.Log($"TestItem {testObject.name} spawned at {position}");
+                global::Failsafe.Debugging.GameplayLog.Trace($"TestItem {testObject.name} spawned at {position}");
             }
         }
     }

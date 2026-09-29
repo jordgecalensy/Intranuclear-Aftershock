@@ -28,24 +28,24 @@ public class ExampleMinigame : MinigameBase
 
     protected override void OnGameStart()
     {
-        print("Game start");
+        global::Failsafe.Debugging.GameplayLog.Trace("Game start");
         PerformAction(_onStart);
     }
     protected override void OnGameExit()
     {
-        print("Game Exit");
+        global::Failsafe.Debugging.GameplayLog.Trace("Game Exit");
         PerformAction(_onExit);
     }
 
     protected override void OnWin()
     {
-        print("Perform win actions");
+        global::Failsafe.Debugging.GameplayLog.Trace("Perform win actions");
         PerformAction(_onWin);
     }
 
     protected override void OnFail()
     {
-        print("Perform fail actions");
+        global::Failsafe.Debugging.GameplayLog.Trace("Perform fail actions");
         PerformAction(_onFail);
     }
 }

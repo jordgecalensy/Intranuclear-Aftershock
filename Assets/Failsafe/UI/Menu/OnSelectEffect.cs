@@ -36,7 +36,7 @@ public class OnSelectEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        Debug.Log("Pointer Entered");
+        global::Failsafe.Debugging.GameplayLog.Trace("Pointer Entered");
 
 
         foreach (TextMeshProUGUI v in _optionalTextsGO)
@@ -56,7 +56,7 @@ public class OnSelectEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        Debug.Log("Pointer Exited");
+        global::Failsafe.Debugging.GameplayLog.Trace("Pointer Exited");
 
 
         foreach (TextMeshProUGUI v in _optionalTextsGO)

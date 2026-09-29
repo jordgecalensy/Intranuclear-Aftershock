@@ -208,7 +208,7 @@ namespace Failsafe.Player.Scripts.Interaction
 
             if (!hitInfo.rigidbody)
             {
-                Debug.Log($"PhysicsInteraction: объект {hitInfo.collider.name} попал в Raycast, но у него нет Rigidbody.");
+                global::Failsafe.Debugging.GameplayLog.Trace($"PhysicsInteraction: объект {hitInfo.collider.name} попал в Raycast, но у него нет Rigidbody.");
                 return;
             }
 

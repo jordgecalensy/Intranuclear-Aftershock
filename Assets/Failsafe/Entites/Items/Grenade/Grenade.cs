@@ -21,7 +21,7 @@ public class Grenade : IUsable
     public ItemUseResult Use()
     {
         GranadeItem.gameObject.GetComponent<BaseGrеnadeObject>().ActivesionGranade(Data, ItsMineState);
-        Debug.Log("Use");
+        global::Failsafe.Debugging.GameplayLog.Trace("Use");
         SoundUtils3D.Play(GranadeItem.gameObject, Data.ThrowGrendeSfx);
         return new ItemUseResult { ItemStateAfterUse = ItemState.Throw, UsageType = UsageType.HoldToUse };
     }
@@ -32,7 +32,7 @@ public class Grenade : IUsable
             SoundUtils3D.Play(GranadeItem.gameObject, Data.MineStateOnSfx);
         else
             SoundUtils3D.Play(GranadeItem.gameObject, Data.MineStateOffSfx);
-        Debug.Log("ItsMineState " + ItsMineState);
+        global::Failsafe.Debugging.GameplayLog.Trace("ItsMineState " + ItsMineState);
     }
     public void GetItemUseDelays(out float startUseDelay, out float useDelay)
     {

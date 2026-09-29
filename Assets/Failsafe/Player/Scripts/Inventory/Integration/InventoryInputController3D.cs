@@ -154,13 +154,18 @@ namespace Failsafe.Inventory.Integration
                 return;
 
             Keyboard keyboard = Keyboard.current;
+            bool inventoryInputBlocked = IsInventoryInputBlocked();
 
             if (keyboard != null &&
                 (keyboard.tabKey.wasPressedThisFrame ||
                  keyboard.iKey.wasPressedThisFrame))
             {
-                Toggle();
+                if (IsOpen || !inventoryInputBlocked)
+                    Toggle();
             }
+
+            if (inventoryInputBlocked)
+                return;
 
             if (_inputHandler != null &&
                 _inputHandler.TryConsumeQuickSlotSelection(
@@ -180,6 +185,12 @@ namespace Failsafe.Inventory.Integration
             int slotIndex,
             out string error)
         {
+            if (IsInventoryInputBlocked())
+            {
+                error = "Inventory input is blocked by another interaction mode.";
+                return false;
+            }
+
             if (!IsOpen)
                 _closedQuickBarLayout?.RequestReveal();
 
@@ -247,6 +258,9 @@ namespace Failsafe.Inventory.Integration
             if (IsOpen)
                 return true;
 
+            if (IsInventoryInputBlocked())
+                return false;
+
             if (_inventory == null ||
                 !_inventory.IsInitialized ||
                 _dragController == null)
@@ -269,6 +283,13 @@ namespace Failsafe.Inventory.Integration
             }
 
             return CompleteOpen();
+        }
+
+        private bool IsInventoryInputBlocked()
+        {
+            return _controlBlocker != null &&
+                   _controlBlocker.IsBlocked(
+                       PlayerControlBlock.Inventory);
         }
 
         public bool Close()

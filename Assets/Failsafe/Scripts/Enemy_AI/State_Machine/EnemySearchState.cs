@@ -49,7 +49,7 @@ public class EnemySearchState : EnemyBaseState
     /// </summary>
     private void BackToPatrol(EnemyStateMachine enemy)
     {
-        Debug.Log("Going back to Patrol State");
+        global::Failsafe.Debugging.GameplayLog.Trace("Going back to Patrol State");
         enemy.SwitchState<EnemyPatrolingState>();
     }
 
@@ -58,7 +58,7 @@ public class EnemySearchState : EnemyBaseState
     /// </summary>
     private void PerformSearch(EnemyStateMachine enemy)
     {
-        Debug.Log("Searching for Player");
+        global::Failsafe.Debugging.GameplayLog.Trace("Searching for Player");
 
         _searchDuration -= Time.deltaTime;
         _changePointTimer -= Time.deltaTime;
@@ -87,7 +87,7 @@ public class EnemySearchState : EnemyBaseState
     /// </summary>
     private void MoveToSearchPoint(Vector3 pos)
     {
-        Debug.Log("Going to Search Point");
+        global::Failsafe.Debugging.GameplayLog.Trace("Going to Search Point");
         _navMeshAgent.SetDestination(pos);
         _navMeshAgent.speed = 8f;
     }

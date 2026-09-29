@@ -18,7 +18,7 @@ public class CallbackExample : MonoBehaviour
     void Awake()
     {
         if(generator != null) {
-            Debug.Log("Registered post generation callback");
+            global::Failsafe.Debugging.GameplayLog.Trace("Registered post generation callback");
             generator.OnComplete += GeneratorComplete;
         }
     }
@@ -31,7 +31,7 @@ public class CallbackExample : MonoBehaviour
     /// </summary>
     /// <param name="generator"></param>
     public void GeneratorComplete(DMDungeonGenerator.DungeonGenerator generator) {
-        Debug.Log("CallbackExample::Generator complete!");
+        global::Failsafe.Debugging.GameplayLog.Trace("CallbackExample::Generator complete!");
 
         //cleanup
         //Destroy any keys we may have spawned (from the last run of the generator if there is a prev gen)
@@ -41,7 +41,7 @@ public class CallbackExample : MonoBehaviour
 
         //do some processing to choose which doors to lock, and which rooms to spawn keys in...
         int numKeys = keysToSpawnMin + generator.rand.Next((keysToSpawnMax - keysToSpawnMin));//get a random amount of keys between [keysToSpawnMin, keysToSpawnMax]
-        Debug.Log("CallbackExample::Computing Locks and Keys - Total keys: " + numKeys);
+        global::Failsafe.Debugging.GameplayLog.Trace("CallbackExample::Computing Locks and Keys - Total keys: " + numKeys);
         ComputeLocksAndKeys(numKeys); //compute the data needed to spawn the key gameobjects
         SpawnKeys(); //spawn the gameobjets using the computed data
 

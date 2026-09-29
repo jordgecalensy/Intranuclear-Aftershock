@@ -14,7 +14,7 @@ public class StasisGunOLD : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.LeftAlt))
         {
             _isDefaultMode = !_isDefaultMode;
-            Debug.Log("Default mode is " + _isDefaultMode);
+            global::Failsafe.Debugging.GameplayLog.Trace("Default mode is " + _isDefaultMode);
         }
         if (_fireRateTimer > 0)
         {
@@ -25,7 +25,7 @@ public class StasisGunOLD : MonoBehaviour
     public void ChangeMode()
     {
         _isDefaultMode = !_isDefaultMode;
-        Debug.Log("Default mode is " + _isDefaultMode);
+        global::Failsafe.Debugging.GameplayLog.Trace("Default mode is " + _isDefaultMode);
     }
 
     //public void Shoot(RaycastHit hit)

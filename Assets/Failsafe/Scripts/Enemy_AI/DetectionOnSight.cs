@@ -14,7 +14,7 @@ public class DetectionOnSight : MonoBehaviour
         }
         else
         {
-            Debug.Log("FieldOfView found in the scene.");
+            global::Failsafe.Debugging.GameplayLog.Trace("FieldOfView found in the scene.");
         }
     }
 

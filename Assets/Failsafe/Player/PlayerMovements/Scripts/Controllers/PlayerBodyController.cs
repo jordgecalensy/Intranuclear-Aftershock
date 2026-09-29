@@ -34,7 +34,7 @@ namespace Failsafe.PlayerMovements.Controllers
             var distance = _standingCCHeight - sphereRadius * 2;
             if (Physics.SphereCast(point, sphereRadius, Vector3.up, out var hitInfo, distance, _ignoreLedgeLayer))
             {
-                Debug.Log("Cant stand :" + hitInfo.transform.name);
+                global::Failsafe.Debugging.GameplayLog.Trace("Cant stand :" + hitInfo.transform.name);
                 return false;
             }
             return true;

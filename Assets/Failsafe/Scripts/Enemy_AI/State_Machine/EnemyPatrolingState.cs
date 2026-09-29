@@ -33,7 +33,7 @@ public class EnemyPatrolingState : EnemyBaseState
         lastPosition = agent.transform.position;
         stuckTimer = 0f;
 
-        if (debugMode) Debug.Log($"[Patrol State] ({enemy.gameObject.name}) Начало патрулирования. Всего точек: {patrolPoints.Length}");
+        if (debugMode) global::Failsafe.Debugging.GameplayLog.Trace($"[Patrol State] ({enemy.gameObject.name}) Начало патрулирования. Всего точек: {patrolPoints.Length}");
         MoveToNextPatrolPoint();
     }
 
@@ -43,7 +43,7 @@ public class EnemyPatrolingState : EnemyBaseState
     public override void ExitState(EnemyStateMachine enemy)
     {
         agent.ResetPath();
-        if (debugMode) Debug.Log($"[Patrol State] ({enemy.gameObject.name}) Выход из состояния патрулирования.");
+        if (debugMode) global::Failsafe.Debugging.GameplayLog.Trace($"[Patrol State] ({enemy.gameObject.name}) Выход из состояния патрулирования.");
     }
 
     /// <summary>
@@ -87,7 +87,7 @@ public class EnemyPatrolingState : EnemyBaseState
     private void HandleWaiting(EnemyStateMachine enemy)
     {
         waitTimer -= Time.deltaTime;
-        if (debugMode) Debug.Log($"[Patrol State] ({enemy.gameObject.name}) Ожидание... Осталось времени: {waitTimer:F2}");
+        if (debugMode) global::Failsafe.Debugging.GameplayLog.Trace($"[Patrol State] ({enemy.gameObject.name}) Ожидание... Осталось времени: {waitTimer:F2}");
 
         if (waitTimer <= 0f)
         {
@@ -106,11 +106,11 @@ public class EnemyPatrolingState : EnemyBaseState
         {
             float remainingDistance = agent.remainingDistance;
 
-            if (debugMode) Debug.Log($"[Patrol State] ({enemy.gameObject.name}) Проверка дистанции до точки {currentPatrolPointIndex}. Осталось: {remainingDistance:F2}");
+            if (debugMode) global::Failsafe.Debugging.GameplayLog.Trace($"[Patrol State] ({enemy.gameObject.name}) Проверка дистанции до точки {currentPatrolPointIndex}. Осталось: {remainingDistance:F2}");
 
             if (remainingDistance <= agent.stoppingDistance + 0.1f && agent.hasPath)
             {
-                if (debugMode) Debug.Log($"[Patrol State] ({enemy.gameObject.name}) Достигнута патрульная точка {currentPatrolPointIndex}");
+                if (debugMode) global::Failsafe.Debugging.GameplayLog.Trace($"[Patrol State] ({enemy.gameObject.name}) Достигнута патрульная точка {currentPatrolPointIndex}");
                 isWaiting = true;
             }
         }
@@ -128,7 +128,7 @@ public class EnemyPatrolingState : EnemyBaseState
 
         if (agent.SetDestination(targetPosition))
         {
-            if (debugMode) Debug.Log($"[Patrol State] ({agent.gameObject.name}) Переход к патрульной точке {currentPatrolPointIndex}: {targetPosition}");
+            if (debugMode) global::Failsafe.Debugging.GameplayLog.Trace($"[Patrol State] ({agent.gameObject.name}) Переход к патрульной точке {currentPatrolPointIndex}: {targetPosition}");
         }
         else
         {

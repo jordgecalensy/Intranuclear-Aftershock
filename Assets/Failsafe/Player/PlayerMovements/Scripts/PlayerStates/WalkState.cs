@@ -26,7 +26,7 @@ namespace Failsafe.PlayerMovements.States
 
         public override void Enter()
         {
-            Debug.Log("Enter " + nameof(WalkState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(WalkState));
             _playerNoiseController.SetNoiseStrength(PlayerNoiseVolume.Default);
             _stepController.Enable(Speed);
 

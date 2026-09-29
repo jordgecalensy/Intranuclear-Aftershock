@@ -33,7 +33,7 @@ namespace Failsafe.PlayerMovements.States
 
         public override void Enter()
         {
-            Debug.Log("Enter " + nameof(SprintState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(SprintState));
             _sprintProgress = 0f;
             _playerNoiseController.SetNoiseStrength(PlayerNoiseVolume.Increased);
             _stepController.Enable(Speed);

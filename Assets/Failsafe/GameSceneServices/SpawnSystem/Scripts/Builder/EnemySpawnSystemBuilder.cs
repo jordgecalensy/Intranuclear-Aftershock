@@ -16,7 +16,7 @@ namespace Failsafe.GameSceneServices.SpawnSystem
 
         public void BuildSpawnSystem(EnemySpawnSystem spawnSystem)
         {
-            Debug.Log("BuildSpawnSystem");
+            global::Failsafe.Debugging.GameplayLog.Trace("BuildSpawnSystem");
 
             if (spawnSystem == null)
                 throw new ArgumentNullException(nameof(spawnSystem));

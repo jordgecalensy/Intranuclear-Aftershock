@@ -18,7 +18,7 @@ public class MineTrigger : MonoBehaviour
             if (Physics.Raycast(transform.position, directionToEnemy, out hit))
             {
                 _itsTriggerActivated = true;
-                Debug.Log("trig " + other.name);
+                global::Failsafe.Debugging.GameplayLog.Trace("trig " + other.name);
                 _eventInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
                 _granade.Explosion();
             }

@@ -22,6 +22,7 @@ namespace Failsafe.Scripts.SaveSystem
             return $"{prefix} {message ?? string.Empty}";
         }
 
+        [System.Diagnostics.Conditional("FAILSAFE_VERBOSE_LOGS")]
         public static void Info(
             string category,
             string message,
@@ -30,9 +31,9 @@ namespace Failsafe.Scripts.SaveSystem
             string formattedMessage = Format(category, message);
 
             if (context != null)
-                Debug.Log(formattedMessage, context);
+                global::Failsafe.Debugging.GameplayLog.Trace(formattedMessage, context);
             else
-                Debug.Log(formattedMessage);
+                global::Failsafe.Debugging.GameplayLog.Trace(formattedMessage);
         }
 
         public static void Warning(

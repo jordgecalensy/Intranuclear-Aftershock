@@ -1,6 +1,4 @@
-﻿using UnityEditor;
-using UnityEditorInternal.Profiling.Memory.Experimental;
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 namespace Assets.Failsafe.Scripts.RandomGeneration
 {

@@ -39,7 +39,7 @@ public class EnemyPhysicsStunComponent : MonoBehaviour
             // Передаем направление и время в Enemy (который переведет StateMachine)
             _enemy.StunnedState(impactDirection, stunTime / 1000f);
             
-            Debug.Log($"Physics Stun applied: {stunTime / 1000f}s");
+            global::Failsafe.Debugging.GameplayLog.Trace($"Physics Stun applied: {stunTime / 1000f}s");
         }
         else
         {

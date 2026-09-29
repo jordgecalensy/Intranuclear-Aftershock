@@ -103,15 +103,15 @@ namespace DMDungeonGenerator {
             if(generateOnStart) {
                 StartGenerator(randomSeed);
             }
-            Debug.Log("Voxel scale is: " + voxelScale);
+            global::Failsafe.Debugging.GameplayLog.Trace("Voxel scale is: " + voxelScale);
         }
 
         public void StartGenerator(int seed) {
             if(!generationComplete) {
-                Debug.Log("Dungeon Generator:: Can not start generator as previous generator is not yet complete!");
+                global::Failsafe.Debugging.GameplayLog.Trace("Dungeon Generator:: Can not start generator as previous generator is not yet complete!");
                 return;
             }
-            Debug.Log("Dungeon Generator:: Starting generation with seed [" + seed + "]");
+            global::Failsafe.Debugging.GameplayLog.Trace("Dungeon Generator:: Starting generation with seed [" + seed + "]");
             DMDebugTimer.Start();
             generationComplete = false;
 
@@ -162,12 +162,12 @@ namespace DMDungeonGenerator {
                             regenerateWithDifferentSeed = true;
                             this.randomSeed++;
 
-                            Debug.Log("Dungeon Generator:: Generation failed to meet min rooms [" + AllRooms.Count + "/" + generatorSettings.minRooms + "] ... trying again with seed++ [ " + this.randomSeed + " ]");
+                            global::Failsafe.Debugging.GameplayLog.Trace("Dungeon Generator:: Generation failed to meet min rooms [" + AllRooms.Count + "/" + generatorSettings.minRooms + "] ... trying again with seed++ [ " + this.randomSeed + " ]");
                             return;
                         }
 
                         if(!generationComplete) {
-                            Debug.Log("Dungeon Generator:: Generation Complete in [" + DMDebugTimer.Lap() + "ms] and [" + attempts + "] attempts");
+                            global::Failsafe.Debugging.GameplayLog.Trace("Dungeon Generator:: Generation Complete in [" + DMDebugTimer.Lap() + "ms] and [" + attempts + "] attempts");
                             generationComplete = true;
                             PostGeneration();
                         }
@@ -179,7 +179,7 @@ namespace DMDungeonGenerator {
 
             if(Input.GetKeyUp(KeyCode.LeftAlt)) {
                 //restart?
-                Debug.Log("Regenerating the next dungeon");
+                global::Failsafe.Debugging.GameplayLog.Trace("Regenerating the next dungeon");
                 randomSeed++;
                 //need to destroy all the rooms
                 StartGenerator(randomSeed);
@@ -196,7 +196,7 @@ namespace DMDungeonGenerator {
 
             if(regenerateWithDifferentSeed) {
                 seed = this.randomSeed;
-                Debug.Log("Dungeon Generator:: Seed changed to [" + seed + "]");
+                global::Failsafe.Debugging.GameplayLog.Trace("Dungeon Generator:: Seed changed to [" + seed + "]");
                 attempts++;
                 regenerateWithDifferentSeed = false;
             }
@@ -253,11 +253,11 @@ namespace DMDungeonGenerator {
             if(AllRooms.Count < generatorSettings.minRooms) {
                 regenerateWithDifferentSeed = true;
                 this.randomSeed++;
-                Debug.Log("Dungeon Generator:: Generation failed to meet min rooms [" + AllRooms.Count + "/" + generatorSettings.minRooms + "] ... trying again with seed++ [ " + this.randomSeed + " ]");
+                global::Failsafe.Debugging.GameplayLog.Trace("Dungeon Generator:: Generation failed to meet min rooms [" + AllRooms.Count + "/" + generatorSettings.minRooms + "] ... trying again with seed++ [ " + this.randomSeed + " ]");
                 return;
             }
 
-            Debug.Log("Dungeon Generator:: Generation Complete in [" + DMDebugTimer.Lap() + "ms] and [" + attempts + "] attempts");
+            global::Failsafe.Debugging.GameplayLog.Trace("Dungeon Generator:: Generation Complete in [" + DMDebugTimer.Lap() + "ms] and [" + attempts + "] attempts");
             generationComplete = true;
 
         }
@@ -346,7 +346,7 @@ namespace DMDungeonGenerator {
                         RoomData possibleRoom = possibleRooms[i].gameObject.GetComponent<RoomData>();
                         if(possibleRoom.Doors.Count < 2) continue;
                         //if(possibleRoom.gameObject.name != "Hallway 2") log = false;
-                        if(log) Debug.Log("Checking possible room: " + possibleRoom.gameObject.name);
+                        if(log) global::Failsafe.Debugging.GameplayLog.Trace("Checking possible room: " + possibleRoom.gameObject.name);
 
                         //we need to check every door pair in this possible room, to see if the computed STUFF matches the spawened door pair we already have.
                         for(int j = 0; j < possibleRoom.Doors.Count; j++) {
@@ -361,16 +361,16 @@ namespace DMDungeonGenerator {
                                     }
                                 }
 
-                                if(log)Debug.Log("------------------------------------ Checking pair with doors: " + j + " : " + pairIndex);
-                                if(log) Debug.Log("Checking voxel dist with room: " + possibleRoom.gameObject.name + " : " + spawnedPairData.VoxelDistance() + ": " + possiblePairData.VoxelDistance());
-                                if(log) Debug.Log("Checking Deltas: " + spawnedPairData.deltaPos.ToString() + " (unrotate) possible: " + possiblePairData.deltaPos.ToString());
+                                if(log)global::Failsafe.Debugging.GameplayLog.Trace("------------------------------------ Checking pair with doors: " + j + " : " + pairIndex);
+                                if(log) global::Failsafe.Debugging.GameplayLog.Trace("Checking voxel dist with room: " + possibleRoom.gameObject.name + " : " + spawnedPairData.VoxelDistance() + ": " + possiblePairData.VoxelDistance());
+                                if(log) global::Failsafe.Debugging.GameplayLog.Trace("Checking Deltas: " + spawnedPairData.deltaPos.ToString() + " (unrotate) possible: " + possiblePairData.deltaPos.ToString());
 
 
                                 if(possiblePairData.VoxelDistance() == spawnedPairData.VoxelDistance()) {
-                                    if(log) Debug.Log("Matching voxel dist with room: " + possibleRoom.gameObject.name + " : " + spawnedPairData.VoxelDistance());
+                                    if(log) global::Failsafe.Debugging.GameplayLog.Trace("Matching voxel dist with room: " + possibleRoom.gameObject.name + " : " + spawnedPairData.VoxelDistance());
                                     //check what rotation we'd need to match this...
                                     if(possiblePairData.CompareDeltas(spawnedPairData.deltaPos)) {
-                                        if(log) Debug.Log("Matching Deltas: " + spawnedPairData.deltaPos.ToString() + " (unrotate) possible: " + possiblePairData.deltaPos.ToString());
+                                        if(log) global::Failsafe.Debugging.GameplayLog.Trace("Matching Deltas: " + spawnedPairData.deltaPos.ToString() + " (unrotate) possible: " + possiblePairData.deltaPos.ToString());
                                         int neededRotation = possiblePairData.GetMatchingDeltaRotation(spawnedPairData.deltaPos);
                                         //Debug.Log("Needs rotation of: " + neededRotation);
 
@@ -422,7 +422,7 @@ namespace DMDungeonGenerator {
                                                 }
                                             }
 
-                                            if(log) Debug.Log("Do the deltas match?: " + matchingDeltas + ": inverted? " + inverted);
+                                            if(log) global::Failsafe.Debugging.GameplayLog.Trace("Do the deltas match?: " + matchingDeltas + ": inverted? " + inverted);
                                             if(matchingDeltas) {
                                                 for(int dd = 0; dd < possibleRoom.Doors.Count; dd++) {
                                                     if(possibleRoom.Doors[dd] == possiblePairData.door) {
@@ -451,7 +451,7 @@ namespace DMDungeonGenerator {
                                                 t.otherSpawnedDoor = spawnedPairData.openSetIndex;
                                                 t.possibleDoorAIndex = indexA;
                                                 t.possibleDoorBIndex = indexB;
-                                                if(log) Debug.Log("<color=red>We have a loop room that would fit here!: " + t.ToString() + "</color>");
+                                                if(log) global::Failsafe.Debugging.GameplayLog.Trace("<color=red>We have a loop room that would fit here!: " + t.ToString() + "</color>");
                                                 loopRooms.Add(t);
                                             }
                                         }
@@ -854,7 +854,7 @@ namespace DMDungeonGenerator {
 
         //Wrapping the interal post step, just generate doors and keys for now (eg, taking each door pair and spawning a gameplay door in it's place)
         private void PostGeneration() {
-            Debug.Log("Dungeon Generator:: Post Generation Starting. ");
+            global::Failsafe.Debugging.GameplayLog.Trace("Dungeon Generator:: Post Generation Starting. ");
 
             //let the user hook in here once it's all done
             if(OnComplete != null) OnComplete(this);

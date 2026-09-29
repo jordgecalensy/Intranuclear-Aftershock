@@ -47,7 +47,7 @@ namespace Failsafe.Items
             if (!_item.ItemData.ModeSwitchSFX.IsNull)
                 SoundUtils3D.Play(_item.gameObject, _item.ItemData.ModeSwitchSFX);
 
-            Debug.Log($"[StasisGun] Default mode = {_isDefaultMode}", _item);
+            global::Failsafe.Debugging.GameplayLog.Trace($"[StasisGun] Default mode = {_isDefaultMode}", _item);
         }
 
         public void ParseItem(Item item_object)
@@ -106,7 +106,7 @@ namespace Failsafe.Items
                 if (!data.EmptyUseSFX.IsNull)
                     SoundUtils3D.Play(_item.gameObject, data.EmptyUseSFX);
 
-                Debug.Log("[StasisGun] Empty energy.", _item);
+                global::Failsafe.Debugging.GameplayLog.Trace("[StasisGun] Empty energy.", _item);
                 return;
             }
 
@@ -157,11 +157,11 @@ namespace Failsafe.Items
 
             if (Physics.Raycast(ray, out RaycastHit hit, range, mask))
             {
-                Debug.Log("[StasisGun] Object ahead: " + hit.collider.name);
+                global::Failsafe.Debugging.GameplayLog.Trace("[StasisGun] Object ahead: " + hit.collider.name);
                 return hit;
             }
 
-            Debug.Log("[StasisGun] No object!");
+            global::Failsafe.Debugging.GameplayLog.Trace("[StasisGun] No object!");
             return default;
         }
 

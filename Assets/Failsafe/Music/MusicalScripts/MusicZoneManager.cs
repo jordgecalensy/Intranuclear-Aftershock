@@ -413,8 +413,9 @@ public class MusicZoneManager : MonoBehaviour
         Log("[Cleanup] Done");
     }
 
+    [System.Diagnostics.Conditional("FAILSAFE_VERBOSE_LOGS")]
     private void Log(string msg)
     {
-        if (debugLogs) Debug.Log($"[MusicZoneManager] {msg}");
+        if (debugLogs) global::Failsafe.Debugging.GameplayLog.Trace($"[MusicZoneManager] {msg}");
     }
 }

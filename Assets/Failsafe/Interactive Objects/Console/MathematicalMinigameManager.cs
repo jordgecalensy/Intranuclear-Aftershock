@@ -96,13 +96,13 @@ public class MathematicalMinigameManager :
         {
             if(comparedNumber > _resultCalculation)
             {
-                Debug.Log($"true {comparedNumber} > {_resultCalculation}");
+                global::Failsafe.Debugging.GameplayLog.Trace($"true {comparedNumber} > {_resultCalculation}");
                 FillingCell();
                 ComparedNumber();
             }
             else
             {
-                Debug.Log($"false {comparedNumber} < {_resultCalculation}");
+                global::Failsafe.Debugging.GameplayLog.Trace($"false {comparedNumber} < {_resultCalculation}");
                 time -= _fimeTime;
             }
         }
@@ -110,13 +110,13 @@ public class MathematicalMinigameManager :
         {
             if (comparedNumber < _resultCalculation)
             {
-                Debug.Log($"true {comparedNumber} < {_resultCalculation}");
+                global::Failsafe.Debugging.GameplayLog.Trace($"true {comparedNumber} < {_resultCalculation}");
                 FillingCell();
                 ComparedNumber();
             }
             else
             {
-                Debug.Log($"false {comparedNumber} > {_resultCalculation}");
+                global::Failsafe.Debugging.GameplayLog.Trace($"false {comparedNumber} > {_resultCalculation}");
                 time -= _fimeTime;
             }
         }
@@ -171,7 +171,7 @@ public class MathematicalMinigameManager :
     private void FillingCell()
     {
         if (_cellsCount == _passwordCells.Length) return;
-        Debug.Log("Cell filled in " + _cellsCount);
+        global::Failsafe.Debugging.GameplayLog.Trace("Cell filled in " + _cellsCount);
         // _passwordCells[_cellsCount].text = _resultCalculation.ToString();
         _passwordCells[_cellsCount].enabled = true;
         _cellsCount++;
@@ -182,8 +182,8 @@ public class MathematicalMinigameManager :
     {
         _timerRunning = false;
         _timerText.text = "0";
-        Debug.Log("Time is out!");
-        Debug.Log("Game over");
+        global::Failsafe.Debugging.GameplayLog.Trace("Time is out!");
+        global::Failsafe.Debugging.GameplayLog.Trace("Game over");
         StartCoroutine(GameOver(false));
         // CreateNewGame();
     }
@@ -207,7 +207,7 @@ public class MathematicalMinigameManager :
     }
     private void UnlockConsole()
     {
-        Debug.Log("Unlock");
+        global::Failsafe.Debugging.GameplayLog.Trace("Unlock");
         _isSolved = true;
         _timerRunning = false;
         Lock(false);

@@ -94,7 +94,7 @@ public class ReferenceRowBuilder : MonoBehaviour
         var row = container.GetComponent<SlotsRow>();
         if (row) row.isReferenceRow = true;
 
-        Debug.Log($"[ReferenceRowBuilder] Построено «{pattern?.patternName ?? "Unnamed"}». Длина: {code.Length}" +
+        global::Failsafe.Debugging.GameplayLog.Trace($"[ReferenceRowBuilder] Построено «{pattern?.patternName ?? "Unnamed"}». Длина: {code.Length}" +
                   (truncated ? $" (урезано до {maxSymbols})" : ""));
     }
 

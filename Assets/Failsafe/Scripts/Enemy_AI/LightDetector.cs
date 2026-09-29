@@ -24,7 +24,7 @@ public class LightDetector : MonoBehaviour
         _detectorCollider = GetComponent<Collider>();
         _detectorCollider.isTrigger = true;
 
-        Debug.Log($"[Освещение] Детектор готов. Точек обнаружения: {_detectionPoints?.Length ?? 0}");
+        global::Failsafe.Debugging.GameplayLog.Trace($"[Освещение] Детектор готов. Точек обнаружения: {_detectionPoints?.Length ?? 0}");
     }
 
     private void OnTriggerEnter(Collider other)
@@ -97,7 +97,7 @@ public class LightDetector : MonoBehaviour
         _illuminationLevel = totalChecks > 0 ? (float)visibleHits / totalChecks : 0f;
         _playerVis.PlayerVisScore = _illuminationLevel * 100;
 
-        Debug.Log($"[Освещение] Статистика: " +
+        global::Failsafe.Debugging.GameplayLog.Trace($"[Освещение] Статистика: " +
                  $"Точек: {_detectionPoints.Length}, " +
                  $"Источников: {_activeLights.Count}, " +
                  $"Попаданий: {visibleHits}/{totalChecks}, " +

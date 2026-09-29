@@ -9,7 +9,7 @@ namespace Failsafe.PlayerMovements.States
     {
         public override void Enter()
         {
-            Debug.Log("Enter " + nameof(InventoryState));
+            global::Failsafe.Debugging.GameplayLog.Trace("Enter " + nameof(InventoryState));
         }
         // TODO вызывается когда игрок открывает инвентарь
     }

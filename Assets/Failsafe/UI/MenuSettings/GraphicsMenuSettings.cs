@@ -42,7 +42,7 @@ public class GraphicsMenuSettings : MonoBehaviour
     public void OnMaxFPSChange()
     {
 
-        Debug.Log(maxFPS.value);
+        global::Failsafe.Debugging.GameplayLog.Trace(maxFPS.value);
 
 
 
@@ -51,7 +51,7 @@ public class GraphicsMenuSettings : MonoBehaviour
     public void OnMaxGammaChange()
     {
 
-        Debug.Log(gamma.value);
+        global::Failsafe.Debugging.GameplayLog.Trace(gamma.value);
 
 
 
@@ -59,14 +59,14 @@ public class GraphicsMenuSettings : MonoBehaviour
 
     public void  OnSaveButtonClick()
     {   
-        Debug.Log("Settings button pressed");
+        global::Failsafe.Debugging.GameplayLog.Trace("Settings button pressed");
         
 
     }
 
     public void  OnDefaultButtonClick()
     {   
-        Debug.Log("Settings button pressed");
+        global::Failsafe.Debugging.GameplayLog.Trace("Settings button pressed");
 
 
     }
@@ -136,7 +136,7 @@ public class GraphicsMenuSettings : MonoBehaviour
     public void SetVSync(bool isVSync)
     {
         QualitySettings.vSyncCount = isVSync ? 1 : 0;
-        Debug.Log($"VSync is {(isVSync ? "ON" : "OFF")}");
+        global::Failsafe.Debugging.GameplayLog.Trace($"VSync is {(isVSync ? "ON" : "OFF")}");
         
     }
 
@@ -145,7 +145,7 @@ public class GraphicsMenuSettings : MonoBehaviour
         if (motionBlur != null)
         {
             motionBlur.active = isMotionBlur;
-            Debug.Log($"Motion Blur {(isMotionBlur ? "ON" : "OFF")}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"Motion Blur {(isMotionBlur ? "ON" : "OFF")}");
         }
 
 
@@ -156,7 +156,7 @@ public class GraphicsMenuSettings : MonoBehaviour
         if (bloom != null)
         {
             bloom.active = isBloom;
-            Debug.Log($"Bloom {(isBloom ? "ON" : "OFF")}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"Bloom {(isBloom ? "ON" : "OFF")}");
         }
 
 
@@ -246,7 +246,7 @@ public class GraphicsMenuSettings : MonoBehaviour
         if (modeIndex >= 0 && modeIndex < screenModes.Length)
         {
             Screen.fullScreenMode = screenModes[modeIndex];
-            Debug.Log($"Screen mode set to: {screenModes[modeIndex]}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"Screen mode set to: {screenModes[modeIndex]}");
         }
     }
 
@@ -263,7 +263,7 @@ public class GraphicsMenuSettings : MonoBehaviour
         if (shadowIndex >= 0 && shadowIndex < shadowQList.Length)
         {
             shadowQuallity.SetCurrentOption(shadowIndex);
-            Debug.Log($"Shadow quality was set to: {shadowQList[shadowIndex]}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"Shadow quality was set to: {shadowQList[shadowIndex]}");
 
         }
     }
@@ -273,7 +273,7 @@ public class GraphicsMenuSettings : MonoBehaviour
         if (modelIndex >= 0 && modelIndex < modelQList.Length)
         {
             modelQuality.SetCurrentOption(modelIndex);
-            Debug.Log($"Model quality was set to: {modelQList[modelIndex]}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"Model quality was set to: {modelQList[modelIndex]}");
 
         }
     }
@@ -283,7 +283,7 @@ public class GraphicsMenuSettings : MonoBehaviour
         if (FPSIndex >= 0 && FPSIndex < FPSList.Length)
         {
             MaxFPS.SetCurrentOption(FPSIndex);
-            Debug.Log($"FPS was set to: {modelQList[FPSIndex]}");
+            global::Failsafe.Debugging.GameplayLog.Trace($"FPS was set to: {modelQList[FPSIndex]}");
 
         }
     }
