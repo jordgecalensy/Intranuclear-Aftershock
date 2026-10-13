@@ -4307,7 +4307,7 @@ MonoBehaviour:
   _config: {fileID: 11400000, guid: 22e18573ab2349a42a26a9865501c2a8, type: 2}
   _damagingObjectMask:
     serializedVersion: 2
-    m_Bits: 1892343
+    m_Bits: 4294967295
   _impactEffects: {fileID: 11400000, guid: f174497a5e799224c9eb8990b4c42bc5, type: 2}
   _sameSourceCooldown: 0.25
   _debugLogs: 1
@@ -4437,9 +4437,9 @@ MonoBehaviour:
   _stasisMaterial: {fileID: 2100000, guid: e89baa730afc6504d869da076eda85c2, type: 2}
   _freezeRigidbody: 1
   _disableEnemyState: 1
-  _freezeDamageObstacle: 1
+  _freezeObstacle: 1
   _blockPlayerControls: 1
-  _playerBlocks: 1023
+  _playerBlocks: -1
 --- !u!114 &6206973088133588022
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4487,6 +4487,22 @@ MonoBehaviour:
     m_RotationOrder: 4
   _baseJumpDuration: 0.5
   _heightMultiplier: 2
+  _dropApexHeight: 0.75
+  _enableShortcutPlanning: 1
+  _minimumHorizontalDistance: 1
+  _maximumHorizontalDistance: 8
+  _maximumRise: 6
+  _maximumDrop: 8
+  _jumpSpeed: 8
+  _minimumTimeSaving: 0.6
+  _minimumRelativeSaving: 0.1
+  _collisionMask:
+    serializedVersion: 2
+    m_Bits: 1892339
+  _trajectorySegments: 12
+  _collisionSkin: 0.08
+  _preparationDuration: 0.12
+  _landingRecoveryDuration: 0.18
 --- !u!114 &4169430645498835357
 MonoBehaviour:
   m_ObjectHideFlags: 0
