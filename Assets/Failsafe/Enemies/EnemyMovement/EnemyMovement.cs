@@ -14,6 +14,8 @@ public class EnemyMovement
     private readonly MonoBehaviour _coroutineRunner; // Ссылка на Enemy.cs для запуска корутин
     private readonly bool _useRootMotion;
     private readonly EnemyLinkTraverser _linkTraverser;
+    private Vector3 _requestedDestination;
+    private bool _hasRequestedDestination;
 
     // Настройки (можно вынести в ScriptableObject)
     private const float TurnThreshold = 45f; // Угол, при котором начинаем разворот на месте
@@ -51,7 +53,10 @@ public class EnemyMovement
     /// </summary>
     public void HandleRotationAndMovement()
     {
-        if (IsBusy) return; // Не мешаем прыжку
+        if (IsBusy || !_agent.enabled || !_agent.isOnNavMesh) return;
+        // Только остановку для собственного разворота мотор снимает сам.
+        // Stop от патруля/боя действует до следующей команды движения.
+        if (_agent.isStopped && !IsRotatingInPlace) return;
 
         // 1. Вычисляем цель поворота
         Vector3 targetDir = GetTargetDirection();
@@ -99,6 +104,8 @@ public class EnemyMovement
     public void MoveTo(Vector3 destination, float speed)
     {
         if (!_agent.isOnNavMesh || IsBusy) return;
+        _requestedDestination = ProjectWalkingDestination(_agent, destination);
+        _hasRequestedDestination = true;
 
         if (_linkTraverser != null)
         {
@@ -107,6 +114,7 @@ public class EnemyMovement
         }
 
         _agent.speed = speed;
+        _agent.isStopped = false;
         _agent.SetDestination(destination);
     }
 
@@ -115,6 +123,8 @@ public class EnemyMovement
     /// </summary>
     public void Stop()
     {
+        _hasRequestedDestination = false;
+        IsRotatingInPlace = false;
         _linkTraverser?.ClearDestination();
 
         if (_agent.isOnNavMesh) 
@@ -139,11 +149,30 @@ public class EnemyMovement
     /// </summary>
     public bool IsPointReached(float stoppingDistance = 0.5f)
     {
-        if (_linkTraverser != null && _linkTraverser.HasCommittedTraversal)
+        if (_linkTraverser != null)
+            return _linkTraverser.IsDestinationReached(stoppingDistance);
+        return _hasRequestedDestination && HasReachedPosition(_agent, _requestedDestination, stoppingDistance);
+    }
+
+    internal static bool HasReachedPosition(NavMeshAgent agent, Vector3 destination, float stoppingDistance)
+    {
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh || agent.pathPending ||
+            agent.isOnOffMeshLink || agent.pathStatus != NavMeshPathStatus.PathComplete)
+            return false;
+        float tolerance = Mathf.Max(0.05f, stoppingDistance);
+        if (agent.hasPath && (float.IsInfinity(agent.remainingDistance) || agent.remainingDistance > tolerance))
             return false;
 
-        if (_agent.pathPending || !_agent.isOnNavMesh) return false;
-        return _agent.remainingDistance <= stoppingDistance; // Упрощенная проверка
+        // remainingDistance == 0 бывает также при ResetPath/потере пути.
+        // Сверяем фактическое положение с конечной целью, а не концом partial path.
+        Vector3 offset = destination - (agent.nextPosition - Vector3.up * agent.baseOffset);
+        return offset.sqrMagnitude <= tolerance * tolerance;
+    }
+
+    internal static Vector3 ProjectWalkingDestination(NavMeshAgent agent, Vector3 destination)
+    {
+        var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+        return NavMesh.SamplePosition(destination, out NavMeshHit hit, 1f, filter) ? hit.position : destination;
     }
 
     public void SetTraversalBusy(bool isBusy)

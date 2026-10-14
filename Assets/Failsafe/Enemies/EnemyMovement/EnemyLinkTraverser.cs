@@ -72,6 +72,7 @@ public class EnemyLinkTraverser : MonoBehaviour
     private IEnumerator _planningSearch;
     private Vector3 _planningTarget;
     private Vector3 _resolvedDestination;
+    private Vector3 _resolvedFromDestination;
     private bool _hasResolvedDestination;
     private int _destinationAreaMask;
     private bool _hasSuppressedLegacyLinks;
@@ -101,6 +102,12 @@ public class EnemyLinkTraverser : MonoBehaviour
     public bool IsTraversing => _isTraversing;
     public bool HasCommittedTraversal => _isTraversing || _plannedRoute.HasValue || _planningSearch != null;
 
+    public bool IsDestinationReached(float stoppingDistance)
+    {
+        return _hasRequestedDestination && !HasCommittedTraversal && _hasResolvedDestination &&
+            EnemyMovement.HasReachedPosition(_agent, _resolvedDestination, stoppingDistance);
+    }
+
     public void Initialize(NavMeshAgent agent, EnemyAnimator animator, EnemyMovement movement)
     {
         _agent = agent;
@@ -129,13 +136,26 @@ public class EnemyLinkTraverser : MonoBehaviour
                                   TargetReplanDistance * TargetReplanDistance;
         bool searchTargetMoved = _planningSearch != null &&
                                  (_planningTarget - destination).sqrMagnitude > TargetReplanDistance * TargetReplanDistance;
-        if ((_requestedDestination - destination).sqrMagnitude > 0.04f)
+        if ((_resolvedFromDestination - destination).sqrMagnitude > 0.04f)
             _hasResolvedDestination = false;
 
         _requestedDestination = destination;
         _requestedSpeed = Mathf.Max(0.1f, speed);
         _requestedTargetRoot = targetRoot;
         _hasRequestedDestination = true;
+
+        // Пешая цель нужна сразу, а не только после окончания поиска прыжков.
+        if (!_hasResolvedDestination && _planner != null && _agent.enabled && _agent.isOnNavMesh)
+        {
+            var filter = new NavMeshQueryFilter
+            {
+                agentTypeID = _agent.agentTypeID,
+                areaMask = SpiderJumpPlanner.GetWalkOnlyAreaMask(_agent.areaMask)
+            };
+            _hasResolvedDestination = _planner.TryResolveTarget(destination, filter, transform,
+                targetRoot, CreatePlannerSettings(), out _resolvedDestination);
+            _resolvedFromDestination = destination;
+        }
 
         if (plannedTargetMoved || searchTargetMoved)
         {
@@ -219,6 +239,24 @@ public class EnemyLinkTraverser : MonoBehaviour
             return;
         }
 
+        // На непрерывном плоском участке прыжок не обходит препятствие.
+        // Не запускаем повторный поиск, мешающий патрулю оценить пеший прогресс.
+        if (_hasResolvedDestination)
+        {
+            Vector3 feet = _agent.nextPosition - Vector3.up * _agent.baseOffset;
+            var filter = new NavMeshQueryFilter
+            {
+                agentTypeID = _agent.agentTypeID,
+                areaMask = SpiderJumpPlanner.GetWalkOnlyAreaMask(_agent.areaMask)
+            };
+            if (Mathf.Abs(feet.y - _resolvedDestination.y) < MinimumVerticalShortcut &&
+                !NavMesh.Raycast(feet, _resolvedDestination, out _, filter))
+            {
+                _nextPlanningTime = Time.time + PlanningInterval;
+                return;
+            }
+        }
+
         _nextPlanningTime = Time.time + PlanningInterval;
         _planningTarget = _requestedDestination;
         _planningSearch = _planner.Plan(
@@ -241,9 +279,10 @@ public class EnemyLinkTraverser : MonoBehaviour
         }
         _planningSearch = null;
         _nextPlanningTime = Time.time + PlanningInterval;
-        if (_planner.HasResolvedTarget)
+        if (_planner.HasResolvedTarget && (_planningTarget - _requestedDestination).sqrMagnitude <= 0.04f)
         {
             _resolvedDestination = _planner.ResolvedTargetPosition;
+            _resolvedFromDestination = _planningTarget;
             _hasResolvedDestination = true;
         }
         bool routeFound = _planner.PlannedJumps.Count > 0;
@@ -425,8 +464,9 @@ public class EnemyLinkTraverser : MonoBehaviour
         else
             ReleasePlannedRoute();
 
-        if (!legacyLink)
-            ApplyCurrentDestination();
+        // Warp при восстановлении агента сбрасывает путь и после обычного линка.
+        // Конечная цель может лежать дальше по той же платформе.
+        ApplyCurrentDestination();
     }
 
     private void RestoreAfterInterruptedTraversal()
@@ -494,7 +534,7 @@ public class EnemyLinkTraverser : MonoBehaviour
 
     private void ApplyCurrentDestination()
     {
-        if (_agent == null || !_agent.enabled || !_agent.isOnNavMesh || _isTraversing)
+        if (_agent == null || !_agent.enabled || !_agent.isOnNavMesh || _isTraversing || !_hasRequestedDestination)
             return;
 
         Vector3 destination = _plannedRoute.HasValue
@@ -514,7 +554,10 @@ public class EnemyLinkTraverser : MonoBehaviour
 
         _agent.speed = Mathf.Max(0.1f, _requestedSpeed);
         _agent.isStopped = false;
-        _agent.SetDestination(destination);
+        // Повтор той же команды не должен каждый раз сбрасывать готовый путь.
+        if ((!_agent.hasPath && !_agent.pathPending) || _agent.isPathStale ||
+            (_agent.destination - destination).sqrMagnitude > 0.0001f)
+            _agent.SetDestination(destination);
     }
 
     private void StoreDestinationStoppingDistance()
