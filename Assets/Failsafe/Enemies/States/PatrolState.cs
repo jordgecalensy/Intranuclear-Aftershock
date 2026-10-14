@@ -67,7 +67,11 @@ public class PatrolState : BehaviorState
         else
         {
             CheckDestinationReached();
-            CheckForStuck();
+            // Поиск и подход к следующему прыжку контролирует маршрутизатор.
+            if (_linkTraverser == null || !_linkTraverser.HasCommittedTraversal)
+                CheckForStuck();
+            else
+                _stuckTimer = 0f;
         }
 
         _lastPosition = _enemyTransform.position;

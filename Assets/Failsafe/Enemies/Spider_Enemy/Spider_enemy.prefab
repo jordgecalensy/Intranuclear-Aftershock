@@ -4491,11 +4491,18 @@ MonoBehaviour:
   _enableShortcutPlanning: 1
   _minimumHorizontalDistance: 1
   _maximumHorizontalDistance: 8
-  _maximumRise: 6
+  _maximumRise: 8
   _maximumDrop: 8
   _jumpSpeed: 8
   _minimumTimeSaving: 0.6
   _minimumRelativeSaving: 0.1
+  _longJumpPenalty: 6
+  _maximumRouteJumps: 8
+  _maximumSearchNodes: 256
+  _maximumExpandedNodes: 64
+  _edgeSearchRadius: 7
+  _targetGroundProbeDistance: 3
+  _planningMillisecondsPerFrame: 1.5
   _collisionMask:
     serializedVersion: 2
     m_Bits: 1892339

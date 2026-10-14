@@ -1,15 +1,16 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 /// <summary>
 /// Общий для всех состояний паука слой маршрутизации.
-/// Сравнивает пеший путь с локальным прыжком и исполняет зафиксированную траекторию.
+/// Исполняет маршрут с несколькими прыжками и пересчитывает его при изменении цели.
 /// </summary>
 public class EnemyLinkTraverser : MonoBehaviour
 {
     [Header("Настройки прыжка")]
-    [Tooltip("Старая кривая сохранена для уже расставленных NavMeshLink.")]
+    [Tooltip("Сохранена для совместимости префабов. Все прыжки исполняются по проверенной планировщиком дуге.")]
     [SerializeField] private AnimationCurve _jumpCurve = new AnimationCurve(
         new Keyframe(0f, 0f),
         new Keyframe(0.5f, 1f),
@@ -22,11 +23,21 @@ public class EnemyLinkTraverser : MonoBehaviour
     [SerializeField] private bool _enableShortcutPlanning = true;
     [SerializeField, Min(0.1f)] private float _minimumHorizontalDistance = 1f;
     [SerializeField, Min(0.1f)] private float _maximumHorizontalDistance = 8f;
-    [SerializeField, Min(0f)] private float _maximumRise = 6f;
+    [SerializeField, Min(0f)] private float _maximumRise = 8f;
     [SerializeField, Min(0f)] private float _maximumDrop = 8f;
     [SerializeField, Min(0.1f)] private float _jumpSpeed = 8f;
     [SerializeField, Min(0f)] private float _minimumTimeSaving = 0.6f;
     [SerializeField, Range(0f, 1f)] private float _minimumRelativeSaving = 0.1f;
+    [Tooltip("Предпочтение промежуточных площадок. Штраф при прыжке на предельную дальность или перепад; 0 — только время.")]
+    [SerializeField, Min(0f)] private float _longJumpPenalty = 6f;
+
+    [Header("Сложные маршруты")]
+    [SerializeField, Min(1)] private int _maximumRouteJumps = 8;
+    [SerializeField, Min(16)] private int _maximumSearchNodes = 256;
+    [SerializeField, Min(1)] private int _maximumExpandedNodes = 64;
+    [SerializeField, Min(1f)] private float _edgeSearchRadius = 7f;
+    [SerializeField, Min(0.1f)] private float _targetGroundProbeDistance = 3f;
+    [SerializeField, Range(0.1f, 5f)] private float _planningMillisecondsPerFrame = 1.5f;
 
     [Header("Безопасность траектории")]
     [SerializeField] private LayerMask _collisionMask = Physics.DefaultRaycastLayers;
@@ -41,7 +52,6 @@ public class EnemyLinkTraverser : MonoBehaviour
     private const float TakeoffTolerance = 0.4f;
     private const float TakeoffStoppingDistance = 0.05f;
     private const float PostLandingPlanningCooldown = 0.25f;
-    private const float EdgeSearchRadius = 7f;
     private const float LandingInset = 0.65f;
     private const float NavMeshSampleRadius = 0.8f;
     private const float MinimumVerticalShortcut = 0.75f;
@@ -57,6 +67,17 @@ public class EnemyLinkTraverser : MonoBehaviour
     private EnemyMovement _movement;
     private Coroutine _traversalRoutine;
     private SpiderJumpPlanner.Route? _plannedRoute;
+    private readonly List<SpiderJumpPlanner.Route> _routeJumps = new List<SpiderJumpPlanner.Route>();
+    private int _routeJumpIndex;
+    private IEnumerator _planningSearch;
+    private Vector3 _planningTarget;
+    private Vector3 _resolvedDestination;
+    private bool _hasResolvedDestination;
+    private int _destinationAreaMask;
+    private bool _hasSuppressedLegacyLinks;
+    private int _originalAreaMask;
+    private float _lastApproachDistance = float.PositiveInfinity;
+    private float _approachStuckTime;
     private Vector3 _requestedDestination;
     private float _requestedSpeed;
     private Transform _requestedTargetRoot;
@@ -78,7 +99,7 @@ public class EnemyLinkTraverser : MonoBehaviour
 #endif
 
     public bool IsTraversing => _isTraversing;
-    public bool HasCommittedTraversal => _isTraversing || _plannedRoute.HasValue;
+    public bool HasCommittedTraversal => _isTraversing || _plannedRoute.HasValue || _planningSearch != null;
 
     public void Initialize(NavMeshAgent agent, EnemyAnimator animator, EnemyMovement movement)
     {
@@ -106,13 +127,17 @@ public class EnemyLinkTraverser : MonoBehaviour
         bool plannedTargetMoved = _plannedRoute.HasValue &&
                                   (_plannedRoute.Value.PlannedTargetPosition - destination).sqrMagnitude >
                                   TargetReplanDistance * TargetReplanDistance;
+        bool searchTargetMoved = _planningSearch != null &&
+                                 (_planningTarget - destination).sqrMagnitude > TargetReplanDistance * TargetReplanDistance;
+        if ((_requestedDestination - destination).sqrMagnitude > 0.04f)
+            _hasResolvedDestination = false;
 
         _requestedDestination = destination;
         _requestedSpeed = Mathf.Max(0.1f, speed);
         _requestedTargetRoot = targetRoot;
         _hasRequestedDestination = true;
 
-        if (plannedTargetMoved)
+        if (plannedTargetMoved || searchTargetMoved)
         {
             ReleasePlannedRoute();
             _nextPlanningTime = Time.time;
@@ -127,6 +152,7 @@ public class EnemyLinkTraverser : MonoBehaviour
             return;
 
         ReleasePlannedRoute();
+        RestoreLegacyLinks();
         _hasRequestedDestination = false;
         _requestedTargetRoot = null;
     }
@@ -145,14 +171,42 @@ public class EnemyLinkTraverser : MonoBehaviour
         if (_plannedRoute.HasValue)
         {
             SpiderJumpPlanner.Route route = _plannedRoute.Value;
-
-            if (!_agent.pathPending &&
-                Vector3.Distance(transform.position, route.TakeoffPosition) <=
-                Mathf.Max(TakeoffTolerance, _agent.radius * 0.8f))
+            Vector3 feet = transform.position - Vector3.up * _agent.baseOffset;
+            float distance = Vector3.Distance(feet, route.TakeoffPosition);
+            if (!_agent.pathPending && distance <= Mathf.Max(TakeoffTolerance, _agent.radius * 0.8f))
             {
-                BeginPlannedTraversal(route);
+                if (_planner.IsJumpStillClear(route, feet, _agent, transform, _requestedTargetRoot, CreatePlannerSettings()))
+                {
+                    BeginPlannedTraversal(route);
+                    return;
+                }
+                else if (distance <= TakeoffStoppingDistance + 0.02f)
+                {
+                    ReplanRoute();
+                    return;
+                }
+            }
+            // Проверяем прогресс и в зоне отрыва: здесь дуга из фактической
+            // позиции может быть закрыта, а агент остановлен до самой точки.
+            if (!_agent.pathPending)
+            {
+                if (distance < _lastApproachDistance - 0.05f)
+                {
+                    _lastApproachDistance = distance;
+                    _approachStuckTime = 0f;
+                }
+                else
+                    _approachStuckTime += Time.deltaTime;
+                if (_agent.pathStatus != NavMeshPathStatus.PathComplete || _approachStuckTime > 3f)
+                    ReplanRoute();
             }
 
+            return;
+        }
+
+        if (_planningSearch != null)
+        {
+            ContinuePlanning();
             return;
         }
 
@@ -166,13 +220,34 @@ public class EnemyLinkTraverser : MonoBehaviour
         }
 
         _nextPlanningTime = Time.time + PlanningInterval;
-        bool routeFound = _planner.TryPlan(
+        _planningTarget = _requestedDestination;
+        _planningSearch = _planner.Plan(
                 _agent,
                 transform,
                 _requestedTargetRoot,
                 _requestedDestination,
-                CreatePlannerSettings(),
-                out SpiderJumpPlanner.Route plannedRoute);
+                CreatePlannerSettings());
+        ContinuePlanning();
+    }
+
+    private void ContinuePlanning()
+    {
+        long started = System.Diagnostics.Stopwatch.GetTimestamp();
+        double budget = System.Diagnostics.Stopwatch.Frequency * Mathf.Max(0.1f, _planningMillisecondsPerFrame) / 1000.0;
+        while (_planningSearch.MoveNext())
+        {
+            if (System.Diagnostics.Stopwatch.GetTimestamp() - started >= budget)
+                return;
+        }
+        _planningSearch = null;
+        _nextPlanningTime = Time.time + PlanningInterval;
+        if (_planner.HasResolvedTarget)
+        {
+            _resolvedDestination = _planner.ResolvedTargetPosition;
+            _hasResolvedDestination = true;
+        }
+        bool routeFound = _planner.PlannedJumps.Count > 0;
+        SpiderJumpPlanner.Route plannedRoute = routeFound ? _planner.PlannedJumps[0] : default;
 
 #if UNITY_EDITOR
         ReportPlannerResult(routeFound, plannedRoute);
@@ -181,9 +256,28 @@ public class EnemyLinkTraverser : MonoBehaviour
         if (routeFound)
         {
             StoreDestinationStoppingDistance();
+            _destinationAreaMask = _agent.areaMask;
+            _agent.areaMask = SpiderJumpPlanner.GetWalkOnlyAreaMask(_destinationAreaMask);
+            _routeJumps.Clear();
+            _routeJumps.AddRange(_planner.PlannedJumps);
+            _routeJumpIndex = 0;
             _plannedRoute = plannedRoute;
-            ApplyCurrentDestination();
+            ResetApproachProgress();
         }
+        ApplyCurrentDestination();
+    }
+
+    private void ResetApproachProgress()
+    {
+        _lastApproachDistance = float.PositiveInfinity;
+        _approachStuckTime = 0f;
+    }
+
+    private void ReplanRoute()
+    {
+        ReleasePlannedRoute();
+        _nextPlanningTime = Time.time + PostLandingPlanningCooldown;
+        ApplyCurrentDestination();
     }
 
     /// <summary>
@@ -192,6 +286,7 @@ public class EnemyLinkTraverser : MonoBehaviour
     public void CancelTraversal()
     {
         ReleasePlannedRoute();
+        RestoreLegacyLinks();
         _hasRequestedDestination = false;
         _requestedTargetRoot = null;
 
@@ -215,14 +310,34 @@ public class EnemyLinkTraverser : MonoBehaviour
 
     private void BeginLegacyLinkTraversal()
     {
-        if (!BeginTraversal())
-            return;
-
         OffMeshLinkData data = _agent.currentOffMeshLinkData;
-        Vector3 endPosition = data.endPos + Vector3.up * _agent.baseOffset;
-        float distance = Vector3.Distance(transform.position, endPosition);
-        float duration = Mathf.Max(_baseJumpDuration, distance / Mathf.Max(0.1f, _agent.speed));
-        _traversalRoutine = StartCoroutine(TraverseLegacyLinkRoutine(endPosition, duration));
+        Vector3 feet = transform.position - Vector3.up * _agent.baseOffset;
+        if (!_planner.TryCreateJump(feet, data.endPos, _agent, transform, _requestedTargetRoot,
+                CreatePlannerSettings(), out SpiderJumpPlanner.Route jump))
+        {
+            ReleasePlannedRoute();
+            if (!_hasSuppressedLegacyLinks)
+            {
+                _originalAreaMask = _agent.areaMask;
+                _hasSuppressedLegacyLinks = true;
+            }
+            // ResetPath на активном линке завершает его: сначала возвращаемся на старт,
+            // чтобы отказ от слишком длинного линка не телепортировал паука на другой берег.
+            _agent.Warp(data.startPos);
+            _agent.areaMask = SpiderJumpPlanner.GetWalkOnlyAreaMask(_originalAreaMask);
+            _nextPlanningTime = Time.time;
+            ApplyCurrentDestination();
+            return;
+        }
+        if (BeginTraversal())
+            _traversalRoutine = StartCoroutine(TraversePlannedRouteRoutine(jump, true));
+    }
+
+    private void RestoreLegacyLinks()
+    {
+        if (_hasSuppressedLegacyLinks && _agent != null)
+            _agent.areaMask = _originalAreaMask;
+        _hasSuppressedLegacyLinks = false;
     }
 
     private bool BeginTraversal()
@@ -250,7 +365,7 @@ public class EnemyLinkTraverser : MonoBehaviour
         return true;
     }
 
-    private IEnumerator TraversePlannedRouteRoutine(SpiderJumpPlanner.Route route)
+    private IEnumerator TraversePlannedRouteRoutine(SpiderJumpPlanner.Route route, bool legacyLink = false)
     {
         Vector3 startPosition = transform.position;
         Vector3 endPosition = route.LandingPosition + Vector3.up * _agent.baseOffset;
@@ -260,7 +375,8 @@ public class EnemyLinkTraverser : MonoBehaviour
         yield return WaitForTraversalDelay(_preparationDuration);
 
         float elapsed = 0f;
-        float duration = Mathf.Max(0.05f, route.FlightDuration);
+        float duration = SpiderJumpPlanner.EstimateFlightDuration(startPosition, endPosition,
+            route.ApexHeight, _jumpSpeed, _baseJumpDuration);
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
@@ -278,40 +394,9 @@ public class EnemyLinkTraverser : MonoBehaviour
         _animator?.Land();
         yield return WaitForTraversalDelay(_landingRecoveryDuration);
 
-        FinishTraversal(route.LandingPosition, false);
-    }
-
-    private IEnumerator TraverseLegacyLinkRoutine(Vector3 endPosition, float duration)
-    {
-        Vector3 startPosition = transform.position;
-        FaceLanding(endPosition);
-        _animator?.Jump();
-
-        float curveStart = _jumpCurve != null ? _jumpCurve.Evaluate(0f) : 0f;
-        float curveEnd = _jumpCurve != null ? _jumpCurve.Evaluate(1f) : 0f;
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            float normalizedTime = Mathf.Clamp01(elapsed / Mathf.Max(0.05f, duration));
-            float rawCurveHeight = _jumpCurve != null
-                ? _jumpCurve.Evaluate(normalizedTime)
-                : 4f * normalizedTime * (1f - normalizedTime);
-            float normalizedCurveHeight = rawCurveHeight - Mathf.Lerp(curveStart, curveEnd, normalizedTime);
-            Vector3 position = Vector3.Lerp(startPosition, endPosition, normalizedTime);
-            position.y += normalizedCurveHeight * _heightMultiplier;
-            SetTraversalPosition(position);
-            yield return null;
-        }
-
-        SetTraversalPosition(endPosition);
-        _animator?.Land();
-
-        if (_agent.enabled && _agent.isOnOffMeshLink)
+        if (legacyLink && _agent.enabled && _agent.isOnOffMeshLink)
             _agent.CompleteOffMeshLink();
-
-        FinishTraversal(endPosition - Vector3.up * _agent.baseOffset, true);
+        FinishTraversal(route.LandingPosition, legacyLink);
     }
 
     private IEnumerator WaitForTraversalDelay(float duration)
@@ -326,12 +411,19 @@ public class EnemyLinkTraverser : MonoBehaviour
 
     private void FinishTraversal(Vector3 navMeshPosition, bool legacyLink)
     {
-        ReleasePlannedRoute();
         RestoreAgentState(navMeshPosition);
         _isTraversing = false;
         _traversalRoutine = null;
         _movement?.SetTraversalBusy(false);
         _nextPlanningTime = Time.time + PostLandingPlanningCooldown;
+
+        if (!legacyLink && ++_routeJumpIndex < _routeJumps.Count)
+        {
+            _plannedRoute = _routeJumps[_routeJumpIndex];
+            ResetApproachProgress();
+        }
+        else
+            ReleasePlannedRoute();
 
         if (!legacyLink)
             ApplyCurrentDestination();
@@ -407,7 +499,7 @@ public class EnemyLinkTraverser : MonoBehaviour
 
         Vector3 destination = _plannedRoute.HasValue
             ? _plannedRoute.Value.TakeoffPosition
-            : _requestedDestination;
+            : (_hasResolvedDestination ? _resolvedDestination : _requestedDestination);
 
         if (_plannedRoute.HasValue)
         {
@@ -436,7 +528,12 @@ public class EnemyLinkTraverser : MonoBehaviour
 
     private void ReleasePlannedRoute()
     {
+        _planningSearch = null;
+        if (_plannedRoute.HasValue && _agent != null)
+            _agent.areaMask = _destinationAreaMask;
         _plannedRoute = null;
+        _routeJumps.Clear();
+        _routeJumpIndex = 0;
 
         if (_agent != null && _hasStoredStoppingDistance)
             _agent.stoppingDistance = _destinationStoppingDistance;
@@ -461,7 +558,7 @@ public class EnemyLinkTraverser : MonoBehaviour
             LandingRecoveryDuration = _landingRecoveryDuration,
             MinimumTimeSaving = _minimumTimeSaving,
             MinimumRelativeSaving = _minimumRelativeSaving,
-            EdgeSearchRadius = EdgeSearchRadius,
+            EdgeSearchRadius = _edgeSearchRadius,
             LandingInset = LandingInset,
             NavMeshSampleRadius = NavMeshSampleRadius,
             MinimumVerticalShortcut = MinimumVerticalShortcut,
@@ -471,7 +568,12 @@ public class EnemyLinkTraverser : MonoBehaviour
             MaximumCandidateChecks = MaximumCandidateChecks,
             CollisionMask = _collisionMask,
             TrajectorySegments = _trajectorySegments,
-            CollisionSkin = _collisionSkin
+            CollisionSkin = _collisionSkin,
+            MaximumJumps = _maximumRouteJumps,
+            MaximumSearchNodes = _maximumSearchNodes,
+            MaximumExpandedNodes = _maximumExpandedNodes,
+            TargetGroundProbeDistance = _targetGroundProbeDistance,
+            LongJumpPenalty = _longJumpPenalty
         };
     }
 
@@ -496,10 +598,13 @@ public class EnemyLinkTraverser : MonoBehaviour
 
         if (routeFound)
         {
+            string benefit = float.IsPositiveInfinity(route.NormalTravelTime)
+                ? "пешего пути нет"
+                : $"экономия {route.TimeSaving:F2} с";
             Debug.Log(
-                $"[{nameof(EnemyLinkTraverser)}] '{name}' выбрал прыжок: " +
+                $"[{nameof(EnemyLinkTraverser)}] '{name}' выбрал маршрут, прыжков: {_planner.PlannedJumps.Count}. Первый: " +
                 $"{route.TakeoffPosition} -> {route.LandingPosition}, " +
-                $"дуга {route.ApexHeight:F2} м, экономия {route.TimeSaving:F2} с.",
+                $"дуга {route.ApexHeight:F2} м, {benefit}.",
                 this);
             return;
         }
@@ -508,7 +613,7 @@ public class EnemyLinkTraverser : MonoBehaviour
             $"[{nameof(EnemyLinkTraverser)}] '{name}' не выбрал прыжок: {failureReason}. " +
             $"Позиция {transform.position}, цель {_requestedDestination}, " +
             $"последняя пара {_planner.LastCandidateTakeoff} -> {_planner.LastCandidateLanding}, " +
-            $"проверок: {_planner.LastCandidateChecks}.",
+            $"проверок: {_planner.LastCandidateChecks}, раскрыто узлов: {_planner.LastExpandedNodes}.",
             this);
     }
 #endif
