@@ -26,13 +26,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6178638500602351662}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.12278774, y: 0.6963643, z: -0.6963643, w: -0.12278774}
+  m_LocalRotation: {x: 1, y: 0, z: 0, w: 0}
   m_LocalPosition: {x: 0, y: 0, z: -0.00308}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6591334458768372611}
-  m_LocalEulerAnglesHint: {x: 90, y: 200, z: 0}
+  m_LocalEulerAnglesHint: {x: 180, y: 0, z: 0}
 --- !u!108 &4014125976964008310
 Light:
   m_ObjectHideFlags: 0
@@ -42,9 +42,9 @@ Light:
   m_GameObject: {fileID: 6178638500602351662}
   m_Enabled: 1
   serializedVersion: 11
-  m_Type: 2
+  m_Type: 3
   m_Color: {r: 0.7647059, g: 0.8666667, b: 0.5529412, a: 1}
-  m_Intensity: 5.9683104
+  m_Intensity: 381.97186
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -89,8 +89,8 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 12335
   m_UseColorTemperature: 1
-  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
-  m_UseBoundingSphereOverride: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 10.353554}
+  m_UseBoundingSphereOverride: 1
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
   m_ShadowRadius: 0
@@ -250,15 +250,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 2e0cf11ab5e28c948badee47697096f8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.50355434
+      value: 24.66
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2e0cf11ab5e28c948badee47697096f8, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 4.778371
+      value: 4.9851303
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2e0cf11ab5e28c948badee47697096f8, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 14.962475
+      value: -211.04552
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2e0cf11ab5e28c948badee47697096f8, type: 3}
       propertyPath: m_LocalRotation.w
