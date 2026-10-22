@@ -17,8 +17,8 @@ MonoBehaviour:
   InventoryDefinitionId: 7186d9eac46e410090d779f77bd50b30
   DisplayName: "\u0421ircular Saw"
   InventoryIcon: {fileID: 0}
-  WorldItemPrefab: {fileID: 0}
-  InventoryModelPrefab: {fileID: 3262717108679775886, guid: c70d9d41756fc054682d0dd16bfb1073, type: 3}
+  WorldItemPrefab: {fileID: 8719997565377255339, guid: c70d9d41756fc054682d0dd16bfb1073, type: 3}
+  InventoryModelPrefab: {fileID: 2614998231946656899, guid: b3998fb533d348941902a35f7808219a, type: 3}
   InventoryBaseEulerAngles: {x: 0, y: 90, z: 90}
   InventoryModelOffsetInCells: {x: 0, y: 0, z: 0}
   InventoryModelScaleMultiplier: 1
@@ -31,6 +31,8 @@ MonoBehaviour:
   CanAssignQuickSlot: 1
   StartUseDelay: 0
   UseDelay: 1
+  StartAltUseDelay: 0
+  UseAltDelay: 0.2
   UsesEnergy: 0
   EnergyAmountMax: 0
   EnergyCostPerUse: 1

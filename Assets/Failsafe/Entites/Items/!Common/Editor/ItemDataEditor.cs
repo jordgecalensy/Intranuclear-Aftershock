@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -29,6 +29,9 @@ public sealed class ItemDataEditor : Editor
 
     private SerializedProperty _startUseDelay;
     private SerializedProperty _useDelay;
+    private SerializedProperty _altStartUseDelay;
+    private SerializedProperty _altUseDelay;
+
 
     private SerializedProperty _usesEnergy;
     private SerializedProperty _energyAmountMax;
@@ -80,6 +83,8 @@ public sealed class ItemDataEditor : Editor
 
         _startUseDelay = serializedObject.FindProperty(nameof(ItemData.StartUseDelay));
         _useDelay = serializedObject.FindProperty(nameof(ItemData.UseDelay));
+        _altStartUseDelay = serializedObject.FindProperty(nameof(ItemData.StartAltUseDelay));
+        _altUseDelay = serializedObject.FindProperty(nameof(ItemData.UseAltDelay));
 
         _usesEnergy = serializedObject.FindProperty(nameof(ItemData.UsesEnergy));
         _energyAmountMax = serializedObject.FindProperty(nameof(ItemData.EnergyAmountMax));
@@ -111,7 +116,7 @@ public sealed class ItemDataEditor : Editor
 
         DrawGroup(ref _showBase, "Base", _description, _type);
         DrawInventoryGroup();
-        DrawGroup(ref _showUseTimings, "Use Timings", _startUseDelay, _useDelay);
+        DrawGroup(ref _showUseTimings, "Use Timings", _startUseDelay, _useDelay, _altStartUseDelay,_altUseDelay);
         DrawEnergyGroup();
         DrawGroup(ref _showRaycast, "Raycast Use", _useRange, _useMask);
         DrawGroup(

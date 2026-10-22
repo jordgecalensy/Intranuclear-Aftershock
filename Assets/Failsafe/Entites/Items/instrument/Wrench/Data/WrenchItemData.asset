@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Description: 
   Type: 5
-  InventoryDefinitionId: 
+  InventoryDefinitionId: 6b3cbf8e057a42e8a69d08a18488e1e8
   DisplayName: Wrench
   InventoryIcon: {fileID: 0}
-  WorldItemPrefab: {fileID: 0}
-  InventoryModelPrefab: {fileID: 3262717108679775886, guid: 4c1ead9f36c4876449f5d33bc9ed3ce5, type: 3}
+  WorldItemPrefab: {fileID: 8719997565377255339, guid: 4c1ead9f36c4876449f5d33bc9ed3ce5, type: 3}
+  InventoryModelPrefab: {fileID: 885478248463316235, guid: e23f8222e3939014f8acae0e09971c50, type: 3}
   InventoryBaseEulerAngles: {x: 0, y: -45, z: -90}
   InventoryModelOffsetInCells: {x: 0, y: 0, z: 0}
   InventoryModelScaleMultiplier: 1
@@ -31,6 +31,8 @@ MonoBehaviour:
   CanAssignQuickSlot: 1
   StartUseDelay: 0
   UseDelay: 1
+  StartAltUseDelay: 0
+  UseAltDelay: 0.2
   UsesEnergy: 0
   EnergyAmountMax: 0
   EnergyCostPerUse: 1
