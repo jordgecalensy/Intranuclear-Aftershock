@@ -6,6 +6,7 @@ public class EnemyAnimator : MonoBehaviour
     [SerializeField] private Animator _animator;
     
     private EnemyMovement _movement;
+    private bool _hasTurnAngle;
     
     // Хеши параметров
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
@@ -34,6 +35,12 @@ public class EnemyAnimator : MonoBehaviour
     public void Initialize(EnemyMovement movement)
     {
         _movement = movement;
+        // Не каждый контроллер содержит анимацию поворота на месте (например, паук).
+        _hasTurnAngle = false;
+        if (_animator != null)
+            foreach (AnimatorControllerParameter parameter in _animator.parameters)
+                if (parameter.nameHash == TurnAngleHash && parameter.type == AnimatorControllerParameterType.Float)
+                    _hasTurnAngle = true;
     }
 
     public void ManualUpdate()
@@ -61,7 +68,8 @@ public class EnemyAnimator : MonoBehaviour
         }
 
         _currentTurnAngle = Mathf.SmoothDampAngle(_currentTurnAngle, rawAngle, ref _turnVelocity, TurnSmoothTime);
-        _animator.SetFloat(TurnAngleHash, Mathf.Clamp(_currentTurnAngle, -90f, 90f));
+        if (_hasTurnAngle)
+            _animator.SetFloat(TurnAngleHash, Mathf.Clamp(_currentTurnAngle, -90f, 90f));
 
         if (_movement.IsRotatingInPlace)
             _animator.SetFloat(SpeedHash, 1f); 
