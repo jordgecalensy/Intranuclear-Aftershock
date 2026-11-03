@@ -22,6 +22,12 @@ public class PatrolState : BehaviorState
     
     private Vector3 _lastPosition;
     private float _stuckTimer = 0f;
+    private Vector3 _currentTargetPosition;
+    private int _recoveryAttempts;
+    private const float PatrolStoppingDistance = 0.1f;
+    private const float MinimumProgress = 0.05f;
+    private const float StuckTimeout = 2f;
+    private const int MaximumRecoveryAttempts = 2;
 
     public PatrolState(
         Sensor[] sensors, Transform transform, EnemyMovePatterns movePatterns, 
@@ -46,6 +52,7 @@ public class PatrolState : BehaviorState
         _stuckTimer = 0f;
         _isWaiting = false;
         _lastPosition = _enemyTransform.position;
+        _agent.stoppingDistance = PatrolStoppingDistance;
 
         MoveToNextPoint();
     }
@@ -55,7 +62,7 @@ public class PatrolState : BehaviorState
         // 1. Защита от прыжков (отключаем логику, пока паук на линке)
         if (_linkTraverser != null && _linkTraverser.IsTraversing)
         {
-            _lastPosition = _enemyTransform.position; 
+            ResetProgress();
             return; 
         }
 
@@ -63,14 +70,22 @@ public class PatrolState : BehaviorState
         if (_isWaiting)
         {
             HandleWaiting();
+            return;
         }
         else
         {
             CheckDestinationReached();
+            if (_isWaiting)
+                return;
+            // Поиск и подход к следующему прыжку контролирует маршрутизатор.
+            if ((_linkTraverser != null && _linkTraverser.HasCommittedTraversal) ||
+                _agent.pathPending || _movement.IsRotatingInPlace)
+            {
+                ResetProgress();
+                return;
+            }
             CheckForStuck();
         }
-
-        _lastPosition = _enemyTransform.position;
     }
 
     public override void Exit()
@@ -105,7 +120,21 @@ public class PatrolState : BehaviorState
             }
         }
 
-        _movement.MoveTo(targetPosition, _config.PatrolingSpeed);
+        _currentTargetPosition = targetPosition;
+        _recoveryAttempts = 0;
+        MoveToCurrentPoint();
+    }
+
+    private void MoveToCurrentPoint()
+    {
+        ResetProgress();
+        _movement.MoveTo(_currentTargetPosition, _config.PatrolingSpeed);
+    }
+
+    private void ResetProgress()
+    {
+        _lastPosition = _enemyTransform.position;
+        _stuckTimer = 0f;
     }
 
     private void CheckDestinationReached()
@@ -113,7 +142,8 @@ public class PatrolState : BehaviorState
         if (_movement.IsPointReached(_agent.stoppingDistance + 0.1f))
         {
             _isWaiting = true;
-            _waitTimer = 2f; // Время ожидания на точке
+            _waitTimer = Mathf.Max(0f, _config.PatrollingWaitTime);
+            ResetProgress();
             _movement.Stop();
         }
     }
@@ -131,19 +161,28 @@ public class PatrolState : BehaviorState
 
     private void CheckForStuck()
     {
-        if (Vector3.Distance(_enemyTransform.position, _lastPosition) < 0.01f)
+        // Суммарное продвижение с контрольной позиции, а не скорость за кадр.
+        // Иначе медленная ходьба и высокий FPS выглядят как застревание.
+        if ((_enemyTransform.position - _lastPosition).sqrMagnitude >= MinimumProgress * MinimumProgress)
         {
-            _stuckTimer += Time.deltaTime;
-            if (_stuckTimer > 2f)
-            {
-                MoveToNextPoint();
-                _stuckTimer = 0f;
-            }
+            ResetProgress();
+            _recoveryAttempts = 0;
+            return;
+        }
+
+        _stuckTimer += Time.deltaTime;
+        if (_stuckTimer <= StuckTimeout)
+            return;
+        if (_recoveryAttempts++ < MaximumRecoveryAttempts)
+        {
+            // Потеря пути не означает переход к следующей точке патруля.
+            // Сначала восстанавливаем путь к текущей цели.
+            if (_agent.isOnNavMesh && !_agent.isOnOffMeshLink)
+                _agent.ResetPath();
+            MoveToCurrentPoint();
         }
         else
-        {
-            _stuckTimer = 0f; 
-        }
+            MoveToNextPoint();
     }
 
     private bool TryGetNextManualPoint(out Transform point)

@@ -12,8 +12,11 @@ public class ElevatorController : MonoBehaviour
     [SerializeField] private float _speed = 2.0f;
     [SerializeField] private int _startFloor;
     [SerializeField] private Transform[] _points;
+    [SerializeField] private bool _loop;
 
     private int _pointIndex;
+    private int _travelDirection = 1;
+    private bool _loopStarted;
 
     private bool _isMoving = false; // ✅ Защита от повторных инвоков старта/стопа
 
@@ -32,6 +35,22 @@ public class ElevatorController : MonoBehaviour
             _canMove = false;
             _isMoving = false;
              OnMoveStop?.Invoke(); // уведомляем звук, что лифт остановился
+            return;
+        }
+
+        if (_loop && _loopStarted && !_canMove && !_isMoving && _points.Length > 1)
+        {
+            if (_pointIndex == _points.Length - 1)
+            {
+                _travelDirection = -1;
+            }
+            else if (_pointIndex == 0)
+            {
+                _travelDirection = 1;
+            }
+
+            _pointIndex += _travelDirection;
+            StartMovement();
         }
 
         if (_canMove)
@@ -47,7 +66,7 @@ public class ElevatorController : MonoBehaviour
 
         global::Failsafe.Debugging.GameplayLog.Trace("Elevator moving up");
         _pointIndex++;
-        StartMovement();
+        StartMovementFromButton(1);
     }
     public void OnButtonDownPress()
     {
@@ -57,7 +76,7 @@ public class ElevatorController : MonoBehaviour
 
         global::Failsafe.Debugging.GameplayLog.Trace("Elevator moving down");
         _pointIndex--;
-        StartMovement();
+        StartMovementFromButton(-1);
     }
     public void CallElevatorButton(int floorNumber)
     {
@@ -66,9 +85,17 @@ public class ElevatorController : MonoBehaviour
         if (_pointIndex == floorNumber) return;
 
         global::Failsafe.Debugging.GameplayLog.Trace("Elevator calling");
+        int direction = floorNumber > _pointIndex ? 1 : -1;
         _pointIndex = floorNumber;
-        StartMovement();
+        StartMovementFromButton(direction);
 
+    }
+
+    private void StartMovementFromButton(int direction)
+    {
+        _travelDirection = direction;
+        _loopStarted = _loop;
+        StartMovement();
     }
 
     private void StartMovement()

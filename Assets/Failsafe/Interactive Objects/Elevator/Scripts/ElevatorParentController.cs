@@ -1,30 +1,81 @@
 using UnityEngine;
+using System.Collections.Generic;
 
+[RequireComponent(typeof(BoxCollider))]
 public class ElevatorParentController : MonoBehaviour
 {
-    // void OnCollisionEnter(Collision collision)
-    // {
-    //     Debug.Log($"Elevator collision enter: {collision}");
-    //     collision.transform.SetParent(transform);
-    // }
-
-    // void OnCollisionExit(Collision collision)
-    // {
-    //     Debug.Log($"Elevator collision exit: {collision}");
-    //     collision.transform.SetParent(null);
-    // }
-
-    void OnTriggerEnter(Collider other)
+    private sealed class PlayerOccupancy
     {
-        // if (other.GetComponent<Player>() == null) return;
-        global::Failsafe.Debugging.GameplayLog.Trace($"Elevator other enter: {other}");
-        other.transform.SetParent(transform);
+        public Transform OriginalParent;
+        public readonly HashSet<Collider> Colliders = new HashSet<Collider>();
     }
 
-    void OnTriggerExit(Collider other)
+    private readonly Dictionary<Transform, PlayerOccupancy> _players = new Dictionary<Transform, PlayerOccupancy>();
+
+    private void Reset()
     {
-        // if (other.GetComponent<Player>() == null) return;
-        global::Failsafe.Debugging.GameplayLog.Trace($"Elevator other exit: {other}");
-        other.transform.SetParent(null);
+        GetComponent<BoxCollider>().isTrigger = true;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        Transform player = FindPlayerTransform(other.transform);
+        if (player == null) return;
+
+        if (!_players.TryGetValue(player, out PlayerOccupancy occupancy))
+        {
+            occupancy = new PlayerOccupancy
+            {
+                OriginalParent = player.parent
+            };
+            _players.Add(player, occupancy);
+            player.SetParent(transform, true);
+        }
+
+        occupancy.Colliders.Add(other);
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        Transform player = FindPlayerTransform(other.transform);
+        if (player == null || !_players.TryGetValue(player, out PlayerOccupancy occupancy)) return;
+
+        occupancy.Colliders.Remove(other);
+        if (occupancy.Colliders.Count > 0) return;
+
+        RestoreParent(player, occupancy.OriginalParent);
+        _players.Remove(player);
+    }
+
+    private void OnDisable()
+    {
+        foreach (KeyValuePair<Transform, PlayerOccupancy> entry in _players)
+        {
+            if (entry.Key != null)
+            {
+                RestoreParent(entry.Key, entry.Value.OriginalParent);
+            }
+        }
+
+        _players.Clear();
+    }
+
+    private static Transform FindPlayerTransform(Transform current)
+    {
+        while (current != null)
+        {
+            if (current.CompareTag("Player")) return current;
+            current = current.parent;
+        }
+
+        return null;
+    }
+
+    private void RestoreParent(Transform player, Transform originalParent)
+    {
+        if (player.parent == transform)
+        {
+            player.SetParent(originalParent, true);
+        }
     }
 }

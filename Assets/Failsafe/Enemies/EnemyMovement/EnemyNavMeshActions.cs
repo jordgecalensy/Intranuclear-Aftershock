@@ -7,6 +7,8 @@ public class EnemyNavMeshActions
     private Transform _enemyPos;
     private readonly EnemyMovement _movement;
     private EnemyLinkTraverser _linkTraverser;
+    private Vector3 _requestedDestination;
+    private bool _hasRequestedDestination;
 
     public NavMeshAgent Agent => _navMeshAgent;
     public Transform   Model => _enemyPos;
@@ -28,6 +30,8 @@ public class EnemyNavMeshActions
         if (_navMeshAgent.isOnNavMesh)
         {
             speed *= _movement.SpeedMultiplier;
+            _requestedDestination = EnemyMovement.ProjectWalkingDestination(_navMeshAgent, point);
+            _hasRequestedDestination = true;
             if (_linkTraverser != null)
             {
                 _linkTraverser.SetDestination(point, speed, targetRoot);
@@ -42,6 +46,7 @@ public class EnemyNavMeshActions
 
     public void StopMoving()
     {
+        _hasRequestedDestination = false;
         _linkTraverser?.ClearDestination();
 
         if (_navMeshAgent.isOnNavMesh)
@@ -61,19 +66,10 @@ public class EnemyNavMeshActions
     
     public bool IsPointReached()
     {
-        if (_linkTraverser != null && _linkTraverser.HasCommittedTraversal)
-            return false;
-
-        if (!_navMeshAgent.hasPath && !_navMeshAgent.pathPending) return true;
-
-        if (_navMeshAgent.remainingDistance <= _navMeshAgent.stoppingDistance)
-        {
-            if (!_navMeshAgent.hasPath || _navMeshAgent.velocity.sqrMagnitude < 0.05f)
-            {
-                return true;
-            }
-        }
-        return false;
+        if (_linkTraverser != null)
+            return _linkTraverser.IsDestinationReached(_navMeshAgent.stoppingDistance);
+        return _hasRequestedDestination && EnemyMovement.HasReachedPosition(
+            _navMeshAgent, _requestedDestination, _navMeshAgent.stoppingDistance);
     }
     
     public void SetStoppingDistance(float distance)

@@ -160,5 +160,27 @@ namespace Failsafe.Enemies.Tests
             Assert.That(SpiderJumpPlanner.ShouldPrioritizeCurrentSide(1f, 5f), Is.False);
             Assert.That(SpiderJumpPlanner.ShouldPrioritizeCurrentSide(2f, 2f), Is.True);
         }
+
+        [Test]
+        public void FlightDurationCapsSpeedAlongHighArc()
+        {
+            Vector3 end = new Vector3(8f, 8f, 0f);
+            float duration = SpiderJumpPlanner.EstimateFlightDuration(Vector3.zero, end, 3f, 8f, 0.5f);
+            for (int step = 0; step < 100; step++)
+            {
+                Vector3 a = SpiderJumpPlanner.EvaluateTrajectory(Vector3.zero, end, 3f, step / 100f);
+                Vector3 b = SpiderJumpPlanner.EvaluateTrajectory(Vector3.zero, end, 3f, (step + 1) / 100f);
+                Assert.That(Vector3.Distance(a, b) / (duration / 100f), Is.LessThanOrEqualTo(8.001f));
+            }
+        }
+
+        [Test]
+        public void ShortHopsHaveLowerEffortThanOneMaximumJump()
+        {
+            float longJump = SpiderJumpPlanner.CalculateJumpPenalty(8f, 0f, 8f, 8f, 8f, 6f);
+            float shortJump = SpiderJumpPlanner.CalculateJumpPenalty(4f, 0f, 8f, 8f, 8f, 6f);
+            Assert.That(longJump, Is.GreaterThan(shortJump * 2f));
+            Assert.That(SpiderJumpPlanner.IsWithinJumpLimits(8f, 8f, 1f, 8f, 8f, 8f), Is.True);
+        }
     }
 }
