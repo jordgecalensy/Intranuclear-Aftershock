@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
+using Failsafe.PlayerMovements;
 
 public class CursorLock : MonoBehaviour
 {
@@ -10,11 +11,13 @@ public class CursorLock : MonoBehaviour
     private EventSystem _eventSystem;
     private GameObject _lastHoveredObject = null;
     private bool _isCursorLocked;
+    private PlayerControlBlocker _controlBlocker;
 
     public bool IsCursorLocked => _isCursorLocked;
 
     private void Start()
     {
+        _controlBlocker = GetComponentInParent<PlayerControlBlocker>();
         // Первичный поиск EventSystem
         _eventSystem = EventSystem.current;
         SetCursorLocked(_lockCursor);
@@ -24,6 +27,15 @@ public class CursorLock : MonoBehaviour
     {
         if (!_isCursorLocked)
             return;
+
+        // Opening/closing keeps the cursor locked, but must not send clicks
+        // through the inventory transition to world-space UI under the crosshair.
+        if (_controlBlocker != null &&
+            _controlBlocker.IsLockedBy(PlayerControlLockIds.InventoryOpened))
+        {
+            ClearVirtualHover();
+            return;
+        }
 
         // 1. Проверяем наличие EventSystem (если вдруг его не было на старте)
         if (_eventSystem == null)
