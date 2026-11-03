@@ -24,6 +24,7 @@ public class EnemyMovement
     public bool IsRotatingInPlace { get; private set; }
     public bool IsBusy { get; private set; } // Флаг для прыжков/спецдействий
     public float CurrentSpeed => _agent.velocity.magnitude;
+    public float SpeedMultiplier { get; set; } = 1f;
     public Vector3 DesiredVelocity => _agent.desiredVelocity;
 
     public EnemyMovement(
@@ -52,6 +53,11 @@ public class EnemyMovement
     public void HandleRotationAndMovement()
     {
         if (IsBusy) return; // Не мешаем прыжку
+        if (!_agent.isOnNavMesh) return;
+
+        // Только новая команда движения снимает явную остановку.
+        // Остановка для разворота должна позволять завершить сам разворот.
+        if (_agent.isStopped && !IsRotatingInPlace) return;
 
         // 1. Вычисляем цель поворота
         Vector3 targetDir = GetTargetDirection();
@@ -100,6 +106,7 @@ public class EnemyMovement
     {
         if (!_agent.isOnNavMesh || IsBusy) return;
 
+        speed *= SpeedMultiplier;
         if (_linkTraverser != null)
         {
             _linkTraverser.SetDestination(destination, speed);
@@ -107,6 +114,7 @@ public class EnemyMovement
         }
 
         _agent.speed = speed;
+        _agent.isStopped = false;
         _agent.SetDestination(destination);
     }
 
@@ -116,6 +124,7 @@ public class EnemyMovement
     public void Stop()
     {
         _linkTraverser?.ClearDestination();
+        IsRotatingInPlace = false;
 
         if (_agent.isOnNavMesh) 
         {
