@@ -5,7 +5,7 @@ using UnityEngine.VFX;
 [CreateAssetMenu(fileName = "Enemy", menuName = "ScriptableObjects/Enemy", order = 1)]
 public class Enemy_ScriptableObject : ScriptableObject
 {
-    public enum AttackType { LaserBeam, Projectile }
+    public enum AttackType { LaserBeam, Projectile, Melee }
 
     [Header("Persistence")]
     [SerializeField]
@@ -83,6 +83,8 @@ public class Enemy_ScriptableObject : ScriptableObject
     public float AttackDuration = 5f; // Длительность атаки
     public float AttackDelay = 1f; // задержка перед атакой
     public float AttackCooldown = 4f; // Скорость атаки врага
+    [Min(0f), Tooltip("Только мили: длительность обратного проигрывания взмаха после контакта с препятствием.")]
+    public float MeleeRecoilDuration = 0.15f;
     
     [Header("Death Settings")]
     public GameObject DummyPrefab; // Префаб для замены врага после смерти

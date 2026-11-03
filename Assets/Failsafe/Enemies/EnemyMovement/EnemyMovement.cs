@@ -26,6 +26,7 @@ public class EnemyMovement
     public bool IsRotatingInPlace { get; private set; }
     public bool IsBusy { get; private set; } // Флаг для прыжков/спецдействий
     public float CurrentSpeed => _agent.velocity.magnitude;
+    public float SpeedMultiplier { get; set; } = 1f;
     public Vector3 DesiredVelocity => _agent.desiredVelocity;
 
     public EnemyMovement(
@@ -107,6 +108,7 @@ public class EnemyMovement
         _requestedDestination = ProjectWalkingDestination(_agent, destination);
         _hasRequestedDestination = true;
 
+        speed *= SpeedMultiplier;
         if (_linkTraverser != null)
         {
             _linkTraverser.SetDestination(destination, speed);
@@ -126,6 +128,7 @@ public class EnemyMovement
         _hasRequestedDestination = false;
         IsRotatingInPlace = false;
         _linkTraverser?.ClearDestination();
+        IsRotatingInPlace = false;
 
         if (_agent.isOnNavMesh) 
         {

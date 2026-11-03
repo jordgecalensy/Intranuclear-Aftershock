@@ -4,14 +4,16 @@ using UnityEngine;
 public class GunUsable : IUsable
 {
     private readonly WeaponController _weaponController;
+    private readonly ShootAction _shootAction;
     
     // Кэшируем задержки
     private float _startDelay;
     private float _useDelay;
 
-    public GunUsable(WeaponController weaponController)
+    public GunUsable(WeaponController weaponController, Camera camera)
     {
         _weaponController = weaponController;
+        _shootAction = new ShootAction(weaponController, camera.transform);
     }
 
     public void ParseItem(Item item)
@@ -53,9 +55,7 @@ public class GunUsable : IUsable
     // Этот метод определяет тип использования (зажать или кликнуть)
     public ItemUseResult Use()
     {
-        // Возвращаем HoldToUse, чтобы можно было зажать кнопку для автоматного огня.
-        // (WeaponController сам ограничит скорострельность через FireRate)
-        return new ItemUseResult { UsageType = UsageType.HoldToUse };
+        return _shootAction.Shoot();
     }
 
     public void Reload()

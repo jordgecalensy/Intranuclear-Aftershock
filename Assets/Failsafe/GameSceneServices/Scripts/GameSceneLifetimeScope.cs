@@ -61,7 +61,8 @@ namespace Failsafe.GameSceneServices
                 .As<IStatusReactionService>()
                 .AsSelf();
 
-            builder.RegisterEntryPoint<EffectApplicationService>(Lifetime.Scoped)
+            // Один экземпляр для сцены, включая дочерние скоупы игрока и врагов.
+            builder.RegisterEntryPoint<EffectApplicationService>(Lifetime.Singleton)
                 .As<IEffectApplicationService>()
                 .As<IEffectPresentationSource>()
                 .AsSelf();

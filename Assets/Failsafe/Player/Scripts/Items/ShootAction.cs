@@ -14,11 +14,16 @@ public class ShootAction : IActionWithItem
 
     public ItemUseResult Execute(PlayerHandsContainer playerHandsContainer)
     {
+        return Shoot();
+    }
+
+    public ItemUseResult Shoot()
+    {
         // 1. Определяем, куда смотрит игрок (центр экрана)
         Vector3 targetPoint;
         Ray ray = new Ray(_cameraTransform.position, _cameraTransform.forward);
         
-        if (Physics.Raycast(ray, out RaycastHit hit, 999f))
+        if (Physics.Raycast(ray, out RaycastHit hit, 999f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
         {
             targetPoint = hit.point;
         }
@@ -31,6 +36,10 @@ public class ShootAction : IActionWithItem
         // (Контроллер сам проверит патроны, скорострельность и создаст пулю в MuzzlePoint)
         _weaponController.TryShoot(targetPoint);
 
-        return new ItemUseResult { UsageType = UsageType.HoldToUse };
+        return new ItemUseResult
+        {
+            UsageType = UsageType.HoldToUse,
+            ItemStateAfterUse = ItemState.Hold
+        };
     }
 }

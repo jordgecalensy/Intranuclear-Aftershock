@@ -17,6 +17,45 @@ public class EnemyAnimator : MonoBehaviour
     private static readonly int PlayIdleHash = Animator.StringToHash("PlayIdle");
     private static readonly int AlertHash = Animator.StringToHash("Alert");
     private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
+    private static readonly int MeleeRecoilHash = Animator.StringToHash("Base Layer.AttackRecoil");
+    private static readonly int CombatIdleHash = Animator.StringToHash("Base Layer.CombatIdle");
+
+    public event System.Action MeleeWindowOpened;
+    public event System.Action MeleeWindowClosed;
+    public event System.Action MeleeAttackFinished;
+
+    // Animation Events клипа мили-атаки.
+    public void OpenMeleeHitWindow() => MeleeWindowOpened?.Invoke();
+    public void CloseMeleeHitWindow() => MeleeWindowClosed?.Invoke();
+    public void FinishMeleeAttack() => MeleeAttackFinished?.Invoke();
+
+    public void PlayMeleeRecoil(float secondsBeforeCurrentPose)
+    {
+        var state = _animator.GetCurrentAnimatorStateInfo(0);
+        if (_animator.IsInTransition(0) && _animator.GetNextAnimatorStateInfo(0).IsTag("Attack"))
+            state = _animator.GetNextAnimatorStateInfo(0);
+
+        float contactTime = Mathf.Clamp01(state.normalizedTime -
+            secondsBeforeCurrentPose * _animator.speed / Mathf.Max(0.001f, state.length));
+        _animator.ResetTrigger(AttackTriggerHash);
+        // У состояния со Speed = -1 время отсчитывается от конца клипа.
+        _animator.Play(MeleeRecoilHash, 0, 1f - contactTime);
+        // Вызывается из LateUpdate hitbox: сразу возвращаем позу к месту контакта.
+        _animator.Update(0f);
+    }
+
+    public void FinishMeleeRecoil() => _animator.CrossFadeInFixedTime(CombatIdleHash, 0.1f, 0, 0f);
+
+    public void CancelMeleeAttack()
+    {
+        _animator.ResetTrigger(AttackTriggerHash);
+        StopAttacking();
+        // Прерванный клип не должен продолжиться после повторного включения Enemy.
+        if (_animator.isActiveAndEnabled &&
+            (_animator.GetCurrentAnimatorStateInfo(0).IsTag("Attack") ||
+             (_animator.IsInTransition(0) && _animator.GetNextAnimatorStateInfo(0).IsTag("Attack"))))
+            _animator.Play(CombatIdleHash, 0, 0f);
+    }
 
     // Сглаживание
     private float _currentTurnAngle;

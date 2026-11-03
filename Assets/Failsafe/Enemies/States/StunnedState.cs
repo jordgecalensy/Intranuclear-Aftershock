@@ -9,6 +9,8 @@ public class StunnedState : BehaviorForcedState
     private EnemyAnimator _enemyAnimator;
     private Transform _transform;
 
+    public event System.Action Completed;
+
     public StunnedState(EnemyAnimator enemyAnimator, EnemyMovement movement, Transform transform)
     {
         _movement = movement;
@@ -46,8 +48,10 @@ public class StunnedState : BehaviorForcedState
 
     public override Transition DecideTransition()
     {
-        if (IsStateFinished()) return _transitionToPreviousState;
-        else return null;
+        if (!IsStateFinished()) return null;
+
+        Completed?.Invoke();
+        return _transitionToPreviousState;
     }
 
     public void SetDirection(Vector3 impactDirection)
