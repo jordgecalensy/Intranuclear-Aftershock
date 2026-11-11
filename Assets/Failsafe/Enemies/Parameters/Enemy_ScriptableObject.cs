@@ -85,6 +85,12 @@ public class Enemy_ScriptableObject : ScriptableObject
     public float AttackCooldown = 4f; // Скорость атаки врага
     [Min(0f), Tooltip("Только мили: длительность обратного проигрывания взмаха после контакта с препятствием.")]
     public float MeleeRecoilDuration = 0.15f;
+    [Min(0f), Tooltip("Максимальная длина подшага во время замаха. 0 отключает подшаг.")]
+    public float MeleeStepDistance;
+    [Min(0f), Tooltip("Скорость подшага до начала активного взмаха, в метрах в секунду.")]
+    public float MeleeStepSpeed = 1.6f;
+    [Min(0f), Tooltip("Дистанция до игрока, которую робот сохраняет при подходе во время замаха.")]
+    public float MeleeStepStoppingDistance = 1.05f;
     
     [Header("Death Settings")]
     public GameObject DummyPrefab; // Префаб для замены врага после смерти

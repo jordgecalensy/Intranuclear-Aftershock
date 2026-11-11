@@ -27,6 +27,11 @@ public class EnemyMovement
     public bool IsBusy { get; private set; } // Флаг для прыжков/спецдействий
     public float CurrentSpeed => _agent.velocity.magnitude;
     public float SpeedMultiplier { get; set; } = 1f;
+    public float StoppingDistance
+    {
+        get => _agent.stoppingDistance;
+        set => _agent.stoppingDistance = Mathf.Max(0f, value);
+    }
     public Vector3 DesiredVelocity => _agent.desiredVelocity;
 
     public EnemyMovement(
