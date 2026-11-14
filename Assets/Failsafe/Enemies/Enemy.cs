@@ -50,6 +50,7 @@ public class Enemy : MonoBehaviour
         CurrentState is ChasingState ||
         CurrentState is AttackState ||
         CurrentState is MeleeAttackState ||
+        CurrentState is MeleeChargeState ||
         CurrentState is SearchingState;
 
     [Inject]
@@ -134,6 +135,7 @@ public class Enemy : MonoBehaviour
         BehaviorState attackState;
         System.Func<bool> canStartAttack;
         System.Func<bool> canLeaveAttack;
+        MeleeChargeState chargeState = null;
         if (_enemyConfig.attackType == Enemy_ScriptableObject.AttackType.Melee)
         {
             var hitbox = GetComponentInChildren<MeleeHitbox>(true);
@@ -142,6 +144,19 @@ public class Enemy : MonoBehaviour
             attackState = melee;
             canStartAttack = () => hitbox != null && hitbox.isActiveAndEnabled && chasingState.PlayerInAttackRange();
             canLeaveAttack = melee.PlayerOutOfAttackRange;
+            if (_enemyConfig.EnableCharge)
+            {
+                var body = GetComponent<CapsuleCollider>();
+                if (body != null)
+                {
+                    chargeState = new MeleeChargeState(this, _sensors, _enemyMovement,
+                        _enemyAnimator, _enemyConfig, body, _enemyMemory);
+                }
+                else
+                {
+                    Debug.LogError("Charge requires a CapsuleCollider on the enemy root.", this);
+                }
+            }
         }
         else
         {
@@ -164,6 +179,20 @@ public class Enemy : MonoBehaviour
         var disabledState = new DisabledState(_animator, _enemyMovement);
         var stunnedState = new StunnedState(_enemyAnimator, _enemyMovement, transform);
         var deathState = new EnemyDeathState(_enemyAnimator, _enemyMovement, _animator, _enemyConfig);
+
+        if (chargeState != null)
+        {
+            System.Func<bool> openingCharge = () =>
+                _awarenessMeter.IsChasing() && chargeState.CanStartOnFirstSight();
+            defaultState.AddTransition(chargeState, openingCharge);
+            patrolState.AddTransition(chargeState, openingCharge);
+            checkState.AddTransition(chargeState, openingCharge);
+            searchingState.AddTransition(chargeState, openingCharge);
+            alertState.AddTransition(chargeState, openingCharge);
+            chasingState.AddTransition(chargeState, openingCharge);
+            chasingState.AddTransition(chargeState, chargeState.CanStart);
+            chargeState.AddTransition(chasingState, () => chargeState.IsFinished);
+        }
 
         // Переходы
         defaultState.AddTransition(alertState, _awarenessMeter.IsChasing);
@@ -213,11 +242,13 @@ public class Enemy : MonoBehaviour
     private void OnDisable()
     {
         if (CurrentState is MeleeAttackState melee) melee.Exit();
+        if (CurrentState is MeleeChargeState charge) charge.Exit();
     }
 
     private void OnEnable()
     {
         if (CurrentState is MeleeAttackState melee) melee.Enter();
+        if (CurrentState is MeleeChargeState charge) charge.Enter();
     }
 
     void Update()

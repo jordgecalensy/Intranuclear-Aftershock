@@ -63,4 +63,27 @@ MonoBehaviour:
   MeleeStepDistance: 2.5
   MeleeStepSpeed: 2.5
   MeleeStepStoppingDistance: 1.05
+  EnableCharge: 1
+  ChargeMinRange: 4
+  ChargeMaxRange: 10
+  ChargePrepareDuration: 0.7
+  ChargeSpeed: 10
+  ChargeTurnSpeed: 60
+  ChargeDistance: 12
+  ChargeRecoveryDuration: 0.8
+  ChargeCooldown: 8
+  ChargeWallStunDuration: 1.5
+  ChargeHitEffects: {fileID: 11400000, guid: a249279b515745d18fdb8ff28bf71a1d, type: 2}
+  ChargeObstacleLayers:
+    serializedVersion: 2
+    m_Bits: 4353
+  ChargeTargetLayers:
+    serializedVersion: 2
+    m_Bits: 64
+  ChargePushableLayers:
+    serializedVersion: 2
+    m_Bits: 1574913
+  ChargePushMaxMass: 5
+  ChargePushMaxSize: 1.2
+  ChargePushSpeed: 5
   DummyPrefab: {fileID: 0}

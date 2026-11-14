@@ -10,6 +10,7 @@ public class EnemyAnimator : MonoBehaviour
     private int _meleeLayerIndex;
     private int _meleeRecoilHash;
     private int _combatIdleHash;
+    private int _chargePoseHash;
     
     // Хеши параметров
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
@@ -21,6 +22,7 @@ public class EnemyAnimator : MonoBehaviour
     private static readonly int AlertHash = Animator.StringToHash("Alert");
     private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
     private static readonly int IsInStunHash = Animator.StringToHash("isInStun");
+    private static readonly int IdleStateHash = Animator.StringToHash("Base Layer.Idle");
     private const float MeleeLayerBlendDuration = 0.1f;
 
     public event System.Action MeleeWindowOpened;
@@ -31,6 +33,19 @@ public class EnemyAnimator : MonoBehaviour
     public void OpenMeleeHitWindow() => MeleeWindowOpened?.Invoke();
     public void CloseMeleeHitWindow() => MeleeWindowClosed?.Invoke();
     public void FinishMeleeAttack() => MeleeAttackFinished?.Invoke();
+
+    public void BeginChargePreparation()
+    {
+        CancelMeleeAttack();
+        _animator.ResetTrigger(AlertHash);
+        _animator.Play(IdleStateHash, 0, 0f);
+        StartAttacking();
+        _animator.Play(_chargePoseHash, _meleeLayerIndex, 0.3f);
+    }
+
+    public void PlayChargeDash() => _animator.SetLayerWeight(_meleeLayerIndex, 1f);
+
+    public void FinishCharge() => CancelMeleeAttack();
 
     public void PlayMeleeRecoil(float secondsBeforeCurrentPose)
     {
@@ -60,6 +75,7 @@ public class EnemyAnimator : MonoBehaviour
         // Прерванный клип не должен продолжиться после повторного включения Enemy.
         if (_animator.isActiveAndEnabled &&
             (_animator.GetCurrentAnimatorStateInfo(_meleeLayerIndex).IsTag("Attack") ||
+             _animator.GetCurrentAnimatorStateInfo(_meleeLayerIndex).IsTag("Charge") ||
              (_animator.IsInTransition(_meleeLayerIndex) &&
               _animator.GetNextAnimatorStateInfo(_meleeLayerIndex).IsTag("Attack"))))
             _animator.Play(_combatIdleHash, _meleeLayerIndex, 0f);
@@ -82,6 +98,7 @@ public class EnemyAnimator : MonoBehaviour
         string layerName = _animator.GetLayerName(_meleeLayerIndex);
         _meleeRecoilHash = Animator.StringToHash(layerName + ".AttackRecoil");
         _combatIdleHash = Animator.StringToHash(layerName + ".CombatIdle");
+        _chargePoseHash = Animator.StringToHash(layerName + ".ChargePose");
     }
 
     public void Initialize(EnemyMovement movement)
