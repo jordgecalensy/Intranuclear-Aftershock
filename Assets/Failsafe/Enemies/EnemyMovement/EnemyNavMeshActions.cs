@@ -5,6 +5,7 @@ public class EnemyNavMeshActions
 {
     private NavMeshAgent _navMeshAgent;
     private Transform _enemyPos;
+    private readonly EnemyMovement _movement;
     private EnemyLinkTraverser _linkTraverser;
     private Vector3 _requestedDestination;
     private bool _hasRequestedDestination;
@@ -15,10 +16,12 @@ public class EnemyNavMeshActions
     public EnemyNavMeshActions(
         NavMeshAgent navMeshAgent,
         Transform transform,
+        EnemyMovement movement,
         EnemyLinkTraverser linkTraverser = null)
     {
         _navMeshAgent = navMeshAgent;
         _enemyPos =  transform;
+        _movement = movement;
         _linkTraverser = linkTraverser;
     }
 
@@ -26,6 +29,7 @@ public class EnemyNavMeshActions
     {
         if (_navMeshAgent.isOnNavMesh)
         {
+            speed *= _movement.SpeedMultiplier;
             _requestedDestination = EnemyMovement.ProjectWalkingDestination(_navMeshAgent, point);
             _hasRequestedDestination = true;
             if (_linkTraverser != null)

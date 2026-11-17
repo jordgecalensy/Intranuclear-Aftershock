@@ -16,6 +16,8 @@ public class EnemyMovement
     private readonly EnemyLinkTraverser _linkTraverser;
     private Vector3 _requestedDestination;
     private bool _hasRequestedDestination;
+    private bool _directMovementActive;
+    private Vector3 _directVelocity;
 
     // Настройки (можно вынести в ScriptableObject)
     private const float TurnThreshold = 45f; // Угол, при котором начинаем разворот на месте
@@ -25,8 +27,14 @@ public class EnemyMovement
     // Состояние
     public bool IsRotatingInPlace { get; private set; }
     public bool IsBusy { get; private set; } // Флаг для прыжков/спецдействий
-    public float CurrentSpeed => _agent.velocity.magnitude;
-    public Vector3 DesiredVelocity => _agent.desiredVelocity;
+    public float CurrentSpeed => _directMovementActive ? _directVelocity.magnitude : _agent.velocity.magnitude;
+    public float SpeedMultiplier { get; set; } = 1f;
+    public float StoppingDistance
+    {
+        get => _agent.stoppingDistance;
+        set => _agent.stoppingDistance = Mathf.Max(0f, value);
+    }
+    public Vector3 DesiredVelocity => _directMovementActive ? _directVelocity : _agent.desiredVelocity;
 
     public EnemyMovement(
         Transform transform,
@@ -53,7 +61,7 @@ public class EnemyMovement
     /// </summary>
     public void HandleRotationAndMovement()
     {
-        if (IsBusy || !_agent.enabled || !_agent.isOnNavMesh) return;
+        if (_directMovementActive || IsBusy || !_agent.enabled || !_agent.isOnNavMesh) return;
         // Только остановку для собственного разворота мотор снимает сам.
         // Stop от патруля/боя действует до следующей команды движения.
         if (_agent.isStopped && !IsRotatingInPlace) return;
@@ -107,6 +115,7 @@ public class EnemyMovement
         _requestedDestination = ProjectWalkingDestination(_agent, destination);
         _hasRequestedDestination = true;
 
+        speed *= SpeedMultiplier;
         if (_linkTraverser != null)
         {
             _linkTraverser.SetDestination(destination, speed);
@@ -126,12 +135,43 @@ public class EnemyMovement
         _hasRequestedDestination = false;
         IsRotatingInPlace = false;
         _linkTraverser?.ClearDestination();
+        IsRotatingInPlace = false;
 
         if (_agent.isOnNavMesh) 
         {
             _agent.isStopped = true;
             _agent.velocity = Vector3.zero;
         }
+    }
+
+    public bool BeginDirectMovement()
+    {
+        if (IsBusy || !_agent.enabled || !_agent.isOnNavMesh) return false;
+
+        Stop();
+        _directVelocity = Vector3.zero;
+        _directMovementActive = true;
+        return true;
+    }
+
+    public Vector3 MoveDirect(Vector3 displacement)
+    {
+        if (!_directMovementActive || IsBusy || !_agent.enabled || !_agent.isOnNavMesh)
+            return Vector3.zero;
+
+        Vector3 previousPosition = _agent.nextPosition;
+        _agent.Move(displacement);
+        Vector3 moved = _agent.nextPosition - previousPosition;
+        _directVelocity = moved / Mathf.Max(0.001f, Time.deltaTime);
+        _transform.position = _agent.nextPosition;
+        return moved;
+    }
+
+    public void EndDirectMovement()
+    {
+        _directMovementActive = false;
+        _directVelocity = Vector3.zero;
+        Stop();
     }
 
     /// <summary>
@@ -187,7 +227,7 @@ public class EnemyMovement
     /// </summary>
     public void ApplyRootMotion(Vector3 deltaPosition)
     {
-        if (!_useRootMotion || IsBusy) return;
+        if (!_useRootMotion || IsBusy || _directMovementActive) return;
 
         _agent.nextPosition = _transform.position + deltaPosition;
         _transform.position = _agent.nextPosition;

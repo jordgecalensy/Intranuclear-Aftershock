@@ -10,19 +10,25 @@ namespace Failsafe.Scripts.Damage
     {
         private readonly IDamageable _damageable;
         private readonly IHealth _health;
+        private readonly WeakPoint _weakPoint;
 
         public readonly GameObject GameObject;
 
         public bool IsValid => _damageable != null || _health != null;
 
+        // Один получатель может иметь несколько коллайдеров и Rigidbody.
+        public object Identity => (object)_health ?? _damageable;
+
         public DamageTarget(
             IDamageable damageable,
             IHealth health,
-            GameObject gameObject)
+            GameObject gameObject,
+            WeakPoint weakPoint = null)
         {
             _damageable = damageable;
             _health = health;
             GameObject = gameObject;
+            _weakPoint = weakPoint;
         }
 
         public void TakeDamage(DamageInfo damage)
@@ -38,7 +44,17 @@ namespace Failsafe.Scripts.Damage
                 if (damage.Amount <= 0f)
                     return;
 
-                _health.AddHealth(-damage.Amount);
+                WeakPoint weakPoint = _weakPoint != null && _weakPoint.isActiveAndEnabled
+                    ? _weakPoint
+                    : null;
+                float amount = damage.Amount * (weakPoint != null ? weakPoint.DamageMultiplier : 1f);
+                if (amount <= 0f) return;
+
+                float healthBefore = _health.CurrentHealth;
+                _health.AddHealth(-amount);
+                // Сопротивления уже применены; учитываем реальное изменение HP, включая смертельный удар.
+                if (weakPoint != null)
+                    weakPoint.RegisterDamage(Mathf.Max(0f, healthBefore - _health.CurrentHealth));
                 return;
             }
 
@@ -93,7 +109,8 @@ namespace Failsafe.Scripts.Damage
                 target = new DamageTarget(
                     null,
                     health,
-                    GetTargetObject(collider));
+                    GetTargetObject(collider),
+                    collider.GetComponentInParent<WeakPoint>());
 
                 return true;
             }

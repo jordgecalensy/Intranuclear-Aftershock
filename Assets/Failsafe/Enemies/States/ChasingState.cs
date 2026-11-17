@@ -77,7 +77,10 @@ public class ChasingState : BehaviorState
                     navigationPosition = _navigationTargetRoot.position;
             }
 
-            _distanceToPlayer = Vector3.Distance(_transform.position, sensedPosition);
+            Vector3 rangePosition = _enemyConfig.attackType == Enemy_ScriptableObject.AttackType.Melee
+                ? navigationPosition
+                : sensedPosition;
+            _distanceToPlayer = Vector3.Distance(_transform.position, rangePosition);
 
             _enemyMemory.SetLastKnownPlayerPosition(
                 navigationPosition,
@@ -90,7 +93,12 @@ public class ChasingState : BehaviorState
 
         if (_playerInSight)
         {
-            _navMeshActions.SetStoppingDistance(_enemyConfig.AttackRangeMin);
+            // Для мили останавливаемся немного внутри радиуса, чтобы погрешность NavMesh
+            // не оставляла противника снаружи порога входа в атаку.
+            float stoppingDistance = _enemyConfig.attackType == Enemy_ScriptableObject.AttackType.Melee
+                ? Mathf.Max(0f, _enemyConfig.AttackRangeMin - 0.1f)
+                : _enemyConfig.AttackRangeMin;
+            _navMeshActions.SetStoppingDistance(stoppingDistance);
         }
         else
         {

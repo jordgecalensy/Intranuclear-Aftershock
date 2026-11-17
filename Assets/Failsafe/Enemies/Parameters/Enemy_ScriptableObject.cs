@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.VFX;
+using Failsafe.Scripts.EffectSystem;
 
 [CreateAssetMenu(fileName = "Enemy", menuName = "ScriptableObjects/Enemy", order = 1)]
 public class Enemy_ScriptableObject : ScriptableObject
 {
-    public enum AttackType { LaserBeam, Projectile }
+    public enum AttackType { LaserBeam, Projectile, Melee }
 
     [Header("Persistence")]
     [SerializeField]
@@ -83,6 +84,41 @@ public class Enemy_ScriptableObject : ScriptableObject
     public float AttackDuration = 5f; // Длительность атаки
     public float AttackDelay = 1f; // задержка перед атакой
     public float AttackCooldown = 4f; // Скорость атаки врага
+    [Min(0f), Tooltip("Только мили: длительность обратного проигрывания взмаха после контакта с препятствием.")]
+    public float MeleeRecoilDuration = 0.15f;
+    [Min(0f), Tooltip("Максимальная длина подшага во время замаха. 0 отключает подшаг.")]
+    public float MeleeStepDistance;
+    [Min(0f), Tooltip("Скорость подшага до начала активного взмаха, в метрах в секунду.")]
+    public float MeleeStepSpeed = 1.6f;
+    [Min(0f), Tooltip("Дистанция до игрока, которую робот сохраняет при подходе во время замаха.")]
+    public float MeleeStepStoppingDistance = 1.05f;
+
+    [Header("Charge")]
+    public bool EnableCharge;
+    [Min(0f)] public float ChargeMinRange = 4f;
+    [Min(0f)] public float ChargeMaxRange = 10f;
+    [Min(0f)] public float ChargePrepareDuration = 0.7f;
+    [Min(0.01f)] public float ChargeSpeed = 10f;
+    [Min(0f), Tooltip("Максимальная скорость доводки на игрока во время разгона, в градусах в секунду.")]
+    public float ChargeTurnSpeed = 60f;
+    [Min(0.01f)] public float ChargeDistance = 12f;
+    [Min(0f)] public float ChargeRecoveryDuration = 0.8f;
+    [Min(0f)] public float ChargeCooldown = 8f;
+    [Min(0.01f)] public float ChargeWallStunDuration = 1.5f;
+    public EffectBundle ChargeHitEffects;
+
+    [Header("Charge Collision")]
+    [Tooltip("Стены и капитальные препятствия, столкновение с которыми оглушает робота.")]
+    public LayerMask ChargeObstacleLayers;
+    [Tooltip("Коллайдеры целей, которым таран наносит урон и накладывает эффекты.")]
+    public LayerMask ChargeTargetLayers;
+    [Tooltip("Слои мелких подвижных предметов, которые робот отбрасывает при таране.")]
+    public LayerMask ChargePushableLayers;
+    [Min(0f)] public float ChargePushMaxMass = 5f;
+    [Min(0f), Tooltip("Максимальный размер предмета по любой оси, в метрах.")]
+    public float ChargePushMaxSize = 1.2f;
+    [Min(0f), Tooltip("Добавляемая скорость разлёта мелкого предмета, в метрах в секунду.")]
+    public float ChargePushSpeed = 5f;
     
     [Header("Death Settings")]
     public GameObject DummyPrefab; // Префаб для замены врага после смерти
