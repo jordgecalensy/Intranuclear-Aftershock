@@ -7,6 +7,10 @@ public class EnemyAnimator : MonoBehaviour
     
     private EnemyMovement _movement;
     private bool _hasTurnAngle;
+    private int _meleeLayerIndex;
+    private int _meleeRecoilHash;
+    private int _combatIdleHash;
+    private int _chargePoseHash;
     
     // Хеши параметров
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
@@ -17,6 +21,65 @@ public class EnemyAnimator : MonoBehaviour
     private static readonly int PlayIdleHash = Animator.StringToHash("PlayIdle");
     private static readonly int AlertHash = Animator.StringToHash("Alert");
     private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
+    private static readonly int IsInStunHash = Animator.StringToHash("isInStun");
+    private static readonly int IdleStateHash = Animator.StringToHash("Base Layer.Idle");
+    private const float MeleeLayerBlendDuration = 0.1f;
+
+    public event System.Action MeleeWindowOpened;
+    public event System.Action MeleeWindowClosed;
+    public event System.Action MeleeAttackFinished;
+
+    // Animation Events клипа мили-атаки.
+    public void OpenMeleeHitWindow() => MeleeWindowOpened?.Invoke();
+    public void CloseMeleeHitWindow() => MeleeWindowClosed?.Invoke();
+    public void FinishMeleeAttack() => MeleeAttackFinished?.Invoke();
+
+    public void BeginChargePreparation()
+    {
+        CancelMeleeAttack();
+        _animator.ResetTrigger(AlertHash);
+        _animator.Play(IdleStateHash, 0, 0f);
+        StartAttacking();
+        _animator.Play(_chargePoseHash, _meleeLayerIndex, 0.3f);
+    }
+
+    public void PlayChargeDash() => _animator.SetLayerWeight(_meleeLayerIndex, 1f);
+
+    public void FinishCharge() => CancelMeleeAttack();
+
+    public void PlayMeleeRecoil(float secondsBeforeCurrentPose)
+    {
+        var state = _animator.GetCurrentAnimatorStateInfo(_meleeLayerIndex);
+        if (_animator.IsInTransition(_meleeLayerIndex) &&
+            _animator.GetNextAnimatorStateInfo(_meleeLayerIndex).IsTag("Attack"))
+            state = _animator.GetNextAnimatorStateInfo(_meleeLayerIndex);
+
+        float contactTime = Mathf.Clamp01(state.normalizedTime -
+            secondsBeforeCurrentPose * _animator.speed / Mathf.Max(0.001f, state.length));
+        _animator.ResetTrigger(AttackTriggerHash);
+        // У состояния со Speed = -1 время отсчитывается от конца клипа.
+        _animator.Play(_meleeRecoilHash, _meleeLayerIndex, 1f - contactTime);
+        // Вызывается из LateUpdate hitbox: сразу возвращаем позу к месту контакта.
+        _animator.Update(0f);
+    }
+
+    public void FinishMeleeRecoil() =>
+        _animator.CrossFadeInFixedTime(_combatIdleHash, 0.1f, _meleeLayerIndex, 0f);
+
+    public void CancelMeleeAttack()
+    {
+        _animator.ResetTrigger(AttackTriggerHash);
+        StopAttacking();
+        if (_meleeLayerIndex > 0)
+            _animator.SetLayerWeight(_meleeLayerIndex, 0f);
+        // Прерванный клип не должен продолжиться после повторного включения Enemy.
+        if (_animator.isActiveAndEnabled &&
+            (_animator.GetCurrentAnimatorStateInfo(_meleeLayerIndex).IsTag("Attack") ||
+             _animator.GetCurrentAnimatorStateInfo(_meleeLayerIndex).IsTag("Charge") ||
+             (_animator.IsInTransition(_meleeLayerIndex) &&
+              _animator.GetNextAnimatorStateInfo(_meleeLayerIndex).IsTag("Attack"))))
+            _animator.Play(_combatIdleHash, _meleeLayerIndex, 0f);
+    }
 
     // Сглаживание
     private float _currentTurnAngle;
@@ -30,6 +93,12 @@ public class EnemyAnimator : MonoBehaviour
     private void Awake()
     {
         if (_animator == null) _animator = GetComponent<Animator>();
+        // Контроллеры без слоя Melee продолжают использовать полный клип на Base Layer.
+        _meleeLayerIndex = Mathf.Max(0, _animator.GetLayerIndex("Melee"));
+        string layerName = _animator.GetLayerName(_meleeLayerIndex);
+        _meleeRecoilHash = Animator.StringToHash(layerName + ".AttackRecoil");
+        _combatIdleHash = Animator.StringToHash(layerName + ".CombatIdle");
+        _chargePoseHash = Animator.StringToHash(layerName + ".ChargePose");
     }
 
     public void Initialize(EnemyMovement movement)
@@ -47,13 +116,26 @@ public class EnemyAnimator : MonoBehaviour
     {
         if (_movement == null) return;
 
-        if (IsInAction())
+        bool isInAction = IsInAction();
+        if (_meleeLayerIndex > 0)
+        {
+            float targetWeight = _animator.GetBool(IsAttackingHash) &&
+                !_animator.GetBool(IsInStunHash) ? 1f : 0f;
+            _animator.SetLayerWeight(_meleeLayerIndex, Mathf.MoveTowards(
+                _animator.GetLayerWeight(_meleeLayerIndex), targetWeight,
+                Time.deltaTime / MeleeLayerBlendDuration));
+        }
+
+        // У слоистого мили ноги продолжают получать скорость во время замаха.
+        if (_meleeLayerIndex > 0 || !isInAction)
+            UpdateLocomotion();
+
+        if (isInAction)
         {
             _isIdlePlaying = false;
             return;
         }
 
-        UpdateLocomotion();
         HandleIdleAnimations();
     }
 
@@ -122,7 +204,7 @@ public class EnemyAnimator : MonoBehaviour
     
     public bool IsInAction()
     {
-        var state = _animator.GetCurrentAnimatorStateInfo(0);
+        var state = _animator.GetCurrentAnimatorStateInfo(_meleeLayerIndex);
         
         // Проверяем, есть ли на текущей анимации тег Attack или Reload
         bool hasTag = state.IsTag("Attack") || state.IsTag("Reload");

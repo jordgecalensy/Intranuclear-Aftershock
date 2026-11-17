@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6533b7b838843a69b63ab8f6d1b5bd2, type: 3}
+  m_Name: RuviEmotions
+  m_EditorClassIdentifier:
+  _neutralFace: {fileID: 2800000, guid: d7f64aca40df42198451aefba3f6172a, type: 3}
+  _emotions:
+  - Name: Ruvi_Emotion01
+    Clip: {fileID: 32900000, guid: 7f593921b4a3430ebc5b9d7adbeb84b7, type: 3}
+    Weight: 10
+  - Name: Ruvi_Emotion03
+    Clip: {fileID: 32900000, guid: 7f1b2af05cfe46319c264eccb829d0b5, type: 3}
+    Weight: 10
+  - Name: Ruvi_Emotion04
+    Clip: {fileID: 32900000, guid: 8ea8de8719744419a80903e923d6487d, type: 3}
+    Weight: 5
+  - Name: Ruvi_Emotion05
+    Clip: {fileID: 32900000, guid: 548ec1356c9a4d21b345afcdcca9f1f4, type: 3}
+    Weight: 15

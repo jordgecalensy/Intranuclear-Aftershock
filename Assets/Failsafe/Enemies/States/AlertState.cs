@@ -30,7 +30,7 @@ public class AlertState : BehaviorState
 
         // 2. Запуск анимации "А!"
         _enemyAnimator.TryAlert();
-        _audio.PlayStateVoice(2);
+        _audio?.PlayStateVoice(2);
         // 3. Ищем, на что мы среагировали
         _hasTarget = false;
         foreach (var sensor in _sensors)

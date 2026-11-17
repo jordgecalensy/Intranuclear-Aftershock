@@ -18,6 +18,10 @@ public class Projectile : MonoBehaviour
     private float _maxLifetime;
     private LayerMask _hitMask;
     private Vector3 _startPosition;
+    private Vector3 _previousPosition;
+    private Transform _sourceRoot;
+    private bool _hasImpacted;
+    private readonly RaycastHit[] _sweepHits = new RaycastHit[8];
     private float _power = 1f;
     private float _impactForce;
     private float _flightFieldRadius;
@@ -52,12 +56,18 @@ public class Projectile : MonoBehaviour
         _flightFieldRadius = Mathf.Max(0f, flightFieldRadius);
         _flightFieldImpulse = Mathf.Max(0f, flightFieldImpulse);
         _source = source;
+        var sourceScope = source != null
+            ? source.GetComponentInParent<VContainer.Unity.LifetimeScope>()
+            : null;
+        _sourceRoot = sourceScope != null ? sourceScope.transform : source != null ? source.transform : null;
+        _hasImpacted = false;
         _impactEffects = impactEffects;
         _impactPhysicsEffects = impactPhysicsEffects;
         _effects = effects;
 
         _maxLifetime = range / _speed;
         _startPosition = transform.position;
+        _previousPosition = transform.position;
         _flightFieldBodies.Clear();
 
         StartFlybySound();
@@ -67,10 +77,23 @@ public class Projectile : MonoBehaviour
 
     private void Update()
     {
-        Vector3 previousPosition = transform.position;
-        transform.Translate(Vector3.forward * _speed * Time.deltaTime);
-        Vector3 currentPosition = transform.position;
+        if (_hasImpacted) return;
 
+        Vector3 previousPosition = transform.position;
+        _previousPosition = previousPosition;
+        float remainingRange = Mathf.Max(0f, _speed * _maxLifetime - Vector3.Distance(_startPosition, previousPosition));
+        float travel = Mathf.Min(_speed * Time.deltaTime, remainingRange);
+        Vector3 currentPosition = previousPosition + transform.forward * travel;
+
+        if (TryFindImpact(previousPosition, currentPosition, out RaycastHit hit))
+        {
+            transform.position = hit.point;
+            ApplyFlightPhysicsField(previousPosition, hit.point);
+            Impact(hit.collider, hit.point);
+            return;
+        }
+
+        transform.position = currentPosition;
         ApplyFlightPhysicsField(previousPosition, currentPosition);
 
         if (Vector3.Distance(_startPosition, transform.position) >= _speed * _maxLifetime)
@@ -170,11 +193,51 @@ public class Projectile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other == null)
-            return;
+        if (_hasImpacted || other == null || other.isTrigger || IsSourceCollider(other)) return;
 
-        if (other.isTrigger)
-            return;
+        // При одновременных контактах тела и уязвимой точки выбираем первый по пути снаряда.
+        if (TryFindImpact(_previousPosition, transform.position, out RaycastHit hit))
+            Impact(hit.collider, hit.point);
+        else
+            Impact(other, other.ClosestPoint(transform.position));
+    }
+
+    private bool IsSourceCollider(Collider other) => other.transform.IsChildOf(transform) ||
+        (_sourceRoot != null && other.transform.IsChildOf(_sourceRoot));
+
+    private bool TryFindImpact(Vector3 from, Vector3 to, out RaycastHit closest)
+    {
+        closest = default;
+        Vector3 displacement = to - from;
+        float distance = displacement.magnitude;
+        if (distance <= 0f) return false;
+
+        RaycastHit[] hits = _sweepHits;
+        int count = Physics.RaycastNonAlloc(from, displacement / distance, hits, distance,
+            ~0, QueryTriggerInteraction.Ignore);
+        if (count == hits.Length)
+        {
+            hits = Physics.RaycastAll(from, displacement / distance, distance,
+                ~0, QueryTriggerInteraction.Ignore);
+            count = hits.Length;
+        }
+
+        bool found = false;
+        for (int i = 0; i < count; i++)
+        {
+            if (IsSourceCollider(hits[i].collider) ||
+                (found && hits[i].distance >= closest.distance)) continue;
+            closest = hits[i];
+            found = true;
+        }
+        return found;
+    }
+
+    private void Impact(Collider other, Vector3 point)
+    {
+        if (_hasImpacted) return;
+        _hasImpacted = true;
+        transform.position = point;
 
         bool isValidTarget = (_hitMask.value & (1 << other.gameObject.layer)) > 0;
 
@@ -183,7 +246,7 @@ public class Projectile : MonoBehaviour
             var impactContext = new EffectContext(
                 _source,
                 other,
-                transform.position,
+                point,
                 -transform.forward,
                 transform.forward,
                 _power);
@@ -195,7 +258,7 @@ public class Projectile : MonoBehaviour
                 var physicsContext = new EffectContext(
                     _source,
                     other,
-                    transform.position,
+                    point,
                     -transform.forward,
                     transform.forward,
                     _impactForce);

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using Failsafe.Enemies.Sensors;
+using Failsafe.Scripts.Damage;
 using Failsafe.Scripts.Health;
 using VContainer;
 using System.Collections.Generic;
@@ -30,6 +31,13 @@ public class Enemy : MonoBehaviour
     [Header("Настройки патрулирования")]
     [Tooltip("Если заданы ручные точки, враг будет ходить по ним. Если пусто - использует точки комнаты.")]
     [SerializeField] private Transform[] _manualPatrolPoints;
+
+    [Header("Стан от уязвимой точки")]
+    [SerializeField] private WeakPoint _stunWeakPoint;
+    [SerializeField, Min(0.01f)] private float _weakPointStunDuration = 2f;
+    [Tooltip("На сколько процентов уменьшить скорость передвижения после стана от уязвимой точки.")]
+    [SerializeField, Range(0f, 100f)] private float _weakPointMoveSpeedReductionPercent;
+
     // Свойства
     public BehaviorState currentState;
     public BehaviorState CurrentState => _stateMachine?.CurrentState;
@@ -41,6 +49,8 @@ public class Enemy : MonoBehaviour
         CurrentState is AlertState ||
         CurrentState is ChasingState ||
         CurrentState is AttackState ||
+        CurrentState is MeleeAttackState ||
+        CurrentState is MeleeChargeState ||
         CurrentState is SearchingState;
 
     [Inject]
@@ -69,6 +79,7 @@ public class Enemy : MonoBehaviour
         _enemyNavMeshActions = new EnemyNavMeshActions(
             _navMeshAgent,
             transform,
+            _enemyMovement,
             _linkTraverser);
 
         // 2. Инициализируем ВИЗУАЛ (Просто передаем зависимость)
@@ -121,7 +132,39 @@ public class Enemy : MonoBehaviour
             _linkTraverser
         );
         
-        var attackState = new AttackState(_sensors, transform, _enemyMovement, _enemyAnimator, _enemyConfig);
+        BehaviorState attackState;
+        System.Func<bool> canStartAttack;
+        System.Func<bool> canLeaveAttack;
+        MeleeChargeState chargeState = null;
+        if (_enemyConfig.attackType == Enemy_ScriptableObject.AttackType.Melee)
+        {
+            var hitbox = GetComponentInChildren<MeleeHitbox>(true);
+            if (hitbox == null) Debug.LogError("Melee Enemy requires a MeleeHitbox on its weapon.", this);
+            var melee = new MeleeAttackState(_sensors, transform, _enemyMovement, _enemyAnimator, _enemyConfig, hitbox);
+            attackState = melee;
+            canStartAttack = () => hitbox != null && hitbox.isActiveAndEnabled && chasingState.PlayerInAttackRange();
+            canLeaveAttack = melee.PlayerOutOfAttackRange;
+            if (_enemyConfig.EnableCharge)
+            {
+                var body = GetComponent<CapsuleCollider>();
+                if (body != null)
+                {
+                    chargeState = new MeleeChargeState(this, _sensors, _enemyMovement,
+                        _enemyAnimator, _enemyConfig, body, _enemyMemory);
+                }
+                else
+                {
+                    Debug.LogError("Charge requires a CapsuleCollider on the enemy root.", this);
+                }
+            }
+        }
+        else
+        {
+            var ranged = new AttackState(_sensors, transform, _enemyMovement, _enemyAnimator, _enemyConfig);
+            attackState = ranged;
+            canStartAttack = chasingState.PlayerInAttackRange;
+            canLeaveAttack = ranged.PlayerOutOfAttackRange;
+        }
         
         var searchingState = new SearchingState(
             _sensors, transform, _enemyMovePatterns, _enemyMovement, 
@@ -137,6 +180,20 @@ public class Enemy : MonoBehaviour
         var stunnedState = new StunnedState(_enemyAnimator, _enemyMovement, transform);
         var deathState = new EnemyDeathState(_enemyAnimator, _enemyMovement, _animator, _enemyConfig);
 
+        if (chargeState != null)
+        {
+            System.Func<bool> openingCharge = () =>
+                _awarenessMeter.IsChasing() && chargeState.CanStartOnFirstSight();
+            defaultState.AddTransition(chargeState, openingCharge);
+            patrolState.AddTransition(chargeState, openingCharge);
+            checkState.AddTransition(chargeState, openingCharge);
+            searchingState.AddTransition(chargeState, openingCharge);
+            alertState.AddTransition(chargeState, openingCharge);
+            chasingState.AddTransition(chargeState, openingCharge);
+            chasingState.AddTransition(chargeState, chargeState.CanStart);
+            chargeState.AddTransition(chasingState, () => chargeState.IsFinished);
+        }
+
         // Переходы
         defaultState.AddTransition(alertState, _awarenessMeter.IsChasing);
         patrolState.AddTransition(alertState, _awarenessMeter.IsChasing);
@@ -146,8 +203,8 @@ public class Enemy : MonoBehaviour
         patrolState.AddTransition(checkState, _awarenessMeter.IsAlerted);
         defaultState.AddTransition(patrolState, defaultState.IsPatroling);
         chasingState.AddTransition(searchingState, _awarenessMeter.IsPlayerLost);
-        chasingState.AddTransition(attackState, chasingState.PlayerInAttackRange);
-        attackState.AddTransition(chasingState, attackState.PlayerOutOfAttackRange);
+        chasingState.AddTransition(attackState, canStartAttack);
+        attackState.AddTransition(chasingState, canLeaveAttack);
         searchingState.AddTransition(patrolState, searchingState.SearchingEnd);
         searchingState.AddTransition(alertState, _awarenessMeter.IsChasing);
 
@@ -157,7 +214,41 @@ public class Enemy : MonoBehaviour
         if (_enemyGetData != null) _enemyGetData.RoomCheck();
 
         _health.OnDeath += DeathState;
-        _health.OnHealthChanged += (damage) => _audioManager.PlayDamageVoice();
+        _health.OnHealthChanged += (damage) => _audioManager?.PlayDamageVoice();
+        if (_stunWeakPoint != null)
+            _stunWeakPoint.ThresholdReached += StunFromWeakPoint;
+    }
+
+    private void OnDestroy()
+    {
+        if (_stunWeakPoint != null)
+            _stunWeakPoint.ThresholdReached -= StunFromWeakPoint;
+    }
+
+    private void StunFromWeakPoint()
+    {
+        if (!isActiveAndEnabled || _health.IsDead) return;
+
+        _stateMachine.GetForcedState<StunnedState>().Completed += ApplyWeakPointSpeedReduction;
+        StunnedState(Vector3.zero, Mathf.Max(0.01f, _weakPointStunDuration));
+    }
+
+    private void ApplyWeakPointSpeedReduction()
+    {
+        _stateMachine.GetForcedState<StunnedState>().Completed -= ApplyWeakPointSpeedReduction;
+        _enemyMovement.SpeedMultiplier = 1f - Mathf.Clamp01(_weakPointMoveSpeedReductionPercent / 100f);
+    }
+
+    private void OnDisable()
+    {
+        if (CurrentState is MeleeAttackState melee) melee.Exit();
+        if (CurrentState is MeleeChargeState charge) charge.Exit();
+    }
+
+    private void OnEnable()
+    {
+        if (CurrentState is MeleeAttackState melee) melee.Enter();
+        if (CurrentState is MeleeChargeState charge) charge.Enter();
     }
 
     void Update()

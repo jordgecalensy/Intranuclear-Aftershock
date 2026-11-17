@@ -6,8 +6,6 @@ namespace Failsafe.Scripts.EffectSystem
 {
     public class StunEffect : Effect, IReapplicableEffect, IRegisteredStatusEffect
     {
-        private const int PlayerStunLockId = 1007;
-
         private readonly StatusEffectState _state;
         private readonly Enemy _enemy;
         private readonly PlayerControlBlocker _playerControlBlocker;
@@ -114,7 +112,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (_blockPlayerControls && _playerControlBlocker != null)
             {
                 _playerControlBlocker.AddLock(
-                    PlayerStunLockId,
+                    PlayerControlLockIds.Stun,
                     _playerBlocks);
             }
 
@@ -141,7 +139,7 @@ namespace Failsafe.Scripts.EffectSystem
                 return;
 
             _playerControlBlocker.AddLock(
-                PlayerStunLockId,
+                PlayerControlLockIds.Stun,
                 _playerBlocks);
         }
 
@@ -150,7 +148,7 @@ namespace Failsafe.Scripts.EffectSystem
             if (_playerControlBlocker == null)
                 return;
 
-            _playerControlBlocker.RemoveLock(PlayerStunLockId);
+            _playerControlBlocker.RemoveLock(PlayerControlLockIds.Stun);
         }
     }
 }
