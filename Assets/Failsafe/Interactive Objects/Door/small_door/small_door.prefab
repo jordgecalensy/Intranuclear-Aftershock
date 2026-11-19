@@ -625,7 +625,7 @@ GameObject:
   - component: {fileID: 3949289883032820359}
   - component: {fileID: 8722291974730301651}
   m_Layer: 0
-  m_Name: CardSlot
+  m_Name: CardSlot2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -681,7 +681,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _placePoint: {fileID: 972960697179141200}
   _doorScript: {fileID: 2978772924729202403}
-  _linkedPlaceAreas: []
+  _linkedPlaceAreas:
+  - {fileID: 5575996714468121651}
 --- !u!1 &2792238056276225094
 GameObject:
   m_ObjectHideFlags: 0
@@ -1693,7 +1694,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _placePoint: {fileID: 8119854830468030001}
   _doorScript: {fileID: 2978772924729202403}
-  _linkedPlaceAreas: []
+  _linkedPlaceAreas:
+  - {fileID: 8722291974730301651}
 --- !u!1 &4972230435942461379
 GameObject:
   m_ObjectHideFlags: 0
@@ -2187,7 +2189,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _isPowered: 1
   _isOpen: 0
-  _hasCard: 1
+  _hasCard: 0
   _cardPlaceArea: {fileID: 8722291974730301651}
   _poweredReadyMaterial: {fileID: 2100000, guid: c63fbc827fd54c4469c09e102a84cc42, type: 2}
   _needsCardMaterial: {fileID: 2100000, guid: 49cc7b88d07055e4da9d3b236e2226c7, type: 2}
@@ -2219,7 +2221,7 @@ Animator:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5969274882116129031}
   m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: 4f448b5566a8c0040a5975b43e1f5f84, type: 3}
+  m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 51f7357d498756e4caee70516e9b22f3, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
