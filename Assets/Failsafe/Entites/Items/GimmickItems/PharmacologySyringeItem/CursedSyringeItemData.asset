@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55443d5422772514c80a38543eaeb7b5, type: 3}
+  m_Name: CursedSyringeItemData
+  m_EditorClassIdentifier: 
+  Description: It is a very bad idea !
+  Type: 0
+  InventoryDefinitionId: 6c2ab7e32f524bacafccdfbd52486b5f
+  DisplayName: StrangeSyringe
+  InventoryIcon: {fileID: 0}
+  WorldItemPrefab: {fileID: 5642815170819963984, guid: 04ff96a1f3c67c549b4b169e9d9321f0, type: 3}
+  InventoryModelPrefab: {fileID: 919132149155446097, guid: 4f2fd98940037b94baea45a00f287ed7, type: 3}
+  InventoryBaseEulerAngles: {x: 90, y: -90, z: -90}
+  InventoryModelOffsetInCells: {x: 0, y: 0, z: 0}
+  InventoryModelScaleMultiplier: 1
+  InventoryModelFitPadding: 0.08
+  InventoryModelMaxDepthInCells: 0.75
+  InventoryWidth: 1
+  InventoryHeight: 1
+  InventoryMaxStack: 1
+  CanRotateInInventory: 1
+  CanAssignQuickSlot: 1
+  StartUseDelay: 0
+  UseDelay: 0.2
+  UsesEnergy: 0
+  EnergyAmountMax: 0
+  EnergyCostPerUse: 1
+  UseRange: 100
+  UseMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  DefaultModeEffects: {fileID: 11400000, guid: bdbc84e0d620d3b4db9b9f32dc76dc74, type: 2}
+  AlternativeModeEffects: {fileID: 0}
+  UseSFX:
+    Guid:
+      Data1: -1417840549
+      Data2: 1233294432
+      Data3: 1657078405
+      Data4: -2112711225
+    Path: event:/SFX/CONSUM/ADRENALINE
+  EmptyUseSFX:
+    Guid:
+      Data1: 0
+      Data2: 0
+      Data3: 0
+      Data4: 0
+    Path: 
+  ModeSwitchSFX:
+    Guid:
+      Data1: 0
+      Data2: 0
+      Data3: 0
+      Data4: 0
+    Path: 

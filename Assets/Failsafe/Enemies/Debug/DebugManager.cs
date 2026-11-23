@@ -1,3 +1,4 @@
+using Failsafe.Scripts.Damage;
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Linq; // Нужно для удобной работы со спи�
 public class DebugManager : MonoBehaviour
 {
     [Header("Settings")]
+    [SerializeField] private bool _manageCursor = true;
     [SerializeField] private bool CursorOn;
     [SerializeField] private bool showNavMeshPath = true;
     [SerializeField] private Color pathColor = Color.cyan;
@@ -13,6 +15,7 @@ public class DebugManager : MonoBehaviour
     // Храним сразу компоненты Enemy, чтобы не искать их каждый кадр
     [Header("Data")]
     [SerializeField] private List<Enemy> Enemies = new List<Enemy>();
+    private readonly List<WeakPoint> _weakPoints = new();
 
     private Rect windowRect = new Rect(100, 100, 350, 500);
     private bool showWindow = true;
@@ -27,6 +30,8 @@ public class DebugManager : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (!_manageCursor) return;
+
         // Управление курсором (показываем если окно открыто или если включена галочка)
         bool showCursor = CursorOn || showWindow;
         if (Cursor.visible != showCursor)
@@ -55,7 +60,9 @@ public class DebugManager : MonoBehaviour
             }
         }
 
-        Enemies = uniqueEnemies.ToList();
+        Enemies = uniqueEnemies
+            .OrderByDescending(enemy => enemy.GetComponentInChildren<WeakPoint>() != null)
+            .ToList();
     }
 
     private void OnGUI()
@@ -83,7 +90,8 @@ public class DebugManager : MonoBehaviour
         GUILayout.BeginVertical();
         
         showNavMeshPath = GUILayout.Toggle(showNavMeshPath, " Отображать пути NavMesh");
-        CursorOn = GUILayout.Toggle(CursorOn, " Force Cursor Visible");
+        if (_manageCursor)
+            CursorOn = GUILayout.Toggle(CursorOn, " Force Cursor Visible");
 
         if (GUILayout.Button("Обновить список врагов"))
         {
@@ -127,6 +135,14 @@ public class DebugManager : MonoBehaviour
                 
                 if (enemy.Health != null)
                     GUILayout.Label($"HP: {enemy.Health.CurrentHealth}/{enemy.Health.MaxHealth}");
+
+                enemy.GetComponentsInChildren(false, _weakPoints);
+                foreach (WeakPoint weakPoint in _weakPoints)
+                {
+                    string threshold = weakPoint.IsThresholdReached ? " (reached)" : "";
+                    GUILayout.Label($"{weakPoint.name}: {weakPoint.AccumulatedDamage:0.##}/{weakPoint.DamageThreshold:0.##}{threshold}");
+                    GUILayout.Label($"Damage multiplier: ×{weakPoint.DamageMultiplier:0.##}");
+                }
 
                 // ИСПОЛЬЗУЕМ НОВЫЕ СВОЙСТВА ИЗ ENEMY.CS
                 GUILayout.Label($"Alertness: {enemy.DebugAlertness:F1}%");

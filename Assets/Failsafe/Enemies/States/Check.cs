@@ -42,7 +42,7 @@ public class CheckState : BehaviorState
         _isWaiting = false;
         _waitTimer = 0f;
         _checkTimer = 0f;
-        _audio.PlayStateVoice(1);
+        _audio?.PlayStateVoice(1);
         // Берём первую активную точку сигнала
         foreach (var sensor in _sensors)
         {

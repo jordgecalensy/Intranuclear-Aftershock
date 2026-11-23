@@ -95,7 +95,7 @@ VideoPlayer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 234957702946959083}
-  m_Enabled: 1
+  m_Enabled: 0
   m_VideoClip: {fileID: 32900000, guid: 3ac44476578162c41bfda4a9b5ee7cb9, type: 3}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
@@ -445,7 +445,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7082a59c15d41ea4f97cfadf917c8356, type: 2}
+  - {fileID: 2100000, guid: fd8a45201dbd6544f9cc0c2d44347393, type: 2}
   - {fileID: 2100000, guid: b9c8eb6dc04b1f14bbe1fb8fa0c28d1b, type: 2}
   - {fileID: 2100000, guid: b0da5862788ed0b45be405ef67a525aa, type: 2}
   - {fileID: 2100000, guid: c53f1d06e0a8cce4496b66242dc0374a, type: 2}
@@ -586,7 +586,7 @@ VideoPlayer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2510761737371043625}
-  m_Enabled: 1
+  m_Enabled: 0
   m_VideoClip: {fileID: 32900000, guid: 03a08b64160a05b4dbdd7e410bd00674, type: 3}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
@@ -625,7 +625,7 @@ GameObject:
   - component: {fileID: 3949289883032820359}
   - component: {fileID: 8722291974730301651}
   m_Layer: 0
-  m_Name: CardSlot
+  m_Name: CardSlot2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -681,7 +681,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _placePoint: {fileID: 972960697179141200}
   _doorScript: {fileID: 2978772924729202403}
-  _linkedPlaceAreas: []
+  _linkedPlaceAreas:
+  - {fileID: 5575996714468121651}
 --- !u!1 &2792238056276225094
 GameObject:
   m_ObjectHideFlags: 0
@@ -750,10 +751,10 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 733f16156674a1b42b9d737428837056, type: 2}
-  - {fileID: 2100000, guid: 733f16156674a1b42b9d737428837056, type: 2}
-  - {fileID: 2100000, guid: 7082a59c15d41ea4f97cfadf917c8356, type: 2}
-  - {fileID: 2100000, guid: 7082a59c15d41ea4f97cfadf917c8356, type: 2}
+  - {fileID: 2100000, guid: aa9bf0387c018f34eb7e176453d1496a, type: 2}
+  - {fileID: 2100000, guid: aa9bf0387c018f34eb7e176453d1496a, type: 2}
+  - {fileID: 2100000, guid: fd8a45201dbd6544f9cc0c2d44347393, type: 2}
+  - {fileID: 2100000, guid: fd8a45201dbd6544f9cc0c2d44347393, type: 2}
   - {fileID: 2100000, guid: c53f1d06e0a8cce4496b66242dc0374a, type: 2}
   - {fileID: 2100000, guid: b0da5862788ed0b45be405ef67a525aa, type: 2}
   m_StaticBatchInfo:
@@ -927,9 +928,9 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: c53f1d06e0a8cce4496b66242dc0374a, type: 2}
-  - {fileID: 2100000, guid: 7082a59c15d41ea4f97cfadf917c8356, type: 2}
+  - {fileID: 2100000, guid: fd8a45201dbd6544f9cc0c2d44347393, type: 2}
   - {fileID: 2100000, guid: b9c8eb6dc04b1f14bbe1fb8fa0c28d1b, type: 2}
-  - {fileID: 2100000, guid: 733f16156674a1b42b9d737428837056, type: 2}
+  - {fileID: 2100000, guid: aa9bf0387c018f34eb7e176453d1496a, type: 2}
   - {fileID: 2100000, guid: 2b2b8962046b9004e8f34130b890ff3a, type: 2}
   - {fileID: 2100000, guid: 0a1998f32e8d86b4596e4d85a2908e18, type: 2}
   m_StaticBatchInfo:
@@ -1155,7 +1156,7 @@ VideoPlayer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3603191600535012230}
-  m_Enabled: 1
+  m_Enabled: 0
   m_VideoClip: {fileID: 32900000, guid: 717218e682237384f8e6b99c6225d305, type: 3}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
@@ -1395,7 +1396,7 @@ VideoPlayer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4529241794014338059}
-  m_Enabled: 1
+  m_Enabled: 0
   m_VideoClip: {fileID: 32900000, guid: 717218e682237384f8e6b99c6225d305, type: 3}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
@@ -1486,12 +1487,12 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7082a59c15d41ea4f97cfadf917c8356, type: 2}
+  - {fileID: 2100000, guid: 63552c6a81760964c8b89ddf6a0c9e20, type: 2}
   - {fileID: 2100000, guid: b9c8eb6dc04b1f14bbe1fb8fa0c28d1b, type: 2}
-  - {fileID: 7130850638845163088, guid: 78dfc04a9855a6241af4c6305ffa3960, type: 3}
+  - {fileID: 2100000, guid: 20717bc75a785924b99c5edad5934949, type: 2}
   - {fileID: 2100000, guid: b0da5862788ed0b45be405ef67a525aa, type: 2}
   - {fileID: 2100000, guid: c53f1d06e0a8cce4496b66242dc0374a, type: 2}
-  - {fileID: 2100000, guid: c65f0e9e561ef5c499aaccc3b75c72d4, type: 2}
+  - {fileID: 2100000, guid: 3c48c1d4167fb69419b658dc0a9e06bf, type: 2}
   - {fileID: 2100000, guid: 0a1998f32e8d86b4596e4d85a2908e18, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
@@ -1579,7 +1580,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7082a59c15d41ea4f97cfadf917c8356, type: 2}
+  - {fileID: 2100000, guid: fd8a45201dbd6544f9cc0c2d44347393, type: 2}
   - {fileID: 2100000, guid: b9c8eb6dc04b1f14bbe1fb8fa0c28d1b, type: 2}
   - {fileID: 2100000, guid: b0da5862788ed0b45be405ef67a525aa, type: 2}
   - {fileID: 2100000, guid: c53f1d06e0a8cce4496b66242dc0374a, type: 2}
@@ -1693,7 +1694,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _placePoint: {fileID: 8119854830468030001}
   _doorScript: {fileID: 2978772924729202403}
-  _linkedPlaceAreas: []
+  _linkedPlaceAreas:
+  - {fileID: 8722291974730301651}
 --- !u!1 &4972230435942461379
 GameObject:
   m_ObjectHideFlags: 0
@@ -1760,9 +1762,9 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: c53f1d06e0a8cce4496b66242dc0374a, type: 2}
-  - {fileID: 2100000, guid: 7082a59c15d41ea4f97cfadf917c8356, type: 2}
+  - {fileID: 2100000, guid: fd8a45201dbd6544f9cc0c2d44347393, type: 2}
   - {fileID: 2100000, guid: b9c8eb6dc04b1f14bbe1fb8fa0c28d1b, type: 2}
-  - {fileID: 2100000, guid: 733f16156674a1b42b9d737428837056, type: 2}
+  - {fileID: 2100000, guid: aa9bf0387c018f34eb7e176453d1496a, type: 2}
   - {fileID: 2100000, guid: 2b2b8962046b9004e8f34130b890ff3a, type: 2}
   - {fileID: 2100000, guid: 0a1998f32e8d86b4596e4d85a2908e18, type: 2}
   m_StaticBatchInfo:
@@ -1875,8 +1877,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 733f16156674a1b42b9d737428837056, type: 2}
-  - {fileID: 2100000, guid: 7082a59c15d41ea4f97cfadf917c8356, type: 2}
+  - {fileID: 2100000, guid: aa9bf0387c018f34eb7e176453d1496a, type: 2}
+  - {fileID: 2100000, guid: fd8a45201dbd6544f9cc0c2d44347393, type: 2}
   - {fileID: 2100000, guid: c159436d358298646ab227c3eef0d1c0, type: 2}
   - {fileID: 2100000, guid: b0da5862788ed0b45be405ef67a525aa, type: 2}
   m_StaticBatchInfo:
@@ -2103,7 +2105,7 @@ VideoPlayer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5713185075884531058}
-  m_Enabled: 1
+  m_Enabled: 0
   m_VideoClip: {fileID: 32900000, guid: 3ac44476578162c41bfda4a9b5ee7cb9, type: 3}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
@@ -2187,7 +2189,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _isPowered: 1
   _isOpen: 0
-  _hasCard: 1
+  _hasCard: 0
   _cardPlaceArea: {fileID: 8722291974730301651}
   _poweredReadyMaterial: {fileID: 2100000, guid: c63fbc827fd54c4469c09e102a84cc42, type: 2}
   _needsCardMaterial: {fileID: 2100000, guid: 49cc7b88d07055e4da9d3b236e2226c7, type: 2}
@@ -2219,7 +2221,7 @@ Animator:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5969274882116129031}
   m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: 4f448b5566a8c0040a5975b43e1f5f84, type: 3}
+  m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 51f7357d498756e4caee70516e9b22f3, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
@@ -2315,7 +2317,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6125433283273205618}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -2694,12 +2696,12 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7082a59c15d41ea4f97cfadf917c8356, type: 2}
+  - {fileID: 2100000, guid: 63552c6a81760964c8b89ddf6a0c9e20, type: 2}
   - {fileID: 2100000, guid: b9c8eb6dc04b1f14bbe1fb8fa0c28d1b, type: 2}
-  - {fileID: 7130850638845163088, guid: 78dfc04a9855a6241af4c6305ffa3960, type: 3}
+  - {fileID: 2100000, guid: 20717bc75a785924b99c5edad5934949, type: 2}
   - {fileID: 2100000, guid: b0da5862788ed0b45be405ef67a525aa, type: 2}
   - {fileID: 2100000, guid: c53f1d06e0a8cce4496b66242dc0374a, type: 2}
-  - {fileID: 2100000, guid: c65f0e9e561ef5c499aaccc3b75c72d4, type: 2}
+  - {fileID: 2100000, guid: 3c48c1d4167fb69419b658dc0a9e06bf, type: 2}
   - {fileID: 2100000, guid: 0a1998f32e8d86b4596e4d85a2908e18, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
@@ -2857,7 +2859,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7379273273604093753}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -3100,7 +3102,7 @@ VideoPlayer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8869035426615802481}
-  m_Enabled: 1
+  m_Enabled: 0
   m_VideoClip: {fileID: 32900000, guid: 03a08b64160a05b4dbdd7e410bd00674, type: 3}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
