@@ -49,6 +49,8 @@ public class Enemy : MonoBehaviour
         CurrentState is AlertState ||
         CurrentState is ChasingState ||
         CurrentState is AttackState ||
+        CurrentState is BorzoiGrenadeAttackState ||
+        CurrentState is BorzoiRetreatState ||
         CurrentState is MeleeAttackState ||
         CurrentState is MeleeChargeState ||
         CurrentState is SearchingState;
@@ -136,11 +138,24 @@ public class Enemy : MonoBehaviour
         System.Func<bool> canStartAttack;
         System.Func<bool> canLeaveAttack;
         MeleeChargeState chargeState = null;
+        var grenadeLauncher = GetComponent<BorzoiGrenadeLauncher>();
+        BorzoiGrenadeAttackState grenadeState = null;
+        BorzoiRetreatState retreatState = null;
+        if (grenadeLauncher != null)
+        {
+            var vision = GetComponent<VisualSensor>();
+            grenadeState = new BorzoiGrenadeAttackState(grenadeLauncher, vision,
+                _enemyMovement, _enemyAnimator, _animator);
+            retreatState = new BorzoiRetreatState(grenadeLauncher, vision, _enemyMovement,
+                _navMeshAgent, _enemyMemory, _enemyConfig.AttackRangeMin);
+        }
+
         if (_enemyConfig.attackType == Enemy_ScriptableObject.AttackType.Melee)
         {
             var hitbox = GetComponentInChildren<MeleeHitbox>(true);
             if (hitbox == null) Debug.LogError("Melee Enemy requires a MeleeHitbox on its weapon.", this);
-            var melee = new MeleeAttackState(_sensors, transform, _enemyMovement, _enemyAnimator, _enemyConfig, hitbox);
+            var melee = new MeleeAttackState(_sensors, transform, _enemyMovement, _enemyAnimator,
+                _enemyConfig, hitbox, grenadeLauncher, retreatState);
             attackState = melee;
             canStartAttack = () => hitbox != null && hitbox.isActiveAndEnabled && chasingState.PlayerInAttackRange();
             canLeaveAttack = melee.PlayerOutOfAttackRange;
@@ -202,8 +217,26 @@ public class Enemy : MonoBehaviour
         alertState.AddTransition(chasingState, alertState.IsAnimationFinished);
         patrolState.AddTransition(checkState, _awarenessMeter.IsAlerted);
         defaultState.AddTransition(patrolState, defaultState.IsPatroling);
-        chasingState.AddTransition(searchingState, _awarenessMeter.IsPlayerLost);
+        chasingState.AddTransition(searchingState, _awarenessMeter.IsPlayerLost,
+            retreatState != null ? retreatState.AllowRetreat : null);
+        if (grenadeState != null)
+        {
+            chasingState.AddTransition(grenadeState, grenadeState.CanEnter);
+            grenadeState.AddTransition(chasingState, grenadeState.CanLeave);
+        }
         chasingState.AddTransition(attackState, canStartAttack);
+        if (retreatState != null)
+        {
+            chasingState.AddTransition(retreatState, retreatState.CanEnter);
+            grenadeState.GrenadeThrown += retreatState.AllowRetreat;
+            if (attackState is MeleeAttackState melee)
+            {
+                melee.SwingCompleted += retreatState.AllowRetreat;
+                melee.AddTransition(retreatState, () => melee.CanRetreat && retreatState.CanEnter());
+            }
+            retreatState.AddTransition(grenadeState, () => retreatState.IsFinished && grenadeState.CanEnter());
+            retreatState.AddTransition(chasingState, () => retreatState.IsFinished);
+        }
         attackState.AddTransition(chasingState, canLeaveAttack);
         searchingState.AddTransition(patrolState, searchingState.SearchingEnd);
         searchingState.AddTransition(alertState, _awarenessMeter.IsChasing);
@@ -241,12 +274,16 @@ public class Enemy : MonoBehaviour
 
     private void OnDisable()
     {
+        if (CurrentState is BorzoiGrenadeAttackState grenade) grenade.Exit();
+        if (CurrentState is BorzoiRetreatState retreat) retreat.Exit();
         if (CurrentState is MeleeAttackState melee) melee.Exit();
         if (CurrentState is MeleeChargeState charge) charge.Exit();
     }
 
     private void OnEnable()
     {
+        if (CurrentState is BorzoiGrenadeAttackState grenade) grenade.Enter();
+        if (CurrentState is BorzoiRetreatState retreat) retreat.Enter();
         if (CurrentState is MeleeAttackState melee) melee.Enter();
         if (CurrentState is MeleeChargeState charge) charge.Enter();
     }
@@ -262,8 +299,10 @@ public class Enemy : MonoBehaviour
         if (!isTraversing)
         {
             _stateMachine.Update();
-            _enemyMovement.HandleRotationAndMovement();
-            _enemyAnimator.ManualUpdate();
+            bool retreating = CurrentState is BorzoiRetreatState;
+            if (!retreating)
+                _enemyMovement.HandleRotationAndMovement();
+            _enemyAnimator.ManualUpdate(retreating);
         }
 
         _awarenessMeter.Update();

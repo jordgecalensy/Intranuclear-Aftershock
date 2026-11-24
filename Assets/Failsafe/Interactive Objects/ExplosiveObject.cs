@@ -12,13 +12,17 @@ public abstract class ExplosiveObject : MonoBehaviour
 
     private IEffectApplicationService _effects;
 
+    public virtual float ExplosionRadius => Data != null ? Data.ExplosionRadius : 0f;
+
     [Inject]
     public void Construct(IEffectApplicationService effects)
     {
         _effects = effects;
     }
 
-    public void Explosion()
+    public virtual void Explosion() => Explosion(null);
+
+    public void Explosion(Collider contactCollider)
     {
         if (Data == null)
         {
@@ -33,21 +37,22 @@ public abstract class ExplosiveObject : MonoBehaviour
             EffectBundle explosionEffects = ResolveExplosionEffects();
             bool useEffectBundle = explosionEffects != null && ResolveEffectsIfNeeded();
 
+            if (contactCollider != null)
+            {
+                Vector3 direction = (contactCollider.bounds.center - transform.position).normalized;
+                ApplyExplosionEffect(contactCollider, direction, explosionEffects, useEffectBundle);
+            }
+
             foreach (var hitInfo in hitsInfo)
             {
+                if (hitInfo == null || hitInfo == contactCollider) continue;
                 Vector3 directionToEnemy = (hitInfo.transform.position - transform.position).normalized;
                 RaycastHit hit;
                 if (Physics.Raycast(transform.position, directionToEnemy, out hit, Data.ExplosionRadius))
                 {
                     if (HitsChecking(hit, hitInfo)) continue;
 
-                    if (useEffectBundle)
-                        BundleExplosionEffect(explosionEffects, hitInfo, directionToEnemy);
-                    else
-                    {
-                        DamagebleExplosionEffect(hitInfo);
-                        PhysicsExplosionEffect(hitInfo, directionToEnemy);
-                    }
+                    ApplyExplosionEffect(hitInfo, directionToEnemy, explosionEffects, useEffectBundle);
                 }
             }
 
@@ -58,6 +63,18 @@ public abstract class ExplosiveObject : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    private void ApplyExplosionEffect(Collider target, Vector3 direction, EffectBundle effects, bool useEffectBundle)
+    {
+        if (useEffectBundle)
+            BundleExplosionEffect(effects, target, direction);
+        else
+        {
+            DamagebleExplosionEffect(target);
+            PhysicsExplosionEffect(target, direction);
+        }
+    }
+
     protected virtual bool HitsChecking(RaycastHit hit, Collider hitInfo)
     {
         if (!Data.IgnoreCollision)

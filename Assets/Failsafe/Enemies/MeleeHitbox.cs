@@ -39,6 +39,8 @@ public class MeleeHitbox : MonoBehaviour
     private float _previousRadius;
     private float _previousHalfSegment;
     private float _previousSampleTime;
+    private float _damageMultiplier = 1f;
+    private EffectBundle _swingEffects;
 
     private bool CanHit => _swingActive && _windowOpen && isActiveAndEnabled &&
         _owner != null && _owner.isActiveAndEnabled;
@@ -72,10 +74,12 @@ public class MeleeHitbox : MonoBehaviour
 
     private void DisableElectricEffects() => _electricEffectsDisabled = true;
 
-    public void BeginSwing()
+    public void BeginSwing(float damageMultiplier = 1f, EffectBundle swingEffects = null)
     {
         EndSwing();
         _hitTargets.Clear();
+        _damageMultiplier = damageMultiplier;
+        _swingEffects = swingEffects;
         _swingActive = true;
     }
 
@@ -104,6 +108,7 @@ public class MeleeHitbox : MonoBehaviour
         _closeRequested = false;
         _hasPreviousPose = false;
         if (_collider != null) _collider.enabled = false;
+        _swingEffects = null;
     }
 
     private void OnDisable() => EndSwing();
@@ -207,20 +212,24 @@ public class MeleeHitbox : MonoBehaviour
 
         Vector3 point = other.ClosestPoint(transform.position);
         Vector3 direction = _owner.transform.forward;
-        var damage = new DamageInfo(_owner.EnemyConfig.Damage, DamageType.Physical,
+        var damage = new DamageInfo(_owner.EnemyConfig.Damage * _damageMultiplier, DamageType.Physical,
             DamageApplicationKind.Contact, _owner.gameObject,
             point, direction);
         DamageResistanceUtility.ApplyDamage(target, damage);
 
-        if (_electricEffectsDisabled || _electricEffects == null || other == null) return;
+        EffectBundle electricEffects = _electricEffectsDisabled ? null : _electricEffects;
+        if ((electricEffects == null && _swingEffects == null) || other == null) return;
         _effectResolver.TryResolve(Time.unscaledTime, false);
         if (_effectResolver.Service == null)
         {
-            Debug.LogWarning("MeleeHitbox: effect application service not found; electric effects were not applied.", this);
+            Debug.LogWarning("MeleeHitbox: effect application service not found; hit effects were not applied.", this);
             return;
         }
 
-        _effectResolver.Service.Apply(_electricEffects, new EffectContext(
-            _owner.gameObject, other, point, -direction, direction));
+        var context = new EffectContext(_owner.gameObject, other, point, -direction, direction);
+        if (electricEffects != null)
+            _effectResolver.Service.Apply(electricEffects, context);
+        if (_swingEffects != null)
+            _effectResolver.Service.Apply(_swingEffects, context);
     }
 }
