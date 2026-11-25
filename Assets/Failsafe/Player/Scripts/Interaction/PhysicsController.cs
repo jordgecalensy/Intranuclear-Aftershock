@@ -40,6 +40,12 @@ namespace Failsafe.Player.Scripts.Interaction
             _rb = GetComponent<Rigidbody>();
         }
 
+        private void OnDestroy()
+        {
+            if (IsGrabbed)
+                Released?.Invoke();
+        }
+
         private void FixedUpdate()
         {
             if (_grabPoint != null)

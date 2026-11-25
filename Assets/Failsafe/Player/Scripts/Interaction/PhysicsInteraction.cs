@@ -10,6 +10,10 @@ namespace Failsafe.Player.Scripts.Interaction
 {
     public class PhysicsInteraction : MonoBehaviour
     {
+        private const float CloseGrenadeCatchDistance = 2.25f;
+        private const float GrenadeHoldDistance = 1.25f;
+        private const float GrenadeCatchAngle = 35f;
+
         [Inject] private PlayerModelParameters _playerModelParameters;
         [Inject] private InputHandler _inputHandler;
         [Inject] private PlayerHandsContainer _playerHandsContainer;
@@ -65,6 +69,8 @@ namespace Failsafe.Player.Scripts.Interaction
         private float _throwForceMultiplier;
 
         private int _carryObjectsLayer;
+        private int _grenadeSightMask;
+        private float _grenadeCatchAlignment;
 
         public bool IsDragging { get; private set; }
 
@@ -80,6 +86,8 @@ namespace Failsafe.Player.Scripts.Interaction
             _currentCarryingDistance = _carryingDistance;
 
             _carryObjectsLayer = LayerMask.NameToLayer("CarryObjects");
+            _grenadeSightMask = Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Player", "PlayerHead");
+            _grenadeCatchAlignment = Mathf.Cos(GrenadeCatchAngle * Mathf.Deg2Rad);
 
             if (_carryObjectsLayer == -1)
             {
@@ -186,14 +194,14 @@ namespace Failsafe.Player.Scripts.Interaction
                 return;
             }
 
-            bool hasHit = Physics.Raycast(
-                _playerCameraTransform.position,
-                _playerCameraTransform.forward,
-                out RaycastHit hitInfo,
-                _maxPickupDistance,
-                _mask
-            );
+            Ray ray = new Ray(_playerCameraTransform.position, _playerCameraTransform.forward);
+            if (TryFindCatchableGrenade(ray, out Rigidbody grenade))
+            {
+                GrabPhysicsObject(grenade, null, false, GrenadeHoldDistance);
+                return;
+            }
 
+            bool hasHit = Physics.Raycast(ray, out RaycastHit hitInfo, _maxPickupDistance, _mask);
             Debug.DrawRay(
                 _playerCameraTransform.position,
                 _playerCameraTransform.forward * _maxPickupDistance,
@@ -212,6 +220,9 @@ namespace Failsafe.Player.Scripts.Interaction
                 return;
             }
 
+            if (hitInfo.rigidbody.TryGetComponent(out BorzoiGrenadeFlight _))
+                return;
+
             Item itemObject = hitInfo.collider.GetComponentInParent<Item>();
 
             if (itemObject != null)
@@ -220,16 +231,19 @@ namespace Failsafe.Player.Scripts.Interaction
                 return;
             }
 
-            CarryingObject = hitInfo.rigidbody.gameObject;
+            GrabPhysicsObject(hitInfo.rigidbody, hitInfo.collider, true, _carryingDistance);
+        }
+
+        private void GrabPhysicsObject(Rigidbody body, Collider hitCollider, bool fixRotation, float holdDistance)
+        {
+            CarryingObject = body.gameObject;
             _physicsController = PhysicsController.GetOrCreate(CarryingObject);
             _carryUsable = CarryingObject.GetComponent<ICarryUsable>();
 
-            if (_carryUsable == null)
+            if (_carryUsable == null && hitCollider != null)
             {
-                _carryUsable = hitInfo.collider.GetComponentInParent<ICarryUsable>();
+                _carryUsable = hitCollider.GetComponentInParent<ICarryUsable>();
             }
-
-            bool fixRotation = true;
 
             if (!_physicsController.Grab(_grabPoint, fixRotation))
             {
@@ -245,8 +259,42 @@ namespace Failsafe.Player.Scripts.Interaction
             IsDragging = true;
             _isPreparingToThrow = false;
             _throwForceMultiplier = 0f;
-            _currentCarryingDistance = _carryingDistance;
+            _currentCarryingDistance = holdDistance;
+            _grabPoint.localPosition = Vector3.forward * holdDistance;
         }
+
+        private bool TryFindCatchableGrenade(Ray ray, out Rigidbody caughtBody)
+        {
+            caughtBody = null;
+            float bestScore = float.NegativeInfinity;
+            foreach (var grenade in BorzoiGrenadeFlight.ActiveGrenades)
+            {
+                if (!grenade.CanBeCaught)
+                    continue;
+
+                Rigidbody body = grenade.Body;
+                Vector3 aimPoint = body.position + Vector3.up * 0.08f;
+                Vector3 offset = aimPoint - ray.origin;
+                float distance = offset.magnitude;
+                if (distance > _maxPickupDistance)
+                    continue;
+
+                float alignment = distance > 0.001f ? Vector3.Dot(ray.direction, offset / distance) : 1f;
+                float minAlignment = distance <= CloseGrenadeCatchDistance ? 0f : _grenadeCatchAlignment;
+                float score = alignment - 0.1f * distance;
+                if (alignment <= minAlignment || score <= bestScore || !CanSeeGrenade(ray.origin, aimPoint, body))
+                    continue;
+
+                bestScore = score;
+                caughtBody = body;
+            }
+
+            return caughtBody != null;
+        }
+
+        private bool CanSeeGrenade(Vector3 origin, Vector3 aimPoint, Rigidbody grenade) =>
+            !Physics.Linecast(origin, aimPoint, out RaycastHit hit, _grenadeSightMask,
+                QueryTriggerInteraction.Ignore) || hit.rigidbody == grenade;
 
         private void TryPickUpItem(Item itemObject)
         {

@@ -3,6 +3,7 @@ using UnityEngine;
 public class MeleeAttackState : BehaviorState
 {
     private enum Phase { Delay, Swing, Recoil, Cooldown }
+    private const float CounterattackWindupSpeed = 2f;
 
     private readonly Sensor[] _sensors;
     private readonly Transform _transform;
@@ -10,17 +11,21 @@ public class MeleeAttackState : BehaviorState
     private readonly EnemyAnimator _animator;
     private readonly Enemy_ScriptableObject _config;
     private readonly MeleeHitbox _hitbox;
+    private readonly BorzoiGrenadeLauncher _grenadeLauncher;
+    private readonly BorzoiRetreatState _retreatState;
     private Transform _target;
     private Phase _phase;
     private float _timer;
     private bool _directionLocked;
+    private bool _fastWindup;
     private bool _stepActive;
     private Vector3 _previousStepPosition;
     private float _stepDistanceMoved;
     private float _previousStoppingDistance;
 
     public MeleeAttackState(Sensor[] sensors, Transform transform, EnemyMovement movement,
-        EnemyAnimator animator, Enemy_ScriptableObject config, MeleeHitbox hitbox)
+        EnemyAnimator animator, Enemy_ScriptableObject config, MeleeHitbox hitbox,
+        BorzoiGrenadeLauncher grenadeLauncher = null, BorzoiRetreatState retreatState = null)
     {
         _sensors = sensors;
         _transform = transform;
@@ -28,9 +33,15 @@ public class MeleeAttackState : BehaviorState
         _animator = animator;
         _config = config;
         _hitbox = hitbox;
+        _grenadeLauncher = grenadeLauncher;
+        _retreatState = retreatState;
     }
 
     private float CombatRange => Mathf.Max(_config.AttackRangeMin, _config.AttackRangeMax);
+
+    public bool CanRetreat => _phase == Phase.Cooldown;
+
+    public event System.Action SwingCompleted;
 
     public bool PlayerOutOfAttackRange() => _phase == Phase.Delay && !TargetInRange();
 
@@ -48,8 +59,9 @@ public class MeleeAttackState : BehaviorState
         _animator.MeleeAttackFinished += FinishSwing;
         _hitbox.ObstacleHit += Recoil;
         _animator.StartAttacking();
-        if (_config.AttackDelay <= 0f && TargetInRange())
-            StartSwing();
+        bool counterattack = _retreatState?.HasRetreatedSinceLastAttack == true;
+        if ((counterattack || _config.AttackDelay <= 0f) && TargetInRange())
+            StartSwing(counterattack);
         else
             _movement.Stop();
     }
@@ -80,7 +92,7 @@ public class MeleeAttackState : BehaviorState
 
         if (_phase == Phase.Cooldown)
         {
-            if (_timer < _config.AttackCooldown) return;
+            if (_timer < _config.AttackCooldown * (_grenadeLauncher?.MeleeCooldownMultiplier ?? 1f)) return;
             _phase = Phase.Delay;
             _timer = 0f;
         }
@@ -91,6 +103,7 @@ public class MeleeAttackState : BehaviorState
     public override void Exit()
     {
         StopStep();
+        ResetWindupSpeed();
         _animator.MeleeWindowOpened -= OpenHitWindow;
         _animator.MeleeWindowClosed -= CloseHitWindow;
         _animator.MeleeAttackFinished -= FinishSwing;
@@ -106,6 +119,7 @@ public class MeleeAttackState : BehaviorState
         if (_phase != Phase.Swing || _directionLocked) return;
         _directionLocked = true;
         StopStep();
+        ResetWindupSpeed();
         _hitbox.OpenWindow();
     }
 
@@ -130,7 +144,9 @@ public class MeleeAttackState : BehaviorState
         if (_phase != Phase.Swing) return;
         StopStep();
         _hitbox.EndSwing();
+        ResetWindupSpeed();
         EnterCooldown();
+        SwingCompleted?.Invoke();
     }
 
     private void EnterCooldown()
@@ -143,11 +159,15 @@ public class MeleeAttackState : BehaviorState
     private bool TargetInRange() => _target != null &&
         Vector3.Distance(_transform.position, _target.position) <= CombatRange;
 
-    private void StartSwing()
+    private void StartSwing(bool fastWindup = false)
     {
         _phase = Phase.Swing;
         _directionLocked = false;
-        _hitbox.BeginSwing();
+        _fastWindup = fastWindup;
+        if (_fastWindup)
+            _animator.SetMeleeWindupSpeed(CounterattackWindupSpeed);
+        _hitbox.BeginSwing(_grenadeLauncher?.MeleeDamageMultiplier ?? 1f,
+            _grenadeLauncher?.DefensiveMeleeEffects);
         _animator.PlayAttackTrigger();
 
         if (_config.MeleeStepDistance <= 0f || _config.MeleeStepSpeed <= 0f)
@@ -163,6 +183,13 @@ public class MeleeAttackState : BehaviorState
             _config.MeleeStepStoppingDistance, 0f, _config.AttackRangeMin);
         _stepActive = true;
         UpdateStep();
+    }
+
+    private void ResetWindupSpeed()
+    {
+        if (!_fastWindup) return;
+        _animator.SetMeleeWindupSpeed(1f);
+        _fastWindup = false;
     }
 
     private void UpdateStep()
