@@ -35,7 +35,10 @@ namespace Failsafe.Player
         private int _pickUpId = Animator.StringToHash("PickUp");
         private int _shootId = Animator.StringToHash("Shoot");
         private int _throwItemId = Animator.StringToHash("ThrowItem");
-
+        private int _switchGrenade = Animator.StringToHash("SwithGrenadeId");
+        private int _wrenchLightAttackId = Animator.StringToHash("WrenchLightAttack");
+        private int _wrenchHeavytAttackId = Animator.StringToHash("WrenchHeavytAttack");
+        private int _circularAttackId = Animator.StringToHash("CircularAttack");
         // --- НОВОЕ: настройки синхронизации скорости анимации ---
         private const bool  AnimFollowMoveMultiplier = true; // включить/выключить привязку
         private const float AnimMinSpeed = 0.20f;            // не давать анимации «умирать»
@@ -125,7 +128,7 @@ namespace Failsafe.Player
             _animator.ResetTrigger(_jumpId);
         }
 
-        public void OnUseItem(ItemType itemType)
+        public void OnUseItem(ItemType itemType, bool ItsDefaultUse)
         {
             switch (itemType)
             {
@@ -137,7 +140,19 @@ namespace Failsafe.Player
                     _animator.SetTrigger(_shootId);
                     break;
                 case ItemType.Grenade:
-                    _animator.SetTrigger(_throwItemId);
+                    if(ItsDefaultUse)
+                        _animator.SetTrigger(_throwItemId);
+                    else
+                        _animator.SetTrigger(_switchGrenade);
+                    break;
+                case ItemType.Tool:
+                    if (ItsDefaultUse)
+                        _animator.SetTrigger(_wrenchLightAttackId);
+                    else
+                        _animator.SetTrigger(_wrenchHeavytAttackId);
+                    break;
+                case ItemType.Circular:
+                    _animator.SetTrigger(_circularAttackId);
                     break;
                 default:
                     break;
@@ -146,7 +161,7 @@ namespace Failsafe.Player
 
         public void OnTakeItem(ItemType itemType)
         {
-            _animator.SetInteger("Item", (int)itemType+1);
+            _animator.SetInteger("Item", (int)itemType);
             _animator.SetTrigger(_pickUpId);
             _animator.SetLayerWeight(_upperBodyLayerId, 1);
         }

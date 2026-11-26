@@ -100,7 +100,7 @@ public class Circular : IUsable, ITickable
     }
     public ItemUseResult AltMode()
     {
-        return new ItemUseResult() { ItemStateAfterUse = ItemState.Hold, UsageType = UsageType.ClickToUse };
+        return new ItemUseResult() { ItemStateAfterUse = ItemState.Hold, UsageType = UsageType.HoldToUse };
     }
     public void ParseItem(Item item_object)
     {

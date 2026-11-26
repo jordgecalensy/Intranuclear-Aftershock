@@ -15,7 +15,7 @@ public class PlayerHandsSystem : ITickable
 {
     public enum UsingState { None, Start, Using, OnDelay }
 
-    public event Action<ItemType> OnItemStartUsing;
+    public event Action<ItemType, bool> OnItemStartUsing;
 
     public UsingState ItemUsingState => _usingState;
 
@@ -101,7 +101,7 @@ public class PlayerHandsSystem : ITickable
 
         if (!_skipStartDelay)
         {
-            OnItemStartUsing?.Invoke(itemInHand.ItemObject.ItemData.Type);
+            OnItemStartUsing?.Invoke(itemInHand.ItemObject.ItemData.Type, ItsDefaultUse);
 
             _usingState = UsingState.Start;
             if (ItsDefaultUse)

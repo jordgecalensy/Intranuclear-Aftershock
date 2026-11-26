@@ -33,7 +33,12 @@ public enum ItemType
     /// <summary>
     /// Инструмент
     /// </summary>
-    Tool
+    Tool,
+
+    /// <summary>
+    /// Циркулярка
+    /// </summary>
+    Circular
 }
 
 [CreateAssetMenu(fileName = "ItemData", menuName = "ScriptableObjects/Entities/ItemData")]
