@@ -27,7 +27,15 @@ public class Wrench : IUsable
     }
     private void TryDamageDeal(RaycastHit hit, bool ItsDefaultUse)
     {
-        if (hit.collider == null) return;
+        if (hit.collider == null) 
+        {
+            if (!_item.ItemData.EmptyUseSFX.IsNull)
+                SoundUtils3D.Play(_item.gameObject, _item.ItemData.EmptyUseSFX);
+            return;
+        }
+        if (!_item.ItemData.UseSFX.IsNull)
+            SoundUtils3D.Play(_item.gameObject, _item.ItemData.UseSFX);
+
         if (_effects == null)
         {
             Debug.LogError("[Wrench] IEffectApplicationService is null.");
