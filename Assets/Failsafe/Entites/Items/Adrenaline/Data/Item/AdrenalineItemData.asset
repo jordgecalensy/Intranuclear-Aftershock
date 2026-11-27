@@ -17,7 +17,7 @@ MonoBehaviour:
     diseases, Alzheimer''s disease, head injuries. Administration: Inject the drug
     into the neck or into the veins of the arms and press the button to deliver the
     fluid into the body.'
-  Type: 0
+  Type: 1
   InventoryDefinitionId: c60d796ab7c149b39481304e1b7bf7ae
   DisplayName: Adrenalin
   InventoryIcon: {fileID: 21300000, guid: 3ce9e052e569e494c8d0ee47f3650911, type: 3}
@@ -35,6 +35,8 @@ MonoBehaviour:
   CanAssignQuickSlot: 1
   StartUseDelay: 0.5
   UseDelay: 0
+  StartAltUseDelay: 0
+  UseAltDelay: 0.2
   UsesEnergy: 0
   EnergyAmountMax: 0
   EnergyCostPerUse: 1

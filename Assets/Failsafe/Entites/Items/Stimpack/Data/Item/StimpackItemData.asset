@@ -16,7 +16,7 @@ MonoBehaviour:
     has an analgesic and regenerative effect on the body. Contraindications: Cancer,
     underage persons. Administration: Inject the drug into the neck or into the veins
     of the arms and press the button to deliver the fluid into the body.'
-  Type: 0
+  Type: 1
   InventoryDefinitionId: 92d84472b7d14b468d289a61f6540c9d
   DisplayName: Stimulator
   InventoryIcon: {fileID: 21300000, guid: 39e93229268dc85429ec62da4bdd35d4, type: 3}
@@ -34,6 +34,8 @@ MonoBehaviour:
   CanAssignQuickSlot: 1
   StartUseDelay: 0
   UseDelay: 0.2
+  StartAltUseDelay: 0
+  UseAltDelay: 0.2
   UsesEnergy: 0
   EnergyAmountMax: 0
   EnergyCostPerUse: 1

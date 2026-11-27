@@ -19,7 +19,7 @@ MonoBehaviour:
     console: Access the console OS and press the "Open lockpick key compartment"
     button, after which be sure not to forget to press the "Call an engineer!!!"
     button.'
-  Type: 0
+  Type: 1
   InventoryDefinitionId: 7f8f8578078645599306f0ff999679bd
   DisplayName: Hacking key
   InventoryIcon: {fileID: 21300000, guid: dabd48cbf6700454e9fd8e1209ac14f6, type: 3}
@@ -37,6 +37,8 @@ MonoBehaviour:
   CanAssignQuickSlot: 1
   StartUseDelay: 0
   UseDelay: 0.2
+  StartAltUseDelay: 0
+  UseAltDelay: 0.2
   UsesEnergy: 0
   EnergyAmountMax: 0
   EnergyCostPerUse: 1

@@ -15,7 +15,7 @@ MonoBehaviour:
   Description: 'Instructions for use: The SPG 4.2 experimental prototype is capable
     of freezing objects in space. If you want to preserve the inertia of a frozen
     object, switch the firing mode to alternative.'
-  Type: 2
+  Type: 3
   InventoryDefinitionId: 03f41bd79b5344ecad406400fd3e7733
   DisplayName: Stasis Gun
   InventoryIcon: {fileID: 21300000, guid: 8cd807820616fc24fbea30fe652a8474, type: 3}
@@ -33,6 +33,8 @@ MonoBehaviour:
   CanAssignQuickSlot: 1
   StartUseDelay: 0
   UseDelay: 0.2
+  StartAltUseDelay: 0
+  UseAltDelay: 0.2
   UsesEnergy: 1
   EnergyAmountMax: 5
   EnergyCostPerUse: 1

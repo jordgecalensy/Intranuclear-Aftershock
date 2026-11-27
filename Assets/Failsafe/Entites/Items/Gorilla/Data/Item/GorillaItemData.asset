@@ -18,7 +18,7 @@ MonoBehaviour:
     Magnesium deficiency, increased muscle content in the body. Administration: Inject
     the drug into the neck or into the veins of the arms and press the button to
     deliver the fluid into the body.'
-  Type: 0
+  Type: 1
   InventoryDefinitionId: 6ac68dc06f1d45028cdd6866cae04335
   DisplayName: Gorilla Battle Stimulant
   InventoryIcon: {fileID: 21300000, guid: 55e377467e862d2498f57445c6b380a1, type: 3}
@@ -36,6 +36,8 @@ MonoBehaviour:
   CanAssignQuickSlot: 1
   StartUseDelay: 0.8
   UseDelay: 0.8
+  StartAltUseDelay: 0
+  UseAltDelay: 0.2
   UsesEnergy: 0
   EnergyAmountMax: 0
   EnergyCostPerUse: 1

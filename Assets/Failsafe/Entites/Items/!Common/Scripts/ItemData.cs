@@ -5,6 +5,11 @@ using UnityEngine;
 public enum ItemType
 {
     /// <summary>
+    /// Заглушка для анимации подбора
+    /// </summary>
+    Defoult,
+
+    /// <summary>
     /// Расходник
     /// </summary>
     Consumable,

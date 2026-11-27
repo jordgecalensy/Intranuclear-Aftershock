@@ -136,7 +136,7 @@ namespace Failsafe.Player
                     _animator.SetTrigger(_healId);
                     ActivateLayerForSeconds(_upperBodyLayerId, 2.5f).Forget();
                     break;
-                case ItemType.Gun:
+                case ItemType.StasisGun:
                     _animator.SetTrigger(_shootId);
                     break;
                 case ItemType.Grenade:
